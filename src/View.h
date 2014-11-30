@@ -1,0 +1,57 @@
+//
+//  View.h
+//  MagIndev
+//
+//  Created by Brian Kelley on 10/20/14293.
+//  Copyright (c) 2014 Brian Kelley. All rights reserved.
+//
+
+#ifndef __MagIndev__View__
+#define __MagIndev__View__
+
+#include <iostream>
+#include <vector>
+#include <SDL2/SDL.h>
+#include <gl.h>
+#include "Model.h"
+#include "Atlas.h"
+#include "Building.h"
+#include "Cuboid.h"
+#include "Scene.h"
+#include "Button.h"
+#include "Label.h"
+#include "Field.h"
+#include "Coord.h"
+#include "Constants.h"
+
+class View
+{
+public:
+    View(int screenX = 0, int screenY = 0);
+    ~View();
+    void update();
+    void updateWindowSize();
+private:
+    Model* model;
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    SDL_GLContext context;
+    Atlas* mainAtlas;
+    void blit(int tex, int x, int y);
+    void blit(int tex, int x1, int y1, int x2, int y2);
+    void frame();
+    void configGL();
+    void drawCuboid(Cuboid& c);
+    void drawBuilding(Building& b);
+    void drawScene(Scene& s);
+    void drawLabel(Label& l);
+    void drawButton(Button& b);
+    void drawField(Field& f);
+    void drawString(std::string text, int x, int y);
+    void drawString(std::string text, int x, int y, float scale);
+    void drawString(std::string text, int x, int y, float scale, float r, float g, float b);
+    int scrX;
+    int scrY;
+};
+
+#endif
