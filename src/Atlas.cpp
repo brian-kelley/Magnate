@@ -13,7 +13,7 @@ using namespace std;
 Atlas::Atlas(string imgDir, SDL_Renderer* renderer, int size)
 {
     string file = imgDir + "_atlas.png";
-    string tileData = file.substr(0, file.size() - 4) + "_tiles.dat";
+    string tileData = file.substr(0, file.size() - 4) + "_tiles.txt";
     string path = DirManager::getPath() + "assets/" + file;
     SDL_Surface* loadedSurface = IMG_Load(path.c_str());
     //Automatically knows to generate the atlas if the file isn't found
@@ -32,9 +32,9 @@ Atlas::Atlas(string imgDir, SDL_Renderer* renderer, int size)
         cout << "Error: could not convert surface to tex." << endl;
         cout << SDL_GetError() << endl;
     }
-    if(tileData.find(".dat") == string::npos)
+    if(tileData.find(".txt") == string::npos)
     {
-        tileData = tileData + ".dat";
+        tileData = tileData + ".txt";
     }
     this->tiles = DirManager::parseTiles(tileData, loadedSurface->w);
     for(int i = 0; i < (int) tiles.size(); i++)
@@ -62,7 +62,7 @@ void Atlas::buildAtlas(string imgDir, SDL_Renderer* renderer, int size)
         exit(1);
     }
     vector<string>* inputFiles = DirManager::exec("ls " + DirManager::getPath() + "assets/" + imgDir + "/*.png");
-    ofstream tileFile((DirManager::getPath() + "data/" + imgDir + "_atlas_tiles.dat").c_str(), std::ios_base::out);
+    ofstream tileFile((DirManager::getPath() + "data/" + imgDir + "_atlas_tiles.txt").c_str(), std::ios_base::out);
     vector<named_tex_t*> textures;
     string* path;
     for(int i = 0; i < (int) inputFiles->size(); i++)

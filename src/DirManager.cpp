@@ -15,7 +15,7 @@ string DirManager::dirPath;
 void DirManager::findPath()
 {
     //Todo: actually get this from the exe location? (if possible)
-    DirManager::dirPath = "/Users/Brian/Documents/MagIndev/MagIndev/";
+    DirManager::dirPath = "/Users/Brian/Dropbox/Magnate/";
 }
 
 string DirManager::getPath()
@@ -25,9 +25,9 @@ string DirManager::getPath()
 
 vector<DirManager::tileData_t> DirManager::parseTiles(string fname, float size)
 {
-    if(fname.find(".dat") == string::npos)
+    if(fname.find(".txt") == string::npos)
     {
-        fname += ".dat";
+        fname += ".txt";
     }
     vector<DirManager::tileData_t> tiles;
     string line;
@@ -83,15 +83,15 @@ Scene* DirManager::parseScene(string fname)
             while(data.length() > 0 && data[0] == '#');
             if(data == "Button")
             {
-                out->addButton(parseButton(fname));
+                out->addButton(parseButton(file));
             }
             else if(data == "Label")
             {
-                out->addLabel(parseLabel(fname));
+                out->addLabel(parseLabel(file));
             }
             else if(data == "Field")
             {
-                out->addField(parseField(fname));
+                out->addField(parseField(file));
             }
         }
         while(data.length() != 0);
@@ -102,7 +102,7 @@ Scene* DirManager::parseScene(string fname)
 vector<Scene*>* DirManager::parseScenes()
 {
     vector<Scene*>* vec = new vector<Scene*>;
-    vector<string>* list = exec("ls -1 " + this->path + "data/ui");
+    vector<string>* list = exec("ls -1 " + dirPath + "data/ui");
     for(int i = 0; i < list->size(); i++)
     {
         vec->push_back(parseScene((*list)[i]));

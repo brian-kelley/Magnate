@@ -9,9 +9,7 @@
 #ifndef __MagIndev__DirManager__
 #define __MagIndev__DirManager__
 
-#ifdef __linux
 #include <stdexcept>
-#endif
 #include <stdio.h>
 #include <iostream>
 #include <string>
@@ -42,14 +40,14 @@ private:
     static std::string dirPath;
     static std::string delim(unsigned long& index, std::string& data);
     static int delimInt(unsigned long& index, std::string& data);
-    static Scene* parseScene(std::ifstream& file);
+    static Scene* parseScene(std::string fname);
     static Button* parseButton(std::ifstream& file);
     static Label* parseLabel(std::ifstream& file);
     static Field* parseField(std::ifstream& file);
 public:
     static void findPath();
     static std::string getPath();
-    static std::vector<tileData_t> parseTiles(std::string path, float size);)
+    static std::vector<tileData_t> parseTiles(std::string path, float size);
     static std::vector<Scene*>* parseScenes();
     static std::vector<std::string>* exec(std::string cmd);
 };

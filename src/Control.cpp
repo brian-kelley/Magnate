@@ -18,7 +18,7 @@ Control::Control()
     updatingView = true;
     trackingMouse = true;
     trackingKeyboard = true;
-    this->scenes = DirManager::parseScenes("ui.dat");
+    this->scenes = DirManager::parseScenes();
     this->currentEvent = new SDL_Event();
     test = new Button(100, 100, 100, 200, "Buton");
     this->scene = 0;
