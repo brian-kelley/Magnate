@@ -67,59 +67,45 @@ vector<DirManager::tileData_t> DirManager::parseTiles(string fname, float size)
     return tiles;
 }
 
-vector<Scene*>* DirManager::parseScenes(string path)
+Scene* DirManager::parseScene(string fname)
 {
-    //Put the vector of scenes* on the heap
-    vector<Scene*>* vec = new vector<Scene*>;
-    ifstream file(dirPath + "data/" + path);
-    unsigned long index;
+    Scene* out = new Scene();
+    ifstream file(dirPath + "data/ui/" + fname);
     string data;
-    string type;
-    Scene buffer;
     if(file.is_open())
     {
         do
         {
-            getline(file, data);
-            if(data[0] == '#' || data.length() < 2)
+            do
             {
-                continue;
+                getline(file, data);
             }
-            else
+            while(data.length() > 0 && data[0] == '#');
+            if(data == "Button")
             {
-                index = 0;
-                type = data;
-                //Begin parsing a scene here
-                if(type == "Scene")
-                {
-                    buffer.clearAll();
-                    while(data != "endScene")
-                    {
-                        getline(file, data);
-                        type = data;
-                        if(type == "Button")
-                        {
-                            buffer.addButton(parseButton(file));
-                        }
-                        else if(type == "Label")
-                        {
-                            buffer.addLabel(parseLabel(file));
-                        }
-                        else if(type == "Field")
-                        {
-                            buffer.addField(parseField(file));
-                        }
-                    }
-                    vec->push_back(new Scene(buffer));
-                }
+                out->addButton(parseButton(fname));
+            }
+            else if(data == "Label")
+            {
+                out->addLabel(parseLabel(fname));
+            }
+            else if(data == "Field")
+            {
+                out->addField(parseField(fname));
             }
         }
-        //run until EOF
-        while(data.length() > 0);
+        while(data.length() != 0);
     }
-    else
+    return out;
+}
+
+vector<Scene*>* DirManager::parseScenes()
+{
+    vector<Scene*>* vec = new vector<Scene*>;
+    vector<string>* list = exec("ls -1 " + this->path + "data/ui");
+    for(int i = 0; i < list->size(); i++)
     {
-        cout << "Error: could not open " << path << endl;
+        vec->push_back(parseScene((*list)[i]));
     }
     return vec;
 }
@@ -153,11 +139,11 @@ int DirManager::delimInt(unsigned long& index, string& data)
     {
         try
         {
-            out = stoi(stp);
+        	out = stoi(stp);
         }
-        catch (const std::invalid_argument& ia)
+        catch (const std::invalid_argument& invArg)
         {
-            cout << "Error parsing int:" << ia.what() << "\n";
+            cout << "Error parsing int:" << invArg.what() << "\n";
             cout << "Outputting 1 instead.\n";
         }
     }
@@ -234,9 +220,7 @@ Field* DirManager::parseField(ifstream& file)
 
 vector<string>* DirManager::exec(string cmd)
 {
-    
     FILE* pipe = popen(cmd.c_str(), "r");
-    
     if(!pipe)
     {
         cout << "Error: Could not open process." << endl;

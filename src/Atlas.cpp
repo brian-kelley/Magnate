@@ -18,7 +18,7 @@ Atlas::Atlas(string imgDir, SDL_Renderer* renderer, int size)
     SDL_Surface* loadedSurface = IMG_Load(path.c_str());
     //Automatically knows to generate the atlas if the file isn't found
     //Note: Assumes tile data file exists and is correct if the image exists.
-    if(loadedSurface == nullptr)
+    if(loadedSurface == NULL)
     {
         cout << "Atlas not found. Building a fresh one." << endl;
         buildAtlas(imgDir, renderer, size);
@@ -27,7 +27,7 @@ Atlas::Atlas(string imgDir, SDL_Renderer* renderer, int size)
     this->tex = SDL_CreateTextureFromSurface(renderer, loadedSurface);
     this->width = loadedSurface->w;
     this->height = loadedSurface->h;
-    if(this->tex == nullptr)
+    if(this->tex == NULL)
     {
         cout << "Error: could not convert surface to tex." << endl;
         cout << SDL_GetError() << endl;
@@ -37,7 +37,7 @@ Atlas::Atlas(string imgDir, SDL_Renderer* renderer, int size)
         tileData = tileData + ".dat";
     }
     this->tiles = DirManager::parseTiles(tileData, loadedSurface->w);
-    for(int i = 0; i < tiles.size(); i++)
+    for(int i = 0; i < (int) tiles.size(); i++)
     {
         this->tileNames[tiles[i].name] = i;
     }
@@ -56,22 +56,22 @@ void Atlas::buildAtlas(string imgDir, SDL_Renderer* renderer, int size)
     wholeThing->h = size;
     SDL_FillRect(target, wholeThing, 0x00000000);
     delete wholeThing;
-    if(target == nullptr)
+    if(target == NULL)
     {
         cout << SDL_GetError() << endl;
         exit(1);
     }
     vector<string>* inputFiles = DirManager::exec("ls " + DirManager::getPath() + "assets/" + imgDir + "/*.png");
-    ofstream tileFile(DirManager::getPath() + "data/" + imgDir + "_atlas_tiles.dat", std::ios_base::out);
+    ofstream tileFile((DirManager::getPath() + "data/" + imgDir + "_atlas_tiles.dat").c_str(), std::ios_base::out);
     vector<named_tex_t*> textures;
     string* path;
-    for(int i = 0; i < inputFiles->size(); i++)
+    for(int i = 0; i < (int) inputFiles->size(); i++)
     {
         path = &(*inputFiles)[i];
         textures.push_back(new named_tex_t);
         textures.back()->name = path->substr(path->rfind("/") + 1, path->find(".png") - path->rfind("/") - 1);
         textures.back()->surface = IMG_Load(path->c_str());
-        if(textures.back()->surface == nullptr)
+        if(textures.back()->surface == NULL)
         {
             cout << "Error: texture " << textures.back()->name << " is null." << endl;
         }
@@ -89,7 +89,7 @@ void Atlas::buildAtlas(string imgDir, SDL_Renderer* renderer, int size)
     while(!textures.empty())
     {
         dest = -1;
-        for(int i = 0; i < rects.size(); i++)
+        for(int i = 0; i < (int) rects.size(); i++)
         {
             //Check for fit first
             if(rects[i]->w >= textures.back()->surface->w
@@ -107,7 +107,7 @@ void Atlas::buildAtlas(string imgDir, SDL_Renderer* renderer, int size)
         }
         if(dest == -1)
         {
-            cout << "Fatal error: texture " << textures.back()->name << " doesn't fit in atlas." << endl;\
+            cout << "Fatal error: texture " << textures.back()->name << " doesn't fit in atlas." << endl;
             exit(EXIT_FAILURE);
         }
         tileNames[textures.back()->name] = (int) this->tiles.size();
@@ -121,7 +121,7 @@ void Atlas::buildAtlas(string imgDir, SDL_Renderer* renderer, int size)
            && rects[dest]->h == textures.back()->surface->h)
         {
             delete rects[dest];
-            rects[dest] = nullptr;
+            rects[dest] = NULL;
             rects.erase(rects.begin() + dest);
         }
         else if(rects[dest]->w == textures.back()->surface->w)
@@ -157,7 +157,7 @@ void Atlas::buildAtlas(string imgDir, SDL_Renderer* renderer, int size)
     }
     this->tex = SDL_CreateTextureFromSurface(renderer, target);
     SDL_FreeSurface(target);
-    target = nullptr;
+    target = NULL;
     tileFile.close();
 }
 
@@ -165,16 +165,16 @@ Atlas::~Atlas()
 {
     SDL_GL_UnbindTexture(this->tex);
     SDL_DestroyTexture(this->tex);
-    this->tex = nullptr;
+    this->tex = NULL;
 }
 
 void Atlas::sortForHeight(vector<named_tex_t*>& vec)
 {
     int smallest;
-    for(int i = 0; i < vec.size() - 1; i++)
+    for(int i = 0; i < (int) vec.size() - 1; i++)
     {
         smallest = i;
-        for(int j = 0; j < vec.size(); j++)
+        for(int j = 0; j < (int) vec.size(); j++)
         {
             if(vec[i]->surface->h < vec[smallest]->surface->h)
             {
@@ -201,7 +201,7 @@ int Atlas::tileFromChar(char c)
     {
         return this->charTiles[c];
     }
-    catch (const std::out_of_range oor)
+    catch (const std::out_of_range& oor)
     {
         cout << "Atlas couldn't find char '" << c << "'" << endl;
         cout << oor.what() << endl;
@@ -211,7 +211,7 @@ int Atlas::tileFromChar(char c)
 
 void Atlas::bind()
 {
-    if(SDL_GL_BindTexture(this->tex, nullptr, nullptr) != 0)
+    if(SDL_GL_BindTexture(this->tex, NULL, NULL) != 0)
     {
         cout << "Error binding atlas to GL context." << endl;
         exit(EXIT_FAILURE);
@@ -222,15 +222,13 @@ void Atlas::initCharTiles()
 {
     constants::FONTW = (int) (this->tiles[this->tileFromName("A")].width * this->width + 0.5);
     constants::FONTH = (int) (this->tiles[this->tileFromName("A")].height * this->height + 0.5);
-    char cstr[2];
-    cstr[0] = '_';
     for(char lower = 'a'; lower <= 'z'; lower++)
     {
-        this->charTiles[lower] = tileNames[string({'_', lower})];
+        this->charTiles[lower] = tileNames["_" + lower];
     }
     for(char cap = 'A'; cap <= 'Z'; cap++)
     {
-        this->charTiles[cap] = tileNames[string({cap})];
+        this->charTiles[cap] = tileNames["" + cap];
     }
     this->charTiles['~'] = tileNames["tilde"];
     this->charTiles['`'] = tileNames["accent"];

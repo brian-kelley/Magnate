@@ -1,0 +1,26 @@
+#Fields for entering and viewing set of save files
+Field
+true 250 50 400 80
+Field
+true 250 150 400 80
+Field
+true 250 250 400 80
+Field
+true 250 350 400 80
+#Back button to return to the main menu
+Button
+Back
+true 320 400 100 80
+#Buttons to load/create save file and start game
+Button
+Load
+true 550 50 100 80
+Button
+Load
+true 550 150 100 80
+Button
+Load
+true 550 250 100 80
+Button
+Load
+true 550 350 100 80

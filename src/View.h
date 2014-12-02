@@ -9,10 +9,17 @@
 #ifndef __MagIndev__View__
 #define __MagIndev__View__
 
-#include <iostream>
-#include <vector>
+#ifdef __APPLE__
 #include <SDL2/SDL.h>
 #include <gl.h>
+#elif __linux
+#include <SDL2/SDL.h>
+#include <GL/gl.h>
+#elif _WIN32
+
+#endif
+#include <iostream>
+#include <vector>
 #include "Model.h"
 #include "Atlas.h"
 #include "Building.h"

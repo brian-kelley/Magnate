@@ -66,4 +66,4 @@ private:
     int roof;
 };
 
-#endif /* defined(__Magnate__Cuboid__) */
+#endif

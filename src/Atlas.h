@@ -9,6 +9,18 @@
 #ifndef __MagIndev__Atlas__
 #define __MagIndev__Atlas__
 
+#ifdef __APPLE__
+#include <gl.h>
+#include <SDL2/SDL.h>
+#include <SDL2_image/SDL_image.h>
+#elif __linux
+#include <GL/gl.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#elif _WIN32
+
+#endif
+
 #include <stdio.h>
 #include <iostream>
 #include <string>
@@ -17,9 +29,6 @@
 #include <vector>
 #include <map>
 #include <stdexcept>
-#include <SDL2/SDL.h>
-#include <SDL2_image/SDL_image.h>
-#include <gl.h>
 #include "DirManager.h"
 #include "Constants.h"
 
@@ -66,4 +75,4 @@ private:
     void initCharTiles();
 };
 
-#endif /* defined(__MagIndev__Atlas__) */
+#endif

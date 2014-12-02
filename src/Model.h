@@ -26,4 +26,4 @@ private:
     World* currentWorld;
 };
 
-#endif /* defined(__Magnate__Model__) */
+#endif
