@@ -13,32 +13,37 @@ using namespace std;
 Control::Control()
 {
     //Populate vector of Scenes from file
-    v = new View();
+    view = new View();
     terminating = false;
     updatingView = true;
     trackingMouse = true;
     trackingKeyboard = true;
     this->scenes = DirManager::parseScenes();
+    cout << "Parsed and loaded " << scenes->size() << " scenes." << endl;
     this->currentEvent = new SDL_Event();
-    test = new Button(100, 100, 100, 200, "Buton");
     this->scene = 0;
 }
 
 Control::~Control()
 {
-    delete v;
-    v = nullptr;
+    delete view;
+    view = nullptr;
     delete test;
-    for(int i = 0; i < this->scenes->size(); i++)
+    for(int i = 0; i < (int) this->scenes->size(); i++)
     {
         delete (*scenes)[i];
         (*scenes)[i] = nullptr;
     }
+    this->scenes->clear();
+    delete scenes;
+    this->scenes = nullptr;
     delete this->currentEvent;
 }
 
 void Control::update()
 {
+    this->oldWindowW = constants::WINDOW_W;
+    this->oldWindowH = constants::WINDOW_H;
     SDL_PumpEvents();
     while(SDL_PollEvent(currentEvent))
     {
@@ -94,8 +99,7 @@ void Control::update()
                 break;
         }
     }
-    mState = SDL_GetMouseState(&mouseX, &mouseY);
-    v->update();
+    view->update();
 }
 
 bool Control::isTerminating()
@@ -105,18 +109,20 @@ bool Control::isTerminating()
 
 void Control::processKeyboardEvent(SDL_Event &e)
 {
-    
+
 }
 
 void Control::processMouseButtonEvent(SDL_Event &e)
 {
-    
+
 }
 
 void Control::processMouseMotionEvent(SDL_Event &e)
 {
     Scene* scenePtr = this->scenes->at(this->scene);
-    for(int i = 0; i < scenePtr->getButtons()->size(); i++)
+    int x = (int) e.motion.x;
+    int y = (int) e.motion.y;
+    for(int i = 0; i < (int) scenePtr->getButtons()->size(); i++)
     {
         
     }
@@ -124,7 +130,8 @@ void Control::processMouseMotionEvent(SDL_Event &e)
 
 void Control::processMouseWheelEvent(SDL_Event &e)
 {
-    
+    int delta = e.wheel.y;
+    cout << "Scrolled by " << delta << " units." << endl;
 }
 
 void Control::processWindowEvent(SDL_Event &e)
@@ -132,27 +139,35 @@ void Control::processWindowEvent(SDL_Event &e)
     switch(e.window.event)
     {
         case SDL_WINDOWEVENT_CLOSE:
+        	this->terminating = true;
             break;
         case SDL_WINDOWEVENT_ENTER: //mouse enters window
+        	this->trackingMouse = true;
             break;
         case SDL_WINDOWEVENT_LEAVE: //mouse leaves window
-            break;
+        	this->trackingMouse = false;
+        	break;
         case SDL_WINDOWEVENT_FOCUS_GAINED: //window gains keyboard focus
-            break;
+            this->trackingKeyboard = true;
+        	break;
         case SDL_WINDOWEVENT_FOCUS_LOST: //window lost keyboard focus
-            break;
+            this->trackingKeyboard = false;
+        	break;
         case SDL_WINDOWEVENT_HIDDEN: //window has been hidden
-            break;
+            this->updatingView = false;
+        	break;
         case SDL_WINDOWEVENT_SHOWN: //window has been shown
-            break;
         case SDL_WINDOWEVENT_MAXIMIZED: //update window size and UI layout
         case SDL_WINDOWEVENT_RESTORED: //window needs to be refreshed for some reason
+        	this->updatingView = true;
+        	break;
         case SDL_WINDOWEVENT_RESIZED: //window resized by user
         case SDL_WINDOWEVENT_SIZE_CHANGED: //system or API call changed window size
-            
-            v->updateWindowSize();
+        	this->updateUISize();
+            view->updateWindowSize();
             break;
         case SDL_WINDOWEVENT_MINIMIZED:
+            this->updatingView = false;
             break;
     }
 }

@@ -21,23 +21,11 @@ public:
     Button(int x, int y, int width, int height, std::string text);
     ~Button();
     void processMouse(int x, int y);
-    inline SDL_Rect& getRect()
-    {
-        return this->rect;
-    }
-    inline SDL_Point& getTextLoc()
-    {
-        return this->textLoc;
-    }
+    inline SDL_Rect& getRect();
+    inline SDL_Point& getTextLoc();
+    inline std::string& getText();
     bool isMouseOver();
-    inline std::string& getText()
-    {
-        return this->text;
-    }
-    inline float getFontScale()
-    {
-        return this->fontScale;
-    }
+    float getFontScale();
 private:
     SDL_Rect rect;
     SDL_Point textLoc;

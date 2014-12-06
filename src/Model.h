@@ -22,6 +22,7 @@ public:
     Model();
     ~Model();
     void update();
+    World* getCurrentWorld();
 private:
     World* currentWorld;
 };

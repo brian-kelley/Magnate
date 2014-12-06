@@ -10,48 +10,34 @@
 
 using namespace std;
 
-Field::Field(int x, int y, int width, int height, bool centered, int font)
+Field::Field(int x, int y, int width, int height)
 {
-    this->x = x;
-    this->y = y;
-    this->width = width;
-    this->height = height;
-    this->centered = centered;
-    this->font = font;
+    x -= width / 2;
+    y -= height / 2;
+    this->rect.x = x;
+    this->rect.y = y;
+    this->rect.w = width;
+    this->rect.h = height;
+    this->fontScale = (float) (width - constants::PAD * 3) / constants::FONTH;
 }
 
 Field::~Field() {}
 
-string Field::getText()
+string& Field::getText()
 {
-    string s(this->text.begin(), this->text.end());
-    return s;
+    return this->text;
 }
 
 void Field::setText(string newtext)
 {
-    this->text.clear();
-    vector<char> newvec(newtext.begin(), newtext.end());
-    this->text = newvec;
-}
-
-void Field::setLocation(int x, int y)
-{
-    this->x = x;
-    this->y = y;
-}
-
-void Field::setSize(int width, int height)
-{
-    this->width = width;
-    this->height = height;
+    this->text = newtext;
 }
 
 void Field::processKey(SDL_Event *ev)
 {
     if(ev->type == SDL_TEXTINPUT)
     {
-        this->text.push_back(ev->text.text[0]);
+        this->text.append(string(ev->text.text));
     }
     else if(ev->type == SDL_KEYDOWN)
     {
@@ -59,9 +45,24 @@ void Field::processKey(SDL_Event *ev)
         {
             if(this->text.size() > 0)
             {
-                this->text.pop_back();
+                this->text = this->text.substr(0, (unsigned long) text.length() - 1);
             }
         }
     }
     cout << getText() << endl;
+}
+
+float Field::getFontScale()
+{
+    return this->fontScale;
+}
+
+SDL_Rect& Field::getRect()
+{
+    return this->rect;
+}
+
+SDL_Point& Field::getTextLoc()
+{
+    return this->textLoc;
 }

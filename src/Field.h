@@ -19,26 +19,26 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include "Constants.h"
 
 class Field
 {
 public:
-    Field(int x, int y, int width, int height, bool centered, int font);
+    Field(int x, int y, int width, int height);
     ~Field();
     void setText(std::string text);
     void setLocation(int x, int y);
     void setSize(int width, int height);
     void processKey(SDL_Event* ev);
-    std::string getText();
+    SDL_Rect& getRect();
+    SDL_Point& getTextLoc();
+    float getFontScale();
+    std::string& getText();
 private:
-    std::vector<char> text;
-    int x;
-    int y;
-    int width;
-    int height;
-    bool centered;
-    //0 (small), 1 (med), 2 (large) or something
-    int font;
+    std::string text;
+    SDL_Rect rect;
+    SDL_Point textLoc;
+    float fontScale;
 };
 
 #endif

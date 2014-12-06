@@ -38,8 +38,8 @@ public:
     ~View();
     void update();
     void updateWindowSize();
+    void drawWorld(World* currentWorld);
 private:
-    Model* model;
     SDL_Window* window;
     SDL_Renderer* renderer;
     SDL_GLContext context;
@@ -48,6 +48,8 @@ private:
     void blit(int tex, int x1, int y1, int x2, int y2);
     void frame();
     void configGL();
+    void initSDLVideo();
+    void initAtlas();
     void drawCuboid(Cuboid& c);
     void drawBuilding(Building& b);
     void drawScene(Scene& s);

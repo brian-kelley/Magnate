@@ -12,6 +12,8 @@ using namespace std;
 
 Button::Button(int x, int y, int width, int height, string text)
 {
+    x -= width / 2;
+    y -= height / 2;
     this->rect.x = x;
     this->rect.y = y;
     this->rect.w = width;
@@ -56,4 +58,24 @@ void Button::processMouse(int x, int y)
 bool Button::isMouseOver()
 {
     return over;
+}
+
+SDL_Rect& Button::getRect()
+{
+    return this->rect;
+}
+
+SDL_Point& Button::getTextLoc()
+{
+    return this->textLoc;
+}
+
+float Button::getFontScale()
+{
+    return this->fontScale;
+}
+
+string& Button::getText()
+{
+    return this->text;
 }

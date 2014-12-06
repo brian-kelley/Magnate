@@ -15,24 +15,14 @@ Label::Label(int x, int y, int width, int height, string text)
     this->rect.x = x;
     this->rect.y = y;
     this->text = text;
-    this->rect.w = constants::FONTW * (int) text.size() + constants::PAD * 2;
-    this->rect.h = constants::FONTH * (int) text.size() + constants::PAD * 2;
-    this->fontScale = 0.2;
-}
-
-Label::Label(int x, int y, string text, float fontSize)
-{
-    this->text = text;
-    this->rect.x = x;
-    this->rect.y = y;
-    this->rect.w = (int) text.size() * constants::FONTW + constants::PAD * 2;
-    this->rect.h = constants::FONTH + constants::PAD * 2;
-    this->fontScale = fontSize;
+    this->rect.w = width;
+    this->rect.h = height;
+    this->calcTextRect();
 }
 
 Label::~Label()
 {
-    
+    //No heap members yet...
 }
 
 void Label::updateText(string newText)
@@ -41,13 +31,37 @@ void Label::updateText(string newText)
     this->rect.w = this->fontScale * newText.size() * constants::FONTW;
 }
 
-void Label::updateLocation(int x, int y)
+void Label::processSizeChange(int oldWindowW, int oldWindowH)
 {
-    this->rect.x = x;
-    this->rect.y = y;
+    if(oldWindowW != constants::WINDOW_W)
+    {
+        float xscl = (float) constants::WINDOW_W / oldWindowW;
+        this->rect.x *= xscl;
+        this->rect.w *= xscl;
+    }
+    if(oldWindowH != constants::WINDOW_H)
+    {
+        float yscl = (float) constants::WINDOW_H / oldWindowH;
+        this->rect.y *= yscl;
+        this->rect.w *= yscl;
+    }
+    calcTextRect();
 }
 
-void Label::updateFontSize(float newScale)
+void Label::calcTextRect()
 {
-    this->fontScale = newScale;
+    float fontScaleX = (rect.w - constants::PAD * 2) / (float) constants::FONTW;
+    float fontScaleY = (rect.h - constants::PAD * 2) / (float) constants::FONTH;
+    if(fontScaleX < fontScaleY)
+    {
+        this->fontScale = fontScaleX;
+        this->textLoc.x = constants::PAD;
+        this->textLoc.y = constants::PAD + 0.5 * constants::FONTH * (fontScaleY - fontScaleX);
+    }
+    else
+    {
+        this->fontScale = fontScaleY;
+        this->textLoc.x = constants::PAD + 0.5 * constants::FONTH * (int) text.length() * (fontScaleX - fontScaleY);
+        this->textLoc.y = constants::PAD;
+    }
 }

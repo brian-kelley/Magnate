@@ -18,7 +18,7 @@ Atlas::Atlas(string imgDir, SDL_Renderer* renderer, int size)
     SDL_Surface* loadedSurface = IMG_Load(path.c_str());
     //Automatically knows to generate the atlas if the file isn't found
     //Note: Assumes tile data file exists and is correct if the image exists.
-    if(loadedSurface == NULL)
+    if(loadedSurface == nullptr)
     {
         cout << "Atlas not found. Building a fresh one." << endl;
         buildAtlas(imgDir, renderer, size);
@@ -27,7 +27,7 @@ Atlas::Atlas(string imgDir, SDL_Renderer* renderer, int size)
     this->tex = SDL_CreateTextureFromSurface(renderer, loadedSurface);
     this->width = loadedSurface->w;
     this->height = loadedSurface->h;
-    if(this->tex == NULL)
+    if(this->tex == nullptr)
     {
         cout << "Error: could not convert surface to tex." << endl;
         cout << SDL_GetError() << endl;
@@ -56,7 +56,7 @@ void Atlas::buildAtlas(string imgDir, SDL_Renderer* renderer, int size)
     wholeThing->h = size;
     SDL_FillRect(target, wholeThing, 0x00000000);
     delete wholeThing;
-    if(target == NULL)
+    if(target == nullptr)
     {
         cout << SDL_GetError() << endl;
         exit(1);
@@ -71,9 +71,9 @@ void Atlas::buildAtlas(string imgDir, SDL_Renderer* renderer, int size)
         textures.push_back(new named_tex_t);
         textures.back()->name = path->substr(path->rfind("/") + 1, path->find(".png") - path->rfind("/") - 1);
         textures.back()->surface = IMG_Load(path->c_str());
-        if(textures.back()->surface == NULL)
+        if(textures.back()->surface == nullptr)
         {
-            cout << "Error: texture " << textures.back()->name << " is null." << endl;
+            cout << "Error: texture " << textures.back()->name << " is nullptr." << endl;
         }
     }
     delete inputFiles;
@@ -114,14 +114,14 @@ void Atlas::buildAtlas(string imgDir, SDL_Renderer* renderer, int size)
         tileFile << textures.back()->name << " " << rects[dest]->x << " " << rects[dest]->y << " " << textures.back()->surface->w << " " << textures.back()->surface->h << endl;
         int origW = rects[dest]->w;
         int origH = rects[dest]->h;
-        SDL_BlitSurface(textures.back()->surface, NULL, target, rects[dest]);
+        SDL_BlitSurface(textures.back()->surface, nullptr, target, rects[dest]);
         rects[dest]->w = origW;
         rects[dest]->h = origH;
         if(rects[dest]->w == textures.back()->surface->w
            && rects[dest]->h == textures.back()->surface->h)
         {
             delete rects[dest];
-            rects[dest] = NULL;
+            rects[dest] = nullptr;
             rects.erase(rects.begin() + dest);
         }
         else if(rects[dest]->w == textures.back()->surface->w)
@@ -157,7 +157,7 @@ void Atlas::buildAtlas(string imgDir, SDL_Renderer* renderer, int size)
     }
     this->tex = SDL_CreateTextureFromSurface(renderer, target);
     SDL_FreeSurface(target);
-    target = NULL;
+    target = nullptr;
     tileFile.close();
 }
 
@@ -165,7 +165,7 @@ Atlas::~Atlas()
 {
     SDL_GL_UnbindTexture(this->tex);
     SDL_DestroyTexture(this->tex);
-    this->tex = NULL;
+    this->tex = nullptr;
 }
 
 void Atlas::sortForHeight(vector<named_tex_t*>& vec)
@@ -211,7 +211,7 @@ int Atlas::tileFromChar(char c)
 
 void Atlas::bind()
 {
-    if(SDL_GL_BindTexture(this->tex, NULL, NULL) != 0)
+    if(SDL_GL_BindTexture(this->tex, nullptr, nullptr) != 0)
     {
         cout << "Error binding atlas to GL context." << endl;
         exit(EXIT_FAILURE);
@@ -224,11 +224,11 @@ void Atlas::initCharTiles()
     constants::FONTH = (int) (this->tiles[this->tileFromName("A")].height * this->height + 0.5);
     for(char lower = 'a'; lower <= 'z'; lower++)
     {
-        this->charTiles[lower] = tileNames["_" + lower];
+        this->charTiles[lower] = tileNames["_" + string({lower})];
     }
     for(char cap = 'A'; cap <= 'Z'; cap++)
     {
-        this->charTiles[cap] = tileNames["" + cap];
+        this->charTiles[cap] = tileNames[string({cap})];
     }
     this->charTiles['~'] = tileNames["tilde"];
     this->charTiles['`'] = tileNames["accent"];

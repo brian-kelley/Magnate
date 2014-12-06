@@ -10,55 +10,16 @@
 
 using namespace std;
 
-View::View(int screenX, int screenY)
-: scrX(screenX), scrY(screenY)
+View::View(int screenX, int screenY) : scrX(screenX), scrY(screenY)
 {
-    if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
-    {
-        cout << "Failed to SDL video." << endl;
-    }
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    window = SDL_CreateWindow("Magnate", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                              constants::WINDOW_W, constants::WINDOW_H, SDL_WINDOW_SHOWN);
-    if(!window)
-    {
-        cout << "Failed to create SDL window." << endl;
-        exit(1);
-    }
-    context = SDL_GL_CreateContext(window);
-    if(context == nullptr)
-    {
-        cout << "Error creating GL context." << endl;
-        exit(1);
-    }
-    SDL_GL_SetSwapInterval(1);
-    this->renderer = SDL_CreateRenderer(this->window, -1, SDL_RENDERER_ACCELERATED);
-    int imgFlags = IMG_INIT_PNG;
-    if(!(IMG_Init(imgFlags) & imgFlags))
-    {
-        cout << "Error: View failed to initialize image loading." << endl;
-        cout << "Not going to attempt loading main atlas." << endl;
-        exit(1);
-    }
-    else
-    {
-        mainAtlas = new Atlas("main", this->renderer);
-        if(mainAtlas == nullptr)
-        {
-            cout << "Error: Failed to create atlas." << endl;
-        }
-    }
+    //Initialize with default window size as defined in constants.cpp
+    initSDLVideo();
     configGL();
-    mainAtlas->bind();
-    model = new Model();
+    initAtlas();
 }
 
 View::~View()
 {
-    delete model;
-    model = nullptr;
     delete mainAtlas;
     SDL_DestroyRenderer(this->renderer);
     this->renderer = nullptr;
@@ -71,73 +32,24 @@ View::~View()
 void View::update()
 {
     glClear(GL_COLOR_BUFFER_BIT);
-    model->update();
     glEnable(GL_TEXTURE_2D);
     this->drawString("This is a string.", 100, 100, 0.5, 1, 0.5, 0);
     this->drawString("This is another string.", 100, 150, 0.5, 1, 0.5, 0);
     SDL_GL_SwapWindow(this->window);
 }
 
-void View::drawCuboid(Cuboid& c)
-{
-    int posX = ix(c.getX(), c.getY()) - scrX;
-    int posY = jy(c.getX(), c.getY()) + (int) (constants::HMULT * c.getZ()) - scrY;
-    //Left wall
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-    glTexCoord2f(mainAtlas->tileX(c.getLeft()),
-                 mainAtlas->tileY(c.getLeft()));
-    glVertex2i(posX + c.draw.x2, posY + c.draw.y2);
-    glTexCoord2f(mainAtlas->tileX(c.getLeft()) + mainAtlas->tileW(c.getLeft()),
-                 mainAtlas->tileY(c.getLeft()));
-    glVertex2i(posX + c.draw.x3, posY + c.draw.y3);
-    glTexCoord2f(mainAtlas->tileX(c.getLeft()) + mainAtlas->tileW(c.getLeft()),
-                 mainAtlas->tileY(c.getLeft()) + mainAtlas->tileH(c.getLeft()));
-    glVertex2i(posX + c.draw.x4, posY + c.draw.y4);
-    glTexCoord2f(mainAtlas->tileX(c.getLeft()) + mainAtlas->tileW(c.getLeft()),
-                 mainAtlas->tileY(c.getLeft()) + mainAtlas->tileH(c.getLeft()));
-    glVertex2i(posX, posY);
-    glEnd();
-    //Roof
-    glBegin(GL_QUADS);
-    glTexCoord2f(mainAtlas->tileX(c.getRoof()),
-                 mainAtlas->tileY(c.getRoof()));
-    glVertex2i(posX + c.draw.x2, posY + c.draw.y2);
-    glTexCoord2f(mainAtlas->tileX(c.getRoof()) + mainAtlas->tileW(c.getRoof()),
-                 mainAtlas->tileY(c.getRoof()));
-    glVertex2i(posX + c.draw.x5, posY + c.draw.y5);
-    glTexCoord2f(mainAtlas->tileX(c.getRoof()) + mainAtlas->tileW(c.getRoof()),
-                 mainAtlas->tileY(c.getRoof()) + mainAtlas->tileH(c.getRoof()));
-    glVertex2i(posX + c.draw.x6, posY + c.draw.y6);
-    glTexCoord2f(mainAtlas->tileX(c.getRoof()),
-                 mainAtlas->tileY(c.getRoof()) + mainAtlas->tileH(c.getRoof()));
-    glVertex2i(posX + c.draw.x3, posY + c.draw.y3);
-    glEnd();
-    //Right wall
-    glColor3f(constants::SHADE, constants::SHADE, constants::SHADE);
-    glBegin(GL_QUADS);
-    glTexCoord2f(mainAtlas->tileX(c.getRight()),
-                 mainAtlas->tileY(c.getRight()));
-    glVertex2i(posX + c.draw.x3, posY + c.draw.y3);
-    glTexCoord2f(mainAtlas->tileX(c.getRight()) + mainAtlas->tileW(c.getRight()),
-                 mainAtlas->tileY(c.getRight()));
-    glVertex2i(posX + c.draw.x6, posY + c.draw.y6);
-    glTexCoord2f(mainAtlas->tileX(c.getRight()) + mainAtlas->tileW(c.getRight()),
-                 mainAtlas->tileY(c.getRight()) + mainAtlas->tileH(c.getRight()));
-    glVertex2i(posX + c.draw.x7, posY + c.draw.y7);
-    glTexCoord2f(mainAtlas->tileX(c.getRight()),
-                 mainAtlas->tileY(c.getRight()) + mainAtlas->tileH(c.getRight()));
-    glVertex2i(posX + c.draw.x4, posY + c.draw.y4);
-    glEnd();
-}
-
 void View::drawBuilding(Building& b)
 {
-    //b's cuboids are already in correct order for rendering
+    //b's cuboids are already in correct order for rendering (back to front)
     for(int i = 0; i < b.numCuboids(); i++)
     {
         this->drawCuboid(b.getCuboidRef(i));
     }
+}
+
+void View::drawWorld(World *currentWorld)
+{
+    
 }
 
 void View::drawScene(Scene& s)
@@ -153,66 +65,6 @@ void View::drawScene(Scene& s)
     for(int i = 0; i < s.getFields()->size(); i++)
     {
         drawField(s.getFields()->at(i));
-    }
-}
-
-void View::blit(int index, int x, int y)
-{
-    cout << mainAtlas->tileW(index) << " " << mainAtlas->tileH(index) << endl;
-    glBegin(GL_QUADS);
-    glTexCoord2f(mainAtlas->tileX(index), mainAtlas->tileY(index));
-    glVertex2i(x, y);
-    glTexCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),
-                 mainAtlas->tileY(index));
-    glVertex2i(x + mainAtlas->tileW(index), y);
-    glTexCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),
-                 mainAtlas->tileY(index) + mainAtlas->tileH(index));
-    glVertex2i(x + mainAtlas->tileW(index),
-               y + mainAtlas->tileH(index));
-    glTexCoord2f(mainAtlas->tileX(index),
-                 mainAtlas->tileY(index) + mainAtlas->tileH(index));
-    glVertex2i(x, y + mainAtlas->tileH(index));
-    glEnd();
-}
-
-void View::blit(int index, int x1, int y1, int x2, int y2)
-{
-    glBegin(GL_QUADS);
-    glTexCoord2f(mainAtlas->tileX(index), mainAtlas->tileY(index));
-    glVertex2i(x1, y1);
-    glTexCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),
-                 mainAtlas->tileY(index));
-    glVertex2i(x2, y1);
-    glTexCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),
-                 mainAtlas->tileY(index) + mainAtlas->tileH(index));
-    glVertex2i(x2, y2);
-    glTexCoord2f(mainAtlas->tileX(index),
-                 mainAtlas->tileY(index) + mainAtlas->tileH(index));
-    glVertex2i(x1, y2);
-    glEnd();
-}
-
-void View::drawString(string text, int x, int y)
-{
-    this->drawString(text, x, y, 1.0f, 1.0f, 1.0f, 1.0f);
-}
-
-void View::drawString(string text, int x, int y, float scale)
-{
-    this->drawString(text, x, y, scale, 1.0f, 1.0f, 1.0f);
-}
-
-void View::drawString(string text, int x, int y, float scale, float r, float g, float b)
-{
-    glColor3f(r, g, b);
-    for(int i = 0; i < text.size(); i++)
-    {
-        if(text[i] != ' ')
-        {
-            this->blit(mainAtlas->tileFromChar(text[i]),
-                       x + i * constants::FONTW * scale, y,
-                       x + (1 + i) * constants::FONTW * scale, y + constants::FONTH * scale);
-        }
     }
 }
 
@@ -293,4 +145,163 @@ void View::configGL()
 void View::updateWindowSize()
 {
     SDL_GetWindowSize(this->window, &constants::WINDOW_W, &constants::WINDOW_H);
+}
+
+void View::blit(int index, int x, int y)
+{
+    cout << mainAtlas->tileW(index) << " " << mainAtlas->tileH(index) << endl;
+    glBegin(GL_QUADS);
+    glTexCoord2f(mainAtlas->tileX(index), mainAtlas->tileY(index));
+    glVertex2i(x, y);
+    glTexCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),
+                 mainAtlas->tileY(index));
+    glVertex2i(x + mainAtlas->tileW(index), y);
+    glTexCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),
+                 mainAtlas->tileY(index) + mainAtlas->tileH(index));
+    glVertex2i(x + mainAtlas->tileW(index),
+               y + mainAtlas->tileH(index));
+    glTexCoord2f(mainAtlas->tileX(index),
+                 mainAtlas->tileY(index) + mainAtlas->tileH(index));
+    glVertex2i(x, y + mainAtlas->tileH(index));
+    glEnd();
+}
+
+void View::blit(int index, int x1, int y1, int x2, int y2)
+{
+    glBegin(GL_QUADS);
+    glTexCoord2f(mainAtlas->tileX(index), mainAtlas->tileY(index));
+    glVertex2i(x1, y1);
+    glTexCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),
+                 mainAtlas->tileY(index));
+    glVertex2i(x2, y1);
+    glTexCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),
+                 mainAtlas->tileY(index) + mainAtlas->tileH(index));
+    glVertex2i(x2, y2);
+    glTexCoord2f(mainAtlas->tileX(index),
+                 mainAtlas->tileY(index) + mainAtlas->tileH(index));
+    glVertex2i(x1, y2);
+    glEnd();
+}
+
+void View::drawString(string text, int x, int y)
+{
+    this->drawString(text, x, y, 1.0f, 1.0f, 1.0f, 1.0f);
+}
+
+void View::drawString(string text, int x, int y, float scale)
+{
+    this->drawString(text, x, y, scale, 1.0f, 1.0f, 1.0f);
+}
+
+void View::drawString(string text, int x, int y, float scale, float r, float g, float b)
+{
+    glColor3f(r, g, b);
+    for(int i = 0; i < text.size(); i++)
+    {
+        if(text[i] != ' ')
+        {
+            this->blit(mainAtlas->tileFromChar(text[i]),
+                       x + i * constants::FONTW * scale, y,
+                       x + (1 + i) * constants::FONTW * scale, y + constants::FONTH * scale);
+        }
+    }
+}
+
+void View::drawCuboid(Cuboid& c)
+{
+    int posX = ix(c.getX(), c.getY()) - scrX;
+    int posY = jy(c.getX(), c.getY()) + (int) (constants::HMULT * c.getZ()) - scrY;
+    //Left wall
+    glColor3f(1.0f, 1.0f, 1.0f);
+    glBegin(GL_QUADS);
+    glTexCoord2f(mainAtlas->tileX(c.getLeft()),
+                 mainAtlas->tileY(c.getLeft()));
+    glVertex2i(posX + c.draw.x2, posY + c.draw.y2);
+    glTexCoord2f(mainAtlas->tileX(c.getLeft()) + mainAtlas->tileW(c.getLeft()),
+                 mainAtlas->tileY(c.getLeft()));
+    glVertex2i(posX + c.draw.x3, posY + c.draw.y3);
+    glTexCoord2f(mainAtlas->tileX(c.getLeft()) + mainAtlas->tileW(c.getLeft()),
+                 mainAtlas->tileY(c.getLeft()) + mainAtlas->tileH(c.getLeft()));
+    glVertex2i(posX + c.draw.x4, posY + c.draw.y4);
+    glTexCoord2f(mainAtlas->tileX(c.getLeft()) + mainAtlas->tileW(c.getLeft()),
+                 mainAtlas->tileY(c.getLeft()) + mainAtlas->tileH(c.getLeft()));
+    glVertex2i(posX, posY);
+    glEnd();
+    //Roof
+    glBegin(GL_QUADS);
+    glTexCoord2f(mainAtlas->tileX(c.getRoof()),
+                 mainAtlas->tileY(c.getRoof()));
+    glVertex2i(posX + c.draw.x2, posY + c.draw.y2);
+    glTexCoord2f(mainAtlas->tileX(c.getRoof()) + mainAtlas->tileW(c.getRoof()),
+                 mainAtlas->tileY(c.getRoof()));
+    glVertex2i(posX + c.draw.x5, posY + c.draw.y5);
+    glTexCoord2f(mainAtlas->tileX(c.getRoof()) + mainAtlas->tileW(c.getRoof()),
+                 mainAtlas->tileY(c.getRoof()) + mainAtlas->tileH(c.getRoof()));
+    glVertex2i(posX + c.draw.x6, posY + c.draw.y6);
+    glTexCoord2f(mainAtlas->tileX(c.getRoof()),
+                 mainAtlas->tileY(c.getRoof()) + mainAtlas->tileH(c.getRoof()));
+    glVertex2i(posX + c.draw.x3, posY + c.draw.y3);
+    glEnd();
+    //Right wall
+    glColor3f(constants::SHADE, constants::SHADE, constants::SHADE);
+    glBegin(GL_QUADS);
+    glTexCoord2f(mainAtlas->tileX(c.getRight()),
+                 mainAtlas->tileY(c.getRight()));
+    glVertex2i(posX + c.draw.x3, posY + c.draw.y3);
+    glTexCoord2f(mainAtlas->tileX(c.getRight()) + mainAtlas->tileW(c.getRight()),
+                 mainAtlas->tileY(c.getRight()));
+    glVertex2i(posX + c.draw.x6, posY + c.draw.y6);
+    glTexCoord2f(mainAtlas->tileX(c.getRight()) + mainAtlas->tileW(c.getRight()),
+                 mainAtlas->tileY(c.getRight()) + mainAtlas->tileH(c.getRight()));
+    glVertex2i(posX + c.draw.x7, posY + c.draw.y7);
+    glTexCoord2f(mainAtlas->tileX(c.getRight()),
+                 mainAtlas->tileY(c.getRight()) + mainAtlas->tileH(c.getRight()));
+    glVertex2i(posX + c.draw.x4, posY + c.draw.y4);
+    glEnd();
+}
+
+void View::initSDLVideo()
+{
+    if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
+    {
+        cout << "Failed to SDL video." << endl;
+    }
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    window = SDL_CreateWindow("Magnate", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                              constants::WINDOW_W, constants::WINDOW_H, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    if(!window)
+    {
+        cout << "Failed to create SDL window." << endl;
+        exit(1);
+    }
+    context = SDL_GL_CreateContext(window);
+    if(context == nullptr)
+    {
+        cout << "Error creating GL context." << endl;
+        exit(1);
+    }
+    SDL_GL_SetSwapInterval(1);
+    this->renderer = SDL_CreateRenderer(this->window, -1, SDL_RENDERER_ACCELERATED);
+}
+
+void View::initAtlas()
+{
+    int imgFlags = IMG_INIT_PNG;
+    if(!(IMG_Init(imgFlags) & imgFlags))
+    {
+        cout << "Error: View failed to initialize image loading." << endl;
+        cout << "Not going to attempt loading main atlas." << endl;
+        exit(1);
+    }
+    else
+    {
+        mainAtlas = new Atlas("main", this->renderer);
+        if(mainAtlas == nullptr)
+        {
+            cout << "Error: Failed to create atlas." << endl;
+        }
+    }
+    mainAtlas->bind();
 }

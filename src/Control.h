@@ -30,18 +30,22 @@ public:
     void update();
     bool isTerminating();
 private:
-    View* v;
+    View* view;
+    Model* model;
     int scene;
     int mouseX;
     int mouseY;
-    uint32_t mState;
+    int oldWindowW;
+    int oldWindowH;
     std::vector<Scene*>* scenes;
     SDL_Event* currentEvent;
+    void processWindowResize();
     void processWindowEvent(SDL_Event& e);
     void processMouseMotionEvent(SDL_Event& e);
     void processMouseButtonEvent(SDL_Event& e);
     void processMouseWheelEvent(SDL_Event& e);
     void processKeyboardEvent(SDL_Event& e);
+    void updateUISize();
     bool terminating;
     bool updatingView;
     bool trackingMouse;

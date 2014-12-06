@@ -19,10 +19,8 @@ class Label
 {
 public:
     Label(int x, int y, int width, int height, std::string text);
-    Label(int x, int y, std::string text, float fontScale);
     void updateText(std::string text);
-    void updateLocation(int x, int y);
-    void updateFontSize(float newSize);
+    void processSizeChange(int oldWindowW, int oldWindowH);
     inline std::string getText()
     {
         return this->text;
@@ -45,6 +43,7 @@ private:
     float fontScale;
     SDL_Rect rect;
     SDL_Point textLoc;
+    void calcTextRect();
 };
 
 #endif

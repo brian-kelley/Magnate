@@ -44,6 +44,7 @@ private:
     static Button* parseButton(std::ifstream& file);
     static Label* parseLabel(std::ifstream& file);
     static Field* parseField(std::ifstream& file);
+    static void getNextLine(std::ifstream& file, std::string& data);
 public:
     static void findPath();
     static std::string getPath();

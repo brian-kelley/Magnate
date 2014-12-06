@@ -28,13 +28,6 @@ namespace constants
     extern float UI_FG_B;
     extern float SHADE;
     extern float HMULT;
-    enum STATES
-    {
-        TRACKING_MOUSE,
-        TRACKING_KEYBOARD,
-        UPDATING_VIEW,
-        TERMINATING
-    };
 }
 
 #endif

@@ -15,7 +15,13 @@ string DirManager::dirPath;
 void DirManager::findPath()
 {
     //Todo: actually get this from the exe location? (if possible)
+#ifdef __APPLE__
     DirManager::dirPath = "/Users/Brian/Dropbox/Magnate/";
+#elif __linux
+    DirManager::dirPath = "/home/brian/Dropbox/Magnate";
+#elif _WIN32
+    
+#endif
 }
 
 string DirManager::getPath()
@@ -40,23 +46,16 @@ vector<DirManager::tileData_t> DirManager::parseTiles(string fname, float size)
     {
         do
         {
-            getline(tfile, line);
-            if(line[0] == '#' || line.length() < 8)
-            {
-                continue;
-            }
-            else
-            {
-                index = 0;
-                buffer.name = delim(index, line);
-                buffer.x = ((float) delimInt(index, line)) / size;
-                buffer.y = ((float) delimInt(index, line)) / size;
-                buffer.width = ((float) delimInt(index, line)) / size;
-                buffer.height = ((float) delimInt(index, line)) / size;
-                tiles.push_back(buffer);
-            }
+            getNextLine(tfile, line);
+            index = 0;
+            buffer.name = delim(index, line);
+            buffer.x = ((float) delimInt(index, line)) / size;
+            buffer.y = ((float) delimInt(index, line)) / size;
+            buffer.width = ((float) delimInt(index, line)) / size;
+            buffer.height = ((float) delimInt(index, line)) / size;
+            tiles.push_back(buffer);
         }
-        while(line.length() > 0);
+        while(line != "");
         tfile.close();
     }
     else
@@ -74,13 +73,9 @@ Scene* DirManager::parseScene(string fname)
     string data;
     if(file.is_open())
     {
-        do
+        getNextLine(file, data);
+        if(data != "")
         {
-            do
-            {
-                getline(file, data);
-            }
-            while(data.length() > 0 && data[0] == '#');
             if(data == "Button")
             {
                 out->addButton(parseButton(file));
@@ -94,7 +89,6 @@ Scene* DirManager::parseScene(string fname)
                 out->addField(parseField(file));
             }
         }
-        while(data.length() != 0);
     }
     return out;
 }
@@ -156,66 +150,42 @@ int DirManager::delimInt(unsigned long& index, string& data)
 
 Button* DirManager::parseButton(ifstream& file)
 {
-    string data;
-    getline(file, data);
-    string txt = data;
-    getline(file, data);
+    string txt;
+    getNextLine(file, txt);
     unsigned long index = 0;
+    string data;
+    getNextLine(file, data);
     int x = delimInt(index, data);
     int y = delimInt(index, data);
     int width = delimInt(index, data);
     int height = delimInt(index, data);
-    //Next call to getline(...) will be something else so leave it there
     return new Button(x, y, width, height, txt);
 }
 
 Label* DirManager::parseLabel(ifstream& file)
 {
-    string data;
-    getline(file, data);
-    string txt = data;
+    string txt;
+    getNextLine(file, txt);
     unsigned long index = 0;
-    getline(file, data);
-    string strCenter = delim(index, data);
-    bool centered = true;
-    if(strCenter == "true")
-    {
-        centered = true;
-    }
-    else if(strCenter == "false")
-    {
-        centered = false;
-    }
-    else
-    {
-        cout << strCenter << " should be either 'true' or 'false'." << endl;
-        cout << "Defaulting to false." << endl;
-        centered = false;
-    }
-    unsigned long tempIndex = index;
-    string def = delim(tempIndex, data);
-    bool autoSized;
-    if(def == "auto")
-    {
-        autoSized = true;
-    }
-    else
-    {
-        autoSized = false;
-    }
+    string data;
+    getNextLine(file, data);
     int x = delimInt(index, data);
     int y = delimInt(index, data);
-    string det;
     int width = delimInt(index, data);
     int height = delimInt(index, data);
-    string font = delim(index, data);
-    return nullptr;
-    //return new Label();
+    return new Label(x, y, width, height, txt);
 }
 
 Field* DirManager::parseField(ifstream& file)
 {
-    return nullptr;
+    string data;
+    getNextLine(file, data);
+    unsigned long index = 0;
+    int x = delimInt(index, data);
+    int y = delimInt(index, data);
+    int width = delimInt(index, data);
+    int height = delimInt(index, data);
+    return new Field(x, y, width, height);
 }
 
 vector<string>* DirManager::exec(string cmd)
@@ -248,4 +218,25 @@ vector<string>* DirManager::exec(string cmd)
         pclose(pipe);
         return result;
     }
+}
+
+void getNextLine(ifstream& file, string& data)
+{
+    if(!file.eof())
+    {
+        getline(file, data);
+        while(data.length() == 0 || data[0] == '#')
+        {
+            if(!file.eof())
+            {
+                getline(file, data);
+            }
+            else
+            {
+                data = "";
+                return;
+            }
+        }
+    }
+    data = "";
 }

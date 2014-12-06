@@ -12,7 +12,7 @@ using namespace std;
 
 Model::Model()
 {
-
+    this->currentWorld = nullptr;
 }
 
 Model::~Model()
@@ -23,4 +23,9 @@ Model::~Model()
 void Model::update()
 {
     
+}
+
+World* Model::getCurrentWorld()
+{
+    return this->currentWorld;
 }
