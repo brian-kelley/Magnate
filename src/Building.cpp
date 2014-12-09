@@ -68,7 +68,7 @@ Cuboid& Building::getCuboidRef(int index)
     return (*this->boxes)[index];
 }
 
-unsigned long Building::numCuboids()
+int Building::numCuboids()
 {
-    return this->boxes->size();
+    return (int) this->boxes->size();
 }

@@ -49,20 +49,20 @@ void View::drawBuilding(Building& b)
 
 void View::drawWorld(World *currentWorld)
 {
-    
+
 }
 
 void View::drawScene(Scene& s)
 {
-    for(int i = 0; i < s.getButtons()->size(); i++)
+    for(int i = 0; i < (int) s.getButtons()->size(); i++)
     {
         drawButton(s.getButtons()->at(i));
     }
-    for(int i = 0; i < s.getLabels()->size(); i++)
+    for(int i = 0; i < (int) s.getLabels()->size(); i++)
     {
         drawLabel(s.getLabels()->at(i));
     }
-    for(int i = 0; i < s.getFields()->size(); i++)
+    for(int i = 0; i < (int) s.getFields()->size(); i++)
     {
         drawField(s.getFields()->at(i));
     }
@@ -70,12 +70,12 @@ void View::drawScene(Scene& s)
 
 void View::drawLabel(Label& l)
 {
-    
+
 }
 
 void View::drawField(Field &f)
 {
-    
+
 }
 
 void View::drawButton(Button &b)
@@ -138,7 +138,6 @@ void View::configGL()
     glEnable(GL_TEXTURE_2D);
     glClearColor(1, 1, 1, 1);
     glEnable(GL_BLEND);
-    glBlendEquation(GL_SMOOTH);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 

@@ -18,7 +18,7 @@ class Building
 public:
     Building();
     virtual ~Building();
-    unsigned long numCuboids();
+    int numCuboids();
     Cuboid& getCuboidRef(int index);
 protected:
 private:

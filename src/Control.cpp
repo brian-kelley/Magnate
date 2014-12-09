@@ -14,6 +14,10 @@ Control::Control()
 {
     //Populate vector of Scenes from file
     view = new View();
+    model = new Model();
+    this->oldWindowW = constants::WINDOW_W;
+    this->oldWindowH = constants::WINDOW_H;
+    SDL_GetMouseState(&this->mouseX, &this->mouseY);
     terminating = false;
     updatingView = true;
     trackingMouse = true;
@@ -28,7 +32,6 @@ Control::~Control()
 {
     delete view;
     view = nullptr;
-    delete test;
     for(int i = 0; i < (int) this->scenes->size(); i++)
     {
         delete (*scenes)[i];
@@ -122,9 +125,10 @@ void Control::processMouseMotionEvent(SDL_Event &e)
     Scene* scenePtr = this->scenes->at(this->scene);
     int x = (int) e.motion.x;
     int y = (int) e.motion.y;
+    cout << x << " " << y << endl;
     for(int i = 0; i < (int) scenePtr->getButtons()->size(); i++)
     {
-        
+
     }
 }
 
@@ -163,11 +167,18 @@ void Control::processWindowEvent(SDL_Event &e)
         	break;
         case SDL_WINDOWEVENT_RESIZED: //window resized by user
         case SDL_WINDOWEVENT_SIZE_CHANGED: //system or API call changed window size
-        	this->updateUISize();
+        	this->oldWindowW = constants::WINDOW_W;
+        	this->oldWindowH = constants::WINDOW_H;
             view->updateWindowSize();
+        	this->updateUISize();
             break;
         case SDL_WINDOWEVENT_MINIMIZED:
             this->updatingView = false;
             break;
     }
+}
+
+void Control::updateUISize()
+{
+
 }

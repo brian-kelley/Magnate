@@ -20,7 +20,7 @@ void DirManager::findPath()
 #elif __linux
     DirManager::dirPath = "/home/brian/Dropbox/Magnate";
 #elif _WIN32
-    
+
 #endif
 }
 
@@ -47,13 +47,20 @@ vector<DirManager::tileData_t> DirManager::parseTiles(string fname, float size)
         do
         {
             getNextLine(tfile, line);
-            index = 0;
-            buffer.name = delim(index, line);
-            buffer.x = ((float) delimInt(index, line)) / size;
-            buffer.y = ((float) delimInt(index, line)) / size;
-            buffer.width = ((float) delimInt(index, line)) / size;
-            buffer.height = ((float) delimInt(index, line)) / size;
-            tiles.push_back(buffer);
+            if(line != "")
+            {
+                index = 0;
+                buffer.name = delim(index, line);
+                buffer.x = ((float) delimInt(index, line)) / size;
+                buffer.y = ((float) delimInt(index, line)) / size;
+                buffer.width = ((float) delimInt(index, line)) / size;
+                buffer.height = ((float) delimInt(index, line)) / size;
+                tiles.push_back(buffer);
+            }
+            else
+            {
+                break;
+            }
         }
         while(line != "");
         tfile.close();
@@ -97,7 +104,7 @@ vector<Scene*>* DirManager::parseScenes()
 {
     vector<Scene*>* vec = new vector<Scene*>;
     vector<string>* list = exec("ls -1 " + dirPath + "data/ui");
-    for(int i = 0; i < list->size(); i++)
+    for(int i = 0; i < (int) list->size(); i++)
     {
         vec->push_back(parseScene((*list)[i]));
     }
@@ -220,23 +227,16 @@ vector<string>* DirManager::exec(string cmd)
     }
 }
 
-void getNextLine(ifstream& file, string& data)
+void DirManager::getNextLine(ifstream& file, string& data)
 {
-    if(!file.eof())
+    data = "";
+    while((data == "" && !(file.eof())))
     {
         getline(file, data);
-        while(data.length() == 0 || data[0] == '#')
+        cout << "getline fetched string:" << data << endl;
+        if(data.length() > 0 && data[0] == '#')
         {
-            if(!file.eof())
-            {
-                getline(file, data);
-            }
-            else
-            {
-                data = "";
-                return;
-            }
+            data = "";
         }
     }
-    data = "";
 }

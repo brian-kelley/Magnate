@@ -26,7 +26,6 @@ class Control
 public:
     Control();
     ~Control();
-    Button* test;
     void update();
     bool isTerminating();
 private:
