@@ -33,6 +33,5 @@ int main(int argc, const char * argv[])
             SDL_Delay(delay);
         }
     }
-    delete c;
     return 0;
 }

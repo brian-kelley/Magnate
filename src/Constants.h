@@ -11,6 +11,8 @@
 
 #include <cstdint>
 
+typedef void (*callback_t) (void);
+
 namespace constants
 {
     extern int FONTW;

@@ -10,7 +10,7 @@
 
 using namespace std;
 
-Control::Control()
+Control::Control() : test(300, 200, 300, 300, "LOLOLOL", mainStartButton)
 {
     //Populate vector of Scenes from file
     view = new View();
@@ -98,7 +98,9 @@ void Control::update()
                 break;
         }
     }
-    view->update();
+    view->prepareFrame();
+    view->drawScene(*this->scenes[current]);
+    view->finalizeFrame();
 }
 
 bool Control::isTerminating()
@@ -113,15 +115,29 @@ void Control::processKeyboardEvent(SDL_Event &e)
 
 void Control::processMouseButtonEvent(SDL_Event &e)
 {
-
+    if(e.button.state == SDL_PRESSED)
+    {
+        Button* btnPtr;
+        SDL_Rect* btnRect;
+        for(int i = 0; i < (int) this->scenes[current]->getButtons()->size(); i++)
+        {
+            btnPtr = &(*this->scenes[current]->getButtons())[i];
+            btnRect = &btnPtr->getRect();
+            if(btnRect->x < mouseX && btnRect->x + btnRect->w > mouseX
+               && btnRect->y < mouseY && btnRect->y + btnRect->h > mouseY)
+            {
+                (*(btnPtr->getCallback())) ();
+                break;
+            }
+        }
+    }
 }
 
 void Control::processMouseMotionEvent(SDL_Event &e)
 {
     Scene* scenePtr = this->scenes[current];
-    int x = (int) e.motion.x;
-    int y = (int) e.motion.y;
-    cout << x << " " << y << endl;
+    mouseX = (int) e.motion.x;
+    mouseY = (int) e.motion.y;
     for(int i = 0; i < (int) scenePtr->getButtons()->size(); i++)
     {
 
@@ -201,4 +217,59 @@ void Control::initScenes()
     stacker->addField(new Field(250, 150, 400, 80, "", &saveName3Update));
     stacker->addField(new Field(250, 200, 400, 80, "", &saveName4Update));
     this->scenes.push_back(stacker);
+}
+
+void Control::mainQuitButton()
+{
+    cout << "Would normally be terminating now, lol!" << endl;
+}
+
+void Control::mainStartButton()
+{
+    cout << "Gratz you clicked t3h buttons!!111!11!" << endl;
+}
+
+void Control::saveBackButton()
+{
+    
+}
+
+void Control::saveName1Update()
+{
+    
+}
+
+void Control::saveName2Update()
+{
+    
+}
+
+void Control::saveName3Update()
+{
+    
+}
+
+void Control::saveName4Update()
+{
+    
+}
+
+void Control::saveStart1()
+{
+    
+}
+
+void Control::saveStart2()
+{
+    
+}
+
+void Control::saveStart3()
+{
+    
+}
+
+void Control::saveStart4()
+{
+    
 }

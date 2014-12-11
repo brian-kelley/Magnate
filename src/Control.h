@@ -67,6 +67,7 @@ private:
     static void saveStart2();
     static void saveStart3();
     static void saveStart4();
+    Button test;
 };
 
 #endif

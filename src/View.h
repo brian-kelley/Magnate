@@ -36,9 +36,11 @@ class View
 public:
     View(int screenX = 0, int screenY = 0);
     ~View();
-    void update();
     void updateWindowSize();
     void drawWorld(World* currentWorld);
+    void drawScene(Scene& s);
+    void prepareFrame();
+    void finalizeFrame();
 private:
     SDL_Window* window;
     SDL_Renderer* renderer;
@@ -52,9 +54,8 @@ private:
     void initAtlas();
     void drawCuboid(Cuboid& c);
     void drawBuilding(Building& b);
-    void drawScene(Scene& s);
-    void drawLabel(Label& l);
     void drawButton(Button& b);
+    void drawLabel(Label& l);
     void drawField(Field& f);
     void drawString(std::string text, int x, int y);
     void drawString(std::string text, int x, int y, float scale);

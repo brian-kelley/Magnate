@@ -24,7 +24,7 @@
 class Field
 {
 public:
-    Field(int x, int y, int width, int height, std::string text, void(*callback) ());
+    Field(int x, int y, int width, int height, std::string text, callback_t callback);
     ~Field();
     void setText(std::string text);
     void setLocation(int x, int y);

@@ -28,13 +28,14 @@ View::~View()
     IMG_Quit();
     SDL_Quit();
 }
-//Called in main loop
-void View::update()
+
+void View::prepareFrame()
 {
     glClear(GL_COLOR_BUFFER_BIT);
-    glEnable(GL_TEXTURE_2D);
-    this->drawString("This is a string.", 100, 100, 0.5, 1, 0.5, 0);
-    this->drawString("This is another string.", 100, 150, 0.5, 1, 0.5, 0);
+}
+
+void View::finalizeFrame()
+{
     SDL_GL_SwapWindow(this->window);
 }
 

@@ -10,7 +10,7 @@
 
 using namespace std;
 
-Field::Field(int x, int y, int width, int height, string text, void(*callback) ())
+Field::Field(int x, int y, int width, int height, string text, callback_t callback)
 {
     x -= width / 2;
     y -= height / 2;

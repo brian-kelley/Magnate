@@ -10,7 +10,7 @@
 
 using namespace std;
 
-Button::Button(int x, int y, int width, int height, string text, void (*callback) ())
+Button::Button(int x, int y, int width, int height, string text, callback_t callback)
 {
     this->callback = callback;
     x -= width / 2;
@@ -79,4 +79,9 @@ float Button::getFontScale()
 string& Button::getText()
 {
     return this->text;
+}
+
+callback_t Button::getCallback()
+{
+    return this->callback;
 }
