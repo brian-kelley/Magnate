@@ -18,7 +18,7 @@
 class Button
 {
 public:
-    Button(int x, int y, int width, int height, std::string text);
+    Button(int x, int y, int width, int height, std::string text, void(*callback) ());
     ~Button();
     void processMouse(int x, int y);
     SDL_Rect& getRect();
@@ -32,6 +32,7 @@ private:
     bool over;
     std::string text;
     float fontScale;
+    void (*callback) ();
 };
 
 #endif /* defined(__MagIndev__Button__) */

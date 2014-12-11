@@ -22,24 +22,20 @@ Control::Control()
     updatingView = true;
     trackingMouse = true;
     trackingKeyboard = true;
-    this->scenes = DirManager::parseScenes();
-    cout << "Parsed and loaded " << scenes->size() << " scenes." << endl;
+    this->initScenes();
     this->currentEvent = new SDL_Event();
-    this->scene = 0;
+    this->current = MAIN_MENU;
 }
 
 Control::~Control()
 {
     delete view;
     view = nullptr;
-    for(int i = 0; i < (int) this->scenes->size(); i++)
+    for(int i = 0; i < (int) this->scenes.size(); i++)
     {
-        delete (*scenes)[i];
-        (*scenes)[i] = nullptr;
+        delete scenes[i];
     }
-    this->scenes->clear();
-    delete scenes;
-    this->scenes = nullptr;
+    this->scenes.clear();
     delete this->currentEvent;
 }
 
@@ -122,7 +118,7 @@ void Control::processMouseButtonEvent(SDL_Event &e)
 
 void Control::processMouseMotionEvent(SDL_Event &e)
 {
-    Scene* scenePtr = this->scenes->at(this->scene);
+    Scene* scenePtr = this->scenes[current];
     int x = (int) e.motion.x;
     int y = (int) e.motion.y;
     cout << x << " " << y << endl;
@@ -181,4 +177,28 @@ void Control::processWindowEvent(SDL_Event &e)
 void Control::updateUISize()
 {
 
+}
+
+void Control::initScenes()
+{
+    Scene* stacker;
+    /* Syntax for adding a new scene (Note: must correspond in order to SNAME elements!)
+     stacker = new Scene();
+     stacker->addButton(lolMyOnlyButtonPtr);
+     this->scenes.push_back(stacker);
+     */
+    stacker = new Scene();
+    stacker->addButton(new Button(200, 100, 240, 100, "Start Game", &mainStartButton));
+    stacker->addButton(new Button(200, 240, 240, 100, "Quit Game", &mainQuitButton));
+    this->scenes.push_back(stacker);
+    stacker = new Scene();
+    stacker->addButton(new Button(550, 50, 100, 80, "Load", &saveStart1));
+    stacker->addButton(new Button(550, 100, 100, 80, "Load", &saveStart2));
+    stacker->addButton(new Button(550, 150, 100, 80, "Load", &saveStart3));
+    stacker->addButton(new Button(550, 200, 100, 80, "Load", &saveStart4));
+    stacker->addField(new Field(250, 50, 400, 80, "", &saveName1Update));
+    stacker->addField(new Field(250, 100, 400, 80, "", &saveName2Update));
+    stacker->addField(new Field(250, 150, 400, 80, "", &saveName3Update));
+    stacker->addField(new Field(250, 200, 400, 80, "", &saveName4Update));
+    this->scenes.push_back(stacker);
 }

@@ -24,7 +24,7 @@
 class Field
 {
 public:
-    Field(int x, int y, int width, int height);
+    Field(int x, int y, int width, int height, std::string text, void(*callback) ());
     ~Field();
     void setText(std::string text);
     void setLocation(int x, int y);
@@ -39,6 +39,7 @@ private:
     SDL_Rect rect;
     SDL_Point textLoc;
     float fontScale;
+    void (*callback) ();
 };
 
 #endif

@@ -72,7 +72,7 @@ vector<DirManager::tileData_t> DirManager::parseTiles(string fname, float size)
     }
     return tiles;
 }
-
+/*
 Scene* DirManager::parseScene(string fname)
 {
     Scene* out = new Scene();
@@ -110,7 +110,7 @@ vector<Scene*>* DirManager::parseScenes()
     }
     return vec;
 }
-
+*/
 string DirManager::delim(unsigned long& index, string& data)
 {
     unsigned long e;
@@ -154,7 +154,7 @@ int DirManager::delimInt(unsigned long& index, string& data)
     }
     return out;
 }
-
+/*
 Button* DirManager::parseButton(ifstream& file)
 {
     string txt;
@@ -194,7 +194,7 @@ Field* DirManager::parseField(ifstream& file)
     int height = delimInt(index, data);
     return new Field(x, y, width, height);
 }
-
+*/
 vector<string>* DirManager::exec(string cmd)
 {
     FILE* pipe = popen(cmd.c_str(), "r");
@@ -233,7 +233,6 @@ void DirManager::getNextLine(ifstream& file, string& data)
     while((data == "" && !(file.eof())))
     {
         getline(file, data);
-        cout << "getline fetched string:" << data << endl;
         if(data.length() > 0 && data[0] == '#')
         {
             data = "";

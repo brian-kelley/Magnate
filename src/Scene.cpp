@@ -25,17 +25,17 @@ Scene::Scene(Scene& toCopy)
 
 Scene::~Scene()
 {
-    for(int i = 0; i < this->buttons.size(); i++)
+    for(int i = 0; i < (int) this->buttons.size(); i++)
     {
         delete &buttons[i];
     }
     this->buttons.clear();
-    for(int i = 0; i < this->fields.size(); i++)
+    for(int i = 0; i < (int) this->fields.size(); i++)
     {
         delete &fields[i];
     }
     this->fields.clear();
-    for(int i = 0; i < this->labels.size(); i++)
+    for(int i = 0; i < (int) this->labels.size(); i++)
     {
         delete &labels[i];
     }

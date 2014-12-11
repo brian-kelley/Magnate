@@ -10,8 +10,9 @@
 
 using namespace std;
 
-Button::Button(int x, int y, int width, int height, string text)
+Button::Button(int x, int y, int width, int height, string text, void (*callback) ())
 {
+    this->callback = callback;
     x -= width / 2;
     y -= height / 2;
     this->rect.x = x;

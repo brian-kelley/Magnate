@@ -31,12 +31,17 @@ public:
 private:
     View* view;
     Model* model;
-    int scene;
+    enum SNAME
+    {
+        MAIN_MENU,
+        SAVE_MENU
+    };
+    SNAME current;
     int mouseX;
     int mouseY;
     int oldWindowW;
     int oldWindowH;
-    std::vector<Scene*>* scenes;
+    std::vector<Scene*> scenes;
     SDL_Event* currentEvent;
     void processWindowResize();
     void processWindowEvent(SDL_Event& e);
@@ -49,6 +54,19 @@ private:
     bool updatingView;
     bool trackingMouse;
     bool trackingKeyboard;
+    void initScenes();
+    //Now list callback functions all UI components
+    static void mainQuitButton();
+    static void mainStartButton();
+    static void saveBackButton();
+    static void saveName1Update();
+    static void saveName2Update();
+    static void saveName3Update();
+    static void saveName4Update();
+    static void saveStart1();
+    static void saveStart2();
+    static void saveStart3();
+    static void saveStart4();
 };
 
 #endif

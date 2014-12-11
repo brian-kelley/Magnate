@@ -29,13 +29,13 @@ public:
     {
         return this->fontScale;
     }
-    inline SDL_Rect* getRect()
+    inline SDL_Rect& getRect()
     {
-        return &this->rect;
+        return this->rect;
     }
-    inline SDL_Point* getTextLoc()
+    inline SDL_Point& getTextLoc()
     {
-        return &this->textLoc;
+        return this->textLoc;
     }
     ~Label();
 private:

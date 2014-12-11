@@ -70,12 +70,35 @@ void View::drawScene(Scene& s)
 
 void View::drawLabel(Label& l)
 {
-
+    glColor4f(constants::UI_FG_R, constants::UI_FG_B, constants::UI_FG_B, 1);
+    glEnable(GL_TEXTURE_2D);
+    this->drawString(l.getText(), l.getTextLoc().x, l.getTextLoc().y, l.getFontScale());
 }
 
 void View::drawField(Field &f)
 {
-
+    SDL_Rect* curRect = &f.getRect();
+    glDisable(GL_TEXTURE_2D);
+    glColor4f(constants::UI_BG_R, constants::UI_BG_G, constants::UI_BG_B, 1);
+    glBegin(GL_QUADS);
+    glVertex2i(curRect->x, curRect->y);
+    glVertex2i(curRect->x + curRect->w, curRect->y);
+    glVertex2i(curRect->x + curRect->w, curRect->y + curRect->h);
+    glVertex2i(curRect->x, curRect->y + curRect->h);
+    glEnd();
+    glColor4f(constants::UI_FG_R, constants::UI_FG_G, constants::UI_FG_B, 1);
+    glBegin(GL_LINES);
+    glVertex2i(curRect->x, curRect->y);
+    glVertex2i(curRect->x + curRect->w, curRect->y);
+    glVertex2i(curRect->x + curRect->w, curRect->y);
+    glVertex2i(curRect->x + curRect->w, curRect->y + curRect->h);
+    glVertex2i(curRect->x + curRect->w, curRect->y + curRect->h);
+    glVertex2i(curRect->x, curRect->y + curRect->h);
+    glVertex2i(curRect->x, curRect->y + curRect->h);
+    glVertex2i(curRect->x, curRect->y);
+    glEnd();
+    glEnable(GL_TEXTURE_2D);
+    this->drawString(f.getText(), f.getTextLoc().x, f.getTextLoc().y, f.getFontScale());
 }
 
 void View::drawButton(Button &b)

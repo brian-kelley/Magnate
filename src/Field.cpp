@@ -10,7 +10,7 @@
 
 using namespace std;
 
-Field::Field(int x, int y, int width, int height)
+Field::Field(int x, int y, int width, int height, string text, void(*callback) ())
 {
     x -= width / 2;
     y -= height / 2;
@@ -19,6 +19,8 @@ Field::Field(int x, int y, int width, int height)
     this->rect.w = width;
     this->rect.h = height;
     this->fontScale = (float) (width - constants::PAD * 3) / constants::FONTH;
+    this->text = text;
+    this->callback = callback;
 }
 
 Field::~Field() {}
