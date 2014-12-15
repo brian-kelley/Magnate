@@ -72,45 +72,7 @@ vector<DirManager::tileData_t> DirManager::parseTiles(string fname, float size)
     }
     return tiles;
 }
-/*
-Scene* DirManager::parseScene(string fname)
-{
-    Scene* out = new Scene();
-    ifstream file(dirPath + "data/ui/" + fname);
-    string data;
-    if(file.is_open())
-    {
-        getNextLine(file, data);
-        if(data != "")
-        {
-            if(data == "Button")
-            {
-                out->addButton(parseButton(file));
-            }
-            else if(data == "Label")
-            {
-                out->addLabel(parseLabel(file));
-            }
-            else if(data == "Field")
-            {
-                out->addField(parseField(file));
-            }
-        }
-    }
-    return out;
-}
 
-vector<Scene*>* DirManager::parseScenes()
-{
-    vector<Scene*>* vec = new vector<Scene*>;
-    vector<string>* list = exec("ls -1 " + dirPath + "data/ui");
-    for(int i = 0; i < (int) list->size(); i++)
-    {
-        vec->push_back(parseScene((*list)[i]));
-    }
-    return vec;
-}
-*/
 string DirManager::delim(unsigned long& index, string& data)
 {
     unsigned long e;
@@ -131,7 +93,7 @@ string DirManager::delim(unsigned long& index, string& data)
         return data.substr(b, e - b);
     }
 }
-//index will be updated with the start index of the next delimited string
+
 int DirManager::delimInt(unsigned long& index, string& data)
 {
     int out = 1;
@@ -154,59 +116,18 @@ int DirManager::delimInt(unsigned long& index, string& data)
     }
     return out;
 }
-/*
-Button* DirManager::parseButton(ifstream& file)
-{
-    string txt;
-    getNextLine(file, txt);
-    unsigned long index = 0;
-    string data;
-    getNextLine(file, data);
-    int x = delimInt(index, data);
-    int y = delimInt(index, data);
-    int width = delimInt(index, data);
-    int height = delimInt(index, data);
-    return new Button(x, y, width, height, txt);
-}
 
-Label* DirManager::parseLabel(ifstream& file)
-{
-    string txt;
-    getNextLine(file, txt);
-    unsigned long index = 0;
-    string data;
-    getNextLine(file, data);
-    int x = delimInt(index, data);
-    int y = delimInt(index, data);
-    int width = delimInt(index, data);
-    int height = delimInt(index, data);
-    return new Label(x, y, width, height, txt);
-}
-
-Field* DirManager::parseField(ifstream& file)
-{
-    string data;
-    getNextLine(file, data);
-    unsigned long index = 0;
-    int x = delimInt(index, data);
-    int y = delimInt(index, data);
-    int width = delimInt(index, data);
-    int height = delimInt(index, data);
-    return new Field(x, y, width, height);
-}
-*/
-vector<string>* DirManager::exec(string cmd)
+vector<string> DirManager::exec(string cmd)
 {
     FILE* pipe = popen(cmd.c_str(), "r");
+    vector<string> result;
     if(!pipe)
     {
         cout << "Error: Could not open process." << endl;
-        return nullptr;
     }
     else
     {
         char buffer[128];
-        vector<string>* result = new vector<string>();
         while(!feof(pipe))
         {
             if(fgets(buffer, 200, pipe) != nullptr)
@@ -219,12 +140,12 @@ vector<string>* DirManager::exec(string cmd)
                         break;
                     }
                 }
-                result->push_back(string(buffer, buffer + i));
+                result.push_back(string(buffer, buffer + i));
             }
         }
         pclose(pipe);
-        return result;
     }
+    return result;
 }
 
 void DirManager::getNextLine(ifstream& file, string& data)
@@ -238,4 +159,9 @@ void DirManager::getNextLine(ifstream& file, string& data)
             data = "";
         }
     }
+}
+
+vector<string> DirManager::listSaves()
+{
+    return exec("ls -1 " + DirManager::dirPath + "saves/");
 }

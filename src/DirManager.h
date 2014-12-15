@@ -40,19 +40,13 @@ private:
     static std::string dirPath;
     static std::string delim(unsigned long& index, std::string& data);
     static int delimInt(unsigned long& index, std::string& data);
-    /*
-    static Scene* parseScene(std::string fname);
-    static Button* parseButton(std::ifstream& file);
-    static Label* parseLabel(std::ifstream& file);
-    static Field* parseField(std::ifstream& file);
-    */
     static void getNextLine(std::ifstream& file, std::string& data);
 public:
     static void findPath();
     static std::string getPath();
     static std::vector<tileData_t> parseTiles(std::string path, float size);
-    //static std::vector<Scene*>* parseScenes();
-    static std::vector<std::string>* exec(std::string cmd);
+    static std::vector<std::string> exec(std::string cmd);
+    static std::vector<std::string> listSaves();
 };
 
 #endif

@@ -17,13 +17,13 @@ using namespace std;
 int main(int argc, const char * argv[])
 {
     DirManager::findPath();
-    Control* c = new Control();
+    Control::init();
     int ticks;
     while(true)
     {
         ticks = SDL_GetTicks();
-        c->update();
-        if(c->isTerminating())
+        Control::update();
+        if(Control::isTerminating())
         {
             break;
         }
@@ -33,5 +33,6 @@ int main(int argc, const char * argv[])
             SDL_Delay(delay);
         }
     }
+    Control::dispose();
     return 0;
 }

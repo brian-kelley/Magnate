@@ -21,53 +21,47 @@
 #include "Scene.h"
 #include "DirManager.h"
 
-class Control
+namespace Control
 {
-public:
-    Control();
-    ~Control();
-    void update();
-    bool isTerminating();
-private:
-    View* view;
-    Model* model;
+    extern void init();
+    extern void dispose();
+    extern void update();
+    extern bool isTerminating();
+    extern View* view;
+    extern Model* model;
     enum SNAME
     {
         MAIN_MENU,
-        SAVE_MENU
+        SAVE_MENU,
+        GAME,
+        PAUSE
     };
-    SNAME current;
-    int mouseX;
-    int mouseY;
-    int oldWindowW;
-    int oldWindowH;
-    std::vector<Scene*> scenes;
-    SDL_Event* currentEvent;
-    void processWindowResize();
-    void processWindowEvent(SDL_Event& e);
-    void processMouseMotionEvent(SDL_Event& e);
-    void processMouseButtonEvent(SDL_Event& e);
-    void processMouseWheelEvent(SDL_Event& e);
-    void processKeyboardEvent(SDL_Event& e);
-    void updateUISize();
-    bool terminating;
-    bool updatingView;
-    bool trackingMouse;
-    bool trackingKeyboard;
-    void initScenes();
+    extern SNAME current;
+    extern std::vector<std::string> saveNames;
+    extern int mouseX;
+    extern int mouseY;
+    extern int oldWindowW;
+    extern int oldWindowH;
+    extern std::vector<Scene*> scenes;
+    extern SDL_Event* currentEvent;
+    extern void processWindowResize();
+    extern void processWindowEvent(SDL_Event& e);
+    extern void processMouseMotionEvent(SDL_Event& e);
+    extern void processMouseButtonEvent(SDL_Event& e);
+    extern void processMouseWheelEvent(SDL_Event& e);
+    extern void processKeyboardEvent(SDL_Event& e);
+    extern void updateUISize();
+    extern bool terminating;
+    extern bool updatingView;
+    extern bool trackingMouse;
+    extern bool trackingKeyboard;
+    extern void initScenes();
     //Now list callback functions all UI components
-    static void mainQuitButton();
-    static void mainStartButton();
-    static void saveBackButton();
-    static void saveName1Update();
-    static void saveName2Update();
-    static void saveName3Update();
-    static void saveName4Update();
-    static void saveStart1();
-    static void saveStart2();
-    static void saveStart3();
-    static void saveStart4();
-    Button test;
-};
+    extern void mainQuitButton();
+    extern void mainStartButton();
+    extern void saveBackButton();
+    extern void saveNameUpdate();
+    extern void loadSave();
+}
 
 #endif

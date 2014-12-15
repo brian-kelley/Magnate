@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
+#include "ScrollBlock.h"
 #include "Button.h"
 #include "Field.h"
 #include "Label.h"
@@ -22,14 +23,17 @@ public:
     Scene();
     Scene(Scene& toCopy);
     ~Scene();
+    void addScrollBlock(ScrollBlock* sb);
     void addButton(Button* b);
     void addLabel(Label* l);
     void addField(Field* f);
-    std::vector<Button>* getButtons();
-    std::vector<Label>* getLabels();
-    std::vector<Field>* getFields();
+    std::vector<ScrollBlock>& getScrollBlocks();
+    std::vector<Button>& getButtons();
+    std::vector<Label>& getLabels();
+    std::vector<Field>& getFields();
     void clearAll();
 private:
+    std::vector<ScrollBlock> scrollBlocks;
     std::vector<Button> buttons;
     std::vector<Field> fields;
     std::vector<Label> labels;

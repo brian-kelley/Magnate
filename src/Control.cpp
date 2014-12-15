@@ -9,40 +9,57 @@
 #include "Control.h"
 
 using namespace std;
+using namespace Control;
 
-Control::Control() : test(300, 200, 300, 300, "LOLOLOL", mainStartButton)
+SNAME Control::current;
+bool Control::terminating;
+bool Control::updatingView;
+bool Control::trackingMouse;
+bool Control::trackingKeyboard;
+View* Control::view;
+Model* Control::model;
+int Control::oldWindowW;
+int Control::oldWindowH;
+int Control::mouseX;
+int Control::mouseY;
+SDL_Event* Control::currentEvent;
+vector<Scene*> Control::scenes;
+vector<string> Control::saveNames;
+
+void Control::init()
 {
-    //Populate vector of Scenes from file
     view = new View();
-    model = new Model();
-    this->oldWindowW = constants::WINDOW_W;
-    this->oldWindowH = constants::WINDOW_H;
-    SDL_GetMouseState(&this->mouseX, &this->mouseY);
+    oldWindowW = constants::WINDOW_W;
+    oldWindowH = constants::WINDOW_H;
+    SDL_GetMouseState(&mouseX, &mouseY);
     terminating = false;
     updatingView = true;
     trackingMouse = true;
     trackingKeyboard = true;
-    this->initScenes();
-    this->currentEvent = new SDL_Event();
-    this->current = MAIN_MENU;
+    saveNames = DirManager::listSaves();
+    initScenes();
+    currentEvent = new SDL_Event();
+    current = MAIN_MENU;
+    //saveNames = DirManager::listSaves();
 }
 
-Control::~Control()
+void Control::dispose()
 {
     delete view;
     view = nullptr;
-    for(int i = 0; i < (int) this->scenes.size(); i++)
+    for(int i = 0; i < (int) scenes.size(); i++)
     {
         delete scenes[i];
     }
-    this->scenes.clear();
-    delete this->currentEvent;
+    scenes.clear();
+    delete currentEvent;
+
 }
 
 void Control::update()
 {
-    this->oldWindowW = constants::WINDOW_W;
-    this->oldWindowH = constants::WINDOW_H;
+    oldWindowW = constants::WINDOW_W;
+    oldWindowH = constants::WINDOW_H;
     SDL_PumpEvents();
     while(SDL_PollEvent(currentEvent))
     {
@@ -99,7 +116,11 @@ void Control::update()
         }
     }
     view->prepareFrame();
-    view->drawScene(*this->scenes[current]);
+    if(current == GAME)
+    {
+        view->drawWorld(model->getCurrentWorld());
+    }
+    view->drawScene(*scenes[current]);
     view->finalizeFrame();
 }
 
@@ -119,9 +140,9 @@ void Control::processMouseButtonEvent(SDL_Event &e)
     {
         Button* btnPtr;
         SDL_Rect* btnRect;
-        for(int i = 0; i < (int) this->scenes[current]->getButtons()->size(); i++)
+        for(int i = 0; i < (int) scenes[current]->getButtons().size(); i++)
         {
-            btnPtr = &(*this->scenes[current]->getButtons())[i];
+            btnPtr = &(scenes[current]->getButtons())[i];
             btnRect = &btnPtr->getRect();
             if(btnRect->x < mouseX && btnRect->x + btnRect->w > mouseX
                && btnRect->y < mouseY && btnRect->y + btnRect->h > mouseY)
@@ -135,10 +156,10 @@ void Control::processMouseButtonEvent(SDL_Event &e)
 
 void Control::processMouseMotionEvent(SDL_Event &e)
 {
-    Scene* scenePtr = this->scenes[current];
+    Scene* scenePtr = scenes[current];
     mouseX = (int) e.motion.x;
     mouseY = (int) e.motion.y;
-    for(int i = 0; i < (int) scenePtr->getButtons()->size(); i++)
+    for(int i = 0; i < (int) scenePtr->getButtons().size(); i++)
     {
 
     }
@@ -155,37 +176,37 @@ void Control::processWindowEvent(SDL_Event &e)
     switch(e.window.event)
     {
         case SDL_WINDOWEVENT_CLOSE:
-        	this->terminating = true;
+        	terminating = true;
             break;
         case SDL_WINDOWEVENT_ENTER: //mouse enters window
-        	this->trackingMouse = true;
+        	trackingMouse = true;
             break;
         case SDL_WINDOWEVENT_LEAVE: //mouse leaves window
-        	this->trackingMouse = false;
+        	trackingMouse = false;
         	break;
         case SDL_WINDOWEVENT_FOCUS_GAINED: //window gains keyboard focus
-            this->trackingKeyboard = true;
+            trackingKeyboard = true;
         	break;
         case SDL_WINDOWEVENT_FOCUS_LOST: //window lost keyboard focus
-            this->trackingKeyboard = false;
+            trackingKeyboard = false;
         	break;
         case SDL_WINDOWEVENT_HIDDEN: //window has been hidden
-            this->updatingView = false;
+            updatingView = false;
         	break;
         case SDL_WINDOWEVENT_SHOWN: //window has been shown
         case SDL_WINDOWEVENT_MAXIMIZED: //update window size and UI layout
         case SDL_WINDOWEVENT_RESTORED: //window needs to be refreshed for some reason
-        	this->updatingView = true;
+        	updatingView = true;
         	break;
         case SDL_WINDOWEVENT_RESIZED: //window resized by user
         case SDL_WINDOWEVENT_SIZE_CHANGED: //system or API call changed window size
-        	this->oldWindowW = constants::WINDOW_W;
-        	this->oldWindowH = constants::WINDOW_H;
+        	oldWindowW = constants::WINDOW_W;
+        	oldWindowH = constants::WINDOW_H;
             view->updateWindowSize();
-        	this->updateUISize();
+        	updateUISize();
             break;
         case SDL_WINDOWEVENT_MINIMIZED:
-            this->updatingView = false;
+            updatingView = false;
             break;
     }
 }
@@ -206,70 +227,40 @@ void Control::initScenes()
     stacker = new Scene();
     stacker->addButton(new Button(200, 100, 240, 100, "Start Game", &mainStartButton));
     stacker->addButton(new Button(200, 240, 240, 100, "Quit Game", &mainQuitButton));
-    this->scenes.push_back(stacker);
+    scenes.push_back(stacker);
     stacker = new Scene();
-    stacker->addButton(new Button(550, 50, 100, 80, "Load", &saveStart1));
-    stacker->addButton(new Button(550, 100, 100, 80, "Load", &saveStart2));
-    stacker->addButton(new Button(550, 150, 100, 80, "Load", &saveStart3));
-    stacker->addButton(new Button(550, 200, 100, 80, "Load", &saveStart4));
-    stacker->addField(new Field(250, 50, 400, 80, "", &saveName1Update));
-    stacker->addField(new Field(250, 100, 400, 80, "", &saveName2Update));
-    stacker->addField(new Field(250, 150, 400, 80, "", &saveName3Update));
-    stacker->addField(new Field(250, 200, 400, 80, "", &saveName4Update));
-    this->scenes.push_back(stacker);
+    ScrollBlock* saveList = new ScrollBlock(320, 220, 550, 400);
+    for(int i = 0; i < (int) saveNames.size(); i++)
+    {
+        saveList->addField(*new Field(250, 50 + 50 * i, 400, 40, saveNames[i], &saveNameUpdate));
+        saveList->addButton(*new Button(550, 50 + 50 * i, 100, 40, "Load", &loadSave));
+    }
+    stacker->addScrollBlock(saveList);
+    stacker->addButton(new Button(320, 400, 300, 80, "Back", &saveBackButton));
+    scenes.push_back(stacker);
 }
 
 void Control::mainQuitButton()
 {
-    cout << "Would normally be terminating now, lol!" << endl;
+    terminating = true;
 }
 
 void Control::mainStartButton()
 {
-    cout << "Gratz you clicked t3h buttons!!111!11!" << endl;
+    current = SAVE_MENU;
 }
 
 void Control::saveBackButton()
 {
-    
+    current = MAIN_MENU;
 }
 
-void Control::saveName1Update()
+void Control::saveNameUpdate()
 {
     
 }
 
-void Control::saveName2Update()
-{
-    
-}
-
-void Control::saveName3Update()
-{
-    
-}
-
-void Control::saveName4Update()
-{
-    
-}
-
-void Control::saveStart1()
-{
-    
-}
-
-void Control::saveStart2()
-{
-    
-}
-
-void Control::saveStart3()
-{
-    
-}
-
-void Control::saveStart4()
+void Control::loadSave()
 {
     
 }

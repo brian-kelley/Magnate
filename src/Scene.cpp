@@ -18,6 +18,7 @@ Scene::Scene()
 Scene::Scene(Scene& toCopy)
 {
     //Call copy constructors for each vector member of Scene
+    this->scrollBlocks = *(new vector<ScrollBlock>(toCopy.scrollBlocks));
     this->buttons = *(new vector<Button>(toCopy.buttons));
     this->labels = *(new vector<Label>(toCopy.labels));
     this->fields = *(new vector<Field>(toCopy.fields));
@@ -25,22 +26,14 @@ Scene::Scene(Scene& toCopy)
 
 Scene::~Scene()
 {
-    for(int i = 0; i < (int) this->buttons.size(); i++)
-    {
-        delete &buttons[i];
-    }
     this->buttons.clear();
-    for(int i = 0; i < (int) this->fields.size(); i++)
-    {
-        delete &fields[i];
-    }
     this->fields.clear();
-    for(int i = 0; i < (int) this->labels.size(); i++)
-    {
-        delete &labels[i];
-    }
     this->labels.clear();
-    //the vectors themselves are automatically freed
+}
+
+void Scene::addScrollBlock(ScrollBlock* sb)
+{
+    this->scrollBlocks.push_back(*sb);
 }
 
 void Scene::addButton(Button* b)
@@ -60,22 +53,28 @@ void Scene::addField(Field* f)
 
 void Scene::clearAll()
 {
+    this->scrollBlocks.clear();
     this->buttons.clear();
     this->fields.clear();
     this->labels.clear();
 }
 
-vector<Label>* Scene::getLabels()
+vector<ScrollBlock>& Scene::getScrollBlocks()
 {
-    return &this->labels;
+    return this->scrollBlocks;
 }
 
-vector<Field>* Scene::getFields()
+vector<Label>& Scene::getLabels()
 {
-    return &this->fields;
+    return this->labels;
 }
 
-vector<Button>* Scene::getButtons()
+vector<Field>& Scene::getFields()
 {
-    return &this->buttons;
+    return this->fields;
+}
+
+vector<Button>& Scene::getButtons()
+{
+    return this->buttons;
 }
