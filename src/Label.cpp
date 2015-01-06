@@ -9,15 +9,13 @@
 #include "Label.h"
 
 using namespace std;
+using namespace componentHandler;
 
 Label::Label(int x, int y, int width, int height, string text)
 {
-    this->rect.x = x;
-    this->rect.y = y;
+	this->compID = createComponent(x, y, width, height, true);
     this->text = text;
-    this->rect.w = width;
-    this->rect.h = height;
-    this->calcTextRect();
+    calcTextPlacement();
 }
 
 Label::~Label()
@@ -28,30 +26,13 @@ Label::~Label()
 void Label::updateText(string newText)
 {
     this->text = newText;
-    this->rect.w = this->fontScale * newText.size() * constants::FONTW;
+    calcTextPlacement();
 }
 
-void Label::processSizeChange(int oldWindowW, int oldWindowH)
+void Label::calcTextPlacement()
 {
-    if(oldWindowW != constants::WINDOW_W)
-    {
-        float xscl = (float) constants::WINDOW_W / oldWindowW;
-        this->rect.x *= xscl;
-        this->rect.w *= xscl;
-    }
-    if(oldWindowH != constants::WINDOW_H)
-    {
-        float yscl = (float) constants::WINDOW_H / oldWindowH;
-        this->rect.y *= yscl;
-        this->rect.w *= yscl;
-    }
-    calcTextRect();
-}
-
-void Label::calcTextRect()
-{
-    float fontScaleX = (rect.w - constants::PAD * 2) / (float) constants::FONTW;
-    float fontScaleY = (rect.h - constants::PAD * 2) / (float) constants::FONTH;
+    float fontScaleX = (getCompIntRect(compID).w - constants::PAD * 2) / (float) constants::FONTW;
+    float fontScaleY = (getCompIntRect(compID).h - constants::PAD * 2) / (float) constants::FONTH;
     if(fontScaleX < fontScaleY)
     {
         this->fontScale = fontScaleX;
@@ -64,4 +45,19 @@ void Label::calcTextRect()
         this->textLoc.x = constants::PAD + 0.5 * constants::FONTH * (int) text.length() * (fontScaleX - fontScaleY);
         this->textLoc.y = constants::PAD;
     }
+}
+
+string Label::getText()
+{
+    return text;
+}
+
+SDL_Point& Label::getTextLoc()
+{
+    return textLoc;
+}
+
+float Label::getFontScale()
+{
+    return fontScale;
 }

@@ -9,18 +9,14 @@
 #include "Field.h"
 
 using namespace std;
+using namespace componentHandler;
 
-Field::Field(int x, int y, int width, int height, string text, callback_t callback)
+Field::Field(int x, int y, int width, int height, string text, fieldCallback_t callback)
 {
-    x -= width / 2;
-    y -= height / 2;
-    this->rect.x = x;
-    this->rect.y = y;
-    this->rect.w = width;
-    this->rect.h = height;
-    this->fontScale = (float) (width - constants::PAD * 3) / constants::FONTH;
+	compID = createComponent(x, y, width, height, true);
     this->text = text;
     this->callback = callback;
+    calcTextPlacement();
 }
 
 Field::~Field() {}
@@ -51,7 +47,6 @@ void Field::processKey(SDL_Event *ev)
             }
         }
     }
-    cout << getText() << endl;
 }
 
 float Field::getFontScale()
@@ -59,12 +54,19 @@ float Field::getFontScale()
     return this->fontScale;
 }
 
-SDL_Rect& Field::getRect()
-{
-    return this->rect;
-}
-
 SDL_Point& Field::getTextLoc()
 {
     return this->textLoc;
+}
+
+void Field::calcTextPlacement()
+{
+	textLoc.x = getCompIntRect(compID).x + 3 * constants::PAD / 2;
+	textLoc.y = textLoc.x;
+    this->fontScale = (float) (getCompIntRect(compID).h - constants::PAD * 3) / constants::FONTH;
+}
+
+int Field::getCompID()
+{
+    return compID;
 }

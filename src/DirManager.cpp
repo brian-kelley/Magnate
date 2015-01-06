@@ -11,16 +11,22 @@
 using namespace std;
 
 string DirManager::dirPath;
+string DirManager::sepChar;
+
+using namespace DirManager;
 
 void DirManager::findPath()
 {
-    //Todo: actually get this from the exe location? (if possible)
 #ifdef __APPLE__
+
     DirManager::dirPath = "/Users/Brian/Dropbox/Magnate/";
+    DirManager::sepChar = "/";
 #elif __linux
     DirManager::dirPath = "/home/brian/Dropbox/Magnate";
+    DirManager::sepChar = "/";
 #elif _WIN32
-
+    DirManager::dirPath = "C:\Users\Brian\Dropbox\Magnate";
+    DirManager::sepChar = "\\";
 #endif
 }
 
@@ -29,19 +35,18 @@ string DirManager::getPath()
     return DirManager::dirPath;
 }
 
-vector<DirManager::tileData_t> DirManager::parseTiles(string fname, float size)
+vector<DirManager::tileData_t*> DirManager::parseTiles(string fname, float size)
 {
     if(fname.find(".txt") == string::npos)
     {
         fname += ".txt";
     }
-    vector<DirManager::tileData_t> tiles;
+    vector<DirManager::tileData_t*> tiles;
     string line;
     //theoretically this path should be the same for debug and release builds
     ifstream tfile(dirPath + "data/" + fname);
     unsigned long index;
     //pos is used to store search result to find whitespace in file
-    DirManager::tileData_t buffer;
     if(tfile.is_open())
     {
         do
@@ -49,12 +54,13 @@ vector<DirManager::tileData_t> DirManager::parseTiles(string fname, float size)
             getNextLine(tfile, line);
             if(line != "")
             {
+            	tileData_t* buffer = new tileData_t;
                 index = 0;
-                buffer.name = delim(index, line);
-                buffer.x = ((float) delimInt(index, line)) / size;
-                buffer.y = ((float) delimInt(index, line)) / size;
-                buffer.width = ((float) delimInt(index, line)) / size;
-                buffer.height = ((float) delimInt(index, line)) / size;
+                buffer->name = delim(index, line);
+                buffer->x = ((float) delimInt(index, line)) / size;
+                buffer->y = ((float) delimInt(index, line)) / size;
+                buffer->width = ((float) delimInt(index, line)) / size;
+                buffer->height = ((float) delimInt(index, line)) / size;
                 tiles.push_back(buffer);
             }
             else

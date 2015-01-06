@@ -16,7 +16,8 @@
 #include <SDL2/SDL.h>
 #include <GL/gl.h>
 #elif _WIN32
-
+#include <SDL2\SDL.h>
+#include <GL\gl.h>
 #endif
 #include <iostream>
 #include <vector>
@@ -57,6 +58,7 @@ private:
     void drawButton(Button& b);
     void drawLabel(Label& l);
     void drawField(Field& f);
+    void drawScrollBlock(ScrollBlock& sb);
     void drawString(std::string text, int x, int y);
     void drawString(std::string text, int x, int y, float scale);
     void drawString(std::string text, int x, int y, float scale, float r, float g, float b);

@@ -17,9 +17,8 @@
 #include <fstream>
 #include "Scene.h"
 
-class DirManager
+namespace DirManager
 {
-public:
     struct buttonData_t
     {
         std::string text;
@@ -36,17 +35,16 @@ public:
         float width;
         float height;
     };
-private:
-    static std::string dirPath;
-    static std::string delim(unsigned long& index, std::string& data);
-    static int delimInt(unsigned long& index, std::string& data);
-    static void getNextLine(std::ifstream& file, std::string& data);
-public:
-    static void findPath();
-    static std::string getPath();
-    static std::vector<tileData_t> parseTiles(std::string path, float size);
-    static std::vector<std::string> exec(std::string cmd);
-    static std::vector<std::string> listSaves();
+    extern std::string dirPath;
+    extern std::string sepChar;
+    extern std::string delim(unsigned long& index, std::string& data);
+    extern int delimInt(unsigned long& index, std::string& data);
+    extern void getNextLine(std::ifstream& file, std::string& data);
+    extern void findPath();
+    extern std::string getPath();
+    extern std::vector<tileData_t*> parseTiles(std::string path, float size);
+    extern std::vector<std::string> exec(std::string cmd);
+    extern std::vector<std::string> listSaves();
 };
 
 #endif

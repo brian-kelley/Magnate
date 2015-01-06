@@ -9,6 +9,7 @@
 #include "Control.h"
 
 using namespace std;
+using namespace constants;
 using namespace Control;
 
 SNAME Control::current;
@@ -20,8 +21,6 @@ View* Control::view;
 Model* Control::model;
 int Control::oldWindowW;
 int Control::oldWindowH;
-int Control::mouseX;
-int Control::mouseY;
 SDL_Event* Control::currentEvent;
 vector<Scene*> Control::scenes;
 vector<string> Control::saveNames;
@@ -31,7 +30,7 @@ void Control::init()
     view = new View();
     oldWindowW = constants::WINDOW_W;
     oldWindowH = constants::WINDOW_H;
-    SDL_GetMouseState(&mouseX, &mouseY);
+    SDL_GetMouseState(&constants::mouseX, &constants::mouseY);
     terminating = false;
     updatingView = true;
     trackingMouse = true;
@@ -40,7 +39,8 @@ void Control::init()
     initScenes();
     currentEvent = new SDL_Event();
     current = MAIN_MENU;
-    //saveNames = DirManager::listSaves();
+    currentScene = scenes[0];
+    currentField = nullptr;
 }
 
 void Control::dispose()
@@ -131,7 +131,7 @@ bool Control::isTerminating()
 
 void Control::processKeyboardEvent(SDL_Event &e)
 {
-
+    //first, see if the event applies to a field
 }
 
 void Control::processMouseButtonEvent(SDL_Event &e)
@@ -139,36 +139,60 @@ void Control::processMouseButtonEvent(SDL_Event &e)
     if(e.button.state == SDL_PRESSED)
     {
         Button* btnPtr;
-        SDL_Rect* btnRect;
+        intRect_t* curRect;
         for(int i = 0; i < (int) scenes[current]->getButtons().size(); i++)
         {
             btnPtr = &(scenes[current]->getButtons())[i];
-            btnRect = &btnPtr->getRect();
-            if(btnRect->x < mouseX && btnRect->x + btnRect->w > mouseX
-               && btnRect->y < mouseY && btnRect->y + btnRect->h > mouseY)
+            curRect = &btnPtr->getIntRect();
+            if(curRect->x < mouseX && curRect->x + curRect->w > mouseX
+               && curRect->y < mouseY && curRect->y + curRect->h > mouseY)
             {
                 (*(btnPtr->getCallback())) ();
                 break;
             }
         }
+        Label* lblPtr;
+        
     }
 }
 
 void Control::processMouseMotionEvent(SDL_Event &e)
 {
     Scene* scenePtr = scenes[current];
-    mouseX = (int) e.motion.x;
-    mouseY = (int) e.motion.y;
+    SDL_GetMouseState(&mouseX, &mouseY);
+    intRect_t* btnRectPtr;
+    Button* btnPtr;
     for(int i = 0; i < (int) scenePtr->getButtons().size(); i++)
     {
-
+        btnRectPtr = &scenePtr->getButtons()[i].getIntRect();
+        if(btnRectPtr->x <= mouseX && btnRectPtr->x + btnRectPtr->w > mouseX
+           && btnRectPtr->y <= mouseY && btnRectPtr->y + btnRectPtr->h > mouseY)
+        {
+            btnPtr->setHover(true);
+        }
+        else
+        {
+            btnPtr->setHover(false);
+        }
     }
 }
 
 void Control::processMouseWheelEvent(SDL_Event &e)
 {
-    int delta = e.wheel.y;
-    cout << "Scrolled by " << delta << " units." << endl;
+    ScrollBlock* sbptr;
+    intRect_t* rectptr;
+    //process all scrollblocks in the screen with the scroll amount
+    for(int i = 0; i < (int) currentScene->getScrollBlocks().size(); i++)
+    {
+        sbptr = &currentScene->getScrollBlocks()[i];
+        //check if mouse inside the scroll block
+        rectptr = &componentHandler::getCompIntRect(sbptr->getCompID());
+        if(rectptr->x <= mouseX && rectptr->x + rectptr->w < mouseX
+        	&& rectptr->y <= mouseY && rectptr->y + rectptr->h < mouseY)
+        {
+                sbptr->processScrollEvent(e.wheel);
+        }
+    }
 }
 
 void Control::processWindowEvent(SDL_Event &e)
@@ -193,9 +217,15 @@ void Control::processWindowEvent(SDL_Event &e)
         case SDL_WINDOWEVENT_HIDDEN: //window has been hidden
             updatingView = false;
         	break;
-        case SDL_WINDOWEVENT_SHOWN: //window has been shown
         case SDL_WINDOWEVENT_MAXIMIZED: //update window size and UI layout
+            view->updateWindowSize();
+            updateUISize();
+            updatingView = true;
+            break;
+        case SDL_WINDOWEVENT_SHOWN: //window has been shown
         case SDL_WINDOWEVENT_RESTORED: //window needs to be refreshed for some reason
+        	trackingMouse = true;
+        	trackingKeyboard = true;
         	updatingView = true;
         	break;
         case SDL_WINDOWEVENT_RESIZED: //window resized by user
@@ -203,9 +233,9 @@ void Control::processWindowEvent(SDL_Event &e)
         	oldWindowW = constants::WINDOW_W;
         	oldWindowH = constants::WINDOW_H;
             view->updateWindowSize();
-        	updateUISize();
+            //updateUISize(); //not really a priority, implement this later
             break;
-        case SDL_WINDOWEVENT_MINIMIZED:
+        case SDL_WINDOWEVENT_MINIMIZED: //save a bit of energy by pausing rendering
             updatingView = false;
             break;
     }
@@ -213,7 +243,22 @@ void Control::processWindowEvent(SDL_Event &e)
 
 void Control::updateUISize()
 {
-
+    for(int j = 0; j < (int) currentScene->getButtons().size(); j++)
+    {
+        componentHandler::updateSize(currentScene->getButtons()[j].getCompID());
+    }
+    for(int j = 0; j < (int) currentScene->getFields().size(); j++)
+    {
+        componentHandler::updateSize(currentScene->getButtons()[j].getCompID());
+    }
+    for(int j = 0; j < (int) currentScene->getLabels().size(); j++)
+    {
+        componentHandler::updateSize(currentScene->getButtons()[j].getCompID());
+    }
+    for(int i = 0; i < (int) currentScene->getScrollBlocks().size(); i++)
+    {
+        currentScene->getScrollBlocks()[i].updateSize();
+    }
 }
 
 void Control::initScenes()
@@ -229,12 +274,15 @@ void Control::initScenes()
     stacker->addButton(new Button(200, 240, 240, 100, "Quit Game", &mainQuitButton));
     scenes.push_back(stacker);
     stacker = new Scene();
-    ScrollBlock* saveList = new ScrollBlock(320, 220, 550, 400);
-    for(int i = 0; i < (int) saveNames.size(); i++)
+    int numSaves = (int) saveNames.size();
+    ScrollBlock* saveList = new ScrollBlock(320, 220, 550, 400, 550, 90 + 50 * numSaves + BORDER_WIDTH);
+    for(int i = 0; i < numSaves; i++)
     {
         saveList->addField(*new Field(250, 50 + 50 * i, 400, 40, saveNames[i], &saveNameUpdate));
         saveList->addButton(*new Button(550, 50 + 50 * i, 100, 40, "Load", &loadSave));
     }
+    saveList->addField(*new Field(250, 50 + 50 * numSaves, 400, 40, "", &newSaveNameUpdate));
+    saveList->addButton(*new Button(550, 50 + 50 * numSaves, 100, 40, "Create", &newSaveCreate));   //add the option to create a new save file
     stacker->addScrollBlock(saveList);
     stacker->addButton(new Button(320, 400, 300, 80, "Back", &saveBackButton));
     scenes.push_back(stacker);
@@ -247,15 +295,20 @@ void Control::mainQuitButton()
 
 void Control::mainStartButton()
 {
-    current = SAVE_MENU;
+    currentScene = scenes[SNAME::SAVE_MENU];
 }
 
 void Control::saveBackButton()
 {
-    current = MAIN_MENU;
+    currentScene = scenes[SNAME::MAIN_MENU];
 }
 
-void Control::saveNameUpdate()
+void Control::saveNameUpdate(std::string name)
+{
+    
+}
+
+void Control::newSaveNameUpdate(std::string name)
 {
     
 }
@@ -263,4 +316,9 @@ void Control::saveNameUpdate()
 void Control::loadSave()
 {
     
+}
+
+void Control::newSaveCreate()
+{
+    //call something that generates world, creates folder and files in dir/saves/
 }

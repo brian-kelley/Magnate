@@ -9,6 +9,7 @@
 #include "View.h"
 
 using namespace std;
+using namespace constants;
 
 View::View(int screenX, int screenY) : scrX(screenX), scrY(screenY)
 {
@@ -55,32 +56,32 @@ void View::drawWorld(World *currentWorld)
 
 void View::drawScene(Scene& s)
 {
-    for(int i = 0; i < (int) s.getButtons()->size(); i++)
+    for(int i = 0; i < (int) s.getButtons().size(); i++)
     {
-        drawButton(s.getButtons()->at(i));
+        drawButton(s.getButtons().at(i));
     }
-    for(int i = 0; i < (int) s.getLabels()->size(); i++)
+    for(int i = 0; i < (int) s.getLabels().size(); i++)
     {
-        drawLabel(s.getLabels()->at(i));
+        drawLabel(s.getLabels().at(i));
     }
-    for(int i = 0; i < (int) s.getFields()->size(); i++)
+    for(int i = 0; i < (int) s.getFields().size(); i++)
     {
-        drawField(s.getFields()->at(i));
+        drawField(s.getFields().at(i));
     }
 }
 
 void View::drawLabel(Label& l)
 {
-    glColor4f(constants::UI_FG_R, constants::UI_FG_B, constants::UI_FG_B, 1);
+    glColor4f(UI_FG_R, UI_FG_B, UI_FG_B, 1);
     glEnable(GL_TEXTURE_2D);
     this->drawString(l.getText(), l.getTextLoc().x, l.getTextLoc().y, l.getFontScale());
 }
 
 void View::drawField(Field &f)
 {
-    SDL_Rect* curRect = &f.getRect();
+    intRect_t* curRect = &componentHandler::getCompIntRect(f.getCompID());
     glDisable(GL_TEXTURE_2D);
-    glColor4f(constants::UI_BG_R, constants::UI_BG_G, constants::UI_BG_B, 1);
+    glColor4f(UI_BG_R, UI_BG_G, UI_BG_B, 1);
     glBegin(GL_QUADS);
     glVertex2i(curRect->x, curRect->y);
     glVertex2i(curRect->x + curRect->w, curRect->y);
@@ -104,48 +105,105 @@ void View::drawField(Field &f)
 
 void View::drawButton(Button &b)
 {
-    SDL_Rect* curRect = &b.getRect();
+    if(b.getHover())
+    {
+        intRect_t* curRect = &b.getIntRect();
+        glDisable(GL_TEXTURE_2D);
+        glColor4f(UI_BG_R, UI_BG_G, UI_BG_B, 1);
+        glBegin(GL_QUADS);
+        glVertex2i(curRect->x + BORDER_WIDTH, curRect->y + BORDER_WIDTH);
+        glVertex2i(curRect->x + curRect->w - BORDER_WIDTH, curRect->y + BORDER_WIDTH);
+        glVertex2i(curRect->x + curRect->w - BORDER_WIDTH, curRect->y + curRect->h - BORDER_WIDTH);
+        glVertex2i(curRect->x + BORDER_WIDTH, curRect->y + curRect->h - BORDER_WIDTH);
+        glEnd();
+        glColor4f(UI_FG_R, UI_FG_G, UI_FG_B, 1);
+        glBegin(GL_POLYGON);
+        glVertex2i(curRect->x, curRect->y);
+        glVertex2i(curRect->x + curRect->w, curRect->y);
+        glVertex2i(curRect->x + curRect->w - BORDER_WIDTH,
+                   curRect->y + BORDER_WIDTH);
+        glVertex2i(curRect->x + BORDER_WIDTH,
+                   curRect->y + BORDER_WIDTH);
+        glVertex2i(curRect->x + BORDER_WIDTH,
+                   curRect->y + curRect->h - BORDER_WIDTH);
+        glVertex2i(curRect->x, curRect->y + curRect->h);
+        glEnd();
+        glColor4f(UI_FG_R * SHADE,
+                  UI_FG_G * SHADE,
+                  UI_FG_B * SHADE, 1);
+        glBegin(GL_QUADS);
+        glVertex2i(curRect->x, curRect->y + curRect->h);
+        glVertex2i(curRect->x + constants::BORDER_WIDTH, curRect->y + curRect->h - constants::BORDER_WIDTH);
+        glVertex2i(curRect->x + curRect->w - constants::BORDER_WIDTH,
+                   curRect->y + curRect->h - constants::BORDER_WIDTH);
+        glVertex2i(curRect->x + curRect->w, curRect->y + curRect->h);
+        glEnd();
+        glBegin(GL_QUADS);
+        glVertex2i(curRect->x + curRect->w, curRect->y);
+        glVertex2i(curRect->x + curRect->w, curRect->y + curRect->h);
+        glVertex2i(curRect->x + curRect->w - constants::BORDER_WIDTH,
+                   curRect->y + curRect->h - constants::BORDER_WIDTH);
+        glVertex2i(curRect->x + curRect->w - constants::BORDER_WIDTH,
+                   curRect->y + constants::BORDER_WIDTH);
+        glEnd();
+        glEnable(GL_TEXTURE_2D);
+        this->drawString(b.getText(), b.getTextLoc().x + curRect->x, b.getTextLoc().y + curRect->y, b.getFontScale(),
+                         constants::UI_FG_R, constants::UI_FG_G, constants::UI_FG_B);
+    }
+    else
+    {
+        glDisable(GL_TEXTURE_2D);
+        glColor4f(UI_BG_R / SHADE, UI_BG_G / SHADE, UI_BG_B / SHADE, 1.0f);
+        intRect_t* rect = &componentHandler::getCompIntRect(b.getCompID());
+        glBegin(GL_QUADS);
+        glVertex2i(rect->x, rect->y);
+        glVertex2i(rect->x + rect->w, rect->y);
+        glVertex2i(rect->x + rect->w, rect->y + rect->h);
+        glVertex2i(rect->x, rect->y + rect->h);
+        glEnd();
+        glColor4f(UI_FG_R / SHADE, UI_FG_G / SHADE, UI_FG_B / SHADE, 1.0f);
+        glBegin(GL_QUADS);
+        glVertex2i(rect->x, rect->y);
+        glVertex2i(rect->x + rect->w, rect->y);
+        glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + BORDER_WIDTH);
+        glVertex2i(rect->x + BORDER_WIDTH, rect->y + BORDER_WIDTH);
+        glEnd();
+        glBegin(GL_QUADS);
+        glVertex2i(rect->x, rect->y);
+        glVertex2i(rect->x + BORDER_WIDTH, rect->y + BORDER_WIDTH);
+        glVertex2i(rect->x + BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
+        glVertex2i(rect->x, rect->y + rect->w);
+        glEnd();
+        glColor4f(UI_FG_R, UI_FG_G, UI_FG_B, 1.0f);
+        glBegin(GL_QUADS);
+        glVertex2i(rect->x + rect->w, rect->y);
+        glVertex2i(rect->x + rect->w, rect->y + rect->h);
+        glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
+        glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + BORDER_WIDTH);
+        glEnd();
+        glBegin(GL_QUADS);
+        glVertex2i(rect->x + BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
+        glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
+        glVertex2i(rect->x + rect->w, rect->y + rect->h);
+        glVertex2i(rect->x, rect->y + rect->h);
+        glEnd();
+        drawString(b.getText(), b.getTextLoc().x, b.getTextLoc().y, b.getFontScale(),
+                   UI_FG_R / SHADE, UI_FG_G / SHADE, UI_FG_B / SHADE);
+    }
+}
+
+void View::drawScrollBlock(ScrollBlock &sb)
+{
+    glColor4f(UI_BG_R * SHADE, UI_BG_G * SHADE, UI_BG_B * SHADE, 1);
+    intRect_t sbrect = componentHandler::getCompIntRect(sb.getCompID());
     glDisable(GL_TEXTURE_2D);
-    glColor4f(constants::UI_BG_R, constants::UI_BG_G, constants::UI_BG_B, 1);
     glBegin(GL_QUADS);
-    glVertex2i(curRect->x + constants::BORDER_WIDTH, curRect->y + constants::BORDER_WIDTH);
-    glVertex2i(curRect->x + curRect->w - constants::BORDER_WIDTH, curRect->y + constants::BORDER_WIDTH);
-    glVertex2i(curRect->x + curRect->w - constants::BORDER_WIDTH, curRect->y + curRect->h - constants::BORDER_WIDTH);
-    glVertex2i(curRect->x + constants::BORDER_WIDTH, curRect->y + curRect->h - constants::BORDER_WIDTH);
+    glVertex2i(sbrect.x, sbrect.y);
+    glVertex2i(sbrect.x + sbrect.w, sbrect.y);
+    glVertex2i(sbrect.x + sbrect.w, sbrect.y + sbrect.h);
+    glVertex2i(sbrect.x, sbrect.y + sbrect.h);
     glEnd();
-    glColor4f(constants::UI_FG_R, constants::UI_FG_G, constants::UI_FG_B, 1);
-    glBegin(GL_POLYGON);
-    glVertex2i(curRect->x, curRect->y);
-    glVertex2i(curRect->x + curRect->w, curRect->y);
-    glVertex2i(curRect->x + curRect->w - constants::BORDER_WIDTH,
-               curRect->y + constants::BORDER_WIDTH);
-    glVertex2i(curRect->x + constants::BORDER_WIDTH,
-               curRect->y + constants::BORDER_WIDTH);
-    glVertex2i(curRect->x + constants::BORDER_WIDTH,
-               curRect->y + curRect->h - constants::BORDER_WIDTH);
-    glVertex2i(curRect->x, curRect->y + curRect->h);
-    glEnd();
-    glColor4f(constants::UI_FG_R * constants::SHADE,
-              constants::UI_FG_G * constants::SHADE,
-              constants::UI_FG_B * constants::SHADE, 1);
-    glBegin(GL_QUADS);
-    glVertex2i(curRect->x, curRect->y + curRect->h);
-    glVertex2i(curRect->x + constants::BORDER_WIDTH, curRect->y + curRect->h - constants::BORDER_WIDTH);
-    glVertex2i(curRect->x + curRect->w - constants::BORDER_WIDTH,
-               curRect->y + curRect->h - constants::BORDER_WIDTH);
-    glVertex2i(curRect->x + curRect->w, curRect->y + curRect->h);
-    glEnd();
-    glBegin(GL_QUADS);
-    glVertex2i(curRect->x + curRect->w, curRect->y);
-    glVertex2i(curRect->x + curRect->w, curRect->y + curRect->h);
-    glVertex2i(curRect->x + curRect->w - constants::BORDER_WIDTH,
-               curRect->y + curRect->h - constants::BORDER_WIDTH);
-    glVertex2i(curRect->x + curRect->w - constants::BORDER_WIDTH,
-               curRect->y + constants::BORDER_WIDTH);
-    glEnd();
-    glEnable(GL_TEXTURE_2D);
-    this->drawString(b.getText(), b.getTextLoc().x + curRect->x, b.getTextLoc().y + curRect->y, b.getFontScale(),
-                     constants::UI_FG_R, constants::UI_FG_G, constants::UI_FG_B);
+    
 }
 
 void View::configGL()

@@ -10,11 +10,29 @@
 #define MagIndev_Constants_h
 
 #include <cstdint>
+#include <string>
 
 typedef void (*callback_t) (void);
+typedef void (*fieldCallback_t) (std::string);
+typedef struct
+{
+    float x;
+    float y;
+    float w;
+    float h;
+} floatRect_t;
+typedef struct
+{
+    int x;
+    int y;
+    int w;
+    int h;
+} intRect_t;
 
 namespace constants
 {
+    extern int mouseX;
+    extern int mouseY;
     extern int FONTW;
     extern int FONTH;
     extern int PAD;

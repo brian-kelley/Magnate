@@ -39,7 +39,7 @@ Atlas::Atlas(string imgDir, SDL_Renderer* renderer, int size)
     this->tiles = DirManager::parseTiles(tileData, loadedSurface->w);
     for(int i = 0; i < (int) tiles.size(); i++)
     {
-        this->tileNames[tiles[i].name] = i;
+        this->tileNames[tiles[i]->name] = i;
     }
     SDL_FreeSurface(loadedSurface);
     initCharTiles();
@@ -61,13 +61,13 @@ void Atlas::buildAtlas(string imgDir, SDL_Renderer* renderer, int size)
         cout << SDL_GetError() << endl;
         exit(1);
     }
-    vector<string>* inputFiles = DirManager::exec("ls " + DirManager::getPath() + "assets/" + imgDir + "/*.png");
+    vector<string> inputFiles = DirManager::exec("ls " + DirManager::getPath() + "assets/" + imgDir + "/*.png");
     ofstream tileFile((DirManager::getPath() + "data/" + imgDir + "_atlas_tiles.txt").c_str(), std::ios_base::out);
     vector<named_tex_t*> textures;
     string* path;
-    for(int i = 0; i < (int) inputFiles->size(); i++)
+    for(int i = 0; i < (int) inputFiles.size(); i++)
     {
-        path = &(*inputFiles)[i];
+        path = &inputFiles[i];
         textures.push_back(new named_tex_t);
         textures.back()->name = path->substr(path->rfind("/") + 1, path->find(".png") - path->rfind("/") - 1);
         textures.back()->surface = IMG_Load(path->c_str());
@@ -76,7 +76,6 @@ void Atlas::buildAtlas(string imgDir, SDL_Renderer* renderer, int size)
             cout << "Error: texture " << textures.back()->name << " is nullptr." << endl;
         }
     }
-    delete inputFiles;
     vector<SDL_Rect*> rects;
     rects.push_back(new SDL_Rect);
     rects[0]->x = 0;
@@ -220,8 +219,8 @@ void Atlas::bind()
 
 void Atlas::initCharTiles()
 {
-    constants::FONTW = (int) (this->tiles[this->tileFromName("A")].width * this->width + 0.5);
-    constants::FONTH = (int) (this->tiles[this->tileFromName("A")].height * this->height + 0.5);
+    constants::FONTW = (int) (this->tiles[this->tileFromName("A")]->width * this->width + 0.5);
+    constants::FONTH = (int) (this->tiles[this->tileFromName("A")]->height * this->height + 0.5);
     for(char lower = 'a'; lower <= 'z'; lower++)
     {
         this->charTiles[lower] = tileNames["_" + string({lower})];

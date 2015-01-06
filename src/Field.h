@@ -13,33 +13,39 @@
 #elif __linux
 #include <SDL2/SDL.h>
 #elif _WIN32
-
+#include <SDL2\SDL.h>
 #endif
 #include <stdio.h>
 #include <iostream>
 #include <vector>
 #include <string>
+#include "Component.h"
 #include "Constants.h"
 
 class Field
 {
 public:
-    Field(int x, int y, int width, int height, std::string text, callback_t callback);
+    Field(int x, int y, int width, int height, std::string text, fieldCallback_t callback);
+    Field(Field const& field);
     ~Field();
     void setText(std::string text);
     void setLocation(int x, int y);
     void setSize(int width, int height);
     void processKey(SDL_Event* ev);
-    SDL_Rect& getRect();
     SDL_Point& getTextLoc();
     float getFontScale();
     std::string& getText();
+    void updateSize();
+    intRect_t& getIntRect();
+    floatRect_t& getFloatRect();
+    int getCompID();
 private:
+    int compID;
     std::string text;
-    SDL_Rect rect;
     SDL_Point textLoc;
     float fontScale;
-    void (*callback) ();
+    void calcTextPlacement();
+    void (*callback) (std::string);
 };
 
 #endif

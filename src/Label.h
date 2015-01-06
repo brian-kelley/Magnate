@@ -9,41 +9,36 @@
 #ifndef __MagIndev__Label__
 #define __MagIndev__Label__
 
+#ifdef __APPLE__
+#include <SDL2/SDL.h>
+#elif __linux
+#include <SDL2/SDL.h>
+#elif _WIN32
+#include <SDL2\SDL.h>
+#endif
 #include <stdio.h>
 #include <iostream>
 #include <string>
-#include <SDL2/SDL.h>
+#include "Component.h"
 #include "Constants.h"
 
 class Label
 {
 public:
     Label(int x, int y, int width, int height, std::string text);
+    int compID;
     void updateText(std::string text);
     void processSizeChange(int oldWindowW, int oldWindowH);
-    inline std::string getText()
-    {
-        return this->text;
-    }
-    inline float getFontScale()
-    {
-        return this->fontScale;
-    }
-    inline SDL_Rect& getRect()
-    {
-        return this->rect;
-    }
-    inline SDL_Point& getTextLoc()
-    {
-        return this->textLoc;
-    }
+    std::string getText();
+    float getFontScale();
+    SDL_Point& getTextLoc();
+    void updateSize();
     ~Label();
 private:
     std::string text;
     float fontScale;
-    SDL_Rect rect;
     SDL_Point textLoc;
-    void calcTextRect();
+    void calcTextPlacement();
 };
 
 #endif
