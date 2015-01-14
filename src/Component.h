@@ -25,7 +25,8 @@ namespace componentHandler
     extern int createComponent(int x, int y, int width, int height, bool center = true);
     extern void updateSize(int id);
     extern bool mouseInside(int id);
-    extern std::vector<component_t*> componentList;
+    extern std::vector<component_t> componentList;
+    extern component_t& getComponent(int id);
     extern intRect_t& getCompIntRect(int id);
     extern floatRect_t& getCompFloatRect(int id);
 };

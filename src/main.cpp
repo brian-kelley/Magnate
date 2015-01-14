@@ -33,6 +33,5 @@ int main(int argc, const char * argv[])
             SDL_Delay(delay);
         }
     }
-    Control::dispose();
     return 0;
 }

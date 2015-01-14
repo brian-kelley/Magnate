@@ -26,7 +26,6 @@ class Field
 {
 public:
     Field(int x, int y, int width, int height, std::string text, fieldCallback_t callback);
-    Field(Field const& field);
     ~Field();
     void setText(std::string text);
     void setLocation(int x, int y);
@@ -39,6 +38,10 @@ public:
     intRect_t& getIntRect();
     floatRect_t& getFloatRect();
     int getCompID();
+    fieldCallback_t getCallback();
+    bool isActive();
+    void activate();
+    void deactivate();
 private:
     int compID;
     std::string text;
@@ -46,6 +49,7 @@ private:
     float fontScale;
     void calcTextPlacement();
     void (*callback) (std::string);
+    bool active;
 };
 
 #endif

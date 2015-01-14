@@ -21,12 +21,10 @@ class Scene
 {
 public:
     Scene();
-    Scene(Scene& toCopy);
-    ~Scene();
-    void addScrollBlock(ScrollBlock* sb);
-    void addButton(Button* b);
-    void addLabel(Label* l);
-    void addField(Field* f);
+    void addScrollBlock(ScrollBlock sb);
+    void addButton(Button b);
+    void addLabel(Label l);
+    void addField(Field f);
     std::vector<ScrollBlock>& getScrollBlocks();
     std::vector<Button>& getButtons();
     std::vector<Label>& getLabels();

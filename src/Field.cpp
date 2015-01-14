@@ -70,3 +70,25 @@ int Field::getCompID()
 {
     return compID;
 }
+
+fieldCallback_t Field::getCallback()
+{
+    return this->callback;
+}
+
+bool Field::isActive()
+{
+    return active;
+}
+
+void Field::activate()
+{
+    text = text.append("_");
+    this->calcTextPlacement();
+}
+
+void Field::deactivate()
+{
+    text = text.substr(0, int(text.length()));
+    this->calcTextPlacement();
+}

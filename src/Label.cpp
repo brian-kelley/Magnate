@@ -61,3 +61,8 @@ float Label::getFontScale()
 {
     return fontScale;
 }
+
+int Label::getCompID()
+{
+    return compID;
+}

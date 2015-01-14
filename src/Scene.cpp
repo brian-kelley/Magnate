@@ -15,40 +15,24 @@ Scene::Scene()
     
 }
 
-Scene::Scene(Scene& toCopy)
+void Scene::addScrollBlock(ScrollBlock sb)
 {
-    //Call copy constructors for each vector member of Scene
-    this->scrollBlocks = *(new vector<ScrollBlock>(toCopy.scrollBlocks));
-    this->buttons = *(new vector<Button>(toCopy.buttons));
-    this->labels = *(new vector<Label>(toCopy.labels));
-    this->fields = *(new vector<Field>(toCopy.fields));
+    this->scrollBlocks.push_back(sb);
 }
 
-Scene::~Scene()
+void Scene::addButton(Button b)
 {
-    this->buttons.clear();
-    this->fields.clear();
-    this->labels.clear();
+    this->buttons.push_back(b);
 }
 
-void Scene::addScrollBlock(ScrollBlock* sb)
+void Scene::addLabel(Label l)
 {
-    this->scrollBlocks.push_back(*sb);
+    this->labels.push_back(l);
 }
 
-void Scene::addButton(Button* b)
+void Scene::addField(Field f)
 {
-    this->buttons.push_back(*b);
-}
-
-void Scene::addLabel(Label* l)
-{
-    this->labels.push_back(*l);
-}
-
-void Scene::addField(Field* f)
-{
-    this->fields.push_back(*f);
+    this->fields.push_back(f);
 }
 
 void Scene::clearAll()

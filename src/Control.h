@@ -32,11 +32,10 @@
 namespace Control
 {
     extern void init();
-    extern void dispose();
     extern void update();
     extern bool isTerminating();
-    extern View* view;
-    extern Model* model;
+    extern View view;
+    extern Model model;
     enum SNAME
     {
         MAIN_MENU,
@@ -46,11 +45,9 @@ namespace Control
     };
     extern SNAME current;
     extern std::vector<std::string> saveNames;
-    extern int mouseX;
-    extern int mouseY;
     extern int oldWindowW;
     extern int oldWindowH;
-    extern std::vector<Scene*> scenes;
+    extern std::vector<Scene> scenes;
     extern SDL_Event* currentEvent;
     extern Scene* currentScene;
     extern Field* currentField;     //the label that currently has keyboard focus, if any

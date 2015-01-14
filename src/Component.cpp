@@ -13,14 +13,13 @@ using namespace componentHandler;
 using namespace constants;
 
 int componentHandler::numIDs = 0;
-vector<component_t*> componentHandler::componentList;
+vector<component_t> componentHandler::componentList;
 
 bool componentHandler::mouseInside(int id)
 {
-    component_t* ptr = componentList[id];
-    intRect_t* rectPtr = &ptr->irect;
-    if(rectPtr->x <= mouseX && rectPtr->x + rectPtr->w > mouseX
-       && rectPtr->y <= mouseY && rectPtr->y + rectPtr->h > mouseY)
+    intRect_t rect = getCompIntRect(id);
+    if(rect.x <= mouseX && rect.x + rect.w > mouseX
+       && rect.y <= mouseY && rect.y + rect.h > mouseY)
     {
         return true;
     }
@@ -30,7 +29,7 @@ bool componentHandler::mouseInside(int id)
     }
 }
 
-component_t* getComponent(int id)
+component_t& getComponent(int id)
 {
     return componentHandler::componentList[id];
 }
@@ -57,20 +56,20 @@ int componentHandler::createComponent(int x, int y, int width, int height, bool 
 
 intRect_t& componentHandler::getCompIntRect(int id)
 {
-    return componentList[id]->irect;
+    return componentList[id].irect;
 }
 
 floatRect_t& componentHandler::getCompFloatRect(int id)
 {
-    return componentList[id]->frect;
+    return componentList[id].frect;
 }
 
 void componentHandler::updateSize(int id)
 {
-    intRect_t* itemp = &componentList[id]->irect;
-    floatRect_t* ftemp = &componentList[id]->frect;
-    itemp->x = ftemp->x * WINDOW_W;
-    itemp->y = ftemp->y * WINDOW_H;
-    itemp->w = ftemp->w * WINDOW_W;
-    itemp->h = ftemp->h * WINDOW_H;
+    intRect_t itemp = getCompIntRect(id);
+    floatRect_t ftemp = getCompFloatRect(id);
+    itemp.x = ftemp.x * WINDOW_W;
+    itemp.y = ftemp.y * WINDOW_H;
+    itemp.w = ftemp.w * WINDOW_W;
+    itemp.h = ftemp.h * WINDOW_H;
 }

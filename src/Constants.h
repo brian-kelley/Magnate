@@ -14,6 +14,8 @@
 
 typedef void (*callback_t) (void);
 typedef void (*fieldCallback_t) (std::string);
+typedef std::string (*fieldDoneCallback_t) ();
+
 typedef struct
 {
     float x;
@@ -21,6 +23,7 @@ typedef struct
     float w;
     float h;
 } floatRect_t;
+
 typedef struct
 {
     int x;

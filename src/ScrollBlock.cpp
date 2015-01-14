@@ -77,17 +77,17 @@ void ScrollBlock::updateSize()      //updateSize will handle resizing subcompone
     canvas.y = fcanvas.y * WINDOW_H;
     canvas.w = fcanvas.w * WINDOW_W;
     canvas.h = fcanvas.h * WINDOW_H;
-    intRect_t* iptr;
-    floatRect_t* fptr;
+    intRect_t itemp;
+    floatRect_t ftemp;
     for(int i = 0; i < (int) buttons.size(); i++)
     {
         //set the new dimensions of the button to
-        iptr = &buttons[i].getIntRect();
-        fptr = &buttons[i].getFloatRect();
-        iptr->x = fptr->x * canvas.w;
-        iptr->y = fptr->y * canvas.h;
-        iptr->w = fptr->w * canvas.w;
-        iptr->h = fptr->h * canvas.h;
+        itemp = componentHandler::getCompIntRect(buttons[i].getCompID());
+        ftemp = componentHandler::getCompFloatRect(buttons[i].getCompID());
+        itemp.x = ftemp.x * canvas.w;
+        itemp.y = ftemp.y * canvas.h;
+        itemp.w = ftemp.w * canvas.w;
+        itemp.h = ftemp.h * canvas.h;
         buttons[i].calcTextPlacement();
     }
 }
@@ -107,6 +107,13 @@ void ScrollBlock::processButtonEvent(SDL_MouseButtonEvent &e)
     int canvMouseY = mouseY;
     canvMouseY -= componentHandler::getCompIntRect(compID).y;
     canvMouseY += viewport.y;
+    for(int i = 0; i < int(this->buttons.size()); i++)
+    {
+        if(mouseInside(buttons[i].getCompID()))
+        {
+            (*buttons[i].getCallback()) ();
+        }
+    }
 }
 
 void ScrollBlock::processScrollEvent(SDL_MouseWheelEvent& e)

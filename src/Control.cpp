@@ -13,21 +13,22 @@ using namespace constants;
 using namespace Control;
 
 SNAME Control::current;
+Scene* Control::currentScene;
+Field* Control::currentField;
 bool Control::terminating;
 bool Control::updatingView;
 bool Control::trackingMouse;
 bool Control::trackingKeyboard;
-View* Control::view;
-Model* Control::model;
+View Control::view;
+Model Control::model;
 int Control::oldWindowW;
 int Control::oldWindowH;
 SDL_Event* Control::currentEvent;
-vector<Scene*> Control::scenes;
+vector<Scene> Control::scenes;
 vector<string> Control::saveNames;
 
 void Control::init()
 {
-    view = new View();
     oldWindowW = constants::WINDOW_W;
     oldWindowH = constants::WINDOW_H;
     SDL_GetMouseState(&constants::mouseX, &constants::mouseY);
@@ -39,21 +40,8 @@ void Control::init()
     initScenes();
     currentEvent = new SDL_Event();
     current = MAIN_MENU;
-    currentScene = scenes[0];
+    currentScene = &scenes[0];
     currentField = nullptr;
-}
-
-void Control::dispose()
-{
-    delete view;
-    view = nullptr;
-    for(int i = 0; i < (int) scenes.size(); i++)
-    {
-        delete scenes[i];
-    }
-    scenes.clear();
-    delete currentEvent;
-
 }
 
 void Control::update()
@@ -115,13 +103,13 @@ void Control::update()
                 break;
         }
     }
-    view->prepareFrame();
+    view.prepareFrame();
     if(current == GAME)
     {
-        view->drawWorld(model->getCurrentWorld());
+        view.drawWorld(model.getCurrentWorld());
     }
-    view->drawScene(*scenes[current]);
-    view->finalizeFrame();
+    view.drawScene(scenes[current]);
+    view.finalizeFrame();
 }
 
 bool Control::isTerminating()
@@ -136,14 +124,19 @@ void Control::processKeyboardEvent(SDL_Event &e)
 
 void Control::processMouseButtonEvent(SDL_Event &e)
 {
+    //if click outside current field, deactivate it
+    if(currentField && !componentHandler::mouseInside(currentField->getCompID()))
+    {
+        currentField->deactivate();
+    }
     if(e.button.state == SDL_PRESSED)
     {
         Button* btnPtr;
         intRect_t* curRect;
-        for(int i = 0; i < (int) scenes[current]->getButtons().size(); i++)
+        for(int i = 0; i < (int) scenes[current].getButtons().size(); i++)
         {
-            btnPtr = &(scenes[current]->getButtons())[i];
-            curRect = &btnPtr->getIntRect();
+            btnPtr = &(scenes[current].getButtons())[i];
+            curRect = &componentHandler::getCompIntRect(btnPtr->getCompID());
             if(curRect->x < mouseX && curRect->x + curRect->w > mouseX
                && curRect->y < mouseY && curRect->y + curRect->h > mouseY)
             {
@@ -151,20 +144,32 @@ void Control::processMouseButtonEvent(SDL_Event &e)
                 break;
             }
         }
-        Label* lblPtr;
-        
+        Field* fieldPtr;
+        for(int i = 0; i < int(scenes[current].getFields().size()); i++)
+        {
+            fieldPtr = &(scenes[current].getFields())[i];
+            curRect = &componentHandler::getCompIntRect(fieldPtr->getCompID());
+            if(curRect->x < mouseX && curRect->x + curRect->w > mouseX
+               && curRect->y < mouseY && curRect->y + curRect->h > mouseY)
+            {
+                {
+                    currentField = fieldPtr;
+                    currentField->activate();
+                }
+            }
+        }
     }
 }
 
 void Control::processMouseMotionEvent(SDL_Event &e)
 {
-    Scene* scenePtr = scenes[current];
+    Scene* scenePtr = &scenes[current];
     SDL_GetMouseState(&mouseX, &mouseY);
     intRect_t* btnRectPtr;
     Button* btnPtr;
     for(int i = 0; i < (int) scenePtr->getButtons().size(); i++)
     {
-        btnRectPtr = &scenePtr->getButtons()[i].getIntRect();
+        btnRectPtr = &componentHandler::getCompIntRect(scenePtr->getButtons()[i].getCompID());
         if(btnRectPtr->x <= mouseX && btnRectPtr->x + btnRectPtr->w > mouseX
            && btnRectPtr->y <= mouseY && btnRectPtr->y + btnRectPtr->h > mouseY)
         {
@@ -218,7 +223,7 @@ void Control::processWindowEvent(SDL_Event &e)
             updatingView = false;
         	break;
         case SDL_WINDOWEVENT_MAXIMIZED: //update window size and UI layout
-            view->updateWindowSize();
+            view.updateWindowSize();
             updateUISize();
             updatingView = true;
             break;
@@ -232,7 +237,7 @@ void Control::processWindowEvent(SDL_Event &e)
         case SDL_WINDOWEVENT_SIZE_CHANGED: //system or API call changed window size
         	oldWindowW = constants::WINDOW_W;
         	oldWindowH = constants::WINDOW_H;
-            view->updateWindowSize();
+            view.updateWindowSize();
             //updateUISize(); //not really a priority, implement this later
             break;
         case SDL_WINDOWEVENT_MINIMIZED: //save a bit of energy by pausing rendering
@@ -263,29 +268,32 @@ void Control::updateUISize()
 
 void Control::initScenes()
 {
-    Scene* stacker;
-    /* Syntax for adding a new scene (Note: must correspond in order to SNAME elements!)
-     stacker = new Scene();
-     stacker->addButton(lolMyOnlyButtonPtr);
-     this->scenes.push_back(stacker);
-     */
-    stacker = new Scene();
-    stacker->addButton(new Button(200, 100, 240, 100, "Start Game", &mainStartButton));
-    stacker->addButton(new Button(200, 240, 240, 100, "Quit Game", &mainQuitButton));
-    scenes.push_back(stacker);
-    stacker = new Scene();
+    /* Main menu */
+    Scene mainMenu;
+    Button startGame(200, 100, 240, 100, "Start Game", &mainStartButton);
+    mainMenu.addButton(startGame);
+    Button quitGame(200, 240, 240, 100, "Quit Game", &mainQuitButton);
+    mainMenu.addButton(quitGame);
+    /* Save menu */
+    Scene saveMenu;
+    scenes.push_back(mainMenu);
     int numSaves = (int) saveNames.size();
-    ScrollBlock* saveList = new ScrollBlock(320, 220, 550, 400, 550, 90 + 50 * numSaves + BORDER_WIDTH);
+    ScrollBlock saveList(320, 220, 550, 400, 550, 90 + 50 * numSaves + BORDER_WIDTH);
     for(int i = 0; i < numSaves; i++)
     {
-        saveList->addField(*new Field(250, 50 + 50 * i, 400, 40, saveNames[i], &saveNameUpdate));
-        saveList->addButton(*new Button(550, 50 + 50 * i, 100, 40, "Load", &loadSave));
+        Field nameField(250, 50 + 50 * i, 400, 40, saveNames[i], &saveNameUpdate);
+        saveList.addField(nameField);
+        Button nameButton(550, 50 + 50 * i, 100, 40, "Load", &loadSave);
+        saveList.addButton(nameButton);
     }
-    saveList->addField(*new Field(250, 50 + 50 * numSaves, 400, 40, "", &newSaveNameUpdate));
-    saveList->addButton(*new Button(550, 50 + 50 * numSaves, 100, 40, "Create", &newSaveCreate));   //add the option to create a new save file
-    stacker->addScrollBlock(saveList);
-    stacker->addButton(new Button(320, 400, 300, 80, "Back", &saveBackButton));
-    scenes.push_back(stacker);
+    Field newNameField(250, 50 + 50 * numSaves, 400, 40, "", &newSaveNameUpdate);
+    saveList.addField(newNameField);
+    Button newNameButton(550, 50 + 50 * numSaves, 100, 40, "Create", &newSaveCreate);
+    saveList.addButton(newNameButton);
+    saveMenu.addScrollBlock(saveList);
+    Button backToMain(320, 400, 300, 80, "Back", &saveBackButton);
+    saveMenu.addButton(backToMain);
+    scenes.push_back(saveMenu);
 }
 
 void Control::mainQuitButton()
@@ -295,12 +303,12 @@ void Control::mainQuitButton()
 
 void Control::mainStartButton()
 {
-    currentScene = scenes[SNAME::SAVE_MENU];
+    currentScene = &scenes[SNAME::SAVE_MENU];
 }
 
 void Control::saveBackButton()
 {
-    currentScene = scenes[SNAME::MAIN_MENU];
+    currentScene = &scenes[SNAME::MAIN_MENU];
 }
 
 void Control::saveNameUpdate(std::string name)

@@ -26,15 +26,16 @@ class Label
 {
 public:
     Label(int x, int y, int width, int height, std::string text);
-    int compID;
     void updateText(std::string text);
     void processSizeChange(int oldWindowW, int oldWindowH);
     std::string getText();
     float getFontScale();
     SDL_Point& getTextLoc();
     void updateSize();
+    int getCompID();
     ~Label();
 private:
+    int compID;
     std::string text;
     float fontScale;
     SDL_Point textLoc;
