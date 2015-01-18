@@ -8,6 +8,17 @@
 
 #include "DirManager.h"
 
+#ifdef __APPLE__
+#define _MAINPATH "/Users/Brian/Dropbox/Magnate"
+#define _SEPCHAR "/"
+#elif __linux
+#define _MAINPATH "/home/brian/Dropbox/Magnate"
+#define _SEPCHAR "/"
+#elif _WIN32
+#define _MAINPATH "C:\Users\Brian\Dropbox\Magnate"
+#define _SEPCHAR "\\"
+#endif
+
 using namespace std;
 
 string DirManager::dirPath;
@@ -17,17 +28,8 @@ using namespace DirManager;
 
 void DirManager::findPath()
 {
-#ifdef __APPLE__
-
-    DirManager::dirPath = "/Users/Brian/Dropbox/Magnate/";
-    DirManager::sepChar = "/";
-#elif __linux
-    DirManager::dirPath = "/home/brian/Dropbox/Magnate";
-    DirManager::sepChar = "/";
-#elif _WIN32
-    DirManager::dirPath = "C:\Users\Brian\Dropbox\Magnate";
-    DirManager::sepChar = "\\";
-#endif
+    dirPath = _MAINPATH;
+    sepChar = _SEPCHAR;
 }
 
 string DirManager::getPath()
@@ -35,16 +37,17 @@ string DirManager::getPath()
     return DirManager::dirPath;
 }
 
-vector<DirManager::tileData_t*> DirManager::parseTiles(string fname, float size)
+vector<DirManager::tileData_t> DirManager::parseTiles(string fname, float size)
 {
     if(fname.find(".txt") == string::npos)
     {
         fname += ".txt";
     }
-    vector<DirManager::tileData_t*> tiles;
+    vector<DirManager::tileData_t> tiles;
     string line;
     //theoretically this path should be the same for debug and release builds
-    ifstream tfile(dirPath + "data/" + fname);
+    string pathElements[] = {"data", fname};
+    ifstream tfile(getCompoundPath(pathElements, 2));
     unsigned long index;
     //pos is used to store search result to find whitespace in file
     if(tfile.is_open())
@@ -54,13 +57,13 @@ vector<DirManager::tileData_t*> DirManager::parseTiles(string fname, float size)
             getNextLine(tfile, line);
             if(line != "")
             {
-            	tileData_t* buffer = new tileData_t;
+            	tileData_t buffer;
                 index = 0;
-                buffer->name = delim(index, line);
-                buffer->x = ((float) delimInt(index, line)) / size;
-                buffer->y = ((float) delimInt(index, line)) / size;
-                buffer->width = ((float) delimInt(index, line)) / size;
-                buffer->height = ((float) delimInt(index, line)) / size;
+                buffer.name = delim(index, line);
+                buffer.x = ((float) delimInt(index, line)) / size;
+                buffer.y = ((float) delimInt(index, line)) / size;
+                buffer.width = ((float) delimInt(index, line)) / size;
+                buffer.height = ((float) delimInt(index, line)) / size;
                 tiles.push_back(buffer);
             }
             else
@@ -170,4 +173,17 @@ void DirManager::getNextLine(ifstream& file, string& data)
 vector<string> DirManager::listSaves()
 {
     return exec("ls -1 " + DirManager::dirPath + "saves/");
+}
+
+string DirManager::getCompoundPath(string dirs[], int num)     //Form platform-independent absolute path given list of nesting directories & filename
+{
+    string path = dirPath;
+    for(int i = 0; i < num; i++)
+    {
+        path = path.append(sepChar);
+        path = path.append(dirs[i]);
+    }
+    cout << "Outputting:\n";
+    cout << path << endl;
+    return path;
 }

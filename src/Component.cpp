@@ -42,15 +42,16 @@ int componentHandler::createComponent(int x, int y, int width, int height, bool 
         y -= height / 2;
     }
     numIDs++;
-    component_t* newComp = new component_t;
-    newComp->irect.x = x;
-    newComp->irect.y = y;
-    newComp->irect.w = width;
-    newComp->irect.h = height;
-    newComp->frect.x = (float) x / WINDOW_W;
-    newComp->frect.y = (float) y / WINDOW_H;
-    newComp->frect.w = (float) width / WINDOW_W;
-    newComp->frect.h = (float) height / WINDOW_H;
+    component_t newComp;
+    newComp.irect.x = x;
+    newComp.irect.y = y;
+    newComp.irect.w = width;
+    newComp.irect.h = height;
+    newComp.frect.x = (float) x / WINDOW_W;
+    newComp.frect.y = (float) y / WINDOW_H;
+    newComp.frect.w = (float) width / WINDOW_W;
+    newComp.frect.h = (float) height / WINDOW_H;
+    componentList.push_back(newComp);
     return numIDs;  //return the ID of the component that has just been created
 }
 

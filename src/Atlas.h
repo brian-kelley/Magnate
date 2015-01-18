@@ -44,19 +44,19 @@ public:
     void bind();
     inline float tileX(int index)
     {
-        return this->tiles[index]->x;
+        return this->tiles[index].x;
     }
     inline float tileY(int index)
     {
-        return this->tiles[index]->y;
+        return this->tiles[index].y;
     }
     inline float tileW(int index)
     {
-        return this->tiles[index]->width;
+        return this->tiles[index].width;
     }
     inline float tileH(int index)
     {
-        return this->tiles[index]->height;
+        return this->tiles[index].height;
     }
 private:
     SDL_Texture* tex;
@@ -69,7 +69,7 @@ private:
     };
     std::map<std::string, int> tileNames;
     std::map<char, int> charTiles;
-    std::vector<DirManager::tileData_t*> tiles;
+    std::vector<DirManager::tileData_t> tiles;
     void buildAtlas(std::string imgDir, SDL_Renderer* renderer, int size);
     int delimInt(unsigned long& index, std::string& data);
     std::string delim(unsigned long& index, std::string& data);

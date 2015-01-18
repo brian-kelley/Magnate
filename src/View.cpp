@@ -105,7 +105,7 @@ void View::drawField(Field &f)
 
 void View::drawButton(Button &b)
 {
-    if(b.getHover())
+    if(b.isMouseOver())
     {
         intRect_t curRect = componentHandler::getCompIntRect(b.getCompID());
         glDisable(GL_TEXTURE_2D);

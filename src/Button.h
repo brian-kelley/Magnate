@@ -30,16 +30,15 @@ public:
     void processMouse(int x, int y);
     SDL_Point& getTextLoc();
     std::string& getText();
-    bool isMouseOver();
     float getFontScale();
     void updateSize();
     callback_t getCallback();
     intRect_t& getIntRect();
     floatRect_t& getFloatRect();
     void calcTextPlacement();
-    void setHover(bool hovering);
-    bool getHover();
     int getCompID();
+    void setMouseOver(bool isOver);
+    bool isMouseOver();
 private:
     int compID;
     SDL_Point textLoc;
@@ -47,7 +46,6 @@ private:
     std::string text;
     float fontScale;
     callback_t callback;
-    bool hover;
 };
 
 #endif /* defined(__MagIndev__Button__) */

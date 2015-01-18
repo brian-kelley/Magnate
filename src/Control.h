@@ -34,8 +34,8 @@ namespace Control
     extern void init();
     extern void update();
     extern bool isTerminating();
-    extern View view;
-    extern Model model;
+    extern View* view;
+    extern Model* model;
     enum SNAME
     {
         MAIN_MENU,

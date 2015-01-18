@@ -17,6 +17,7 @@ Button::Button(int x, int y, int width, int height, string text, callback_t call
     this->over = false;
     this->compID = componentHandler::createComponent(x, y, width, height);
     calcTextPlacement();
+    over = false;
 }
 
 Button::~Button()
@@ -27,11 +28,6 @@ Button::~Button()
 void Button::processMouse(int x, int y)
 {
     this->over = componentHandler::mouseInside(compID);
-}
-
-bool Button::isMouseOver()
-{
-    return over;
 }
 
 SDL_Point& Button::getTextLoc()
@@ -81,17 +77,17 @@ void Button::calcTextPlacement()
     }
 }
 
-void Button::setHover(bool hovering)
-{
-    hover = hovering;
-}
-
-bool Button::getHover()
-{
-    return hover;
-}
-
 int Button::getCompID()
 {
     return compID;
+}
+
+bool Button::isMouseOver()
+{
+    return over;
+}
+
+void Button::setMouseOver(bool isOver)
+{
+    over = isOver;
 }

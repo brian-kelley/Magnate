@@ -42,7 +42,10 @@ namespace DirManager
     extern void getNextLine(std::ifstream& file, std::string& data);
     extern void findPath();
     extern std::string getPath();
-    extern std::vector<tileData_t*> parseTiles(std::string path, float size);
+    /* pass an array of strings that represent the nesting directories/filename to get a file
+     * function will return single path string based on platform path syntax */
+    extern std::string getCompoundPath(std::string dirs[], int num);
+    extern std::vector<tileData_t> parseTiles(std::string path, float size);
     extern std::vector<std::string> exec(std::string cmd);
     extern std::vector<std::string> listSaves();
 };
