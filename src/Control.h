@@ -34,8 +34,6 @@ namespace Control
     extern void init();
     extern void update();
     extern bool isTerminating();
-    extern View* view;
-    extern Model* model;
     enum SNAME
     {
         MAIN_MENU,
@@ -63,14 +61,6 @@ namespace Control
     extern bool trackingMouse;
     extern bool trackingKeyboard;
     extern void initScenes();
-    //Now list callback functions all UI components
-    extern void mainQuitButton();
-    extern void mainStartButton();
-    extern void saveBackButton();
-    extern void saveNameUpdate(std::string name);
-    extern void newSaveNameUpdate(std::string name);
-    extern void newSaveCreate();
-    extern void loadSave();
 }
 
 #endif

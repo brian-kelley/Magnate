@@ -37,24 +37,30 @@ public:
     std::vector<Button>& getButtons();
     std::vector<Field>& getFields();
     std::vector<Label>& getLabels();
-    intRect_t& getCanvasRect();                 //0,0 is upper-left corner of canvas
-    intRect_t& getViewportRect();               //0,0 is upper-left corner of scrollblock on screen
     void updateSize();
-    void updateCanvasRect(intRect_t newCanvas);
+    void updateCanvasRect(int newHeight);
     void processScrollEvent(SDL_MouseWheelEvent& e);
     void processButtonEvent(SDL_MouseButtonEvent& e);
+    void processMouseMotionEvent(SDL_MouseMotionEvent& e);
     int compID;
     int getCompID();
-    
+    bool isActive();
+    void activate();
+    void deactivate();
 private:
     SDL_Rect rect;
     std::vector<Button> buttons;
     std::vector<Field> fields;
     std::vector<Label> labels;
-    intRect_t canvas;   //the entire internal space of the scrollblock
-    floatRect_t fcanvas;    //including non-visible subcomponents
-    intRect_t viewport;     //rectangular subset of canvas that is currently visible
-    floatRect_t fviewport;  //ratio of viewport to canvas dimensions
+    int canvH;
+    float fCanvH;
+    int viewport;
+    float fViewport;
+    int xOffset;          //what needs to be added to screen x coordinate to get local coordinates
+    int yOffset;
+    void refreshModifiers();  //use component/canvas/viewport rectangles to calculate offsets
+    Field* currentField();
+    bool active;
 };
 
 #endif /* defined(__Magnate__ScrollBlock__) */

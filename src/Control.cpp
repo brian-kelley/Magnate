@@ -18,16 +18,47 @@ bool Control::terminating;
 bool Control::updatingView;
 bool Control::trackingMouse;
 bool Control::trackingKeyboard;
-View* Control::view;
-Model* Control::model;
 int Control::oldWindowW;
 int Control::oldWindowH;
 SDL_Event* Control::currentEvent;
 vector<Scene> Control::scenes;
 vector<string> Control::saveNames;
 
+namespace ui        //place for callbacks etc.
+{
+    void mainQuitButton(int compID)
+    {
+        Control::terminating = true;
+    }
+    void mainStartButton(int compID)
+    {
+        Control::current = SAVE_MENU;
+    }
+    void saveBackButton(int compID)
+    {
+        current = MAIN_MENU;
+    }
+    void saveNameUpdate(int compID)
+    {
+        
+    }
+    void newSaveNameUpdate(int compID)
+    {
+        
+    }
+    void newSaveCreate(int compID)
+    {
+        
+    }
+    void loadSave(int compID)
+    {
+        
+    }
+}
+
 void Control::init()
 {
+    view::init();
     initScenes();
     oldWindowW = constants::WINDOW_W;
     oldWindowH = constants::WINDOW_H;
@@ -40,8 +71,7 @@ void Control::init()
     currentEvent = new SDL_Event();
     current = MAIN_MENU;
     currentField = nullptr;
-    view = new View();
-    model = new Model();
+    model::init();
 }
 
 void Control::update()
@@ -103,13 +133,13 @@ void Control::update()
                 break;
         }
     }
-    view->prepareFrame();
+    view::prepareFrame();
     if(current == GAME)
     {
-        view->drawWorld(model->getCurrentWorld());
+        view::drawWorld(model::getCurrentWorld());
     }
-    view->drawScene(scenes[current]);
-    view->finalizeFrame();
+    view::drawScene(scenes[current]);
+    view::finalizeFrame();
 }
 
 bool Control::isTerminating()
@@ -120,6 +150,7 @@ bool Control::isTerminating()
 void Control::processKeyboardEvent(SDL_Event &e)
 {
     //first, see if the event applies to a field
+    
 }
 
 void Control::processMouseButtonEvent(SDL_Event &e)
@@ -140,7 +171,7 @@ void Control::processMouseButtonEvent(SDL_Event &e)
             if(curRect->x < mouseX && curRect->x + curRect->w > mouseX
                && curRect->y < mouseY && curRect->y + curRect->h > mouseY)
             {
-                (*(btnPtr->getCallback())) ();
+                (*(btnPtr->getCallback())) (btnPtr->getCompID());
                 break;
             }
         }
@@ -165,19 +196,35 @@ void Control::processMouseMotionEvent(SDL_Event &e)
 {
     Scene* scenePtr = &scenes[current];
     SDL_GetMouseState(&mouseX, &mouseY);
-    intRect_t* btnRectPtr;
+    intRect_t* tempRect;
     Button* btnPtr;
-    for(int i = 0; i < (int) scenePtr->getButtons().size(); i++)
+    for(int i = 0; i < int(scenePtr->getButtons().size()); i++)
     {
-        btnRectPtr = &componentHandler::getCompIntRect(scenePtr->getButtons()[i].getCompID());
-        if(btnRectPtr->x <= mouseX && btnRectPtr->x + btnRectPtr->w > mouseX
-           && btnRectPtr->y <= mouseY && btnRectPtr->y + btnRectPtr->h > mouseY)
+        tempRect = &componentHandler::getCompIntRect(scenePtr->getButtons()[i].getCompID());
+        btnPtr = &scenePtr->getButtons()[i];
+        if(tempRect->x <= mouseX && tempRect->x + tempRect->w > mouseX
+           && tempRect->y <= mouseY && tempRect->y + tempRect->h > mouseY)
         {
             btnPtr->setMouseOver(true);
         }
         else
         {
             btnPtr->setMouseOver(false);
+        }
+    }
+    ScrollBlock* sbPtr;
+    for(int i = 0; i < int(scenePtr->getScrollBlocks().size()); i++)
+    {
+        tempRect = &componentHandler::getCompIntRect(scenePtr->getScrollBlocks()[i].getCompID());
+        sbPtr = &scenePtr->getScrollBlocks()[i];
+        if(tempRect->x <= mouseX && tempRect->x + tempRect->w > mouseX
+           && tempRect->y <= mouseY && tempRect->y + tempRect->h > mouseY)
+        {
+            
+        }
+        else
+        {
+            
         }
     }
 }
@@ -224,7 +271,7 @@ void Control::processWindowEvent(SDL_Event &e)
             updatingView = false;
         	break;
         case SDL_WINDOWEVENT_MAXIMIZED: //update window size and UI layout
-            view->updateWindowSize();
+            view::updateWindowSize();
             updateUISize();
             updatingView = true;
             break;
@@ -238,7 +285,7 @@ void Control::processWindowEvent(SDL_Event &e)
         case SDL_WINDOWEVENT_SIZE_CHANGED: //system or API call changed window size
         	oldWindowW = constants::WINDOW_W;
         	oldWindowH = constants::WINDOW_H;
-            view->updateWindowSize();
+            view::updateWindowSize();
             //updateUISize(); //not really a priority, implement this later
             break;
         case SDL_WINDOWEVENT_MINIMIZED: //save a bit of energy by pausing rendering
@@ -272,9 +319,9 @@ void Control::initScenes()
 {
     /* Main menu */
     Scene mainMenu;
-    Button startGame(200, 100, 240, 100, "Start Game", &mainStartButton);
+    Button startGame(200, 100, 240, 100, "Start Game", &ui::mainStartButton);
     mainMenu.addButton(startGame);
-    Button quitGame(200, 240, 240, 100, "Quit Game", &mainQuitButton);
+    Button quitGame(200, 240, 240, 100, "Quit Game", &ui::mainQuitButton);
     mainMenu.addButton(quitGame);
     /* Save menu */
     Scene saveMenu;
@@ -285,53 +332,18 @@ void Control::initScenes()
     {
         for(int i = 0; i < numSaves; i++)
         {
-            Field nameField(250, 50 + 50 * i, 400, 40, saveNames[i], &saveNameUpdate);
+            Field nameField(250, 50 + 50 * i, 400, 40, saveNames[i], &ui::saveNameUpdate);
             saveList.addField(nameField);
-            Button nameButton(550, 50 + 50 * i, 100, 40, "Load", &loadSave);
+            Button nameButton(550, 50 + 50 * i, 100, 40, "Load", &ui::loadSave);
             saveList.addButton(nameButton);
         }
     }
-    Field newNameField(250, 50 + 50 * numSaves, 400, 40, "", &newSaveNameUpdate);
+    Field newNameField(250, 50 + 50 * numSaves, 400, 40, "", &ui::newSaveNameUpdate);
     saveList.addField(newNameField);
-    Button newNameButton(550, 50 + 50 * numSaves, 100, 40, "Create", &newSaveCreate);
+    Button newNameButton(550, 50 + 50 * numSaves, 100, 40, "Create", &ui::newSaveCreate);
     saveList.addButton(newNameButton);
     saveMenu.addScrollBlock(saveList);
-    Button backToMain(320, 400, 300, 80, "Back", &saveBackButton);
+    Button backToMain(320, 400, 300, 80, "Back", &ui::saveBackButton);
     saveMenu.addButton(backToMain);
     scenes.push_back(saveMenu);
-}
-
-void Control::mainQuitButton()
-{
-    terminating = true;
-}
-
-void Control::mainStartButton()
-{
-    current = SAVE_MENU;
-}
-
-void Control::saveBackButton()
-{
-    current = MAIN_MENU;
-}
-
-void Control::saveNameUpdate(std::string name)
-{
-    
-}
-
-void Control::newSaveNameUpdate(std::string name)
-{
-    
-}
-
-void Control::loadSave()
-{
-    
-}
-
-void Control::newSaveCreate()
-{
-    //call something that generates world, creates folder and files in dir/saves/
 }

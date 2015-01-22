@@ -9,6 +9,8 @@
 #ifndef __Magnate__Component__
 #define __Magnate__Component__
 
+#define NO_PARENT -1
+
 #include <stdio.h>
 #include <vector>
 #include "Constants.h"
@@ -20,6 +22,7 @@ namespace componentHandler
         intRect_t irect;
         floatRect_t frect;
         int id;
+        int parent;
     };
     extern int numIDs;    //unique numerical id for each UI component in the game
     extern int createComponent(int x, int y, int width, int height, bool center = true);

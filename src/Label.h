@@ -33,13 +33,13 @@ public:
     SDL_Point& getTextLoc();
     void updateSize();
     int getCompID();
+    void calcTextPlacement();
     ~Label();
 private:
     int compID;
     std::string text;
     float fontScale;
     SDL_Point textLoc;
-    void calcTextPlacement();
 };
 
 #endif

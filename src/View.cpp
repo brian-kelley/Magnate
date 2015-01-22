@@ -10,51 +10,60 @@
 
 using namespace std;
 using namespace constants;
+using namespace view;
 
-View::View(int screenX, int screenY) : scrX(screenX), scrY(screenY)
+int view::scrX = 0;
+int view::scrY = 0;
+SDL_Window* view::window = nullptr;
+SDL_Renderer* view::renderer = nullptr;
+SDL_GLContext view::context;
+Atlas* view::mainAtlas = nullptr;
+
+void view::init(int screenX, int screenY)
 {
-    //Initialize with default window size as defined in constants.cpp
+    scrX = screenX;
+    scrY = screenY;
     initSDLVideo();
     configGL();
     initAtlas();
 }
 
-View::~View()
+void view::dispose()
 {
     delete mainAtlas;
-    SDL_DestroyRenderer(this->renderer);
-    this->renderer = nullptr;
-    SDL_DestroyWindow(this->window);
-    this->window = nullptr;
+    SDL_DestroyRenderer(renderer);
+    renderer = nullptr;
+    SDL_DestroyWindow(window);
+    window = nullptr;
     IMG_Quit();
     SDL_Quit();
 }
 
-void View::prepareFrame()
+void view::prepareFrame()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void View::finalizeFrame()
+void view::finalizeFrame()
 {
-    SDL_GL_SwapWindow(this->window);
+    SDL_GL_SwapWindow(window);
 }
 
-void View::drawBuilding(Building& b)
+void view::drawBuilding(Building& b)
 {
     //b's cuboids are already in correct order for rendering (back to front)
     for(int i = 0; i < b.numCuboids(); i++)
     {
-        this->drawCuboid(b.getCuboidRef(i));
+        drawCuboid(b.getCuboidRef(i));
     }
 }
 
-void View::drawWorld(World *currentWorld)
+void view::drawWorld(World *currentWorld)
 {
 
 }
 
-void View::drawScene(Scene& s)
+void view::drawScene(Scene& s)
 {
     for(int i = 0; i < (int) s.getButtons().size(); i++)
     {
@@ -70,14 +79,14 @@ void View::drawScene(Scene& s)
     }
 }
 
-void View::drawLabel(Label& l)
+void view::drawLabel(Label& l)
 {
     glColor4f(UI_FG_R, UI_FG_B, UI_FG_B, 1);
     glEnable(GL_TEXTURE_2D);
-    this->drawString(l.getText(), l.getTextLoc().x, l.getTextLoc().y, l.getFontScale());
+    drawString(l.getText(), l.getTextLoc().x, l.getTextLoc().y, l.getFontScale());
 }
 
-void View::drawField(Field &f)
+void view::drawField(Field &f)
 {
     intRect_t curRect = componentHandler::getCompIntRect(f.getCompID());
     glDisable(GL_TEXTURE_2D);
@@ -100,10 +109,10 @@ void View::drawField(Field &f)
     glVertex2i(curRect.x, curRect.y);
     glEnd();
     glEnable(GL_TEXTURE_2D);
-    this->drawString(f.getText(), f.getTextLoc().x, f.getTextLoc().y, f.getFontScale());
+    drawString(f.getText(), f.getTextLoc().x, f.getTextLoc().y, f.getFontScale());
 }
 
-void View::drawButton(Button &b)
+void view::drawButton(Button &b)
 {
     if(b.isMouseOver())
     {
@@ -147,7 +156,7 @@ void View::drawButton(Button &b)
                    curRect.y + constants::BORDER_WIDTH);
         glEnd();
         glEnable(GL_TEXTURE_2D);
-        this->drawString(b.getText(), b.getTextLoc().x + curRect.x, b.getTextLoc().y + curRect.y, b.getFontScale(),
+        drawString(b.getText(), b.getTextLoc().x + curRect.x, b.getTextLoc().y + curRect.y, b.getFontScale(),
                          constants::UI_FG_R, constants::UI_FG_G, constants::UI_FG_B);
     }
     else
@@ -192,7 +201,7 @@ void View::drawButton(Button &b)
     }
 }
 
-void View::drawScrollBlock(ScrollBlock &sb)
+void view::drawScrollBlock(ScrollBlock &sb)
 {
     glColor4f(UI_BG_R * SHADE, UI_BG_G * SHADE, UI_BG_B * SHADE, 1);
     intRect_t sbrect = componentHandler::getCompIntRect(sb.getCompID());
@@ -206,7 +215,7 @@ void View::drawScrollBlock(ScrollBlock &sb)
     
 }
 
-void View::configGL()
+void view::configGL()
 {
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -223,12 +232,12 @@ void View::configGL()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void View::updateWindowSize()
+void view::updateWindowSize()
 {
-    SDL_GetWindowSize(this->window, &constants::WINDOW_W, &constants::WINDOW_H);
+    SDL_GetWindowSize(window, &constants::WINDOW_W, &constants::WINDOW_H);
 }
 
-void View::blit(int index, int x, int y)
+void view::blit(int index, int x, int y)
 {
     cout << mainAtlas->tileW(index) << " " << mainAtlas->tileH(index) << endl;
     glBegin(GL_QUADS);
@@ -247,7 +256,7 @@ void View::blit(int index, int x, int y)
     glEnd();
 }
 
-void View::blit(int index, int x1, int y1, int x2, int y2)
+void view::blit(int index, int x1, int y1, int x2, int y2)
 {
     glBegin(GL_QUADS);
     glTexCoord2f(mainAtlas->tileX(index), mainAtlas->tileY(index));
@@ -264,31 +273,31 @@ void View::blit(int index, int x1, int y1, int x2, int y2)
     glEnd();
 }
 
-void View::drawString(string text, int x, int y)
+void view::drawString(string text, int x, int y)
 {
-    this->drawString(text, x, y, 1.0f, 1.0f, 1.0f, 1.0f);
+    drawString(text, x, y, 1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-void View::drawString(string text, int x, int y, float scale)
+void view::drawString(string text, int x, int y, float scale)
 {
-    this->drawString(text, x, y, scale, 1.0f, 1.0f, 1.0f);
+    drawString(text, x, y, scale, 1.0f, 1.0f, 1.0f);
 }
 
-void View::drawString(string text, int x, int y, float scale, float r, float g, float b)
+void view::drawString(string text, int x, int y, float scale, float r, float g, float b)
 {
     glColor3f(r, g, b);
     for(int i = 0; i < text.size(); i++)
     {
         if(text[i] != ' ')
         {
-            this->blit(mainAtlas->tileFromChar(text[i]),
+            blit(mainAtlas->tileFromChar(text[i]),
                        x + i * constants::FONTW * scale, y,
                        x + (1 + i) * constants::FONTW * scale, y + constants::FONTH * scale);
         }
     }
 }
 
-void View::drawCuboid(Cuboid& c)
+void view::drawCuboid(Cuboid& c)
 {
     int posX = ix(c.getX(), c.getY()) - scrX;
     int posY = jy(c.getX(), c.getY()) + (int) (constants::HMULT * c.getZ()) - scrY;
@@ -341,7 +350,7 @@ void View::drawCuboid(Cuboid& c)
     glEnd();
 }
 
-void View::initSDLVideo()
+void view::initSDLVideo()
 {
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
     {
@@ -364,10 +373,10 @@ void View::initSDLVideo()
         exit(1);
     }
     SDL_GL_SetSwapInterval(1);
-    this->renderer = SDL_CreateRenderer(this->window, -1, SDL_RENDERER_ACCELERATED);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 }
 
-void View::initAtlas()
+void view::initAtlas()
 {
     int imgFlags = IMG_INIT_PNG;
     if(!(IMG_Init(imgFlags) & imgFlags))
@@ -378,7 +387,7 @@ void View::initAtlas()
     }
     else
     {
-        mainAtlas = new Atlas("main", this->renderer);
+        mainAtlas = new Atlas("main", renderer);
         if(mainAtlas == nullptr)
         {
             cout << "Error: Failed to create atlas." << endl;

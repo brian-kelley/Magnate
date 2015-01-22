@@ -9,6 +9,7 @@
 #include "Atlas.h"
 
 using namespace std;
+using namespace boost::filesystem;
 //Call this to initialize an atlas that already exists as assets/filename
 Atlas::Atlas(string imgDir, SDL_Renderer* renderer, int size)
 {
@@ -61,7 +62,6 @@ void Atlas::buildAtlas(string imgDir, SDL_Renderer* renderer, int size)
     if(target == nullptr)
     {
         cout << SDL_GetError() << endl;
-        exit(1);
     }
     string inputListPath[] = {"assets", imgDir, "*.png"};
     vector<string> inputFiles = DirManager::exec("ls " + DirManager::getCompoundPath(inputListPath, 3));
@@ -111,7 +111,6 @@ void Atlas::buildAtlas(string imgDir, SDL_Renderer* renderer, int size)
         if(dest == -1)
         {
             cout << "Fatal error: texture " << textures.back()->name << " doesn't fit in atlas." << endl;
-            exit(EXIT_FAILURE);
         }
         tileNames[textures.back()->name] = (int) this->tiles.size();
         tileFile << textures.back()->name << " " << rects[dest]->x << " " << rects[dest]->y << " " << textures.back()->surface->w << " " << textures.back()->surface->h << endl;
@@ -217,7 +216,6 @@ void Atlas::bind()
     if(SDL_GL_BindTexture(this->tex, nullptr, nullptr) != 0)
     {
         cout << "Error binding atlas to GL context." << endl;
-        exit(EXIT_FAILURE);
     }
 }
 

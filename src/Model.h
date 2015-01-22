@@ -16,15 +16,12 @@
 #include "Cuboid.h"
 #include "Constants.h"
 
-class Model
+namespace model
 {
-public:
-    Model();
-    ~Model();
-    void update();
-    World* getCurrentWorld();
-private:
-    World* currentWorld;
-};
+    extern void init();
+    extern void update();
+    extern World* getCurrentWorld();
+    extern World* currentWorld;
+}
 
 #endif

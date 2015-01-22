@@ -9,13 +9,16 @@
 #include <iostream>
 #include <vector>
 #include <SDL2/SDL.h>
+#include <boost/filesystem.hpp>
 #include "Control.h"
 #include "DirManager.h"
 
 using namespace std;
+using namespace boost::filesystem;
 
 int main(int argc, const char* argv[])
 {
+    cout << initial_path() << endl;
     DirManager::findPath();
     Control::init();
     int ticks;

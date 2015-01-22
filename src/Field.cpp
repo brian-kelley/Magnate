@@ -11,7 +11,7 @@
 using namespace std;
 using namespace componentHandler;
 
-Field::Field(int x, int y, int width, int height, string text, fieldCallback_t callback)
+Field::Field(int x, int y, int width, int height, string text, callback_t callback)
 {
 	compID = createComponent(x, y, width, height, true);
     this->text = text;
@@ -71,9 +71,9 @@ int Field::getCompID()
     return compID;
 }
 
-fieldCallback_t Field::getCallback()
+callback_t Field::getCallback()
 {
-    return this->callback;
+    return callback;
 }
 
 bool Field::isActive()

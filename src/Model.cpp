@@ -9,23 +9,21 @@
 #include "Model.h"
 
 using namespace std;
+using namespace model;
 
-Model::Model()
+World* model::currentWorld;
+
+void model::init()
 {
-    this->currentWorld = nullptr;
+    //TODO: Initialize model, using savename file?
 }
 
-Model::~Model()
+void model::update()
 {
     
 }
 
-void Model::update()
+World* model::getCurrentWorld()
 {
-    
-}
-
-World* Model::getCurrentWorld()
-{
-    return this->currentWorld;
+    return currentWorld;
 }

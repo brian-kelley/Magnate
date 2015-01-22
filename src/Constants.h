@@ -12,9 +12,9 @@
 #include <cstdint>
 #include <string>
 
-typedef void (*callback_t) (void);
-typedef void (*fieldCallback_t) (std::string);
-typedef std::string (*fieldDoneCallback_t) ();
+//general action for buttons and fields, pass component
+//ID so callee can identify component
+typedef void (*callback_t) (int);
 
 typedef struct
 {

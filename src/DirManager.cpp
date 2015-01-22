@@ -15,16 +15,15 @@
 #define _MAINPATH "/home/brian/Dropbox/Magnate"
 #define _SEPCHAR "/"
 #elif _WIN32
-#define _MAINPATH "C:\Users\Brian\Dropbox\Magnate"
+#define _MAINPATH "C:\\Users\\Brian\\Dropbox\\Magnate"
 #define _SEPCHAR "\\"
 #endif
 
 using namespace std;
+using namespace DirManager;
 
 string DirManager::dirPath;
 string DirManager::sepChar;
-
-using namespace DirManager;
 
 void DirManager::findPath()
 {
@@ -113,7 +112,7 @@ int DirManager::delimInt(unsigned long& index, string& data)
         {
         	out = stoi(stp);
         }
-        catch (const std::invalid_argument& invArg)
+        catch (const invalid_argument& invArg)
         {
             cout << "Error parsing int:" << invArg.what() << "\n";
             cout << "Outputting 1 instead.\n";

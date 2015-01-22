@@ -17,7 +17,7 @@
 #include <GL/gl.h>
 #elif _WIN32
 #include <SDL2\SDL.h>
-#include <GL\gl.h>
+#include <GL/gl.h>
 #endif
 #include <iostream>
 #include <vector>
@@ -32,38 +32,39 @@
 #include "Coord.h"
 #include "Constants.h"
 
-class View
+namespace view
 {
-public:
-    View(int screenX = 0, int screenY = 0);
-    ~View();
-    void updateWindowSize();
-    void drawWorld(World* currentWorld);
-    void drawScene(Scene& s);
-    void prepareFrame();
-    void finalizeFrame();
-private:
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-    SDL_GLContext context;
-    Atlas* mainAtlas;
-    void blit(int tex, int x, int y);
-    void blit(int tex, int x1, int y1, int x2, int y2);
-    void frame();
-    void configGL();
-    void initSDLVideo();
-    void initAtlas();
-    void drawCuboid(Cuboid& c);
-    void drawBuilding(Building& b);
-    void drawButton(Button& b);
-    void drawLabel(Label& l);
-    void drawField(Field& f);
-    void drawScrollBlock(ScrollBlock& sb);
-    void drawString(std::string text, int x, int y);
-    void drawString(std::string text, int x, int y, float scale);
-    void drawString(std::string text, int x, int y, float scale, float r, float g, float b);
-    int scrX;
-    int scrY;
-};
+    //Private data members
+    extern int scrX;
+    extern int scrY;
+    extern SDL_Window* window;
+    extern SDL_Renderer* renderer;
+    extern SDL_GLContext context;
+    extern Atlas* mainAtlas;
+    //Public functions
+    extern void init(int screenX = 0, int screenY = 0);
+    extern void dispose();
+    extern void updateWindowSize();
+    extern void drawWorld(World* currentWorld);
+    extern void drawScene(Scene& s);
+    extern void prepareFrame();
+    extern void finalizeFrame();
+    //Private functions
+    extern void blit(int tex, int x, int y);
+    extern void blit(int tex, int x1, int y1, int x2, int y2);
+    extern void frame();
+    extern void configGL();
+    extern void initSDLVideo();
+    extern void initAtlas();
+    extern void drawCuboid(Cuboid& c);
+    extern void drawBuilding(Building& b);
+    extern void drawButton(Button& b);
+    extern void drawLabel(Label& l);
+    extern void drawField(Field& f);
+    extern void drawScrollBlock(ScrollBlock& sb);
+    extern void drawString(std::string text, int x, int y);
+    extern void drawString(std::string text, int x, int y, float scale);
+    extern void drawString(std::string text, int x, int y, float scale, float r, float g, float b);
+}
 
 #endif
