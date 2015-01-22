@@ -18,7 +18,10 @@ using namespace boost::filesystem;
 
 int main(int argc, const char* argv[])
 {
-    cout << initial_path() << endl;
+    for(int i = 0; i < argc; i++)
+    {
+        cout << "Here comes argv #" << i << ": " << argv[i] << endl;
+    }
     DirManager::findPath();
     Control::init();
     int ticks;

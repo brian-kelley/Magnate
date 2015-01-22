@@ -6,3 +6,4 @@ src/.settings/
 .gitignore
 .cproject
 .project
+src/.*
