@@ -25,7 +25,7 @@ Button::~Button()
     
 }
 
-void Button::processMouse(int x, int y)
+void Button::processMouse()
 {
     this->over = componentHandler::mouseInside(compID);
 }

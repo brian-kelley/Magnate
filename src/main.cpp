@@ -11,18 +11,13 @@
 #include <SDL2/SDL.h>
 #include <boost/filesystem.hpp>
 #include "Control.h"
-#include "DirManager.h"
+#include "Button.h"
 
 using namespace std;
 using namespace boost::filesystem;
 
 int main(int argc, const char* argv[])
 {
-    for(int i = 0; i < argc; i++)
-    {
-        cout << "Here comes argv #" << i << ": " << argv[i] << endl;
-    }
-    DirManager::findPath();
     Control::init();
     int ticks;
     while(true)

@@ -11,6 +11,7 @@
 using namespace std;
 using namespace constants;
 using namespace view;
+using namespace boost::filesystem;
 
 int view::scrX = 0;
 int view::scrY = 0;
@@ -114,63 +115,18 @@ void view::drawField(Field &f)
 
 void view::drawButton(Button &b)
 {
-    if(b.isMouseOver())
-    {
-        intRect_t curRect = componentHandler::getCompIntRect(b.getCompID());
-        glDisable(GL_TEXTURE_2D);
-        glColor4f(UI_BG_R, UI_BG_G, UI_BG_B, 1);
-        glBegin(GL_QUADS);
-        glVertex2i(curRect.x + BORDER_WIDTH, curRect.y + BORDER_WIDTH);
-        glVertex2i(curRect.x + curRect.w - BORDER_WIDTH, curRect.y + BORDER_WIDTH);
-        glVertex2i(curRect.x + curRect.w - BORDER_WIDTH, curRect.y + curRect.h - BORDER_WIDTH);
-        glVertex2i(curRect.x + BORDER_WIDTH, curRect.y + curRect.h - BORDER_WIDTH);
-        glEnd();
-        glColor4f(UI_FG_R, UI_FG_G, UI_FG_B, 1);
-        glBegin(GL_POLYGON);
-        glVertex2i(curRect.x, curRect.y);
-        glVertex2i(curRect.x + curRect.w, curRect.y);
-        glVertex2i(curRect.x + curRect.w - BORDER_WIDTH,
-                   curRect.y + BORDER_WIDTH);
-        glVertex2i(curRect.x + BORDER_WIDTH,
-                   curRect.y + BORDER_WIDTH);
-        glVertex2i(curRect.x + BORDER_WIDTH,
-                   curRect.y + curRect.h - BORDER_WIDTH);
-        glVertex2i(curRect.x, curRect.y + curRect.h);
-        glEnd();
-        glColor4f(UI_FG_R * SHADE,
-                  UI_FG_G * SHADE,
-                  UI_FG_B * SHADE, 1);
-        glBegin(GL_QUADS);
-        glVertex2i(curRect.x, curRect.y + curRect.h);
-        glVertex2i(curRect.x + constants::BORDER_WIDTH, curRect.y + curRect.h - constants::BORDER_WIDTH);
-        glVertex2i(curRect.x + curRect.w - constants::BORDER_WIDTH,
-                   curRect.y + curRect.h - constants::BORDER_WIDTH);
-        glVertex2i(curRect.x + curRect.w, curRect.y + curRect.h);
-        glEnd();
-        glBegin(GL_QUADS);
-        glVertex2i(curRect.x + curRect.w, curRect.y);
-        glVertex2i(curRect.x + curRect.w, curRect.y + curRect.h);
-        glVertex2i(curRect.x + curRect.w - constants::BORDER_WIDTH,
-                   curRect.y + curRect.h - constants::BORDER_WIDTH);
-        glVertex2i(curRect.x + curRect.w - constants::BORDER_WIDTH,
-                   curRect.y + constants::BORDER_WIDTH);
-        glEnd();
-        glEnable(GL_TEXTURE_2D);
-        drawString(b.getText(), b.getTextLoc().x + curRect.x, b.getTextLoc().y + curRect.y, b.getFontScale(),
-                         constants::UI_FG_R, constants::UI_FG_G, constants::UI_FG_B);
-    }
-    else
+    if(!b.isMouseOver())
     {
         glDisable(GL_TEXTURE_2D);
-        glColor4f(UI_BG_R / SHADE, UI_BG_G / SHADE, UI_BG_B / SHADE, 1.0f);
+        glColor4f(UI_BG_R, UI_BG_G, UI_BG_B, 1.0f);
         intRect_t* rect = &componentHandler::getCompIntRect(b.getCompID());
         glBegin(GL_QUADS);
-        glVertex2i(rect->x, rect->y);
-        glVertex2i(rect->x + rect->w, rect->y);
-        glVertex2i(rect->x + rect->w, rect->y + rect->h);
-        glVertex2i(rect->x, rect->y + rect->h);
+        glVertex2i(rect->x + BORDER_WIDTH, rect->y + BORDER_WIDTH);
+        glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + BORDER_WIDTH);
+        glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
+        glVertex2i(rect->x + BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
         glEnd();
-        glColor4f(UI_FG_R / SHADE, UI_FG_G / SHADE, UI_FG_B / SHADE, 1.0f);
+        glColor4f(UI_FG_R, UI_FG_G, UI_FG_B, 1.0f);
         glBegin(GL_QUADS);
         glVertex2i(rect->x, rect->y);
         glVertex2i(rect->x + rect->w, rect->y);
@@ -181,7 +137,7 @@ void view::drawButton(Button &b)
         glVertex2i(rect->x, rect->y);
         glVertex2i(rect->x + BORDER_WIDTH, rect->y + BORDER_WIDTH);
         glVertex2i(rect->x + BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
-        glVertex2i(rect->x, rect->y + rect->w);
+        glVertex2i(rect->x, rect->y + rect->h);
         glEnd();
         glColor4f(UI_FG_R, UI_FG_G, UI_FG_B, 1.0f);
         glBegin(GL_QUADS);
@@ -196,7 +152,49 @@ void view::drawButton(Button &b)
         glVertex2i(rect->x + rect->w, rect->y + rect->h);
         glVertex2i(rect->x, rect->y + rect->h);
         glEnd();
-        drawString(b.getText(), b.getTextLoc().x, b.getTextLoc().y, b.getFontScale(),
+        glEnable(GL_TEXTURE_2D);
+        drawString(b.getText(), rect->x + b.getTextLoc().x, rect->y + b.getTextLoc().y, b.getFontScale(),
+                   UI_FG_R, UI_FG_G, UI_FG_B);
+    }
+    else
+    {
+        glDisable(GL_TEXTURE_2D);
+        glColor4f(UI_BG_R / SHADE, UI_BG_G / SHADE, UI_BG_B / SHADE, 1.0f);
+        intRect_t* rect = &componentHandler::getCompIntRect(b.getCompID());
+        glBegin(GL_QUADS);
+        glVertex2i(rect->x + BORDER_WIDTH, rect->y + BORDER_WIDTH);
+        glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + BORDER_WIDTH);
+        glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
+        glVertex2i(rect->x + BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
+        glEnd();
+        glColor4f(UI_FG_R / SHADE, UI_FG_G / SHADE, UI_FG_B / SHADE, 1.0f);
+        glBegin(GL_QUADS);
+        glVertex2i(rect->x, rect->y);
+        glVertex2i(rect->x + rect->w, rect->y);
+        glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + BORDER_WIDTH);
+        glVertex2i(rect->x + BORDER_WIDTH, rect->y + BORDER_WIDTH);
+        glEnd();
+        glBegin(GL_QUADS);
+        glVertex2i(rect->x, rect->y);
+        glVertex2i(rect->x + BORDER_WIDTH, rect->y + BORDER_WIDTH);
+        glVertex2i(rect->x + BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
+        glVertex2i(rect->x, rect->y + rect->h);
+        glEnd();
+        glColor4f(UI_FG_R, UI_FG_G, UI_FG_B, 1.0f);
+        glBegin(GL_QUADS);
+        glVertex2i(rect->x + rect->w, rect->y);
+        glVertex2i(rect->x + rect->w, rect->y + rect->h);
+        glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
+        glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + BORDER_WIDTH);
+        glEnd();
+        glBegin(GL_QUADS);
+        glVertex2i(rect->x + BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
+        glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
+        glVertex2i(rect->x + rect->w, rect->y + rect->h);
+        glVertex2i(rect->x, rect->y + rect->h);
+        glEnd();
+        glEnable(GL_TEXTURE_2D);
+        drawString(b.getText(), rect->x + b.getTextLoc().x, rect->y + b.getTextLoc().y, b.getFontScale(),
                    UI_FG_R / SHADE, UI_FG_G / SHADE, UI_FG_B / SHADE);
     }
 }
@@ -204,15 +202,14 @@ void view::drawButton(Button &b)
 void view::drawScrollBlock(ScrollBlock &sb)
 {
     glColor4f(UI_BG_R * SHADE, UI_BG_G * SHADE, UI_BG_B * SHADE, 1);
-    intRect_t sbrect = componentHandler::getCompIntRect(sb.getCompID());
+    intRect_t* sbrect = &componentHandler::getCompIntRect(sb.getCompID());
     glDisable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
-    glVertex2i(sbrect.x, sbrect.y);
-    glVertex2i(sbrect.x + sbrect.w, sbrect.y);
-    glVertex2i(sbrect.x + sbrect.w, sbrect.y + sbrect.h);
-    glVertex2i(sbrect.x, sbrect.y + sbrect.h);
+    glVertex2i(sbrect->x, sbrect->y);
+    glVertex2i(sbrect->x + sbrect->w, sbrect->y);
+    glVertex2i(sbrect->x + sbrect->w, sbrect->y + sbrect->h);
+    glVertex2i(sbrect->x, sbrect->y + sbrect->h);
     glEnd();
-    
 }
 
 void view::configGL()
@@ -378,6 +375,7 @@ void view::initSDLVideo()
 
 void view::initAtlas()
 {
+    path imgPath = initial_path() / ".." / "assets" / "main_atlas.png";
     int imgFlags = IMG_INIT_PNG;
     if(!(IMG_Init(imgFlags) & imgFlags))
     {

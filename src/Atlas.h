@@ -31,13 +31,12 @@
 #include <vector>
 #include <map>
 #include <stdexcept>
-#include "DirManager.h"
 #include "Constants.h"
 
 class Atlas
 {
 public:
-    Atlas(std::string imgDir, SDL_Renderer* renderer, int size = constants::DEFAULT_ATLAS_SIZE);
+    Atlas(std::string imageName, SDL_Renderer* renderer, int size = constants::DEFAULT_ATLAS_SIZE); //example, pass either "main" or "main.png"
     ~Atlas();
     int tileFromName(std::string tilename);
     int tileFromChar(char c);
@@ -60,8 +59,7 @@ public:
     }
 private:
     SDL_Texture* tex;
-    int width;
-    int height;
+    int size;
     struct named_tex_t
     {
         SDL_Surface* surface;
@@ -69,12 +67,11 @@ private:
     };
     std::map<std::string, int> tileNames;
     std::map<char, int> charTiles;
-    std::vector<DirManager::tileData_t> tiles;
+    std::vector<tileData_t> tiles;
     void buildAtlas(std::string imgDir, SDL_Renderer* renderer, int size);
-    int delimInt(unsigned long& index, std::string& data);
-    std::string delim(unsigned long& index, std::string& data);
     void sortForHeight(std::vector<named_tex_t*>& vec);
     void initCharTiles();
+    std::vector<tileData_t> parseTiles(boost::filesystem::path fpath);
 };
 
 #endif

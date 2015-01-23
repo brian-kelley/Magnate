@@ -14,6 +14,7 @@ using namespace Control;
 
 SNAME Control::current;
 Field* Control::currentField;
+Scene* Control::currentScene;
 bool Control::terminating;
 bool Control::updatingView;
 bool Control::trackingMouse;
@@ -67,7 +68,7 @@ void Control::init()
     updatingView = true;
     trackingMouse = true;
     trackingKeyboard = true;
-    saveNames = DirManager::listSaves();
+    saveNames = SaveManager::listSaveFolders();
     currentEvent = new SDL_Event();
     current = MAIN_MENU;
     currentField = nullptr;
@@ -319,9 +320,11 @@ void Control::initScenes()
 {
     /* Main menu */
     Scene mainMenu;
-    Button startGame(200, 100, 240, 100, "Start Game", &ui::mainStartButton);
+    Button startGame(320, 180, 240, 100, "Start Game", &ui::mainStartButton);
     mainMenu.addButton(startGame);
-    Button quitGame(200, 240, 240, 100, "Quit Game", &ui::mainQuitButton);
+    intRect_t* lol = &componentHandler::getCompIntRect(startGame.getCompID());
+    cout << lol->x << " " << lol->y << " " << lol->w << " " << lol->h << endl;
+    Button quitGame(320, 300, 240, 100, "Quit Game", &ui::mainQuitButton);
     mainMenu.addButton(quitGame);
     /* Save menu */
     Scene saveMenu;
@@ -346,4 +349,13 @@ void Control::initScenes()
     Button backToMain(320, 400, 300, 80, "Back", &ui::saveBackButton);
     saveMenu.addButton(backToMain);
     scenes.push_back(saveMenu);
+}
+
+void Control::clearEnables()      //clear currentField and button hovers in current scene
+{
+    currentField = nullptr;
+    for(int i = 0; i < int(currentScene->getButtons().size()); i++)
+    {
+        currentScene->getButtons()[i].processMouse();
+    }
 }

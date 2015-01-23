@@ -32,6 +32,15 @@ typedef struct
     int h;
 } intRect_t;
 
+typedef struct
+{
+    std::string name;
+    float x;
+    float y;
+    float width;
+    float height;
+} tileData_t;
+
 namespace constants
 {
     extern int mouseX;

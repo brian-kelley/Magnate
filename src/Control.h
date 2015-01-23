@@ -26,8 +26,8 @@
 #include "Field.h"
 #include "Label.h"
 #include "Scene.h"
-#include "DirManager.h"
 #include "Constants.h"
+#include "SaveManager.h"
 
 namespace Control
 {
@@ -61,6 +61,7 @@ namespace Control
     extern bool trackingMouse;
     extern bool trackingKeyboard;
     extern void initScenes();
+    extern void clearEnables();
 }
 
 #endif

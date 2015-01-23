@@ -27,7 +27,7 @@ class Button
 public:
     Button(int x, int y, int width, int height, std::string text, callback_t callback);
     ~Button();
-    void processMouse(int x, int y);
+    void processMouse();
     SDL_Point& getTextLoc();
     std::string& getText();
     float getFontScale();
