@@ -37,10 +37,16 @@ void Scene::addField(Field f)
 
 void Scene::clearAll()
 {
-    this->scrollBlocks.clear();
-    this->buttons.clear();
-    this->fields.clear();
-    this->labels.clear();
+    for(int i = 0; i < scrollBlocks.size(); i++)
+    {
+        scrollBlocks[i].getButtons().clear();
+        scrollBlocks[i].getFields().clear();
+        scrollBlocks[i].getLabels().clear();
+    }
+    scrollBlocks.clear();
+    buttons.clear();
+    fields.clear();
+    labels.clear();
 }
 
 vector<ScrollBlock>& Scene::getScrollBlocks()

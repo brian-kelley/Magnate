@@ -31,15 +31,15 @@ void Field::setText(string newtext)
     this->text = newtext;
 }
 
-void Field::processKey(SDL_Event *ev)
+void Field::processKey(SDL_Event& e)
 {
-    if(ev->type == SDL_TEXTINPUT)
+    if(e.type == SDL_TEXTINPUT)
     {
-        this->text.append(string(ev->text.text));
+        text += string(e.text.text);
     }
-    else if(ev->type == SDL_KEYDOWN)
+    else if(e.type == SDL_KEYDOWN)
     {
-        if(ev->key.keysym.scancode == SDL_SCANCODE_BACKSPACE)
+        if(e.key.keysym.scancode == SDL_SCANCODE_BACKSPACE)
         {
             if(this->text.size() > 0)
             {

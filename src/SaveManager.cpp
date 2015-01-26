@@ -11,6 +11,11 @@
 using namespace std;
 using namespace boost::filesystem;
 
+SaveManager::SaveManager()
+{
+    refreshSaveList();
+}
+
 World* SaveManager::loadWorld(string worldFolder)
 {
     /* TODO: When world structure is implemented, allocate memory for it
@@ -30,10 +35,31 @@ void SaveManager::deleteWorld(string worldFolder)
     }
 }
 
-vector<string> SaveManager::listSaveFolders()
+void SaveManager::refreshSaveList()
 {
     vector<string> out;
-    path saves = initial_path() / ".."/ "saves";
-    out.push_back("not really a save");
-    return out;
+    path saveFolder = initial_path() / ".."/ "saves";
+    if(is_directory(saveFolder))
+    {
+        directory_iterator dirIter(saveFolder);
+        directory_iterator end;
+        while(dirIter != end)
+        {
+            if(is_directory(dirIter->path()))
+            {
+                saves.push_back(((dirIter->path()).stem()).string());
+            }
+            dirIter++;
+        }
+    }
+}
+
+vector<string>& SaveManager::listSaves()
+{
+    return saves;
+}
+
+int SaveManager::getNumSaves()
+{
+    return int(saves.size());
 }

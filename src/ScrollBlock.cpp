@@ -94,7 +94,7 @@ void ScrollBlock::updateSize()      //updateSize will handle resizing subcompone
     }
 }
 
-void ScrollBlock::updateCanvasRect(int newHeight) //call this when need more space for subcomponents
+void ScrollBlock::updateCanvasHeight(int newHeight) //call this when need more space for subcomponents
 {
     //minimum height of canvas is height of top-level rect; least height where no scrolling
     if(newHeight < getCompIntRect(compID).h)
@@ -156,6 +156,20 @@ void ScrollBlock::processScrollEvent(SDL_MouseWheelEvent& e)
         }
     }
     refreshModifiers();
+}
+
+void ScrollBlock::processMouseMotionEvent(SDL_MouseMotionEvent &e)
+{
+    intRect_t* rect;
+    for(int i = 0; i < int(buttons.size()); i++)
+    {
+        rect = &getCompIntRect(buttons[i].getCompID());
+        if(rect->x <= mouseX && rect->x + rect->w > mouseX
+           && rect->y <= mouseY && rect->y + rect->h > mouseY)
+        {
+            buttons[i].setMouseOver(true);
+        }
+    }
 }
 
 int ScrollBlock::getCompID()

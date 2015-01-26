@@ -11,6 +11,7 @@
 
 #ifdef __APPLE__
 #include <SDL2/SDL.h>
+#include <boost/filesystem.hpp>
 #elif __linux
 #include <SDL2/SDL.h>
 #elif _WIN32
@@ -41,14 +42,13 @@ namespace Control
         GAME,
         PAUSE
     };
-    extern SNAME current;
-    extern std::vector<std::string> saveNames;
     extern int oldWindowW;
     extern int oldWindowH;
-    extern std::vector<Scene> scenes;
+    extern std::map<SNAME, Scene> scenes;
     extern SDL_Event* currentEvent;
     extern Scene* currentScene;
     extern Field* currentField;     //the label that currently has keyboard focus, if any
+    extern SaveManager* sman;
     extern void processWindowResize();
     extern void processWindowEvent(SDL_Event& e);
     extern void processMouseMotionEvent(SDL_Event& e);

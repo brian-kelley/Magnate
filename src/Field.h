@@ -30,7 +30,7 @@ public:
     void setText(std::string text);
     void setLocation(int x, int y);
     void setSize(int width, int height);
-    void processKey(SDL_Event* ev);
+    void processKey(SDL_Event& e);
     SDL_Point& getTextLoc();
     float getFontScale();
     std::string& getText();

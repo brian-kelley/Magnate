@@ -38,7 +38,7 @@ public:
     std::vector<Field>& getFields();
     std::vector<Label>& getLabels();
     void updateSize();
-    void updateCanvasRect(int newHeight);
+    void updateCanvasHeight(int newHeight);
     void processScrollEvent(SDL_MouseWheelEvent& e);
     void processButtonEvent(SDL_MouseButtonEvent& e);
     void processMouseMotionEvent(SDL_MouseMotionEvent& e);
@@ -61,6 +61,8 @@ private:
     void refreshModifiers();  //use component/canvas/viewport rectangles to calculate offsets
     Field* currentField();
     bool active;
+    int barHeight;
+    float fBarHeight;
 };
 
 #endif /* defined(__Magnate__ScrollBlock__) */

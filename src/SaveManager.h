@@ -13,20 +13,30 @@
 #include <string>
 #include <vector>
 #include "World.h"
+#include "Scene.h"
+#include "Button.h"
 
 #ifdef __APPLE__
 #include <boost/filesystem.hpp>
+#include <boost/range/iterator_range.hpp>
 #elif _WIN32
 
 #elif __linux
 
 #endif
 
-namespace SaveManager
+class SaveManager
 {
+public:
+    SaveManager();
+    ~SaveManager();
+    void refreshSaveList();
+    std::vector<std::string>& listSaves();
     World* loadWorld(std::string worldFolder);
     void deleteWorld(std::string worldFolder);
-    std::vector<std::string> listSaveFolders();
-}
+    int getNumSaves();
+private:
+    std::vector<std::string> saves;
+};
 
 #endif /* defined(__Magnate__SaveManager__) */
