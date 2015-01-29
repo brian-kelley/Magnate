@@ -36,7 +36,7 @@
 class Atlas
 {
 public:
-    Atlas(std::string imageName, SDL_Renderer* renderer, int size = constants::DEFAULT_ATLAS_SIZE); //example, pass either "main" or "main.png"
+    Atlas(std::string imageName, SDL_Renderer* renderer); //example, pass either "main" or "main.png"
     ~Atlas();
     int tileFromName(std::string tilename);
     int tileFromChar(char c);
@@ -71,7 +71,7 @@ private:
     void buildAtlas(std::string imgDir, SDL_Renderer* renderer, int size);
     void sortForHeight(std::vector<named_tex_t*>& vec);
     void initCharTiles();
-    std::vector<tileData_t> parseTiles(boost::filesystem::path fpath);
+    void parseTiles(boost::filesystem::path fpath);
 };
 
 #endif

@@ -37,32 +37,41 @@ public:
     std::vector<Button>& getButtons();
     std::vector<Field>& getFields();
     std::vector<Label>& getLabels();
-    void updateSize();
+    int numButtons();
+    int numFields();
+    int numLabels();
+    int getXOffset();
+    int getYOffset();
+    void updateSBSize();
     void updateCanvasHeight(int newHeight);
     void processScrollEvent(SDL_MouseWheelEvent& e);
     void processButtonEvent(SDL_MouseButtonEvent& e);
     void processMouseMotionEvent(SDL_MouseMotionEvent& e);
     int compID;
+    Field* currentField();
     int getCompID();
     bool isActive();
     void activate();
     void deactivate();
+    intRect_t getBarRect();
+    bool hasBar();
 private:
     SDL_Rect rect;
     std::vector<Button> buttons;
     std::vector<Field> fields;
     std::vector<Label> labels;
-    int canvH;
-    float fCanvH;
-    int viewport;
-    float fViewport;
+    int canvH;            //height of the canvas, in pixels
+    float fCanvH;         //height of the canvas relative to window height
+    int viewport;         //how far from top of canvas top of viewable area is
+    float fViewport;      //viewport, relative
     int xOffset;          //what needs to be added to screen x coordinate to get local coordinates
     int yOffset;
     void refreshModifiers();  //use component/canvas/viewport rectangles to calculate offsets
-    Field* currentField();
+    void calcBarPlacement();
     bool active;
-    int barHeight;
-    float fBarHeight;
+    int barHeight;        //how many pixels tall is the bar?
+    float fBarHeight;     //relative to component size?
+    float barPos;         //where to draw bar? (0 = top, 1 = bottom)
 };
 
 #endif /* defined(__Magnate__ScrollBlock__) */

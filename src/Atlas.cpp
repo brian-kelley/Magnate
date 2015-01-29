@@ -11,20 +11,19 @@
 using namespace std;
 using namespace boost::filesystem;
 //Call this to initialize an atlas that already exists as assets/filename
-Atlas::Atlas(string atlasName, SDL_Renderer* renderer, int size)
+Atlas::Atlas(string atlasName, SDL_Renderer* renderer)
 {
-    this->size = size;
     path imagePath = initial_path() / ".." / "assets" / (atlasName + "_atlas.png");
     path tilePath = initial_path() / ".." / "data" / (atlasName + "_tiles.txt");
-    tiles = parseTiles(tilePath);
     SDL_Surface* loadedSurface = IMG_Load(imagePath.string().c_str());
+    size = loadedSurface->w;
     this->tex = SDL_CreateTextureFromSurface(renderer, loadedSurface);
+    parseTiles(tilePath);
     if(this->tex == nullptr)
     {
         cout << "Error: could not convert surface to tex." << endl;
         cout << SDL_GetError() << endl;
     }
-    parseTiles(tilePath);
     for(int i = 0; i < (int) tiles.size(); i++)
     {
         this->tileNames[tiles[i].name] = i;
@@ -123,9 +122,8 @@ void Atlas::initCharTiles()
     this->charTiles['/'] = tileNames["slash"];
 }
 
-vector<tileData_t> Atlas::parseTiles(path fpath)
+void Atlas::parseTiles(path fpath)
 {
-    vector<tileData_t> tiles;
     string line;
     ifstream tfile(fpath.string().c_str());
     unsigned long index;
@@ -166,5 +164,4 @@ vector<tileData_t> Atlas::parseTiles(path fpath)
         cout << "Error: could not load data/" + fpath.filename().string() << endl;
         cout << "Check if it exists and has file extension." << endl;
     }
-    return tiles;
 }

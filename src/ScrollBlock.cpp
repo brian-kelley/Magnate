@@ -18,6 +18,7 @@ ScrollBlock::ScrollBlock(int x, int y, int width, int height, int canvh, bool ce
     this->canvH = canvh;
     fCanvH = (float) canvH / WINDOW_H;
     refreshModifiers();
+    calcBarPlacement();
 }
 
 ScrollBlock::~ScrollBlock()
@@ -55,41 +56,23 @@ vector<Field>& ScrollBlock::getFields()
     return this->fields;
 }
 
-void ScrollBlock::updateSize()      //updateSize will handle resizing subcomponents as well
+void ScrollBlock::updateSBSize()      //updateSize will handle resizing subcomponents as well
 {
     componentHandler::updateSize(compID);   //updates top-level rectangle rel. to window
     canvH = fCanvH * WINDOW_H;              //also adjust canvas height
-    intRect_t* sbRect = &getCompIntRect(compID);
-    intRect_t* itemp;
-    floatRect_t* ftemp;
     for(int i = 0; i < int(buttons.size()); i++)
     {
-        itemp = &getCompIntRect(buttons[i].getCompID());
-        ftemp = &getCompFloatRect(buttons[i].getCompID());      //remember, float rect rel. to SB
-        itemp->x = ftemp->x * sbRect->w;       //canvas and top-level widths equal
-        itemp->y = ftemp->y * canvH;
-        itemp->w = ftemp->w * sbRect->w;
-        itemp->h = ftemp->h * canvH;
+        updateSize(buttons[i].getCompID());
         buttons[i].calcTextPlacement();
     }
     for(int i = 0; i < int(fields.size()); i++)
     {
-        itemp = &getCompIntRect(fields[i].getCompID());
-        ftemp = &getCompFloatRect(buttons[i].getCompID());
-        itemp->x = ftemp->x * sbRect->w;
-        itemp->y = ftemp->y * canvH;
-        itemp->w = ftemp->w * sbRect->w;
-        itemp->h = ftemp->h * canvH;
+        updateSize(fields[i].getCompID());
         fields[i].calcTextPlacement();
     }
     for(int i = 0; i < int(labels.size()); i++)
     {
-        itemp = &getCompIntRect(labels[i].getCompID());
-        ftemp = &getCompFloatRect(labels[i].getCompID());
-        itemp->x = ftemp->x * sbRect->w;
-        itemp->y = ftemp->y * canvH;
-        itemp->w = ftemp->w * sbRect->w;
-        itemp->h = ftemp->h * canvH;
+        updateSize(labels[i].getCompID());
         fields[i].calcTextPlacement();
     }
 }
@@ -105,6 +88,7 @@ void ScrollBlock::updateCanvasHeight(int newHeight) //call this when need more s
     {
         canvH = newHeight;
     }
+    calcBarPlacement();
 }
 
 void ScrollBlock::processButtonEvent(SDL_MouseButtonEvent &e)
@@ -201,7 +185,71 @@ void ScrollBlock::deactivate()
     {
         if(fields[i].isActive())
         {
-            
+            (*fields[i].getCallback()) (fields[i].getCompID());
+            fields[i].deactivate();
         }
     }
+}
+
+void ScrollBlock::calcBarPlacement()
+{
+    int compHeight = getCompIntRect(compID).h;
+    if(compHeight >= canvH)
+    {
+        barHeight = -1;     //-1 means don't draw any bar
+        fBarHeight = -1;
+    }
+    else
+    {
+        fBarHeight = (float(compHeight) - 2.0f * PAD) / canvH;
+        barHeight = fBarHeight * compHeight;
+    }
+}
+
+bool ScrollBlock::hasBar()
+{
+    if(barHeight == -1)
+    {
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+intRect_t ScrollBlock::getBarRect()
+{
+    intRect_t out;
+    intRect_t sbRect = getCompIntRect(compID);
+    out.x = sbRect.x + sbRect.w - PAD - BAR_WIDTH;
+    out.y = sbRect.y + PAD + barPos * sbRect.h;
+    out.w = BAR_WIDTH;
+    out.h = barHeight;
+    return out;
+}
+
+int ScrollBlock::numButtons()
+{
+    return int(buttons.size());
+}
+
+int ScrollBlock::numLabels()
+{
+    return int(labels.size());
+}
+
+int ScrollBlock::numFields()
+{
+    return int(fields.size());
+}
+
+int ScrollBlock::getXOffset()
+{
+    return xOffset;
+}
+
+int ScrollBlock::getYOffset()
+{
+    return yOffset;
 }

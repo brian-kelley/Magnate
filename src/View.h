@@ -59,13 +59,14 @@ namespace view
     extern void initAtlas();
     extern void drawCuboid(Cuboid& c);
     extern void drawBuilding(Building& b);
-    extern void drawButton(Button& b);
+    extern void drawButton(Button& b, int xOffset = 0, int yOffset = 0);
     extern void drawLabel(Label& l);
     extern void drawField(Field& f);
     extern void drawScrollBlock(ScrollBlock& sb);
     extern void drawString(std::string text, int x, int y);
     extern void drawString(std::string text, int x, int y, float scale);
     extern void drawString(std::string text, int x, int y, float scale, float r, float g, float b);
+    extern void drawVClipString(std::string text, int x, int y, float scale, float r, float g, float b, int top, int bottom);
 }
 
 #endif

@@ -49,7 +49,7 @@ namespace constants
     extern int FONTH;
     extern int PAD;
     extern int BORDER_WIDTH;
-    extern int DEFAULT_ATLAS_SIZE;
+    extern int BAR_WIDTH;
     extern int WINDOW_W;
     extern int WINDOW_H;
     extern float UI_BG_R;

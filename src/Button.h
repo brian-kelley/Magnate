@@ -33,8 +33,6 @@ public:
     float getFontScale();
     void updateSize();
     callback_t getCallback();
-    intRect_t& getIntRect();
-    floatRect_t& getFloatRect();
     void calcTextPlacement();
     int getCompID();
     void setMouseOver(bool isOver);

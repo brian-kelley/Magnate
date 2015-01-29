@@ -12,6 +12,7 @@ using namespace std;
 using namespace constants;
 using namespace view;
 using namespace boost::filesystem;
+using namespace componentHandler;
 
 int view::scrX = 0;
 int view::scrY = 0;
@@ -64,8 +65,15 @@ void view::drawWorld(World *currentWorld)   //probably too general of a function
     
 }
 
+/* Test drawing code here */
+void testCall()
+{
+    
+}
+
 void view::drawScene(Scene& s)
 {
+    testCall();
     for(int i = 0; i < int(s.getScrollBlocks().size()); i++)
     {
         drawScrollBlock(s.getScrollBlocks()[i]);
@@ -117,7 +125,7 @@ void view::drawField(Field &f)
     drawString(f.getText(), f.getTextLoc().x, f.getTextLoc().y, f.getFontScale());
 }
 
-void view::drawButton(Button &b)
+void view::drawButton(Button &b, int xOffset, int yOffset)
 {
     float colorMult;
     if(!b.isMouseOver())
@@ -130,41 +138,43 @@ void view::drawButton(Button &b)
     }
     glDisable(GL_TEXTURE_2D);
     glColor4f(UI_BG_R * colorMult, UI_BG_G * colorMult, UI_BG_B * colorMult, 1.0f);
-    intRect_t* rect = &componentHandler::getCompIntRect(b.getCompID());
+    intRect_t rect = getCompIntRect(b.getCompID());
+    rect.x += xOffset;
+    rect.y += yOffset;
     glBegin(GL_QUADS);
-    glVertex2i(rect->x + BORDER_WIDTH, rect->y + BORDER_WIDTH);
-    glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + BORDER_WIDTH);
-    glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
-    glVertex2i(rect->x + BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
+    glVertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
+    glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
+    glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
+    glVertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
     glEnd();
     glColor4f(UI_FG_R * colorMult, UI_FG_G * colorMult, UI_FG_B * colorMult, 1.0f);
     glBegin(GL_QUADS);
-    glVertex2i(rect->x, rect->y);
-    glVertex2i(rect->x + rect->w, rect->y);
-    glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + BORDER_WIDTH);
-    glVertex2i(rect->x + BORDER_WIDTH, rect->y + BORDER_WIDTH);
+    glVertex2i(rect.x, rect.y);
+    glVertex2i(rect.x + rect.w, rect.y);
+    glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
+    glVertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
     glEnd();
     glBegin(GL_QUADS);
-    glVertex2i(rect->x, rect->y);
-    glVertex2i(rect->x + BORDER_WIDTH, rect->y + BORDER_WIDTH);
-    glVertex2i(rect->x + BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
-    glVertex2i(rect->x, rect->y + rect->h);
+    glVertex2i(rect.x, rect.y);
+    glVertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
+    glVertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
+    glVertex2i(rect.x, rect.y + rect.h);
     glEnd();
     glColor4f(UI_FG_R * SHADE * colorMult, UI_FG_G * SHADE * colorMult, UI_FG_B * SHADE * colorMult, 1.0f);
     glBegin(GL_QUADS);
-    glVertex2i(rect->x + rect->w, rect->y);
-    glVertex2i(rect->x + rect->w, rect->y + rect->h);
-    glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
-    glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + BORDER_WIDTH);
+    glVertex2i(rect.x + rect.w, rect.y);
+    glVertex2i(rect.x + rect.w, rect.y + rect.h);
+    glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
+    glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
     glEnd();
     glBegin(GL_QUADS);
-    glVertex2i(rect->x + BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
-    glVertex2i(rect->x + rect->w - BORDER_WIDTH, rect->y + rect->h - BORDER_WIDTH);
-    glVertex2i(rect->x + rect->w, rect->y + rect->h);
-    glVertex2i(rect->x, rect->y + rect->h);
+    glVertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
+    glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
+    glVertex2i(rect.x + rect.w, rect.y + rect.h);
+    glVertex2i(rect.x, rect.y + rect.h);
     glEnd();
     glEnable(GL_TEXTURE_2D);
-    drawString(b.getText(), rect->x + b.getTextLoc().x, rect->y + b.getTextLoc().y, b.getFontScale(),
+    drawString(b.getText(), rect.x + b.getTextLoc().x, rect.y + b.getTextLoc().y, b.getFontScale(),
                UI_FG_R * colorMult, UI_FG_G * colorMult, UI_FG_B * colorMult);
 }
 
@@ -172,14 +182,40 @@ void view::drawScrollBlock(ScrollBlock &sb)
 {
     glColor4f(UI_BG_R * SHADE, UI_BG_G * SHADE, UI_BG_B * SHADE, 1);
     glDisable(GL_TEXTURE_2D);
-    intRect_t* sbrect = &componentHandler::getCompIntRect(sb.getCompID());
+    intRect_t sbrect = componentHandler::getCompIntRect(sb.getCompID());
     glBegin(GL_QUADS);
-    glVertex2i(sbrect->x, sbrect->y);
-    glVertex2i(sbrect->x + sbrect->w, sbrect->y);
-    glVertex2i(sbrect->x + sbrect->w, sbrect->y + sbrect->h);
-    glVertex2i(sbrect->x, sbrect->y + sbrect->h);
-    
+    glVertex2i(sbrect.x, sbrect.y);
+    glVertex2i(sbrect.x + sbrect.w, sbrect.y);
+    glVertex2i(sbrect.x + sbrect.w, sbrect.y + sbrect.h);
+    glVertex2i(sbrect.x, sbrect.y + sbrect.h);
     glEnd();
+    int xOff = sb.getXOffset();
+    int yOff = sb.getYOffset();
+    for(int i = 0; i < sb.numButtons(); i++)
+    {
+        intRect_t btnRect = getCompIntRect(sb.getButtons()[i].getCompID());
+        if(rectInside(btnRect, sbrect))
+        {
+            drawButton(sb.getButtons()[i], xOff, yOff);
+        }
+        else
+        {
+            
+        }
+        glDisable(GL_TEXTURE_2D);
+    }
+    if(sb.hasBar())
+    {
+        intRect_t bar = sb.getBarRect();
+        glDisable(GL_TEXTURE_2D);
+        glColor4f(UI_FG_R, UI_FG_G, UI_FG_B, 1);
+        glBegin(GL_QUADS);
+        glVertex2i(bar.x, bar.y);
+        glVertex2i(bar.x + bar.w, bar.y);
+        glVertex2i(bar.x + bar.w, bar.y + bar.h);
+        glVertex2i(bar.x, bar.y + bar.h);
+        glEnd();
+    }
 }
 
 void view::configGL()
@@ -224,6 +260,7 @@ void view::blit(int index, int x, int y)
 
 void view::blit(int index, int x1, int y1, int x2, int y2)
 {
+    glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
     glTexCoord2f(mainAtlas->tileX(index), mainAtlas->tileY(index));
     glVertex2i(x1, y1);
@@ -241,12 +278,12 @@ void view::blit(int index, int x1, int y1, int x2, int y2)
 
 void view::drawString(string text, int x, int y)
 {
-    drawString(text, x, y, 1.0f, 1.0f, 1.0f, 1.0f);
+    drawString(text, x, y, 1, 0, 0, 0);
 }
 
 void view::drawString(string text, int x, int y, float scale)
 {
-    drawString(text, x, y, scale, 1.0f, 1.0f, 1.0f);
+    drawString(text, x, y, scale, 0, 0, 0);
 }
 
 void view::drawString(string text, int x, int y, float scale, float r, float g, float b)
@@ -259,6 +296,80 @@ void view::drawString(string text, int x, int y, float scale, float r, float g, 
             blit(mainAtlas->tileFromChar(text[i]),
                        x + i * constants::FONTW * scale, y,
                        x + (1 + i) * constants::FONTW * scale, y + constants::FONTH * scale);
+        }
+    }
+}
+
+void view::drawVClipString(std::string text, int x, int y, float scale, float r, float g, float b, int top, int bottom)
+{
+    glEnable(GL_TEXTURE_2D);
+    glColor3f(r, g, b);
+    int charTop = y;              //where the character's top would normally be
+    int charBottom = y + scale * FONTH;  //where the bottom would be
+    if(top >= charTop || bottom <= charBottom)
+    {
+        int topClamp;
+        int bottomClamp;
+        float topRatio;
+        float bottomRatio;
+        if(top > charTop)          //can't draw char from very top, adjust
+        {
+            topClamp = top;
+            topRatio = float(top - charTop) / float(charBottom - charTop);
+        }
+        else                       //draw the character starting at the very top
+        {
+            topClamp = charTop;
+            topRatio = 0.0f;
+        }
+        if(bottom < charBottom)    //same process for bottom edge
+        {
+            bottomClamp = bottom;
+            bottomRatio = float(bottom - charTop) / float(charBottom - charTop);
+        }
+        else
+        {
+            bottomClamp = charBottom;
+            bottomRatio = 1.0f;
+        }
+        int tileNum;
+        float charX, charY, charW, charH;
+        int charXDist = FONTW * scale;
+        for(int i = 0; i < int(text.length()); i++)
+        {
+            if(text[i] != ' ')
+            {
+                tileNum = mainAtlas->tileFromChar(text[i]);
+                charX = mainAtlas->tileX(tileNum);
+                charY = mainAtlas->tileY(tileNum);
+                charW = mainAtlas->tileW(tileNum);
+                charH = mainAtlas->tileH(tileNum);
+                charY += (charH * topRatio);
+                charH *= (bottomRatio - topRatio);
+                glBegin(GL_QUADS);
+                glTexCoord2f(charX, charY);
+                glVertex2i(x, topClamp);
+                glTexCoord2f(charX + charW, charY);
+                glVertex2i(x + charXDist, topClamp);
+                glTexCoord2f(charX + charW, charY + charH);
+                glVertex2i(x + charXDist, bottomClamp);
+                glTexCoord2f(charX, charY + charH);
+                glVertex2i(x, bottomClamp);
+                glEnd();
+            }
+            x += charXDist;     //easier here to iterate through char positions in loop
+        }
+    }
+    else
+    {
+        for(int i = 0; i < int(text.length()); i++)
+        {
+            if(text[i] != ' ')
+            {
+                blit(mainAtlas->tileFromChar(text[i]),
+                     x + i * FONTW * scale, y,
+                     x + (1 + i) * FONTW * scale, y + FONTH * scale);
+            }
         }
     }
 }
