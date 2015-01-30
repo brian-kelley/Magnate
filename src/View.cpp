@@ -92,14 +92,13 @@ void view::drawScene(Scene& s)
     }
 }
 
-void view::drawLabel(Label& l)
+void view::drawLabel(Label& l, int xOffset, int yOffset, int topClip, int bottomClip)
 {
     glColor4f(UI_FG_R, UI_FG_B, UI_FG_B, 1);
-    glEnable(GL_TEXTURE_2D);
     drawString(l.getText(), l.getTextLoc().x, l.getTextLoc().y, l.getFontScale());
 }
 
-void view::drawField(Field &f)
+void view::drawField(Field &f, int xOffset, int yOffset, int topClip, int bottomClip)
 {
     intRect_t curRect = componentHandler::getCompIntRect(f.getCompID());
     glDisable(GL_TEXTURE_2D);
@@ -125,7 +124,7 @@ void view::drawField(Field &f)
     drawString(f.getText(), f.getTextLoc().x, f.getTextLoc().y, f.getFontScale());
 }
 
-void view::drawButton(Button &b, int xOffset, int yOffset)
+void view::drawButton(Button &b, int xOffset, int yOffset, int topClip, int bottomClip)
 {
     float colorMult;
     if(!b.isMouseOver())
@@ -136,11 +135,73 @@ void view::drawButton(Button &b, int xOffset, int yOffset)
     {
         colorMult = 1.0f / SHADE;
     }
-    glDisable(GL_TEXTURE_2D);
-    glColor4f(UI_BG_R * colorMult, UI_BG_G * colorMult, UI_BG_B * colorMult, 1.0f);
-    intRect_t rect = getCompIntRect(b.getCompID());
+    if(topClip == -1)
+        topClip = 0;
+    if(bottomClip == -1)
+        bottomClip = WINDOW_H;
+    intRect_t rect = getCompIntRect(b.getCompID());         //initalize copy, don't modify
     rect.x += xOffset;
     rect.y += yOffset;
+    if(rect.y > bottomClip || rect.y + rect.h < topClip)
+    {
+        return;     //nothing to be drawn
+    }
+    if(topClip < rect.y)
+    {
+        topClip = 0;
+    }
+    else
+    {
+        topClip -= rect.y;
+    }
+    if(bottomClip > rect.y + rect.w)
+    {
+        bottomClip = rect.h;
+    }
+    else
+    {
+        bottomClip -= rect.y;
+    }
+    glDisable(GL_TEXTURE_2D);
+    //Draw the background fill rect that text goes on top of
+    glColor4f(UI_BG_R * colorMult, UI_BG_G * colorMult, UI_BG_B * colorMult, 1.0f);
+    if(topClip < rect.h - BORDER_WIDTH && bottomClip > BORDER_WIDTH)
+    {
+        glBegin(GL_QUADS);
+        if(topClip >= BORDER_WIDTH && topClip < rect.h - BORDER_WIDTH)  //top clip is in rect
+        {
+            glVertex2i(rect.x + BORDER_WIDTH, rect.y + topClip);
+            glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + topClip);
+        }
+        else if(topClip < rect.y + BORDER_WIDTH)                        //top clip in top border
+        {
+            glVertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
+            glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
+        }
+        if(bottomClip > BORDER_WIDTH && bottomClip < rect.h - BORDER_WIDTH)
+        {
+            glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + bottomClip);
+            glVertex2i(rect.x + BORDER_WIDTH, rect.y + bottomClip);
+        }
+        else
+        {
+            glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
+            glVertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
+        }
+        glEnd();
+    }
+    // Draw the top beveled border quad
+    
+    
+    //Draw the left/right border quads
+    
+    
+    //Draw bottom border quad
+    
+    
+    //Draw text
+    
+    
     glBegin(GL_QUADS);
     glVertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
     glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
@@ -196,11 +257,7 @@ void view::drawScrollBlock(ScrollBlock &sb)
         intRect_t btnRect = getCompIntRect(sb.getButtons()[i].getCompID());
         if(rectInside(btnRect, sbrect))
         {
-            drawButton(sb.getButtons()[i], xOff, yOff);
-        }
-        else
-        {
-            
+            drawButton(sb.getButtons()[i], xOff, yOff, sbrect.y, sbrect.y + sbrect.h);
         }
         glDisable(GL_TEXTURE_2D);
     }

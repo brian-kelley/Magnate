@@ -326,7 +326,7 @@ void Control::initScenes()
     /* Save menu */
     Scene saveMenu;
     int numSaves = sman->getNumSaves();
-    ScrollBlock saveList(320, 180, 550, 300, 90 + 50 * numSaves + BORDER_WIDTH);
+    ScrollBlock saveList(320, 180, 550, 300, 390 + 50 * numSaves + BORDER_WIDTH);
     if(numSaves != 0)
     {
         for(int i = 0; i < sman->getNumSaves(); i++)

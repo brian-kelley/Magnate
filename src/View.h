@@ -59,9 +59,9 @@ namespace view
     extern void initAtlas();
     extern void drawCuboid(Cuboid& c);
     extern void drawBuilding(Building& b);
-    extern void drawButton(Button& b, int xOffset = 0, int yOffset = 0);
-    extern void drawLabel(Label& l);
-    extern void drawField(Field& f);
+    extern void drawButton(Button& b, int xOffset = 0, int yOffset = 0, int topClip = -1, int bottomClip = -1);
+    extern void drawLabel(Label& l, int xOffset = 0, int yOffset = 0, int topClip = -1, int bottomClip = -1);
+    extern void drawField(Field& f, int xOffset = 0, int yOffset = 0, int topClip = -1, int bottomClip = -1);
     extern void drawScrollBlock(ScrollBlock& sb);
     extern void drawString(std::string text, int x, int y);
     extern void drawString(std::string text, int x, int y, float scale);
