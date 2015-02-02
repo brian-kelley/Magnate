@@ -240,8 +240,8 @@ void Control::processMouseWheelEvent(SDL_Event &e)
         sbptr = &currentScene->getScrollBlocks()[i];
         //check if mouse inside the scroll block
         rectptr = &componentHandler::getCompIntRect(sbptr->getCompID());
-        if(rectptr->x <= mouseX && rectptr->x + rectptr->w < mouseX
-        	&& rectptr->y <= mouseY && rectptr->y + rectptr->h < mouseY)
+        if(rectptr->x <= mouseX && rectptr->x + rectptr->w > mouseX
+        	&& rectptr->y <= mouseY && rectptr->y + rectptr->h > mouseY)
         {
             sbptr->processScrollEvent(e.wheel);
         }

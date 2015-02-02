@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
+#include <iostream>
 #include "Constants.h"
 #include "Button.h"
 #include "Label.h"

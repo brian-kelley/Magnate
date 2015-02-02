@@ -73,7 +73,6 @@ void testCall()
 
 void view::drawScene(Scene& s)
 {
-    testCall();
     for(int i = 0; i < int(s.getScrollBlocks().size()); i++)
     {
         drawScrollBlock(s.getScrollBlocks()[i]);
@@ -92,15 +91,16 @@ void view::drawScene(Scene& s)
     }
 }
 
-void view::drawLabel(Label& l, int xOffset, int yOffset, int topClip, int bottomClip)
+void view::drawLabel(Label& l, int xOffset, int yOffset)
 {
-    glColor4f(UI_FG_R, UI_FG_B, UI_FG_B, 1);
-    drawString(l.getText(), l.getTextLoc().x, l.getTextLoc().y, l.getFontScale());
+    drawString(l.getText(), l.getTextLoc().x, l.getTextLoc().y, l.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
-void view::drawField(Field &f, int xOffset, int yOffset, int topClip, int bottomClip)
+void view::drawField(Field &f, int xOffset, int yOffset)
 {
-    intRect_t curRect = componentHandler::getCompIntRect(f.getCompID());
+    intRect_t curRect = getCompIntRect(f.getCompID());
+    curRect.x += xOffset;
+    curRect.y += yOffset;
     glDisable(GL_TEXTURE_2D);
     glColor4f(UI_BG_R, UI_BG_G, UI_BG_B, 1);
     glBegin(GL_QUADS);
@@ -124,7 +124,7 @@ void view::drawField(Field &f, int xOffset, int yOffset, int topClip, int bottom
     drawString(f.getText(), f.getTextLoc().x, f.getTextLoc().y, f.getFontScale());
 }
 
-void view::drawButton(Button &b, int xOffset, int yOffset, int topClip, int bottomClip)
+void view::drawButton(Button &b, int xOffset, int yOffset)
 {
     float colorMult;
     if(!b.isMouseOver())
@@ -135,80 +135,18 @@ void view::drawButton(Button &b, int xOffset, int yOffset, int topClip, int bott
     {
         colorMult = 1.0f / SHADE;
     }
-    if(topClip == -1)
-        topClip = 0;
-    if(bottomClip == -1)
-        bottomClip = WINDOW_H;
     intRect_t rect = getCompIntRect(b.getCompID());         //initalize copy, don't modify
     rect.x += xOffset;
     rect.y += yOffset;
-    if(rect.y > bottomClip || rect.y + rect.h < topClip)
-    {
-        return;     //nothing to be drawn
-    }
-    if(topClip < rect.y)
-    {
-        topClip = 0;
-    }
-    else
-    {
-        topClip -= rect.y;
-    }
-    if(bottomClip > rect.y + rect.w)
-    {
-        bottomClip = rect.h;
-    }
-    else
-    {
-        bottomClip -= rect.y;
-    }
     glDisable(GL_TEXTURE_2D);
-    //Draw the background fill rect that text goes on top of
-    glColor4f(UI_BG_R * colorMult, UI_BG_G * colorMult, UI_BG_B * colorMult, 1.0f);
-    if(topClip < rect.h - BORDER_WIDTH && bottomClip > BORDER_WIDTH)
-    {
-        glBegin(GL_QUADS);
-        if(topClip >= BORDER_WIDTH && topClip < rect.h - BORDER_WIDTH)  //top clip is in rect
-        {
-            glVertex2i(rect.x + BORDER_WIDTH, rect.y + topClip);
-            glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + topClip);
-        }
-        else if(topClip < rect.y + BORDER_WIDTH)                        //top clip in top border
-        {
-            glVertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
-            glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
-        }
-        if(bottomClip > BORDER_WIDTH && bottomClip < rect.h - BORDER_WIDTH)
-        {
-            glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + bottomClip);
-            glVertex2i(rect.x + BORDER_WIDTH, rect.y + bottomClip);
-        }
-        else
-        {
-            glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
-            glVertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
-        }
-        glEnd();
-    }
-    // Draw the top beveled border quad
-    
-    
-    //Draw the left/right border quads
-    
-    
-    //Draw bottom border quad
-    
-    
-    //Draw text
-    
-    
+    glColor3f(UI_BG_R, UI_BG_G, UI_BG_B);
     glBegin(GL_QUADS);
     glVertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
     glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
     glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
     glVertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
     glEnd();
-    glColor4f(UI_FG_R * colorMult, UI_FG_G * colorMult, UI_FG_B * colorMult, 1.0f);
+    glColor3f(UI_FG_R * colorMult, UI_FG_G * colorMult, UI_FG_B * colorMult);
     glBegin(GL_QUADS);
     glVertex2i(rect.x, rect.y);
     glVertex2i(rect.x + rect.w, rect.y);
@@ -221,7 +159,7 @@ void view::drawButton(Button &b, int xOffset, int yOffset, int topClip, int bott
     glVertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
     glVertex2i(rect.x, rect.y + rect.h);
     glEnd();
-    glColor4f(UI_FG_R * SHADE * colorMult, UI_FG_G * SHADE * colorMult, UI_FG_B * SHADE * colorMult, 1.0f);
+    glColor3f(UI_FG_R * colorMult * SHADE, UI_FG_G * colorMult * SHADE, UI_FG_B * colorMult * SHADE);
     glBegin(GL_QUADS);
     glVertex2i(rect.x + rect.w, rect.y);
     glVertex2i(rect.x + rect.w, rect.y + rect.h);
@@ -234,32 +172,57 @@ void view::drawButton(Button &b, int xOffset, int yOffset, int topClip, int bott
     glVertex2i(rect.x + rect.w, rect.y + rect.h);
     glVertex2i(rect.x, rect.y + rect.h);
     glEnd();
-    glEnable(GL_TEXTURE_2D);
-    drawString(b.getText(), rect.x + b.getTextLoc().x, rect.y + b.getTextLoc().y, b.getFontScale(),
-               UI_FG_R * colorMult, UI_FG_G * colorMult, UI_FG_B * colorMult);
+    drawString(b.getText(), b.getTextLoc().x + rect.x, b.getTextLoc().y + rect.y, b.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
 void view::drawScrollBlock(ScrollBlock &sb)
 {
     glColor4f(UI_BG_R * SHADE, UI_BG_G * SHADE, UI_BG_B * SHADE, 1);
     glDisable(GL_TEXTURE_2D);
-    intRect_t sbrect = componentHandler::getCompIntRect(sb.getCompID());
+    intRect_t* sbrect = &componentHandler::getCompIntRect(sb.getCompID());
     glBegin(GL_QUADS);
-    glVertex2i(sbrect.x, sbrect.y);
-    glVertex2i(sbrect.x + sbrect.w, sbrect.y);
-    glVertex2i(sbrect.x + sbrect.w, sbrect.y + sbrect.h);
-    glVertex2i(sbrect.x, sbrect.y + sbrect.h);
+    glVertex2i(sbrect->x, sbrect->y);
+    glVertex2i(sbrect->x + sbrect->w, sbrect->y);
+    glVertex2i(sbrect->x + sbrect->w, sbrect->y + sbrect->h);
+    glVertex2i(sbrect->x, sbrect->y + sbrect->h);
     glEnd();
+    glScissor(sbrect->x, sbrect->y, sbrect->w, sbrect->h);
+    glEnable(GL_SCISSOR_TEST);  //enable scissor clipping to sb rectangle
     int xOff = sb.getXOffset();
     int yOff = sb.getYOffset();
+    intRect_t subRect;
     for(int i = 0; i < sb.numButtons(); i++)
     {
-        intRect_t btnRect = getCompIntRect(sb.getButtons()[i].getCompID());
-        if(rectInside(btnRect, sbrect))
+        subRect = getCompIntRect(sb.getButtons()[i].getCompID());
+        subRect.x += xOff;
+        subRect.y += yOff;
+        if(subRect.y + subRect.h <= sbrect->y
+           && subRect.y > sbrect->y + sbrect->h)
         {
-            drawButton(sb.getButtons()[i], xOff, yOff, sbrect.y, sbrect.y + sbrect.h);
+            drawButton(sb.getButtons()[i], xOff, yOff);
         }
-        glDisable(GL_TEXTURE_2D);
+    }
+    for(int i = 0; i < sb.numFields(); i++)
+    {
+        subRect = getCompIntRect(sb.getFields()[i].getCompID());
+        subRect.x += xOff;
+        subRect.y += yOff;
+        if(subRect.y + subRect.h <= sbrect->y
+           && subRect.y > sbrect->y + sbrect->h)
+        {
+            drawField(sb.getFields()[i], xOff, yOff);
+        }
+    }
+    for(int i = 0; i < sb.numLabels(); i++)
+    {
+        subRect = getCompIntRect(sb.getLabels()[i].getCompID());
+        subRect.x += xOff;
+        subRect.y += yOff;
+        if(subRect.y += subRect.h <= sbrect->y
+           && subRect.y > sbrect->y + sbrect->h)
+        {
+            drawLabel(sb.getLabels()[i], xOff, yOff);
+        }
     }
     if(sb.hasBar())
     {
@@ -273,6 +236,7 @@ void view::drawScrollBlock(ScrollBlock &sb)
         glVertex2i(bar.x, bar.y + bar.h);
         glEnd();
     }
+    glDisable(GL_SCISSOR_TEST);
 }
 
 void view::configGL()
@@ -299,6 +263,7 @@ void view::updateWindowSize()
 
 void view::blit(int index, int x, int y)
 {
+    glEnable(GL_TEXTURE_2D);
     glBegin(GL_QUADS);
     glTexCoord2f(mainAtlas->tileX(index), mainAtlas->tileY(index));
     glVertex2i(x, y);
@@ -359,12 +324,12 @@ void view::drawString(string text, int x, int y, float scale, float r, float g, 
 
 void view::drawVClipString(std::string text, int x, int y, float scale, float r, float g, float b, int top, int bottom)
 {
-    glEnable(GL_TEXTURE_2D);
     glColor3f(r, g, b);
     int charTop = y;              //where the character's top would normally be
     int charBottom = y + scale * FONTH;  //where the bottom would be
     if(top >= charTop || bottom <= charBottom)
     {
+        glEnable(GL_TEXTURE_2D);    //custom blit routine, need to enable textures
         int topClamp;
         int bottomClamp;
         float topRatio;

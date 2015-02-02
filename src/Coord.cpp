@@ -28,10 +28,10 @@ double yj(int x, int y)
     return x / 128.0 + y / 64.0;
 }
 
-bool rectInside(intRect_t& small, intRect_t& big)
+bool rectInside(intRect_t* small, intRect_t* big)
 {
-    if(big.x <= small.x && big.x + big.w > small.x + small.w
-       && big.y <= small.y && big.y + big.h > small.y + small.h)
+    if(big->x <= small->x && big->x + big->w > small->x + small->w
+       && big->y <= small->y && big->y + big->h > small->y + small->h)
     {
         return true;
     }

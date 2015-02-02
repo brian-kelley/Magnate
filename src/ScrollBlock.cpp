@@ -15,7 +15,8 @@ using namespace componentHandler;
 ScrollBlock::ScrollBlock(int x, int y, int width, int height, int canvh, bool center)
 {
 	compID = createComponent(x, y, width, height, center);
-    this->canvH = canvh;
+    viewport = 0;
+    canvH = canvh;
     fCanvH = (float) canvH / WINDOW_H;
     refreshModifiers();
     calcBarPlacement();
@@ -97,8 +98,8 @@ void ScrollBlock::processButtonEvent(SDL_MouseButtonEvent &e)
     //need to convert that to canvas position to compare to local subcomponents
     if(e.button == SDL_BUTTON_LEFT)
     {
-        int canvMouseX = mouseX + xOffset;
-        int canvMouseY = mouseY + yOffset;
+        int canvMouseX = mouseX - xOffset;
+        int canvMouseY = mouseY - yOffset;
         for(int i = 0; i < int(this->buttons.size()); i++)
         {
             intRect_t* btnRect = &getCompIntRect(buttons[i].getCompID());
@@ -112,7 +113,7 @@ void ScrollBlock::processButtonEvent(SDL_MouseButtonEvent &e)
         {
             intRect_t* fldRect = &getCompIntRect(fields[i].getCompID());
             if(fldRect->x <= canvMouseX && fldRect->x + fldRect->w > canvMouseX
-               && fldRect->y <= canvMouseY && fldRect)
+               && fldRect->y <= canvMouseY && fldRect->y + fldRect->h > canvMouseY)
             {
                 
             }
@@ -123,6 +124,7 @@ void ScrollBlock::processButtonEvent(SDL_MouseButtonEvent &e)
 void ScrollBlock::processScrollEvent(SDL_MouseWheelEvent& e)
 {
     int delta = 10 * e.y;
+    cout << "Got scroll event with delta of " << delta << endl;
 	if(delta > 0)	//upward scrolling
 	{
         viewport -= delta;
@@ -140,6 +142,7 @@ void ScrollBlock::processScrollEvent(SDL_MouseWheelEvent& e)
         }
     }
     refreshModifiers();
+    calcBarPlacement();
 }
 
 void ScrollBlock::processMouseMotionEvent(SDL_MouseMotionEvent &e)
@@ -163,8 +166,8 @@ int ScrollBlock::getCompID()
 
 void ScrollBlock::refreshModifiers()
 {
-    xOffset = -getCompIntRect(compID).x;
-    yOffset = viewport - getCompIntRect(compID).y;
+    xOffset = getCompIntRect(compID).x;
+    yOffset = getCompIntRect(compID).y - viewport;
 }
 
 bool ScrollBlock::isActive()
