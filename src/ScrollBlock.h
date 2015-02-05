@@ -30,7 +30,6 @@ class ScrollBlock
 {
 public:
     ScrollBlock(int x, int y, int width, int height, int canvh, bool center = true);
-    ~ScrollBlock();
     void addButton(Button b);
     void addLabel(Label l);
     void addField(Field f);
@@ -49,11 +48,12 @@ public:
     void processButtonEvent(SDL_MouseButtonEvent& e);
     void processMouseMotionEvent(SDL_MouseMotionEvent& e);
     int compID;
-    Field* currentField();
+    Field* getCurrentField();
     int getCompID();
     bool isActive();
     void activate();
     void deactivate();
+    void calcBarPlacement();
     intRect_t getBarRect();
     bool hasBar();
 private:
@@ -64,15 +64,14 @@ private:
     int canvH;            //height of the canvas, in pixels
     float fCanvH;         //height of the canvas relative to window height
     int viewport;         //how far from top of canvas top of viewable area is
-    float fViewport;      //viewport, relative
     int xOffset;          //what needs to be added to screen x coordinate to get local coordinates
     int yOffset;
     void refreshModifiers();  //use component/canvas/viewport rectangles to calculate offsets
-    void calcBarPlacement();
     bool active;
     int barHeight;        //how many pixels tall is the bar?
     float fBarHeight;     //relative to component size?
-    float barPos;         //where to draw bar? (0 = top, 1 = bottom)
+    int barPos;
+    Field* currentField;
 };
 
 #endif /* defined(__Magnate__ScrollBlock__) */

@@ -19,8 +19,6 @@ Field::Field(int x, int y, int width, int height, string text, callback_t callba
     calcTextPlacement();
 }
 
-Field::~Field() {}
-
 string& Field::getText()
 {
     return this->text;
@@ -35,7 +33,7 @@ void Field::processKey(SDL_Event& e)
 {
     if(e.type == SDL_TEXTINPUT)
     {
-        text += string(e.text.text);
+        text = text.substr(0, text.length() - 1) + string(e.text.text) + "_";
     }
     else if(e.type == SDL_KEYDOWN)
     {
@@ -43,8 +41,12 @@ void Field::processKey(SDL_Event& e)
         {
             if(this->text.size() > 0)
             {
-                this->text = this->text.substr(0, (unsigned long) text.length() - 1);
+                this->text = this->text.substr(0, (unsigned long) text.length() - 2) + "_";
             }
+        }
+        else if(e.key.keysym.scancode == SDL_SCANCODE_RETURN)
+        {
+            deactivate();
         }
     }
 }
@@ -84,11 +86,17 @@ bool Field::isActive()
 void Field::activate()
 {
     text = text.append("_");
+    hasCursor = true;
     this->calcTextPlacement();
 }
 
 void Field::deactivate()
 {
-    text = text.substr(0, int(text.length()));
+    if(hasCursor)
+    {
+        text = text.substr(0, int(text.length() - 1));
+        hasCursor = false;
+    }
     this->calcTextPlacement();
+    (*callback) (compID);
 }

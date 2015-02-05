@@ -22,11 +22,6 @@ ScrollBlock::ScrollBlock(int x, int y, int width, int height, int canvh, bool ce
     calcBarPlacement();
 }
 
-ScrollBlock::~ScrollBlock()
-{
-    
-}
-
 void ScrollBlock::addButton(Button b)
 {
     this->buttons.push_back(b);
@@ -115,7 +110,9 @@ void ScrollBlock::processButtonEvent(SDL_MouseButtonEvent &e)
             if(fldRect->x <= canvMouseX && fldRect->x + fldRect->w > canvMouseX
                && fldRect->y <= canvMouseY && fldRect->y + fldRect->h > canvMouseY)
             {
-                
+                active = true;
+                currentField = &fields[i];
+                fields[i].activate();
             }
         }
     }
@@ -123,38 +120,47 @@ void ScrollBlock::processButtonEvent(SDL_MouseButtonEvent &e)
 
 void ScrollBlock::processScrollEvent(SDL_MouseWheelEvent& e)
 {
-    int delta = 10 * e.y;
-    cout << "Got scroll event with delta of " << delta << endl;
-	if(delta > 0)	//upward scrolling
-	{
-        viewport -= delta;
-        if(viewport < 0)
-        {
-            viewport = 0;
-        }
-    }
-    else if(delta < 0)
+    if(this->hasBar())
     {
-        viewport += delta;
-        if(viewport + getCompIntRect(compID).h > canvH)
+        int delta = e.y * -4;
+        cout << "Got scroll event with delta of " << delta << endl;
+        if(delta < 0)	//upward scrolling
         {
-            viewport = canvH - getCompIntRect(compID).h;
+            viewport += delta;
+            if(viewport < 0)
+            {
+                viewport = 0;
+            }
         }
+        else if(delta > 0)
+        {
+            viewport += delta;
+            if(viewport + getCompIntRect(compID).h > canvH)
+            {
+                viewport = canvH - getCompIntRect(compID).h;
+            }
+        }
+        refreshModifiers();
+        calcBarPlacement();
     }
-    refreshModifiers();
-    calcBarPlacement();
 }
 
 void ScrollBlock::processMouseMotionEvent(SDL_MouseMotionEvent &e)
 {
     intRect_t* rect;
+    int localMX = mouseX - xOffset;
+    int localMY = mouseY - yOffset;
     for(int i = 0; i < int(buttons.size()); i++)
     {
         rect = &getCompIntRect(buttons[i].getCompID());
-        if(rect->x <= mouseX && rect->x + rect->w > mouseX
-           && rect->y <= mouseY && rect->y + rect->h > mouseY)
+        if(rect->x <= localMX && rect->x + rect->w > localMX
+           && rect->y <= localMY && rect->y + rect->h > localMY)
         {
             buttons[i].setMouseOver(true);
+        }
+        else
+        {
+            buttons[i].setMouseOver(false);
         }
     }
 }
@@ -200,18 +206,20 @@ void ScrollBlock::calcBarPlacement()
     if(compHeight >= canvH)
     {
         barHeight = -1;     //-1 means don't draw any bar
+        barPos = -1;
         fBarHeight = -1;
     }
     else
     {
         fBarHeight = (float(compHeight) - 2.0f * PAD) / canvH;
         barHeight = fBarHeight * compHeight;
+        barPos = float(viewport) / (canvH - viewport) * compHeight;
     }
 }
 
 bool ScrollBlock::hasBar()
 {
-    if(barHeight == -1)
+    if(barHeight == -1 || barPos == -1.0f)
     {
         return false;
     }
@@ -226,7 +234,7 @@ intRect_t ScrollBlock::getBarRect()
     intRect_t out;
     intRect_t sbRect = getCompIntRect(compID);
     out.x = sbRect.x + sbRect.w - PAD - BAR_WIDTH;
-    out.y = sbRect.y + PAD + barPos * sbRect.h;
+    out.y = PAD + barPos;
     out.w = BAR_WIDTH;
     out.h = barHeight;
     return out;

@@ -244,6 +244,7 @@ void Control::processMouseWheelEvent(SDL_Event &e)
         	&& rectptr->y <= mouseY && rectptr->y + rectptr->h > mouseY)
         {
             sbptr->processScrollEvent(e.wheel);
+            cout << sbptr->getXOffset() << " " << sbptr->getYOffset() << endl;
         }
     }
 }
@@ -322,24 +323,26 @@ void Control::initScenes()
     mainMenu.addButton(startGame);
     Button quitGame(320, 300, 240, 100, "Quit Game", &ui::mainQuitButton);
     mainMenu.addButton(quitGame);
+    Field testF(100, 100, 100, 80, "Test", &ui::mainStartButton);
+    mainMenu.addField(testF);
     scenes[MAIN_MENU] = mainMenu;
     /* Save menu */
     Scene saveMenu;
     int numSaves = sman->getNumSaves();
-    ScrollBlock saveList(320, 180, 550, 300, 390 + 50 * numSaves + BORDER_WIDTH);
+    ScrollBlock saveList(320, 180, 550, 300, 900 + 50 * numSaves + BORDER_WIDTH);
     if(numSaves != 0)
     {
         for(int i = 0; i < sman->getNumSaves(); i++)
         {
-            Field nameField(250, 50 + 50 * i, 400, 40, sman->listSaves()[i], &ui::saveNameUpdate);
+            Field nameField(235, 50 + 50 * i, 390, 40, sman->listSaves()[i], &ui::saveNameUpdate);
             saveList.addField(nameField);
-            Button nameButton(550, 50 + 50 * i, 100, 40, "Load", &ui::loadSave);
+            Button nameButton(490, 50 + 50 * i, 100, 40, "Load", &ui::loadSave);
             saveList.addButton(nameButton);
         }
     }
-    Field newNameField(250, 50 + 50 * numSaves, 400, 40, "", &ui::newSaveNameUpdate);
+    Field newNameField(235, 50 + 50 * numSaves, 390, 40, "", &ui::newSaveNameUpdate);
     saveList.addField(newNameField);
-    Button newNameButton(550, 50 + 50 * numSaves, 100, 40, "Create", &ui::newSaveCreate);
+    Button newNameButton(490, 50 + 50 * numSaves, 100, 40, "Create", &ui::newSaveCreate);
     saveList.addButton(newNameButton);
     saveMenu.addScrollBlock(saveList);
     Button backToMain(320, 400, 300, 80, "Back", &ui::saveBackButton);
@@ -351,11 +354,17 @@ void Control::clearEnables()      //clear currentField and button hovers in curr
 {
     if(currentField != nullptr)
     {   //force same action as pressing "Enter" would have done, whatever that is
-        (*currentField->getCallback()) (currentField->getCompID());
+        Field* deactivating = currentField;
         currentField = nullptr;
+        deactivating->deactivate();
     }
     for(int i = 0; i < int(currentScene->getButtons().size()); i++)
     {
         currentScene->getButtons()[i].setMouseOver(false);
+    }
+    for(int i = 0; i < int(currentScene->getScrollBlocks().size()); i++)
+    {
+        currentScene->getScrollBlocks()[i].deactivate();
+        currentScene->getScrollBlocks()[i].calcBarPlacement();
     }
 }

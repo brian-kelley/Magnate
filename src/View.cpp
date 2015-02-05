@@ -65,12 +65,6 @@ void view::drawWorld(World *currentWorld)   //probably too general of a function
     
 }
 
-/* Test drawing code here */
-void testCall()
-{
-    
-}
-
 void view::drawScene(Scene& s)
 {
     for(int i = 0; i < int(s.getScrollBlocks().size()); i++)
@@ -117,11 +111,11 @@ void view::drawField(Field &f, int xOffset, int yOffset)
     glVertex2i(curRect.x + curRect.w, curRect.y + curRect.h);
     glVertex2i(curRect.x + curRect.w, curRect.y + curRect.h);
     glVertex2i(curRect.x, curRect.y + curRect.h);
-    glVertex2i(curRect.x, curRect.y + curRect.h);
     glVertex2i(curRect.x, curRect.y);
+    glVertex2i(curRect.x, curRect.y + curRect.h);
     glEnd();
     glEnable(GL_TEXTURE_2D);
-    drawString(f.getText(), f.getTextLoc().x, f.getTextLoc().y, f.getFontScale());
+    drawString(f.getText(), curRect.x + f.getTextLoc().x, curRect.y + f.getTextLoc().y, f.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
 void view::drawButton(Button &b, int xOffset, int yOffset)
@@ -186,8 +180,10 @@ void view::drawScrollBlock(ScrollBlock &sb)
     glVertex2i(sbrect->x + sbrect->w, sbrect->y + sbrect->h);
     glVertex2i(sbrect->x, sbrect->y + sbrect->h);
     glEnd();
-    glScissor(sbrect->x, sbrect->y, sbrect->w, sbrect->h);
+    cout << sbrect->x << " " << sbrect->y + sbrect->h << " " << sbrect->w << " " << sbrect->h << endl;
+    //For some reason glScissor wants (x, y) to be lower-left corner
     glEnable(GL_SCISSOR_TEST);  //enable scissor clipping to sb rectangle
+    glScissor(sbrect->x, WINDOW_H - sbrect->y - sbrect->h, sbrect->w, sbrect->h);
     int xOff = sb.getXOffset();
     int yOff = sb.getYOffset();
     intRect_t subRect;
@@ -196,8 +192,8 @@ void view::drawScrollBlock(ScrollBlock &sb)
         subRect = getCompIntRect(sb.getButtons()[i].getCompID());
         subRect.x += xOff;
         subRect.y += yOff;
-        if(subRect.y + subRect.h <= sbrect->y
-           && subRect.y > sbrect->y + sbrect->h)
+        if(subRect.y + subRect.h > sbrect->y
+           || subRect.y <= sbrect->y + sbrect->h)
         {
             drawButton(sb.getButtons()[i], xOff, yOff);
         }
@@ -207,8 +203,8 @@ void view::drawScrollBlock(ScrollBlock &sb)
         subRect = getCompIntRect(sb.getFields()[i].getCompID());
         subRect.x += xOff;
         subRect.y += yOff;
-        if(subRect.y + subRect.h <= sbrect->y
-           && subRect.y > sbrect->y + sbrect->h)
+        if(subRect.y + subRect.h > sbrect->y
+           || subRect.y <= sbrect->y + sbrect->h)
         {
             drawField(sb.getFields()[i], xOff, yOff);
         }
@@ -218,8 +214,8 @@ void view::drawScrollBlock(ScrollBlock &sb)
         subRect = getCompIntRect(sb.getLabels()[i].getCompID());
         subRect.x += xOff;
         subRect.y += yOff;
-        if(subRect.y += subRect.h <= sbrect->y
-           && subRect.y > sbrect->y + sbrect->h)
+        if(subRect.y + subRect.h > sbrect->y
+           || subRect.y <= sbrect->y + sbrect->h)
         {
             drawLabel(sb.getLabels()[i], xOff, yOff);
         }
@@ -228,7 +224,7 @@ void view::drawScrollBlock(ScrollBlock &sb)
     {
         intRect_t bar = sb.getBarRect();
         glDisable(GL_TEXTURE_2D);
-        glColor4f(UI_FG_R, UI_FG_G, UI_FG_B, 1);
+        glColor3f(UI_FG_R, UI_FG_G, 0);
         glBegin(GL_QUADS);
         glVertex2i(bar.x, bar.y);
         glVertex2i(bar.x + bar.w, bar.y);
