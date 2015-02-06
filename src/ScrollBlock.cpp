@@ -104,6 +104,7 @@ void ScrollBlock::processButtonEvent(SDL_MouseButtonEvent &e)
                 (*buttons[i].getCallback()) (buttons[i].getCompID());     //deref & exec button's callback
             }
         }
+        
         for(int i = 0; i < int(this->fields.size()); i++)
         {
             intRect_t* fldRect = &getCompIntRect(fields[i].getCompID());
@@ -113,6 +114,7 @@ void ScrollBlock::processButtonEvent(SDL_MouseButtonEvent &e)
                 active = true;
                 currentField = &fields[i];
                 fields[i].activate();
+                cout << "Activating SB field." << endl;
             }
         }
     }
@@ -123,7 +125,6 @@ void ScrollBlock::processScrollEvent(SDL_MouseWheelEvent& e)
     if(this->hasBar())
     {
         int delta = e.y * -4;
-        cout << "Got scroll event with delta of " << delta << endl;
         if(delta < 0)	//upward scrolling
         {
             viewport += delta;
@@ -207,19 +208,17 @@ void ScrollBlock::calcBarPlacement()
     {
         barHeight = -1;     //-1 means don't draw any bar
         barPos = -1;
-        fBarHeight = -1;
     }
     else
     {
-        fBarHeight = (float(compHeight) - 2.0f * PAD) / canvH;
-        barHeight = fBarHeight * compHeight;
-        barPos = float(viewport) / (canvH - viewport) * compHeight;
+        barHeight = float(compHeight) / canvH * (compHeight - 2 * PAD);
+        barPos = float(viewport + compHeight / 2) * (compHeight - 2 * PAD) / canvH - barHeight / 2;
     }
 }
 
 bool ScrollBlock::hasBar()
 {
-    if(barHeight == -1 || barPos == -1.0f)
+    if(barHeight == -1)
     {
         return false;
     }
@@ -233,10 +232,10 @@ intRect_t ScrollBlock::getBarRect()
 {
     intRect_t out;
     intRect_t sbRect = getCompIntRect(compID);
-    out.x = sbRect.x + sbRect.w - PAD - BAR_WIDTH;
-    out.y = PAD + barPos;
     out.w = BAR_WIDTH;
     out.h = barHeight;
+    out.x = sbRect.x + sbRect.w - PAD - BAR_WIDTH;
+    out.y = sbRect.y + PAD + barPos;
     return out;
 }
 
@@ -263,4 +262,9 @@ int ScrollBlock::getXOffset()
 int ScrollBlock::getYOffset()
 {
     return yOffset;
+}
+
+Field* ScrollBlock::getCurrentField()
+{
+    return currentField;
 }

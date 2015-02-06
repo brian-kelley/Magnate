@@ -161,21 +161,22 @@ void Control::processKeyboardEvent(SDL_Event &e)
 
 void Control::processMouseButtonEvent(SDL_Event &e)
 {
-    //if click outside current field, deactivate it
-    if(currentField && !componentHandler::mouseInside(currentField->getCompID()))
-    {
-        currentField->deactivate();
-    }
     if(e.button.state == SDL_PRESSED)
     {
+        //Control will only handle top-level field activation/deactivation
+        if(currentField && !componentHandler::mouseInside(currentField->getCompID())
+           && !componentHandler::hasParent(currentField->getCompID()))
+        {
+            currentField->deactivate();
+        }
         Button* btnPtr;
         intRect_t* curRect;
         for(int i = 0; i < int(currentScene->getButtons().size()); i++)
         {
             btnPtr = &(currentScene->getButtons())[i];
             curRect = &componentHandler::getCompIntRect(btnPtr->getCompID());
-            if(curRect->x < mouseX && curRect->x + curRect->w > mouseX
-               && curRect->y < mouseY && curRect->y + curRect->h > mouseY)
+            if(curRect->x <= mouseX && curRect->x + curRect->w > mouseX
+               && curRect->y <= mouseY && curRect->y + curRect->h > mouseY)
             {
                 (*(btnPtr->getCallback())) (btnPtr->getCompID());
                 break;
@@ -186,11 +187,25 @@ void Control::processMouseButtonEvent(SDL_Event &e)
         {
             fieldPtr = &(currentScene->getFields())[i];
             curRect = &componentHandler::getCompIntRect(fieldPtr->getCompID());
-            if(curRect->x < mouseX && curRect->x + curRect->w > mouseX
-               && curRect->y < mouseY && curRect->y + curRect->h > mouseY)
+            if(curRect->x <= mouseX && curRect->x + curRect->w > mouseX
+               && curRect->y <= mouseY && curRect->y + curRect->h > mouseY)
             {
+                currentField = fieldPtr;
+                currentField->activate();
+            }
+        }
+        ScrollBlock* sbPtr;
+        for(int i = 0; i < int(currentScene->getScrollBlocks().size()); i++)
+        {
+            sbPtr = &(currentScene->getScrollBlocks()[i]);
+            curRect = &componentHandler::getCompIntRect(sbPtr->getCompID());
+            if(curRect->x <= mouseX && curRect->x + curRect->w > mouseX
+               && curRect->y <= mouseY && curRect->y + curRect->y > mouseY)
+            {
+                sbPtr->processButtonEvent(e.button);
+                if(sbPtr->getCurrentField() != nullptr)
                 {
-                    currentField = fieldPtr;
+                    currentField = sbPtr->getCurrentField();
                     currentField->activate();
                 }
             }
@@ -244,7 +259,6 @@ void Control::processMouseWheelEvent(SDL_Event &e)
         	&& rectptr->y <= mouseY && rectptr->y + rectptr->h > mouseY)
         {
             sbptr->processScrollEvent(e.wheel);
-            cout << sbptr->getXOffset() << " " << sbptr->getYOffset() << endl;
         }
     }
 }
@@ -323,8 +337,6 @@ void Control::initScenes()
     mainMenu.addButton(startGame);
     Button quitGame(320, 300, 240, 100, "Quit Game", &ui::mainQuitButton);
     mainMenu.addButton(quitGame);
-    Field testF(100, 100, 100, 80, "Test", &ui::mainStartButton);
-    mainMenu.addField(testF);
     scenes[MAIN_MENU] = mainMenu;
     /* Save menu */
     Scene saveMenu;
@@ -334,15 +346,15 @@ void Control::initScenes()
     {
         for(int i = 0; i < sman->getNumSaves(); i++)
         {
-            Field nameField(235, 50 + 50 * i, 390, 40, sman->listSaves()[i], &ui::saveNameUpdate);
+            Field nameField(210, 50 + 50 * i, 390, 40, sman->listSaves()[i], &ui::saveNameUpdate);
             saveList.addField(nameField);
-            Button nameButton(490, 50 + 50 * i, 100, 40, "Load", &ui::loadSave);
+            Button nameButton(480, 50 + 50 * i, 100, 40, "Load", &ui::loadSave);
             saveList.addButton(nameButton);
         }
     }
-    Field newNameField(235, 50 + 50 * numSaves, 390, 40, "", &ui::newSaveNameUpdate);
+    Field newNameField(210, 50 + 50 * numSaves, 390, 40, "", &ui::newSaveNameUpdate);
     saveList.addField(newNameField);
-    Button newNameButton(490, 50 + 50 * numSaves, 100, 40, "Create", &ui::newSaveCreate);
+    Button newNameButton(480, 50 + 50 * numSaves, 100, 40, "Create", &ui::newSaveCreate);
     saveList.addButton(newNameButton);
     saveMenu.addScrollBlock(saveList);
     Button backToMain(320, 400, 300, 80, "Back", &ui::saveBackButton);

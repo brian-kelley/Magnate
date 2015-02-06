@@ -69,7 +69,6 @@ private:
     void refreshModifiers();  //use component/canvas/viewport rectangles to calculate offsets
     bool active;
     int barHeight;        //how many pixels tall is the bar?
-    float fBarHeight;     //relative to component size?
     int barPos;
     Field* currentField;
 };

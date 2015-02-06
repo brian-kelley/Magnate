@@ -87,7 +87,8 @@ void view::drawScene(Scene& s)
 
 void view::drawLabel(Label& l, int xOffset, int yOffset)
 {
-    drawString(l.getText(), l.getTextLoc().x, l.getTextLoc().y, l.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
+    intRect_t* lrect = &getCompIntRect(l.getCompID());
+    drawString(l.getText(), lrect->x + xOffset + l.getTextLoc().x, lrect->y + yOffset + l.getTextLoc().y, l.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
 void view::drawField(Field &f, int xOffset, int yOffset)
@@ -96,14 +97,14 @@ void view::drawField(Field &f, int xOffset, int yOffset)
     curRect.x += xOffset;
     curRect.y += yOffset;
     glDisable(GL_TEXTURE_2D);
-    glColor4f(UI_BG_R, UI_BG_G, UI_BG_B, 1);
+    glColor3f(UI_BG_R, UI_BG_G, UI_BG_B);
     glBegin(GL_QUADS);
     glVertex2i(curRect.x, curRect.y);
     glVertex2i(curRect.x + curRect.w, curRect.y);
     glVertex2i(curRect.x + curRect.w, curRect.y + curRect.h);
     glVertex2i(curRect.x, curRect.y + curRect.h);
     glEnd();
-    glColor4f(constants::UI_FG_R, constants::UI_FG_G, constants::UI_FG_B, 1);
+    glColor3f(constants::UI_FG_R, constants::UI_FG_G, constants::UI_FG_B);
     glBegin(GL_LINES);
     glVertex2i(curRect.x, curRect.y);
     glVertex2i(curRect.x + curRect.w, curRect.y);
@@ -114,8 +115,7 @@ void view::drawField(Field &f, int xOffset, int yOffset)
     glVertex2i(curRect.x, curRect.y);
     glVertex2i(curRect.x, curRect.y + curRect.h);
     glEnd();
-    glEnable(GL_TEXTURE_2D);
-    drawString(f.getText(), curRect.x + f.getTextLoc().x, curRect.y + f.getTextLoc().y, f.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
+    drawString(f.getText(), curRect.x + PAD, curRect.y + PAD, f.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
 void view::drawButton(Button &b, int xOffset, int yOffset)
@@ -180,7 +180,6 @@ void view::drawScrollBlock(ScrollBlock &sb)
     glVertex2i(sbrect->x + sbrect->w, sbrect->y + sbrect->h);
     glVertex2i(sbrect->x, sbrect->y + sbrect->h);
     glEnd();
-    cout << sbrect->x << " " << sbrect->y + sbrect->h << " " << sbrect->w << " " << sbrect->h << endl;
     //For some reason glScissor wants (x, y) to be lower-left corner
     glEnable(GL_SCISSOR_TEST);  //enable scissor clipping to sb rectangle
     glScissor(sbrect->x, WINDOW_H - sbrect->y - sbrect->h, sbrect->w, sbrect->h);
@@ -224,7 +223,7 @@ void view::drawScrollBlock(ScrollBlock &sb)
     {
         intRect_t bar = sb.getBarRect();
         glDisable(GL_TEXTURE_2D);
-        glColor3f(UI_FG_R, UI_FG_G, 0);
+        glColor3f(UI_FG_R, UI_FG_G, UI_FG_B);
         glBegin(GL_QUADS);
         glVertex2i(bar.x, bar.y);
         glVertex2i(bar.x + bar.w, bar.y);
@@ -314,80 +313,6 @@ void view::drawString(string text, int x, int y, float scale, float r, float g, 
             blit(mainAtlas->tileFromChar(text[i]),
                        x + i * constants::FONTW * scale, y,
                        x + (1 + i) * constants::FONTW * scale, y + constants::FONTH * scale);
-        }
-    }
-}
-
-void view::drawVClipString(std::string text, int x, int y, float scale, float r, float g, float b, int top, int bottom)
-{
-    glColor3f(r, g, b);
-    int charTop = y;              //where the character's top would normally be
-    int charBottom = y + scale * FONTH;  //where the bottom would be
-    if(top >= charTop || bottom <= charBottom)
-    {
-        glEnable(GL_TEXTURE_2D);    //custom blit routine, need to enable textures
-        int topClamp;
-        int bottomClamp;
-        float topRatio;
-        float bottomRatio;
-        if(top > charTop)          //can't draw char from very top, adjust
-        {
-            topClamp = top;
-            topRatio = float(top - charTop) / float(charBottom - charTop);
-        }
-        else                       //draw the character starting at the very top
-        {
-            topClamp = charTop;
-            topRatio = 0.0f;
-        }
-        if(bottom < charBottom)    //same process for bottom edge
-        {
-            bottomClamp = bottom;
-            bottomRatio = float(bottom - charTop) / float(charBottom - charTop);
-        }
-        else
-        {
-            bottomClamp = charBottom;
-            bottomRatio = 1.0f;
-        }
-        int tileNum;
-        float charX, charY, charW, charH;
-        int charXDist = FONTW * scale;
-        for(int i = 0; i < int(text.length()); i++)
-        {
-            if(text[i] != ' ')
-            {
-                tileNum = mainAtlas->tileFromChar(text[i]);
-                charX = mainAtlas->tileX(tileNum);
-                charY = mainAtlas->tileY(tileNum);
-                charW = mainAtlas->tileW(tileNum);
-                charH = mainAtlas->tileH(tileNum);
-                charY += (charH * topRatio);
-                charH *= (bottomRatio - topRatio);
-                glBegin(GL_QUADS);
-                glTexCoord2f(charX, charY);
-                glVertex2i(x, topClamp);
-                glTexCoord2f(charX + charW, charY);
-                glVertex2i(x + charXDist, topClamp);
-                glTexCoord2f(charX + charW, charY + charH);
-                glVertex2i(x + charXDist, bottomClamp);
-                glTexCoord2f(charX, charY + charH);
-                glVertex2i(x, bottomClamp);
-                glEnd();
-            }
-            x += charXDist;     //easier here to iterate through char positions in loop
-        }
-    }
-    else
-    {
-        for(int i = 0; i < int(text.length()); i++)
-        {
-            if(text[i] != ' ')
-            {
-                blit(mainAtlas->tileFromChar(text[i]),
-                     x + i * FONTW * scale, y,
-                     x + (1 + i) * FONTW * scale, y + FONTH * scale);
-            }
         }
     }
 }

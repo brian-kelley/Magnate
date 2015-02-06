@@ -34,7 +34,7 @@ component_t& getComponent(int id)
     return componentHandler::componentList[id];
 }
 
-int componentHandler::createComponent(int x, int y, int width, int height, bool center)
+int componentHandler::createComponent(int x, int y, int width, int height, int parentCompID, bool center)
 {
     if(center)
     {
@@ -51,6 +51,7 @@ int componentHandler::createComponent(int x, int y, int width, int height, bool 
     newComp.frect.y = (float) y / WINDOW_H;
     newComp.frect.w = (float) width / WINDOW_W;
     newComp.frect.h = (float) height / WINDOW_H;
+    newComp.parentID = parentCompID;
     componentList.push_back(newComp);
     return newComp.id;  //return the ID of the component that has just been created
 }
@@ -73,4 +74,14 @@ void componentHandler::updateSize(int id)
     itemp.y = ftemp.y * WINDOW_H;
     itemp.w = ftemp.w * WINDOW_W;
     itemp.h = ftemp.h * WINDOW_H;
+}
+
+bool componentHandler::hasParent(int id)
+{
+    return componentList[id].parentID != -1;    //parentID != -1 iff has parent
+}
+
+void componentHandler::setParent(int childID, int parentID)
+{
+    componentList[childID].parentID = parentID;
 }

@@ -56,16 +56,9 @@ float Field::getFontScale()
     return this->fontScale;
 }
 
-SDL_Point& Field::getTextLoc()
-{
-    return this->textLoc;
-}
-
 void Field::calcTextPlacement()
 {
-	textLoc.x = getCompIntRect(compID).x + 3 * constants::PAD / 2;
-	textLoc.y = textLoc.x;
-    this->fontScale = (float) (getCompIntRect(compID).h - constants::PAD * 3) / constants::FONTH;
+    this->fontScale = float(getCompIntRect(compID).h - constants::PAD * 2) / constants::FONTH;
 }
 
 int Field::getCompID()

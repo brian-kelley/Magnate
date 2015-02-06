@@ -30,7 +30,6 @@ public:
     void setLocation(int x, int y);
     void setSize(int width, int height);
     void processKey(SDL_Event& e);
-    SDL_Point& getTextLoc();
     float getFontScale();
     std::string& getText();
     void updateSize();
@@ -45,7 +44,6 @@ public:
 private:
     int compID;
     std::string text;
-    SDL_Point textLoc;
     float fontScale;
     callback_t callback;
     bool active;

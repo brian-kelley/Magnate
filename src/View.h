@@ -66,7 +66,6 @@ namespace view
     extern void drawString(std::string text, int x, int y);
     extern void drawString(std::string text, int x, int y, float scale);
     extern void drawString(std::string text, int x, int y, float scale, float r, float g, float b);
-    extern void drawVClipString(std::string text, int x, int y, float scale, float r, float g, float b, int top, int bottom);
 }
 
 #endif
