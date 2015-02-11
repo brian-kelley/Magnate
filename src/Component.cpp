@@ -23,6 +23,7 @@ Component::Component(int x, int y, int width, int height, Component* parentComp)
     this->parent = parentComp;
     if(parent)
     {
+        parent->addChild(this);
         localFloatRect.x = float(local.x) / parent->localRect.w;
         localFloatRect.y = float(local.y) / parent->localRect.h;
         localFloatRect.w = float(local.w) / parent->localRect.w;
@@ -89,4 +90,22 @@ void Component::calcOffsets()
         xOffset = localRect.x;
         yOffset = localRect.y;
     }
+}
+
+bool Component::isMouseOver()
+{
+    if(drawRect.x <= mouseX && drawRect.x + drawRect.w > mouseX
+       && drawRect.y <= mouseY && drawRect.y + drawRect.h > mouseY)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+intRect_t& Component::getDrawRect()
+{
+    return drawRect;
 }

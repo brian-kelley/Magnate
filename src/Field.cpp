@@ -11,9 +11,9 @@
 using namespace std;
 using namespace componentHandler;
 
-Field::Field(int x, int y, int width, int height, string text, callback_t callback)
+Field::Field(int x, int y, int width, int height, string text, callback_t callback, Component* parentComp)
 {
-	compID = createComponent(x, y, width, height, true);
+    Component(x, y, width, height, parentComp);
     this->text = text;
     this->callback = callback;
     calcTextPlacement();

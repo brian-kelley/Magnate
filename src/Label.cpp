@@ -11,16 +11,11 @@
 using namespace std;
 using namespace componentHandler;
 
-Label::Label(int x, int y, int width, int height, string text)
+Label::Label(int x, int y, int width, int height, string text, Component* parentComp)
 {
-	this->compID = createComponent(x, y, width, height, true);
+    Component(x, y, width, height, parentComp);
     this->text = text;
     calcTextPlacement();
-}
-
-Label::~Label()
-{
-    //No heap members yet...
 }
 
 void Label::updateText(string newText)
@@ -60,9 +55,4 @@ SDL_Point& Label::getTextLoc()
 float Label::getFontScale()
 {
     return fontScale;
-}
-
-int Label::getCompID()
-{
-    return compID;
 }

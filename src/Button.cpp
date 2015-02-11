@@ -10,12 +10,12 @@
 
 using namespace std;
 
-Button::Button(int x, int y, int width, int height, string text, callback_t callback)
+Button::Button(int x, int y, int width, int height, string text, callback_t callback, Component* parentComp)
 {
+    Component(x, y, width, height, parentComp);
     this->callback = callback;
     this->text = text;
     this->over = false;
-    this->compID = componentHandler::createComponent(x, y, width, height);
     calcTextPlacement();
     over = false;
 }

@@ -1,0 +1,3 @@
+/Users/Brian/Dropbox/Magnate/macBuild/CMakeFiles/ALL_BUILD.dir
+/Users/Brian/Dropbox/Magnate/macBuild/CMakeFiles/Magnate.dir
+/Users/Brian/Dropbox/Magnate/macBuild/CMakeFiles/ZERO_CHECK.dir

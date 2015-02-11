@@ -12,9 +12,9 @@ using namespace std;
 using namespace constants;
 using namespace componentHandler;
 
-ScrollBlock::ScrollBlock(int x, int y, int width, int height, int canvh, bool center)
+ScrollBlock::ScrollBlock(int x, int y, int width, int height, Component* parentComp, int canvh, bool center)
 {
-	compID = createComponent(x, y, width, height, center);
+    Component(x, y, width, height, parentComp);
     viewport = 0;
     canvH = canvh;
     fCanvH = (float) canvH / WINDOW_H;
@@ -97,23 +97,18 @@ void ScrollBlock::processButtonEvent(SDL_MouseButtonEvent &e)
         int canvMouseY = mouseY - yOffset;
         for(int i = 0; i < int(this->buttons.size()); i++)
         {
-            intRect_t* btnRect = &getCompIntRect(buttons[i].getCompID());
-            if(btnRect->x <= canvMouseX && btnRect->x + btnRect->w > canvMouseX
-               && btnRect->y <= canvMouseY && btnRect->y + btnRect->h > canvMouseY)
+            if(buttons[i].isMouseOver())
             {
-                (*buttons[i].getCallback()) (buttons[i].getCompID());     //deref & exec button's callback
+                (*buttons[i].getCallback()) (buttons[i].getCompID());
             }
         }
         for(int i = 0; i < int(this->fields.size()); i++)
         {
-            intRect_t* fldRect = &getCompIntRect(fields[i].getCompID());
-            if(fldRect->x <= canvMouseX && fldRect->x + fldRect->w > canvMouseX
-               && fldRect->y <= canvMouseY && fldRect->y + fldRect->h > canvMouseY)
+            if(fields[i].isMouseOver())
             {
                 active = true;
                 currentField = &fields[i];
                 fields[i].activate();
-                cout << "Activating SB field." << endl;
             }
         }
     }
@@ -135,9 +130,9 @@ void ScrollBlock::processScrollEvent(SDL_MouseWheelEvent& e)
         else if(delta > 0)
         {
             viewport += delta;
-            if(viewport + getCompIntRect(compID).h > canvH)
+            if(viewport + drawRect.h > canvH)
             {
-                viewport = canvH - getCompIntRect(compID).h;
+                viewport = canvH - drawRect.h;
             }
         }
         refreshModifiers();
@@ -152,22 +147,8 @@ void ScrollBlock::processMouseMotionEvent(SDL_MouseMotionEvent &e)
     int localMY = mouseY - yOffset;
     for(int i = 0; i < int(buttons.size()); i++)
     {
-        rect = &getCompIntRect(buttons[i].getCompID());
-        if(rect->x <= localMX && rect->x + rect->w > localMX
-           && rect->y <= localMY && rect->y + rect->h > localMY)
-        {
-            buttons[i].setMouseOver(true);
-        }
-        else
-        {
-            buttons[i].setMouseOver(false);
-        }
+        buttons[i].setMouseOver(buttons[i].isMouseOver());
     }
-}
-
-int ScrollBlock::getCompID()
-{
-	return compID;
 }
 
 void ScrollBlock::refreshModifiers()
@@ -202,16 +183,15 @@ void ScrollBlock::deactivate()
 
 void ScrollBlock::calcBarPlacement()
 {
-    int compHeight = getCompIntRect(compID).h;
-    if(compHeight >= canvH)
+    if(localRect.h >= canvH)
     {
         barHeight = -1;     //-1 means don't draw any bar
         barPos = -1;
     }
     else
     {
-        barHeight = float(compHeight) / canvH * (compHeight - 2 * PAD);
-        barPos = float(viewport + compHeight / 2) * (compHeight - 2 * PAD) / canvH - barHeight / 2;
+        barHeight = float(localRect.h) / canvH * (localRect.h - 2 * PAD);
+        barPos = float(viewport + localRect.h / 2) * (localRect.h - 2 * PAD) / canvH - barHeight / 2;
     }
 }
 
@@ -230,11 +210,10 @@ bool ScrollBlock::hasBar()
 intRect_t ScrollBlock::getBarRect()
 {
     intRect_t out;
-    intRect_t sbRect = getCompIntRect(compID);
     out.w = BAR_WIDTH;
     out.h = barHeight;
-    out.x = sbRect.x + sbRect.w - PAD - BAR_WIDTH;
-    out.y = sbRect.y + PAD + barPos;
+    out.x = drawRect.x + drawRect.w - PAD - BAR_WIDTH;  //use actual screen pos
+    out.y = drawRect.y + PAD + barPos;
     return out;
 }
 
@@ -266,4 +245,10 @@ int ScrollBlock::getYOffset()
 Field* ScrollBlock::getCurrentField()
 {
     return currentField;
+}
+
+void ScrollBlock::calcOffsets()
+{
+    Component::calcOffsets();   //otherwise, use same xy values from Comp method
+    yOffset += viewport;
 }

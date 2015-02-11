@@ -85,15 +85,15 @@ void view::drawScene(Scene& s)
     }
 }
 
-void view::drawLabel(Label& l, int xOffset, int yOffset)
+void view::drawLabel(Label& l)
 {
-    intRect_t* lrect = &getCompIntRect(l.getCompID());
-    drawString(l.getText(), lrect->x + xOffset + l.getTextLoc().x, lrect->y + yOffset + l.getTextLoc().y, l.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
+    intRect_t& lrect = l.getdrawRect();
+    drawString(l.getText(), lrect.x + l.getTextLoc().x, lrect.y + l.getTextLoc().y, l.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
-void view::drawField(Field &f, int xOffset, int yOffset)
+void view::drawField(Field &f)
 {
-    intRect_t curRect = getCompIntRect(f.getCompID());
+    intRect_t curRect = f.getDrawRect();
     curRect.x += xOffset;
     curRect.y += yOffset;
     glDisable(GL_TEXTURE_2D);
@@ -118,7 +118,7 @@ void view::drawField(Field &f, int xOffset, int yOffset)
     drawString(f.getText(), curRect.x + PAD, curRect.y + PAD, f.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
-void view::drawButton(Button &b, int xOffset, int yOffset)
+void view::drawButton(Button &b)
 {
     float colorMult;
     if(!b.isMouseOver())
@@ -129,9 +129,7 @@ void view::drawButton(Button &b, int xOffset, int yOffset)
     {
         colorMult = 1.0f / SHADE;
     }
-    intRect_t rect = getCompIntRect(b.getCompID());         //initalize copy, don't modify
-    rect.x += xOffset;
-    rect.y += yOffset;
+    intRect_t rect = b.getDrawRect();         //initalize copy, don't modify
     glDisable(GL_TEXTURE_2D);
     glColor3f(UI_BG_R, UI_BG_G, UI_BG_B);
     glBegin(GL_QUADS);
