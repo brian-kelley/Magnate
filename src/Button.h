@@ -10,7 +10,7 @@
 #define __MagIndev__Button__
 
 #ifdef __APPLE__
-#include <SDL2/SDL.h>
+#include "SDL.h"
 #elif __linux
 #include <SDL2/SDL.h>
 #elif _WIN32
@@ -22,11 +22,10 @@
 #include "Component.h"
 #include "Constants.h"
 
-class Button
+class Button : Component
 {
 public:
     Button(int x, int y, int width, int height, std::string text, callback_t callback);
-    ~Button();
     void processMouse();
     SDL_Point& getTextLoc();
     std::string& getText();

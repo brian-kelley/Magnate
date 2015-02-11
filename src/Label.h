@@ -10,7 +10,7 @@
 #define __MagIndev__Label__
 
 #ifdef __APPLE__
-#include <SDL2/SDL.h>
+#include "SDL.h"
 #elif __linux
 #include <SDL2/SDL.h>
 #elif _WIN32

@@ -104,7 +104,6 @@ void ScrollBlock::processButtonEvent(SDL_MouseButtonEvent &e)
                 (*buttons[i].getCallback()) (buttons[i].getCompID());     //deref & exec button's callback
             }
         }
-        
         for(int i = 0; i < int(this->fields.size()); i++)
         {
             intRect_t* fldRect = &getCompIntRect(fields[i].getCompID());

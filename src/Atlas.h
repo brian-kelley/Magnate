@@ -10,9 +10,9 @@
 #define __MagIndev__Atlas__
 //Platform-specific includes
 #ifdef __APPLE__
-#include <gl.h>
-#include <SDL2/SDL.h>
-#include <SDL2_image/SDL_image.h>
+#include "gl.h"
+#include "SDL.h"
+#include "SDL_image.h"
 #include <boost/filesystem.hpp>
 #elif __linux
 #include <GL/gl.h>

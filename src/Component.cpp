@@ -9,79 +9,84 @@
 #include "Component.h"
 
 using namespace std;
-using namespace componentHandler;
 using namespace constants;
 
-int componentHandler::numIDs = 0;
-vector<component_t> componentHandler::componentList;
-
-bool componentHandler::mouseInside(int id)
+Component::Component(int x, int y, int width, int height, Component* parentComp)
 {
-    intRect_t rect = getCompIntRect(id);
-    if(rect.x <= mouseX && rect.x + rect.w > mouseX
-       && rect.y <= mouseY && rect.y + rect.h > mouseY)
+    intRect_t local;
+    local.x = x;
+    local.y = y;
+    local.w = width;
+    local.h = height;
+    drawRect.w = width;
+    drawRect.h = height;
+    this->parent = parentComp;
+    if(parent)
     {
-        return true;
+        localFloatRect.x = float(local.x) / parent->localRect.w;
+        localFloatRect.y = float(local.y) / parent->localRect.h;
+        localFloatRect.w = float(local.w) / parent->localRect.w;
+        localFloatRect.h = float(local.h) / parent->localRect.h;
     }
     else
     {
-        return false;
+        localFloatRect.x = float(local.x) / WINDOW_W;
+        localFloatRect.y = float(local.y) / WINDOW_H;
+        localFloatRect.w = float(local.w) / WINDOW_W;
+        localFloatRect.h = float(local.h) / WINDOW_H;
     }
+    calcDrawRect();
+    processResize();
 }
 
-component_t& getComponent(int id)
+void Component::calcDrawRect()
 {
-    return componentHandler::componentList[id];
-}
-
-int componentHandler::createComponent(int x, int y, int width, int height, int parentCompID, bool center)
-{
-    if(center)
+    if(parent)
     {
-        x -= width / 2;
-        y -= height / 2;
+        drawRect.x = parent->drawRect.x + localRect.x;
+        drawRect.y = parent->drawRect.y + localRect.y;
     }
-    component_t newComp;
-    newComp.id = int(componentList.size());
-    newComp.irect.x = x;
-    newComp.irect.y = y;
-    newComp.irect.w = width;
-    newComp.irect.h = height;
-    newComp.frect.x = (float) x / WINDOW_W;
-    newComp.frect.y = (float) y / WINDOW_H;
-    newComp.frect.w = (float) width / WINDOW_W;
-    newComp.frect.h = (float) height / WINDOW_H;
-    newComp.parentID = parentCompID;
-    componentList.push_back(newComp);
-    return newComp.id;  //return the ID of the component that has just been created
+    else
+    {
+        drawRect.x = localRect.x;
+        drawRect.y = localRect.y;
+    }
+    //w,h already set
 }
 
-intRect_t& componentHandler::getCompIntRect(int id)
+void Component::processResize()
 {
-    return componentList[id].irect;
+    if(parent)
+    {
+        localRect.x = localFloatRect.x * parent->localRect.w;
+        localRect.y = localFloatRect.y * parent->localRect.h;
+        localRect.w = localFloatRect.w * parent->localRect.w;
+        localRect.h = localFloatRect.h * parent->localRect.h;
+    }
+    else
+    {
+        localRect.x = localFloatRect.x * WINDOW_W;
+        localRect.y = localFloatRect.y * WINDOW_H;
+        localRect.w = localFloatRect.w * WINDOW_W;
+        localRect.h = localFloatRect.h * WINDOW_H;
+    }
+    calcOffsets();
+    for(int i = 0; i < int(children.size()); i++)
+    {
+        children[i]->processResize();
+    }
 }
 
-floatRect_t& componentHandler::getCompFloatRect(int id)
+void Component::calcOffsets()
 {
-    return componentList[id].frect;
-}
-
-void componentHandler::updateSize(int id)
-{
-    intRect_t itemp = getCompIntRect(id);
-    floatRect_t ftemp = getCompFloatRect(id);
-    itemp.x = ftemp.x * WINDOW_W;
-    itemp.y = ftemp.y * WINDOW_H;
-    itemp.w = ftemp.w * WINDOW_W;
-    itemp.h = ftemp.h * WINDOW_H;
-}
-
-bool componentHandler::hasParent(int id)
-{
-    return componentList[id].parentID != -1;    //parentID != -1 iff has parent
-}
-
-void componentHandler::setParent(int childID, int parentID)
-{
-    componentList[childID].parentID = parentID;
+    if(parent)
+    {
+        xOffset = localRect.x + parent->getXOffset();
+        yOffset = localRect.y + parent->getYOffset();
+    }
+    else
+    {
+        xOffset = localRect.x;
+        yOffset = localRect.y;
+    }
 }

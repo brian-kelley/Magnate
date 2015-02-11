@@ -20,11 +20,6 @@ Button::Button(int x, int y, int width, int height, string text, callback_t call
     over = false;
 }
 
-Button::~Button()
-{
-    
-}
-
 void Button::processMouse()
 {
     this->over = componentHandler::mouseInside(compID);

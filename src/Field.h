@@ -9,7 +9,7 @@
 #ifndef __MagIndev__Field__
 #define __MagIndev__Field__
 #ifdef __APPLE__
-#include <SDL2/SDL.h>
+#include "SDL.h"
 #elif __linux
 #include <SDL2/SDL.h>
 #elif _WIN32

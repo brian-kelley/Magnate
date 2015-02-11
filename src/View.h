@@ -10,8 +10,8 @@
 #define __MagIndev__View__
 
 #ifdef __APPLE__
-#include <SDL2/SDL.h>
-#include <gl.h>
+#include "SDL.h"
+#include "gl.h"
 #include <boost/filesystem.hpp>
 #elif __linux
 #include <SDL2/SDL.h>
