@@ -1,0 +1,39 @@
+=== BUILD AGGREGATE TARGET ZERO_CHECK OF PROJECT Magnate WITH THE DEFAULT CONFIGURATION (Debug) ===
+
+Check dependencies
+
+PhaseScriptExecution CMake\ Rules build/Magnate.build/Debug/ZERO_CHECK.build/Script-6C02CE59330D4FB490057076.sh
+    cd /Users/Brian/Dropbox/Magnate
+    /bin/sh -c /Users/Brian/Dropbox/Magnate/build/Magnate.build/Debug/ZERO_CHECK.build/Script-6C02CE59330D4FB490057076.sh
+echo ""
+
+make -f /Users/Brian/Dropbox/Magnate/build/CMakeScripts/ReRunCMake.make
+/usr/local/bin/cmake -H/Users/Brian/Dropbox/Magnate -B/Users/Brian/Dropbox/Magnate/build
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /Users/Brian/Dropbox/Magnate/build
+
+=== BUILD TARGET Magnate OF PROJECT Magnate WITH THE DEFAULT CONFIGURATION (Debug) ===
+
+Check dependencies
+
+CompileC build/src/Magnate.build/Debug/Magnate.build/Objects-normal/x86_64/Button.o src/Button.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+    cd /Users/Brian/Dropbox/Magnate
+    export LANG=en_US.US-ASCII
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Wno-return-type -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wno-unused-function -Wno-unused-label -Wno-unused-parameter -Wno-unused-variable -Wunused-value -Wno-empty-body -Wno-uninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wno-constant-conversion -Wno-int-conversion -Wno-bool-conversion -Wno-enum-conversion -Wno-shorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DCMAKE_INTDIR=\"Debug\" -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.10 -g -Wno-sign-conversion -I/Users/Brian/Dropbox/Magnate/build/src/Debug/include -I/Users/Brian/Dropbox/Magnate/src -I/usr/local/include -I/Users/Brian/Dropbox/Magnate/build/src/Magnate.build/Debug/Magnate.build/DerivedSources/x86_64 -I/Users/Brian/Dropbox/Magnate/build/src/Magnate.build/Debug/Magnate.build/DerivedSources -Wmost -Wno-four-char-constants -Wno-unknown-pragmas -F/Users/Brian/Dropbox/Magnate/build/src/Debug -MMD -MT dependencies -MF /Users/Brian/Dropbox/Magnate/build/src/Magnate.build/Debug/Magnate.build/Objects-normal/x86_64/Button.d --serialize-diagnostics /Users/Brian/Dropbox/Magnate/build/src/Magnate.build/Debug/Magnate.build/Objects-normal/x86_64/Button.dia -c /Users/Brian/Dropbox/Magnate/src/Button.cpp -o /Users/Brian/Dropbox/Magnate/build/src/Magnate.build/Debug/Magnate.build/Objects-normal/x86_64/Button.o
+In file included from /Users/Brian/Dropbox/Magnate/src/Button.cpp:9:
+/Users/Brian/Dropbox/Magnate/src/Button.h:13:10: fatal error: 'SDL.h' file not found
+#include "SDL.h"
+         ^
+1 error generated.
+
+CompileC build/src/Magnate.build/Debug/Magnate.build/Objects-normal/x86_64/Atlas.o src/Atlas.cpp normal x86_64 c++ com.apple.compilers.llvm.clang.1_0.compiler
+    cd /Users/Brian/Dropbox/Magnate
+    export LANG=en_US.US-ASCII
+    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -x c++ -arch x86_64 -fmessage-length=0 -fdiagnostics-show-note-include-stack -fmacro-backtrace-limit=0 -Wno-trigraphs -fpascal-strings -O0 -Wno-missing-field-initializers -Wno-missing-prototypes -Wno-return-type -Wno-non-virtual-dtor -Wno-overloaded-virtual -Wno-exit-time-destructors -Wno-missing-braces -Wparentheses -Wswitch -Wno-unused-function -Wno-unused-label -Wno-unused-parameter -Wno-unused-variable -Wunused-value -Wno-empty-body -Wno-uninitialized -Wno-unknown-pragmas -Wno-shadow -Wno-four-char-constants -Wno-conversion -Wno-constant-conversion -Wno-int-conversion -Wno-bool-conversion -Wno-enum-conversion -Wno-shorten-64-to-32 -Wno-newline-eof -Wno-c++11-extensions -DCMAKE_INTDIR=\"Debug\" -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk -fasm-blocks -fstrict-aliasing -Wdeprecated-declarations -Winvalid-offsetof -mmacosx-version-min=10.10 -g -Wno-sign-conversion -I/Users/Brian/Dropbox/Magnate/build/src/Debug/include -I/Users/Brian/Dropbox/Magnate/src -I/usr/local/include -I/Users/Brian/Dropbox/Magnate/build/src/Magnate.build/Debug/Magnate.build/DerivedSources/x86_64 -I/Users/Brian/Dropbox/Magnate/build/src/Magnate.build/Debug/Magnate.build/DerivedSources -Wmost -Wno-four-char-constants -Wno-unknown-pragmas -F/Users/Brian/Dropbox/Magnate/build/src/Debug -MMD -MT dependencies -MF /Users/Brian/Dropbox/Magnate/build/src/Magnate.build/Debug/Magnate.build/Objects-normal/x86_64/Atlas.d --serialize-diagnostics /Users/Brian/Dropbox/Magnate/build/src/Magnate.build/Debug/Magnate.build/Objects-normal/x86_64/Atlas.dia -c /Users/Brian/Dropbox/Magnate/src/Atlas.cpp -o /Users/Brian/Dropbox/Magnate/build/src/Magnate.build/Debug/Magnate.build/Objects-normal/x86_64/Atlas.o
+In file included from /Users/Brian/Dropbox/Magnate/src/Atlas.cpp:9:
+/Users/Brian/Dropbox/Magnate/src/Atlas.h:13:10: fatal error: 'gl.h' file not found
+#include "gl.h"
+         ^
+1 error generated.
+
