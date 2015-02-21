@@ -23,39 +23,28 @@ bool Control::trackingKeyboard;
 int Control::oldWindowW;
 int Control::oldWindowH;
 SDL_Event* Control::currentEvent;
-map<SNAME, Scene> Control::scenes;
+map<SNAME, Scene*> Control::scenes;
 
 namespace ui        //place for callbacks etc.
 {
-    void mainQuitButton(int compID)
+    void mainQuitButton(void* comp)
     {
         Control::terminating = true;
     }
-    void mainStartButton(int compID)
+    void mainStartButton(void* comp)
     {
         clearEnables();
-        currentScene = &scenes[SAVE_MENU];
+        currentScene = scenes[SAVE_MENU];
     }
-    void saveBackButton(int compID)
+    void saveBackButton(void* comp)
     {
         clearEnables();
-        currentScene = &scenes[MAIN_MENU];
+        currentScene = scenes[MAIN_MENU];
     }
-    void saveNameUpdate(int compID)
+    void saveGameButton(void* comp)
     {
-        
-    }
-    void newSaveNameUpdate(int compID)
-    {
-        
-    }
-    void newSaveCreate(int compID)
-    {
-        
-    }
-    void loadSave(int compID)
-    {
-        
+        clearEnables();
+        currentScene = scenes[GAME];
     }
 }
 
@@ -73,7 +62,7 @@ void Control::init()
     trackingKeyboard = true;
     currentEvent = new SDL_Event();
     currentField = nullptr;
-    currentScene = &scenes[MAIN_MENU];
+    currentScene = scenes[MAIN_MENU];
     model::init();
 }
 
@@ -122,7 +111,7 @@ void Control::update()
             case SDL_MOUSEMOTION:
                 if(trackingMouse)
                 {
-                    processMouseMotionEvent(*currentEvent);
+                    processMouseMotionEvent();
                 }
                 break;
             case SDL_MOUSEWHEEL:
@@ -137,11 +126,11 @@ void Control::update()
         }
     }
     view::prepareFrame();
-    if(currentScene == &scenes[GAME])
+    if(currentScene == scenes[GAME])
     {
         view::drawWorld(model::getCurrentWorld());
     }
-    view::drawScene(*currentScene);
+    view::drawScene(currentScene);
     view::finalizeFrame();
 }
 
@@ -161,106 +150,21 @@ void Control::processKeyboardEvent(SDL_Event &e)
 
 void Control::processMouseButtonEvent(SDL_Event &e)
 {
-    if(e.button.state == SDL_PRESSED)
+    if(e.button.state == SDL_PRESSED && e.button.button == SDL_BUTTON_LEFT)
     {
-        //Control will only handle top-level field activation/deactivation
-        if(currentField && !componentHandler::mouseInside(currentField->getCompID())
-           && !componentHandler::hasParent(currentField->getCompID()))
-        {
-            currentField->deactivate();
-        }
-        Button* btnPtr;
-        intRect_t* curRect;
-        for(int i = 0; i < int(currentScene->getButtons().size()); i++)
-        {
-            btnPtr = &(currentScene->getButtons())[i];
-            curRect = &componentHandler::getCompIntRect(btnPtr->getCompID());
-            if(curRect->x <= mouseX && curRect->x + curRect->w > mouseX
-               && curRect->y <= mouseY && curRect->y + curRect->h > mouseY)
-            {
-                (*(btnPtr->getCallback())) (btnPtr->getCompID());
-                break;
-            }
-        }
-        Field* fieldPtr;
-        for(int i = 0; i < int(currentScene->getFields().size()); i++)
-        {
-            fieldPtr = &(currentScene->getFields())[i];
-            curRect = &componentHandler::getCompIntRect(fieldPtr->getCompID());
-            if(curRect->x <= mouseX && curRect->x + curRect->w > mouseX
-               && curRect->y <= mouseY && curRect->y + curRect->h > mouseY)
-            {
-                currentField = fieldPtr;
-                currentField->activate();
-            }
-        }
-        ScrollBlock* sbPtr;
-        for(int i = 0; i < int(currentScene->getScrollBlocks().size()); i++)
-        {
-            sbPtr = &(currentScene->getScrollBlocks()[i]);
-            curRect = &componentHandler::getCompIntRect(sbPtr->getCompID());
-            if(curRect->x <= mouseX && curRect->x + curRect->w > mouseX
-               && curRect->y <= mouseY && curRect->y + curRect->y > mouseY)
-            {
-                sbPtr->processButtonEvent(e.button);
-                if(sbPtr->getCurrentField() != nullptr)
-                {
-                    currentField = sbPtr->getCurrentField();
-                    currentField->activate();
-                }
-            }
-        }
+        currentScene->processLeftClick();
     }
 }
 
-void Control::processMouseMotionEvent(SDL_Event &e)
+void Control::processMouseMotionEvent()
 {
     SDL_GetMouseState(&mouseX, &mouseY);
-    intRect_t* tempRect;
-    Button* btnPtr;
-    for(int i = 0; i < int(currentScene->getButtons().size()); i++)
-    {
-        tempRect = &componentHandler::getCompIntRect(currentScene->getButtons()[i].getCompID());
-        btnPtr = &currentScene->getButtons()[i];
-        if(tempRect->x <= mouseX && tempRect->x + tempRect->w > mouseX
-           && tempRect->y <= mouseY && tempRect->y + tempRect->h > mouseY)
-        {
-            btnPtr->setMouseOver(true);
-        }
-        else
-        {
-            btnPtr->setMouseOver(false);
-        }
-    }
-    ScrollBlock* sbPtr;
-    for(int i = 0; i < int(currentScene->getScrollBlocks().size()); i++)
-    {
-        sbPtr = &(currentScene->getScrollBlocks())[i];
-        tempRect = &componentHandler::getCompIntRect(sbPtr->getCompID());
-        if(tempRect->x <= mouseX && tempRect->x + tempRect->w > mouseX
-           && tempRect->y <= mouseY && tempRect->y + tempRect->h > mouseY)
-        {
-            sbPtr->processMouseMotionEvent(e.motion);
-        }
-    }
+    currentScene->processMouseMotion();
 }
 
 void Control::processMouseWheelEvent(SDL_Event &e)
 {
-    ScrollBlock* sbptr;
-    intRect_t* rectptr;
-    //process all scrollblocks in the screen with the scroll amount
-    for(int i = 0; i < int(currentScene->getScrollBlocks().size()); i++)
-    {
-        sbptr = &currentScene->getScrollBlocks()[i];
-        //check if mouse inside the scroll block
-        rectptr = &componentHandler::getCompIntRect(sbptr->getCompID());
-        if(rectptr->x <= mouseX && rectptr->x + rectptr->w > mouseX
-        	&& rectptr->y <= mouseY && rectptr->y + rectptr->h > mouseY)
-        {
-            sbptr->processScrollEvent(e.wheel);
-        }
-    }
+    currentScene->processScroll(e.wheel);
 }
 
 void Control::processWindowEvent(SDL_Event &e)
@@ -287,7 +191,7 @@ void Control::processWindowEvent(SDL_Event &e)
         	break;
         case SDL_WINDOWEVENT_MAXIMIZED: //update window size and UI layout
             view::updateWindowSize();
-            updateUISize();
+            //updateUISize();
             updatingView = true;
             break;
         case SDL_WINDOWEVENT_SHOWN: //window has been shown
@@ -311,72 +215,24 @@ void Control::processWindowEvent(SDL_Event &e)
 
 void Control::updateUISize()
 {
-    for(int j = 0; j < (int) currentScene->getButtons().size(); j++)
-    {
-        componentHandler::updateSize(currentScene->getButtons()[j].getCompID());
-    }
-    for(int j = 0; j < (int) currentScene->getFields().size(); j++)
-    {
-        componentHandler::updateSize(currentScene->getButtons()[j].getCompID());
-    }
-    for(int j = 0; j < (int) currentScene->getLabels().size(); j++)
-    {
-        componentHandler::updateSize(currentScene->getButtons()[j].getCompID());
-    }
-    for(int i = 0; i < (int) currentScene->getScrollBlocks().size(); i++)
-    {
-        currentScene->getScrollBlocks()[i].updateSBSize();
-    }
+    currentScene->processResize();
 }
 
 void Control::initScenes()
 {
     /* Main menu */
-    Scene mainMenu;
-    Button startGame(320, 180, 240, 100, "Start Game", &ui::mainStartButton);
-    mainMenu.addButton(startGame);
-    Button quitGame(320, 300, 240, 100, "Quit Game", &ui::mainQuitButton);
-    mainMenu.addButton(quitGame);
+    Scene* mainMenu = new Scene();
+    new Button(320, 180, 240, 100, "Start Game", &ui::mainStartButton, mainMenu);
+    new Button(320, 300, 240, 100, "Quit Game", &ui::mainQuitButton, mainMenu);
     scenes[MAIN_MENU] = mainMenu;
-    /* Save menu */
-    Scene saveMenu;
-    int numSaves = sman->getNumSaves();
-    ScrollBlock saveList(320, 180, 550, 300, 900 + 50 * numSaves + BORDER_WIDTH);
-    if(numSaves != 0)
-    {
-        for(int i = 0; i < sman->getNumSaves(); i++)
-        {
-            Field nameField(210, 50 + 50 * i, 390, 40, sman->listSaves()[i], &ui::saveNameUpdate);
-            saveList.addField(nameField);
-            Button nameButton(480, 50 + 50 * i, 100, 40, "Load", &ui::loadSave);
-            saveList.addButton(nameButton);
-        }
-    }
-    Field newNameField(210, 50 + 50 * numSaves, 390, 40, "", &ui::newSaveNameUpdate);
-    saveList.addField(newNameField);
-    Button newNameButton(480, 50 + 50 * numSaves, 100, 40, "Create", &ui::newSaveCreate);
-    saveList.addButton(newNameButton);
-    saveMenu.addScrollBlock(saveList);
-    Button backToMain(320, 400, 300, 80, "Back", &ui::saveBackButton);
-    saveMenu.addButton(backToMain);
-    scenes[SAVE_MENU] = saveMenu;
+    sman->initMenu(&ui::saveBackButton, &ui::saveGameButton);
+    scenes[SAVE_MENU] = sman->getScene();
 }
 
 void Control::clearEnables()      //clear currentField and button hovers in current scene
 {
-    if(currentField != nullptr)
-    {   //force same action as pressing "Enter" would have done, whatever that is
-        Field* deactivating = currentField;
-        currentField = nullptr;
-        deactivating->deactivate();
-    }
-    for(int i = 0; i < int(currentScene->getButtons().size()); i++)
+    for(Component* c : currentScene->getChildren())
     {
-        currentScene->getButtons()[i].setMouseOver(false);
-    }
-    for(int i = 0; i < int(currentScene->getScrollBlocks().size()); i++)
-    {
-        currentScene->getScrollBlocks()[i].deactivate();
-        currentScene->getScrollBlocks()[i].calcBarPlacement();
+        c->deactivate();
     }
 }

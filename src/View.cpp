@@ -12,7 +12,6 @@ using namespace std;
 using namespace constants;
 using namespace view;
 using namespace boost::filesystem;
-using namespace componentHandler;
 
 int view::scrX = 0;
 int view::scrY = 0;
@@ -65,37 +64,48 @@ void view::drawWorld(World *currentWorld)   //probably too general of a function
     
 }
 
-void view::drawScene(Scene& s)
+void view::drawScene(Scene* s)
 {
-    for(int i = 0; i < int(s.getScrollBlocks().size()); i++)
+    Component* c;
+    for(int i = 0; i < int(s->getChildren().size()); i++)
     {
-        drawScrollBlock(s.getScrollBlocks()[i]);
-    }
-    for(int i = 0; i < int(s.getButtons().size()); i++)
-    {
-        drawButton(s.getButtons()[i]);
-    }
-    for(int i = 0; i < int(s.getLabels().size()); i++)
-    {
-        drawLabel(s.getLabels()[i]);
-    }
-    for(int i = 0; i < int(s.getFields().size()); i++)
-    {
-        drawField(s.getFields()[i]);
+        c = dynamic_cast<Component*>(s->getChildren()[i]);
+        switch(c->getType())
+        {
+            case BUTTON:
+                drawButton(dynamic_cast<Button*>(c));
+                break;
+            case FIELD:
+                drawField(dynamic_cast<Field*>(c));
+                break;
+            case LABEL:
+                drawLabel(dynamic_cast<Label*>(c));
+                break;
+            case SCROLLBLOCK:
+                drawScrollBlock(dynamic_cast<ScrollBlock*>(c));
+                break;
+            default:
+                glDisable(GL_TEXTURE_2D);
+                glColor3f(1, 0.5, 0);
+                glBegin(GL_TRIANGLES);
+                glVertex2i(100, 100);
+                glVertex2i(200, 100);
+                glVertex2i(100, 200);
+                glEnd();
+                cout << "Error: Unknown component type" << endl;
+        }
     }
 }
 
-void view::drawLabel(Label& l)
+void view::drawLabel(Label* l)
 {
-    intRect_t& lrect = l.getdrawRect();
-    drawString(l.getText(), lrect.x + l.getTextLoc().x, lrect.y + l.getTextLoc().y, l.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
+    intRect_t& lrect = l->getDrawRect();
+    drawString(l->getText(), lrect.x + l->getTextLoc().x, lrect.y + l->getTextLoc().y, l->getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
-void view::drawField(Field &f)
+void view::drawField(Field* f)
 {
-    intRect_t curRect = f.getDrawRect();
-    curRect.x += xOffset;
-    curRect.y += yOffset;
+    intRect_t curRect = f->getDrawRect();
     glDisable(GL_TEXTURE_2D);
     glColor3f(UI_BG_R, UI_BG_G, UI_BG_B);
     glBegin(GL_QUADS);
@@ -115,13 +125,13 @@ void view::drawField(Field &f)
     glVertex2i(curRect.x, curRect.y);
     glVertex2i(curRect.x, curRect.y + curRect.h);
     glEnd();
-    drawString(f.getText(), curRect.x + PAD, curRect.y + PAD, f.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
+    drawString(f->getText(), curRect.x + PAD, curRect.y + PAD, f->getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
-void view::drawButton(Button &b)
+void view::drawButton(Button* b)
 {
     float colorMult;
-    if(!b.isMouseOver())
+    if(!b->isMouseOver())
     {
         colorMult = 1.0f;
     }
@@ -129,7 +139,7 @@ void view::drawButton(Button &b)
     {
         colorMult = 1.0f / SHADE;
     }
-    intRect_t rect = b.getDrawRect();         //initalize copy, don't modify
+    intRect_t rect = b->getDrawRect();         //initalize copy, don't modify
     glDisable(GL_TEXTURE_2D);
     glColor3f(UI_BG_R, UI_BG_G, UI_BG_B);
     glBegin(GL_QUADS);
@@ -164,14 +174,14 @@ void view::drawButton(Button &b)
     glVertex2i(rect.x + rect.w, rect.y + rect.h);
     glVertex2i(rect.x, rect.y + rect.h);
     glEnd();
-    drawString(b.getText(), b.getTextLoc().x + rect.x, b.getTextLoc().y + rect.y, b.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
+    drawString(b->getText(), b->getTextLoc().x + rect.x, b->getTextLoc().y + rect.y, b->getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
-void view::drawScrollBlock(ScrollBlock &sb)
+void view::drawScrollBlock(ScrollBlock* sb)
 {
     glColor4f(UI_BG_R * SHADE, UI_BG_G * SHADE, UI_BG_B * SHADE, 1);
     glDisable(GL_TEXTURE_2D);
-    intRect_t* sbrect = &componentHandler::getCompIntRect(sb.getCompID());
+    intRect_t* sbrect = &sb->getDrawRect();
     glBegin(GL_QUADS);
     glVertex2i(sbrect->x, sbrect->y);
     glVertex2i(sbrect->x + sbrect->w, sbrect->y);
@@ -181,45 +191,9 @@ void view::drawScrollBlock(ScrollBlock &sb)
     //For some reason glScissor wants (x, y) to be lower-left corner
     glEnable(GL_SCISSOR_TEST);  //enable scissor clipping to sb rectangle
     glScissor(sbrect->x, WINDOW_H - sbrect->y - sbrect->h, sbrect->w, sbrect->h);
-    int xOff = sb.getXOffset();
-    int yOff = sb.getYOffset();
-    intRect_t subRect;
-    for(int i = 0; i < sb.numButtons(); i++)
+    if(sb->hasBar())
     {
-        subRect = getCompIntRect(sb.getButtons()[i].getCompID());
-        subRect.x += xOff;
-        subRect.y += yOff;
-        if(subRect.y + subRect.h > sbrect->y
-           || subRect.y <= sbrect->y + sbrect->h)
-        {
-            drawButton(sb.getButtons()[i], xOff, yOff);
-        }
-    }
-    for(int i = 0; i < sb.numFields(); i++)
-    {
-        subRect = getCompIntRect(sb.getFields()[i].getCompID());
-        subRect.x += xOff;
-        subRect.y += yOff;
-        if(subRect.y + subRect.h > sbrect->y
-           || subRect.y <= sbrect->y + sbrect->h)
-        {
-            drawField(sb.getFields()[i], xOff, yOff);
-        }
-    }
-    for(int i = 0; i < sb.numLabels(); i++)
-    {
-        subRect = getCompIntRect(sb.getLabels()[i].getCompID());
-        subRect.x += xOff;
-        subRect.y += yOff;
-        if(subRect.y + subRect.h > sbrect->y
-           || subRect.y <= sbrect->y + sbrect->h)
-        {
-            drawLabel(sb.getLabels()[i], xOff, yOff);
-        }
-    }
-    if(sb.hasBar())
-    {
-        intRect_t bar = sb.getBarRect();
+        intRect_t bar = sb->getBarRect();
         glDisable(GL_TEXTURE_2D);
         glColor3f(UI_FG_R, UI_FG_G, UI_FG_B);
         glBegin(GL_QUADS);

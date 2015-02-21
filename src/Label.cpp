@@ -9,11 +9,9 @@
 #include "Label.h"
 
 using namespace std;
-using namespace componentHandler;
 
-Label::Label(int x, int y, int width, int height, string text, Component* parentComp)
+Label::Label(int x, int y, int width, int height, string text, Component* parentComp) : Component(x, y, width, height, true, parentComp, CTYPE::LABEL)
 {
-    Component(x, y, width, height, parentComp);
     this->text = text;
     calcTextPlacement();
 }
@@ -26,8 +24,8 @@ void Label::updateText(string newText)
 
 void Label::calcTextPlacement()
 {
-    float fontScaleX = (getCompIntRect(compID).w - constants::PAD * 2) / (float) constants::FONTW;
-    float fontScaleY = (getCompIntRect(compID).h - constants::PAD * 2) / (float) constants::FONTH;
+    float fontScaleX = (localRect.w - constants::PAD * 2) / (float) constants::FONTW;
+    float fontScaleY = (localRect.h - constants::PAD * 2) / (float) constants::FONTH;
     if(fontScaleX < fontScaleY)
     {
         this->fontScale = fontScaleX;

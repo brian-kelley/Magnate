@@ -38,7 +38,7 @@ void SaveManager::deleteWorld(string worldFolder)
 void SaveManager::refreshSaveList()
 {
     vector<string> out;
-    path saveFolder = initial_path() / ".."/ "saves";
+    path saveFolder = initial_path() / ".." / "saves";
     if(is_directory(saveFolder))
     {
         directory_iterator dirIter(saveFolder);
@@ -62,4 +62,16 @@ vector<string>& SaveManager::listSaves()
 int SaveManager::getNumSaves()
 {
     return int(saves.size());
+}
+
+Scene* SaveManager::getScene()
+{
+    return &menu;
+}
+
+void SaveManager::initMenu(callback_t toMain, callback_t toGame)
+{
+    new Button(160, 430, 200, 80, "Back", toMain, &menu);
+    new Button(480, 430, 200, 80, "Start", toGame, &menu);
+    new ScrollBlock(320, 220, 550, 300, &menu, saves.size() * 50);
 }

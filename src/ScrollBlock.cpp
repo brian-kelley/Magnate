@@ -10,11 +10,9 @@
 
 using namespace std;
 using namespace constants;
-using namespace componentHandler;
 
-ScrollBlock::ScrollBlock(int x, int y, int width, int height, Component* parentComp, int canvh, bool center)
+ScrollBlock::ScrollBlock(int x, int y, int width, int height, Component* parentComp, int canvh, bool center) : Component(x, y, width, height, true, parentComp, CTYPE::SCROLLBLOCK)
 {
-    Component(x, y, width, height, parentComp);
     viewport = 0;
     canvH = canvh;
     fCanvH = (float) canvH / WINDOW_H;
@@ -22,63 +20,12 @@ ScrollBlock::ScrollBlock(int x, int y, int width, int height, Component* parentC
     calcBarPlacement();
 }
 
-void ScrollBlock::addButton(Button b)
-{
-    this->buttons.push_back(b);
-}
-
-void ScrollBlock::addField(Field f)
-{
-    this->fields.push_back(f);
-}
-
-void ScrollBlock::addLabel(Label l)
-{
-    this->labels.push_back(l);
-}
-
-vector<Button>& ScrollBlock::getButtons()
-{
-    return this->buttons;
-}
-
-vector<Label>& ScrollBlock::getLabels()
-{
-    return this->labels;
-}
-
-vector<Field>& ScrollBlock::getFields()
-{
-    return this->fields;
-}
-
-void ScrollBlock::updateSBSize()      //updateSize will handle resizing subcomponents as well
-{
-    componentHandler::updateSize(compID);   //updates top-level rectangle rel. to window
-    canvH = fCanvH * WINDOW_H;              //also adjust canvas height
-    for(int i = 0; i < int(buttons.size()); i++)
-    {
-        updateSize(buttons[i].getCompID());
-        buttons[i].calcTextPlacement();
-    }
-    for(int i = 0; i < int(fields.size()); i++)
-    {
-        updateSize(fields[i].getCompID());
-        fields[i].calcTextPlacement();
-    }
-    for(int i = 0; i < int(labels.size()); i++)
-    {
-        updateSize(labels[i].getCompID());
-        fields[i].calcTextPlacement();
-    }
-}
-
 void ScrollBlock::updateCanvasHeight(int newHeight) //call this when need more space for subcomponents
 {
     //minimum height of canvas is height of top-level rect; least height where no scrolling
-    if(newHeight < getCompIntRect(compID).h)
+    if(newHeight < localRect.h)
     {
-        canvH = getCompIntRect(compID).h;
+        canvH = localRect.h;
     }
     else
     {
@@ -87,31 +34,9 @@ void ScrollBlock::updateCanvasHeight(int newHeight) //call this when need more s
     calcBarPlacement();
 }
 
-void ScrollBlock::processButtonEvent(SDL_MouseButtonEvent &e)
+void ScrollBlock::processLeftClick()
 {
-    //e occured at (mouseX, mouseY)
-    //need to convert that to canvas position to compare to local subcomponents
-    if(e.button == SDL_BUTTON_LEFT)
-    {
-        int canvMouseX = mouseX - xOffset;
-        int canvMouseY = mouseY - yOffset;
-        for(int i = 0; i < int(this->buttons.size()); i++)
-        {
-            if(buttons[i].isMouseOver())
-            {
-                (*buttons[i].getCallback()) (buttons[i].getCompID());
-            }
-        }
-        for(int i = 0; i < int(this->fields.size()); i++)
-        {
-            if(fields[i].isMouseOver())
-            {
-                active = true;
-                currentField = &fields[i];
-                fields[i].activate();
-            }
-        }
-    }
+    Component::processLeftClick();
 }
 
 void ScrollBlock::processScrollEvent(SDL_MouseWheelEvent& e)
@@ -140,21 +65,12 @@ void ScrollBlock::processScrollEvent(SDL_MouseWheelEvent& e)
     }
 }
 
-void ScrollBlock::processMouseMotionEvent(SDL_MouseMotionEvent &e)
-{
-    intRect_t* rect;
-    int localMX = mouseX - xOffset;
-    int localMY = mouseY - yOffset;
-    for(int i = 0; i < int(buttons.size()); i++)
-    {
-        buttons[i].setMouseOver(buttons[i].isMouseOver());
-    }
-}
+void ScrollBlock::processMouseMotionEvent(SDL_MouseMotionEvent &e) {}
 
 void ScrollBlock::refreshModifiers()
 {
-    xOffset = getCompIntRect(compID).x;
-    yOffset = getCompIntRect(compID).y - viewport;
+    xOffset = localRect.x;
+    yOffset = localRect.y - viewport;
 }
 
 bool ScrollBlock::isActive()
@@ -170,15 +86,6 @@ void ScrollBlock::activate()
 void ScrollBlock::deactivate()
 {
     active = false;
-    //right now, the only effect of deactivating SB is to deactivate all its fields
-    for(int i = 0; i < int(fields.size()); i++)
-    {
-        if(fields[i].isActive())
-        {
-            (*fields[i].getCallback()) (fields[i].getCompID());
-            fields[i].deactivate();
-        }
-    }
 }
 
 void ScrollBlock::calcBarPlacement()
@@ -215,31 +122,6 @@ intRect_t ScrollBlock::getBarRect()
     out.x = drawRect.x + drawRect.w - PAD - BAR_WIDTH;  //use actual screen pos
     out.y = drawRect.y + PAD + barPos;
     return out;
-}
-
-int ScrollBlock::numButtons()
-{
-    return int(buttons.size());
-}
-
-int ScrollBlock::numLabels()
-{
-    return int(labels.size());
-}
-
-int ScrollBlock::numFields()
-{
-    return int(fields.size());
-}
-
-int ScrollBlock::getXOffset()
-{
-    return xOffset;
-}
-
-int ScrollBlock::getYOffset()
-{
-    return yOffset;
 }
 
 Field* ScrollBlock::getCurrentField()

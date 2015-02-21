@@ -1,15 +1,35 @@
 cmake_minimum_required (VERSION 3.0)
 project (Magnate)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -F/Library/Frameworks -F/System/Library/Frameworks -lOpenGL -lSDL2 -lSDL2_image -lSDL2_ttf -I/System/Library/Frameworks/OpenGL.framework/Headers -I/Library/Frameworks/SDL2.framework/Headers -I/Library/Frameworks/SDL2_image.framework/Headers -I/Library/Frameworks/SDL2_ttf.framework/Headers")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-#Have to handle some libraries a certain way because they are .frameworks
-if(apple)
-	find_path (GL_INCLUDE_DIR gl.h)
-	find_path (SDL2_INCLUDE_DIR SDL.h)
-	find_path (SDL2_IMAGE_INCLUDE_DIR SDL_image.h)
-	find_path (SDL2_TTF_INCLUDE_DIR SDL_ttf.h)
-	set (EXTRA_LIBS OpenGL SDL2 SDL2_image SDL2_ttf)
-endif(apple)
+#Manually pass apple frameworks and include directories via clang flags
+find_library(BOOST_SYSTEM boost_system)
+if(NOT BOOST_SYSTEM)
+	message(FATAL_ERROR "libboost_system not found!")
+endif()
+find_library(BOOST_FILESYSTEM boost_filesystem)
+if(NOT BOOST_FILESYSTEM)
+	message(FATAL_ERROR "libboost_filesystem not found!")
+endif()
+find_library(OPENGL OpenGL)
+if(NOT OPENGL)
+	message(FATAL_ERROR "OpenGL library not found!")
+endif()
+find_library(SDL2_LIB SDL2)
+if(NOT SDL2_LIB)
+	message(FATAL_ERROR "SDL2 library not found!")
+endif()
+find_library(SDL2_IMAGE_LIB SDL2_image)
+if(NOT SDL2_IMAGE_LIB)
+	message(FATAL_ERROR "SDL2_image library not found!")
+endif()
+find_library(SDL2_TTF_LIB SDL2_ttf)
+if(NOT SDL2_TTF_LIB)
+	message(FATAL_ERROR "SDL2_ttf library not found!")
+endif()
+if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/System/Library/Frameworks/OpenGL.framework/Headers -I/Library/Frameworks/SDL2.framework/Headers -I/Library/Frameworks/SDL2_image.framework/Headers -I/Library/Frameworks/SDL2_ttf.framework/Headers")
+endif()
 
 include_directories (/usr/local/include)
 include_directories (/usr/include)
@@ -53,11 +73,10 @@ src/View
 src/World
 )
 
-target_link_libraries (Magnate 
-boost_filesystem
-
-)
-
-if(apple)
-	target_link_libraries (Magnate ${EXTRA_LIBS})
-endif(apple)
+target_link_libraries (Magnate
+${BOOST_SYSTEM}
+${BOOST_FILESYSTEM}
+${OPENGL}
+${SDL2_LIB}
+${SDL2_IMAGE_LIB}
+${SDL2_TTF_LIB})

@@ -38,7 +38,7 @@ void Cuboid::initDrawCoords()
     draw.x3 = ix(x, y + width) - baseX;
     draw.y3 = jy(x, y + width) + (int) (constants::HMULT * (z + height)) - baseY;
     draw.x4 = ix(x, y + width) - baseX;
-    draw.y4 = jy(x, y + width) + (int) (constants::HMULT * (z)) - baseY;
+    draw.y4 = jy(x, y + width) + (int) (constants::HMULT * z) - baseY;
     draw.x5 = ix(x + length, y) - baseX;
     draw.y5 = jy(x + length, y) + (int) (constants::HMULT * (z + height)) - baseY;
     draw.x6 = ix(x + length, y + width) - baseX;

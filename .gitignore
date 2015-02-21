@@ -7,3 +7,6 @@ src/.settings/
 .cproject
 .project
 src/.*
+macBuild/*
+winBuild/*
+linuxBuild/*

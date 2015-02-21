@@ -10,19 +10,13 @@
 
 using namespace std;
 
-Button::Button(int x, int y, int width, int height, string text, callback_t callback, Component* parentComp)
+Button::Button(int x, int y, int width, int height, string text, callback_t callback, Component* parentComp) : Component(x, y, width, height, true, parentComp, CTYPE::BUTTON)
 {
-    Component(x, y, width, height, parentComp);
     this->callback = callback;
     this->text = text;
     this->over = false;
     calcTextPlacement();
     over = false;
-}
-
-void Button::processMouse()
-{
-    this->over = componentHandler::mouseInside(compID);
 }
 
 SDL_Point& Button::getTextLoc()
@@ -45,9 +39,9 @@ callback_t Button::getCallback()
     return this->callback;
 }
 
-void Button::updateSize()
+void Button::processResize()
 {
-    componentHandler::updateSize(compID);
+    Component::processResize();
     calcTextPlacement();
 }
 
@@ -55,34 +49,41 @@ void Button::calcTextPlacement()
 {
     float fontScaleW;
     float fontScaleH;
-    intRect_t irect = componentHandler::getCompIntRect(compID);
-    fontScaleW = ((float) irect.w - constants::BORDER_WIDTH * 2 - constants::PAD * 2) / ((int) text.size() * constants::FONTW);
-    fontScaleH = ((float) irect.h - constants::BORDER_WIDTH * 2 - constants::PAD * 2) / constants::FONTH;
+    fontScaleW = ((float) localRect.w - constants::BORDER_WIDTH * 2 - constants::PAD * 2) / ((int) text.size() * constants::FONTW);
+    fontScaleH = ((float) localRect.h - constants::BORDER_WIDTH * 2 - constants::PAD * 2) / constants::FONTH;
     if(fontScaleW < fontScaleH)
     {
         this->fontScale = fontScaleW;
         this->textLoc.x = constants::BORDER_WIDTH + constants::PAD;
-        this->textLoc.y = (irect.h - constants::FONTH * fontScale) / 2;
+        this->textLoc.y = (localRect.h - constants::FONTH * fontScale) / 2;
     }
     else
     {
         this->fontScale = fontScaleH;
         this->textLoc.y = constants::BORDER_WIDTH + constants::PAD;
-        this->textLoc.x = (irect.w - (int) text.size() * fontScale * constants::FONTW) / 2;
+        this->textLoc.x = (localRect.w - (int) text.size() * fontScale * constants::FONTW) / 2;
     }
 }
 
-int Button::getCompID()
+void Button::processMouseMotion()
 {
-    return compID;
+    if(this->isMouseOver())
+    {
+        activate();
+    }
 }
 
-bool Button::isMouseOver()
+void Button::processLeftClick()
 {
-    return over;
+    (*callback) (this);
 }
 
-void Button::setMouseOver(bool isOver)
+void Button::activate()
 {
-    over = isOver;
+    Component::activate();
+}
+
+void Button::deactivate()
+{
+    Component::deactivate();
 }

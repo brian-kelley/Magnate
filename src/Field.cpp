@@ -9,11 +9,9 @@
 #include "Field.h"
 
 using namespace std;
-using namespace componentHandler;
 
-Field::Field(int x, int y, int width, int height, string text, callback_t callback, Component* parentComp)
+Field::Field(int x, int y, int width, int height, string text, callback_t callback, Component* parentComp) : Component(x, y, width, height, true, parentComp, CTYPE::FIELD)
 {
-    Component(x, y, width, height, parentComp);
     this->text = text;
     this->callback = callback;
     calcTextPlacement();
@@ -58,12 +56,7 @@ float Field::getFontScale()
 
 void Field::calcTextPlacement()
 {
-    this->fontScale = float(getCompIntRect(compID).h - constants::PAD * 2) / constants::FONTH;
-}
-
-int Field::getCompID()
-{
-    return compID;
+    this->fontScale = float(localRect.h - constants::PAD * 2) / constants::FONTH;
 }
 
 callback_t Field::getCallback()
@@ -91,5 +84,5 @@ void Field::deactivate()
         hasCursor = false;
     }
     this->calcTextPlacement();
-    (*callback) (compID);
+    (*callback) (0);
 }
