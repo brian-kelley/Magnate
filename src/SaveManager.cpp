@@ -10,10 +10,16 @@
 
 using namespace std;
 using namespace boost::filesystem;
+using namespace SaveManager;
 
-SaveManager::SaveManager()
+Scene* SaveManager::menu;
+MultiSelect* SaveManager::saveSelect;
+vector<string> SaveManager::saves;
+
+void SaveManager::init()
 {
     refreshSaveList();
+    menu = new Scene();
 }
 
 World* SaveManager::loadWorld(string worldFolder)
@@ -25,7 +31,7 @@ World* SaveManager::loadWorld(string worldFolder)
 
 void SaveManager::deleteWorld(string worldFolder)
 {
-    path wPath = initial_path() / ".." / "saves" / worldFolder;
+    path wPath = initial_path() / constants::BIN_TO_ROOT / "saves" / worldFolder;
     if(exists(wPath))
     {
         if(!boost::filesystem::remove(wPath))
@@ -38,7 +44,7 @@ void SaveManager::deleteWorld(string worldFolder)
 void SaveManager::refreshSaveList()
 {
     vector<string> out;
-    path saveFolder = initial_path() / ".." / "saves";
+    path saveFolder = initial_path() / constants::BIN_TO_ROOT / "saves";
     if(is_directory(saveFolder))
     {
         directory_iterator dirIter(saveFolder);
@@ -66,12 +72,23 @@ int SaveManager::getNumSaves()
 
 Scene* SaveManager::getScene()
 {
-    return &menu;
+    return menu;
+}
+
+void SaveManager::rename(void* arg)
+{
+    cout << saveSelect->getSelectionText() << endl;
 }
 
 void SaveManager::initMenu(callback_t toMain, callback_t toGame)
 {
-    new Button(160, 430, 200, 80, "Back", toMain, &menu);
-    new Button(480, 430, 200, 80, "Start", toGame, &menu);
-    new ScrollBlock(320, 220, 550, 300, &menu, saves.size() * 50);
+    new Button(140, 430, 150, 60, "Back", toMain, menu);
+    new Button(320, 430, 150, 60, "Rename", &(SaveManager::rename), menu);
+    new Button(500, 430, 150, 60, "Load", toGame, menu);
+    ScrollBlock* listSB = new ScrollBlock(320, 220, 550, 300, menu, saves.size() * 50);
+    saveSelect = new MultiSelect(275, 150, 500, 280, 50, listSB);
+    for(int i = 0; i < int(saves.size()); i++)
+    {
+        saveSelect->addOption(saves[i]);
+    }
 }

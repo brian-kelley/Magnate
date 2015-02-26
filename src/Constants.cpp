@@ -8,6 +8,8 @@
 
 #include "Constants.h"
 
+using namespace std;
+
 int constants::mouseX = 0;
 int constants::mouseY = 0;
 int constants::FONTW = -1;
@@ -25,3 +27,12 @@ float constants::UI_FG_G = 0.75;
 float constants::UI_FG_B = 0.75;
 float constants::SHADE = 0.85;
 float constants::HMULT = -80.0;
+
+#ifdef __APPLE__
+string constants::BIN_TO_ROOT = "../..";
+//Don't know exactly what linux/win values will be
+#elif __linux
+string constants::BIN_TO_ROOT = "../..";
+#elif _WIN32
+string constants::BIN_TO_ROOT = "../..";
+#endif

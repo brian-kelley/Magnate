@@ -22,22 +22,19 @@
 #include "Component.h"
 #include "Constants.h"
 
-class Button : Component
+class Button : public Component
 {
 public:
-    Button(int x, int y, int width, int height, std::string text, callback_t callback);
-    void processMouse();
+    Button(int x, int y, int width, int height, std::string text, callback_t callback, Component* parentComp);
     SDL_Point& getTextLoc();
     std::string& getText();
     float getFontScale();
-    void updateSize();
+    void processResize();
     callback_t getCallback();
     void calcTextPlacement();
-    int getCompID();
-    void setMouseOver(bool isOver);
-    bool isMouseOver();
+    void processMouseMotion();
+    void processLeftClick();
 private:
-    int compID;
     SDL_Point textLoc;
     bool over;
     std::string text;

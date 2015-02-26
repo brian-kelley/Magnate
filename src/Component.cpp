@@ -118,9 +118,15 @@ void Component::processMouseMotion()
     
 }
 
-void Component::processScroll(SDL_MouseWheelEvent)
+void Component::processScroll(SDL_MouseWheelEvent& e)
 {
-    
+    for(Component* c : children)
+    {
+        if(c->isMouseOver())
+        {
+            c->processScroll(e);
+        }
+    }
 }
 
 void Component::activate()

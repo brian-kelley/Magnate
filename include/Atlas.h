@@ -18,10 +18,12 @@
 #include <GL/gl.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <boost/filesystem.hpp>
 #elif _WIN32
 #include <GL/gl.h>
-#include <SDL2\SDL.h>
-#include <SDL2\SDL_image.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+#include <boost/filesystem.hpp>
 #endif
 #include <stdio.h>
 #include <iostream>

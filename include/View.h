@@ -11,6 +11,7 @@
 
 #ifdef __APPLE__
 #include "SDL.h"
+#include "SDL_ttf.h"
 #include "gl.h"
 #include <boost/filesystem.hpp>
 #elif __linux
@@ -30,6 +31,7 @@
 #include "Button.h"
 #include "Label.h"
 #include "Field.h"
+#include "MultiSelect.h"
 #include "Coord.h"
 #include "Constants.h"
 
@@ -42,30 +44,34 @@ namespace view
     extern SDL_Renderer* renderer;
     extern SDL_GLContext context;
     extern Atlas* mainAtlas;
-    //Public functions
+    extern TTF_Font* font;
+    //Publicly used functions
     extern void init(int screenX = 0, int screenY = 0);
     extern void dispose();
     extern void updateWindowSize();
-    extern void drawWorld(World* currentWorld);
-    extern void drawScene(Scene& s);
+    extern void drawWorld(World& currentWorld);
     extern void prepareFrame();
     extern void finalizeFrame();
-    //Private functions
+    //Privately used functions
     extern void blit(int tex, int x, int y);
     extern void blit(int tex, int x1, int y1, int x2, int y2);
     extern void frame();
     extern void configGL();
     extern void initSDLVideo();
     extern void initAtlas();
+    extern void initFont();
     extern void drawCuboid(Cuboid& c);
     extern void drawBuilding(Building& b);
-    extern void drawButton(Button& b, int xOffset = 0, int yOffset = 0);
-    extern void drawLabel(Label& l, int xOffset = 0, int yOffset = 0);
-    extern void drawField(Field& f, int xOffset = 0, int yOffset = 0);
+    extern void drawComponent(Component& c);
+    extern void drawButton(Button& b);
+    extern void drawLabel(Label& l);
+    extern void drawField(Field& f);
     extern void drawScrollBlock(ScrollBlock& sb);
+    extern void drawMultiSelect(MultiSelect& ms);
     extern void drawString(std::string text, int x, int y);
     extern void drawString(std::string text, int x, int y, float scale);
     extern void drawString(std::string text, int x, int y, float scale, float r, float g, float b);
+    extern void renderText(std::string text, float r, float g, float b, float fontScale);
 }
 
 #endif

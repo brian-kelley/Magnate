@@ -22,21 +22,18 @@
 #include "Component.h"
 #include "Constants.h"
 
-class Label
+class Label : public Component
 {
 public:
-    Label(int x, int y, int width, int height, std::string text);
+    Label(int x, int y, int width, int height, std::string text, Component* parentComp);
     void updateText(std::string text);
     void processSizeChange(int oldWindowW, int oldWindowH);
     std::string getText();
     float getFontScale();
     SDL_Point& getTextLoc();
     void updateSize();
-    int getCompID();
     void calcTextPlacement();
-    ~Label();
 private:
-    int compID;
     std::string text;
     float fontScale;
     SDL_Point textLoc;

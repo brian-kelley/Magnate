@@ -26,47 +26,25 @@
 #include "Label.h"
 #include "Field.h"
 
-class ScrollBlock
+class ScrollBlock : public Component
 {
 public:
-    ScrollBlock(int x, int y, int width, int height, int canvh, bool center = true);
-    void addButton(Button b);
-    void addLabel(Label l);
-    void addField(Field f);
-    SDL_Rect& getRect();
-    std::vector<Button>& getButtons();
-    std::vector<Field>& getFields();
-    std::vector<Label>& getLabels();
-    int numButtons();
-    int numFields();
-    int numLabels();
-    int getXOffset();
-    int getYOffset();
-    void updateSBSize();
+    ScrollBlock(int x, int y, int width, int height, Component* parentComp, int canvh, bool center = true);
     void updateCanvasHeight(int newHeight);
-    void processScrollEvent(SDL_MouseWheelEvent& e);
-    void processButtonEvent(SDL_MouseButtonEvent& e);
+    void processScroll(SDL_MouseWheelEvent& e);
     void processMouseMotionEvent(SDL_MouseMotionEvent& e);
-    int compID;
     Field* getCurrentField();
-    int getCompID();
     bool isActive();
     void activate();
     void deactivate();
     void calcBarPlacement();
     intRect_t getBarRect();
     bool hasBar();
+    void calcOffsets(); //override component method since SB can scroll
 private:
-    SDL_Rect rect;
-    std::vector<Button> buttons;
-    std::vector<Field> fields;
-    std::vector<Label> labels;
     int canvH;            //height of the canvas, in pixels
     float fCanvH;         //height of the canvas relative to window height
     int viewport;         //how far from top of canvas top of viewable area is
-    int xOffset;          //what needs to be added to screen x coordinate to get local coordinates
-    int yOffset;
-    void refreshModifiers();  //use component/canvas/viewport rectangles to calculate offsets
     bool active;
     int barHeight;        //how many pixels tall is the bar?
     int barPos;

@@ -10,3 +10,4 @@ src/.*
 macBuild/*
 winBuild/*
 linuxBuild/*
+build/*

@@ -16,7 +16,8 @@ ScrollBlock::ScrollBlock(int x, int y, int width, int height, Component* parentC
     viewport = 0;
     canvH = canvh;
     fCanvH = (float) canvH / WINDOW_H;
-    refreshModifiers();
+    calcOffsets();  //need to call this here because Component constructor doesn't
+    calcDrawRect();
     calcBarPlacement();
 }
 
@@ -34,12 +35,7 @@ void ScrollBlock::updateCanvasHeight(int newHeight) //call this when need more s
     calcBarPlacement();
 }
 
-void ScrollBlock::processLeftClick()
-{
-    Component::processLeftClick();
-}
-
-void ScrollBlock::processScrollEvent(SDL_MouseWheelEvent& e)
+void ScrollBlock::processScroll(SDL_MouseWheelEvent& e)
 {
     if(this->hasBar())
     {
@@ -60,18 +56,18 @@ void ScrollBlock::processScrollEvent(SDL_MouseWheelEvent& e)
                 viewport = canvH - drawRect.h;
             }
         }
-        refreshModifiers();
+        calcOffsets();
+        calcDrawRect();
         calcBarPlacement();
+        for(Component* c : children)
+        {
+            c->calcOffsets();
+            c->calcDrawRect();
+        }
     }
 }
 
 void ScrollBlock::processMouseMotionEvent(SDL_MouseMotionEvent &e) {}
-
-void ScrollBlock::refreshModifiers()
-{
-    xOffset = localRect.x;
-    yOffset = localRect.y - viewport;
-}
 
 bool ScrollBlock::isActive()
 {
@@ -131,6 +127,6 @@ Field* ScrollBlock::getCurrentField()
 
 void ScrollBlock::calcOffsets()
 {
-    Component::calcOffsets();   //otherwise, use same xy values from Comp method
-    yOffset += viewport;
+    Component::calcOffsets();   //otherwise, use same xy values from Component
+    yOffset -= viewport;
 }

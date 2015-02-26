@@ -53,6 +53,7 @@ include/Model
 include/Scene
 include/View
 include/World
+include/MultiSelect
 src/main
 src/Atlas
 src/Building
@@ -71,6 +72,7 @@ src/Model
 src/Scene
 src/View
 src/World
+src/MultiSelect
 )
 
 target_link_libraries (Magnate

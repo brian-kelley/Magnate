@@ -22,10 +22,10 @@
 #include "Component.h"
 #include "Constants.h"
 
-class Field
+class Field : public Component
 {
 public:
-    Field(int x, int y, int width, int height, std::string text, callback_t callback);
+    Field(int x, int y, int width, int height, std::string text, callback_t callback, Component* parentComp);
     void setText(std::string text);
     void setLocation(int x, int y);
     void setSize(int width, int height);
@@ -35,14 +35,12 @@ public:
     void updateSize();
     intRect_t& getIntRect();
     floatRect_t& getFloatRect();
-    int getCompID();
     callback_t getCallback();
     bool isActive();
     void activate();
     void deactivate();
     void calcTextPlacement();
 private:
-    int compID;
     std::string text;
     float fontScale;
     callback_t callback;

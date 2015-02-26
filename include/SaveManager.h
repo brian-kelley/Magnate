@@ -15,28 +15,26 @@
 #include "World.h"
 #include "Scene.h"
 #include "Button.h"
+#include "ScrollBlock.h"
+#include "MultiSelect.h"
 
-#ifdef __APPLE__
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
-#elif _WIN32
 
-#elif __linux
-
-#endif
-
-class SaveManager
+namespace SaveManager
 {
-public:
-    SaveManager();
-    ~SaveManager();
-    void refreshSaveList();
-    std::vector<std::string>& listSaves();
-    World* loadWorld(std::string worldFolder);
-    void deleteWorld(std::string worldFolder);
-    int getNumSaves();
-private:
-    std::vector<std::string> saves;
+    extern void init();
+    extern void refreshSaveList();
+    extern std::vector<std::string>& listSaves();
+    extern World* loadWorld(std::string worldFolder);
+    extern void deleteWorld(std::string worldFolder);
+    extern void initMenu(callback_t toMain, callback_t toGame);
+    extern int getNumSaves();
+    extern Scene* getScene();
+    extern std::vector<std::string> saves;
+    extern Scene* menu;
+    extern void rename(void* arg);
+    extern MultiSelect* saveSelect;
 };
 
 #endif /* defined(__Magnate__SaveManager__) */

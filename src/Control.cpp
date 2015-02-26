@@ -15,7 +15,6 @@ using namespace boost::filesystem;
 
 Field* Control::currentField;
 Scene* Control::currentScene;
-SaveManager* Control::sman;
 bool Control::terminating;
 bool Control::updatingView;
 bool Control::trackingMouse;
@@ -27,21 +26,21 @@ map<SNAME, Scene*> Control::scenes;
 
 namespace ui        //place for callbacks etc.
 {
-    void mainQuitButton(void* comp)
+    void mainQuitButton(void* obj)
     {
         Control::terminating = true;
     }
-    void mainStartButton(void* comp)
+    void mainStartButton(void* obj)
     {
         clearEnables();
         currentScene = scenes[SAVE_MENU];
     }
-    void saveBackButton(void* comp)
+    void saveBackButton(void* obj)
     {
         clearEnables();
         currentScene = scenes[MAIN_MENU];
     }
-    void saveGameButton(void* comp)
+    void saveGameButton(void* obj)
     {
         clearEnables();
         currentScene = scenes[GAME];
@@ -51,7 +50,7 @@ namespace ui        //place for callbacks etc.
 void Control::init()
 {
     view::init();
-    sman = new SaveManager();
+    SaveManager::init();
     initScenes();
     oldWindowW = constants::WINDOW_W;
     oldWindowH = constants::WINDOW_H;
@@ -64,6 +63,17 @@ void Control::init()
     currentField = nullptr;
     currentScene = scenes[MAIN_MENU];
     model::init();
+}
+
+void Control::dispose()
+{
+    //main task here is to destroy all scenes and their subcomponents
+    for(auto iter : scenes)
+    {
+        delete iter.second;
+    }
+    //immediately remove all the dangling pointers left over
+    scenes.clear();
 }
 
 void Control::update()
@@ -126,11 +136,7 @@ void Control::update()
         }
     }
     view::prepareFrame();
-    if(currentScene == scenes[GAME])
-    {
-        view::drawWorld(model::getCurrentWorld());
-    }
-    view::drawScene(currentScene);
+    view::drawComponent(*currentScene);
     view::finalizeFrame();
 }
 
@@ -152,19 +158,19 @@ void Control::processMouseButtonEvent(SDL_Event &e)
 {
     if(e.button.state == SDL_PRESSED && e.button.button == SDL_BUTTON_LEFT)
     {
-        currentScene->processLeftClick();
+        (currentScene)->processLeftClick();
     }
 }
 
 void Control::processMouseMotionEvent()
 {
     SDL_GetMouseState(&mouseX, &mouseY);
-    currentScene->processMouseMotion();
+    ((Component*) currentScene)->processMouseMotion();
 }
 
 void Control::processMouseWheelEvent(SDL_Event &e)
 {
-    currentScene->processScroll(e.wheel);
+    ((Component*) currentScene)->processScroll(e.wheel);
 }
 
 void Control::processWindowEvent(SDL_Event &e)
@@ -225,8 +231,8 @@ void Control::initScenes()
     new Button(320, 180, 240, 100, "Start Game", &ui::mainStartButton, mainMenu);
     new Button(320, 300, 240, 100, "Quit Game", &ui::mainQuitButton, mainMenu);
     scenes[MAIN_MENU] = mainMenu;
-    sman->initMenu(&ui::saveBackButton, &ui::saveGameButton);
-    scenes[SAVE_MENU] = sman->getScene();
+    SaveManager::initMenu(&ui::saveBackButton, &ui::saveGameButton);
+    scenes[SAVE_MENU] = SaveManager::getScene();
 }
 
 void Control::clearEnables()      //clear currentField and button hovers in current scene

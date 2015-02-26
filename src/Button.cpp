@@ -77,13 +77,3 @@ void Button::processLeftClick()
 {
     (*callback) (this);
 }
-
-void Button::activate()
-{
-    Component::activate();
-}
-
-void Button::deactivate()
-{
-    Component::deactivate();
-}

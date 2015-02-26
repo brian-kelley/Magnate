@@ -16,25 +16,12 @@
 #include "Button.h"
 #include "Field.h"
 #include "Label.h"
+#include "Constants.h"
 
-class Scene
+class Scene : public Component
 {
 public:
     Scene();
-    void addScrollBlock(ScrollBlock sb);
-    void addButton(Button b);
-    void addLabel(Label l);
-    void addField(Field f);
-    std::vector<ScrollBlock>& getScrollBlocks();
-    std::vector<Button>& getButtons();
-    std::vector<Label>& getLabels();
-    std::vector<Field>& getFields();
-    void clearAll();
-private:
-    std::vector<ScrollBlock> scrollBlocks;
-    std::vector<Button> buttons;
-    std::vector<Field> fields;
-    std::vector<Label> labels;
 };
 
 #endif /* defined(__MagIndev__Scene__) */

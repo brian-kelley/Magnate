@@ -13,8 +13,8 @@ using namespace boost::filesystem;
 //Call this to initialize an atlas that already exists as assets/filename
 Atlas::Atlas(string atlasName, SDL_Renderer* renderer)
 {
-    path imagePath = initial_path() / "../.." / "assets" / (atlasName + "_atlas.png");
-    path tilePath = initial_path() / "../.." / "data" / (atlasName + "_tiles.txt");
+    path imagePath = initial_path() / constants::BIN_TO_ROOT / "assets" / (atlasName + "_atlas.png");
+    path tilePath = initial_path() / constants::BIN_TO_ROOT / "data" / (atlasName + "_tiles.txt");
     SDL_Surface* loadedSurface = IMG_Load(imagePath.string().c_str());
     size = loadedSurface->w;
     this->tex = SDL_CreateTextureFromSurface(renderer, loadedSurface);

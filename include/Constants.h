@@ -12,9 +12,7 @@
 #include <cstdint>
 #include <string>
 
-//general action for buttons and fields, pass component
-//ID so callee can identify component
-typedef void (*callback_t) (int);
+//Structs used all over the place
 
 typedef struct
 {
@@ -41,6 +39,11 @@ typedef struct
     float height;
 } tileData_t;
 
+//Pass pointer to anything in callback, unsafe but useful
+//Callback function itself has to know what type the actual object has
+
+typedef void (*callback_t) (void*);
+
 namespace constants
 {
     extern int mouseX;
@@ -60,6 +63,7 @@ namespace constants
     extern float UI_FG_B;
     extern float SHADE;
     extern float HMULT;
+    extern std::string BIN_TO_ROOT;
 }
 
 #endif

@@ -15,10 +15,11 @@ using namespace boost::filesystem;
 
 int view::scrX = 0;
 int view::scrY = 0;
-SDL_Window* view::window = nullptr;
-SDL_Renderer* view::renderer = nullptr;
+SDL_Window* view::window;
+SDL_Renderer* view::renderer;
 SDL_GLContext view::context;
-Atlas* view::mainAtlas = nullptr;
+Atlas* view::mainAtlas;
+TTF_Font* view::font;
 
 void view::init(int screenX, int screenY)
 {
@@ -27,6 +28,7 @@ void view::init(int screenX, int screenY)
     initSDLVideo();
     configGL();
     initAtlas();
+    initFont();
 }
 
 void view::dispose()
@@ -59,53 +61,113 @@ void view::drawBuilding(Building& b)
     }
 }
 
-void view::drawWorld(World *currentWorld)   //probably too general of a function
+void view::drawWorld(World& currentWorld)   //probably too general of a function
 {
     
 }
 
-void view::drawScene(Scene* s)
+void view::drawComponent(Component& c)
 {
-    Component* c;
-    for(int i = 0; i < int(s->getChildren().size()); i++)
+    intRect_t& drect = c.getDrawRect();
+    if(c.getParent() == nullptr)
     {
-        c = dynamic_cast<Component*>(s->getChildren()[i]);
-        switch(c->getType())
+        glDisable(GL_SCISSOR_TEST);
+    }
+    else
+    {
+        intRect_t& parentDraw = c.getParent()->getDrawRect();
+        glScissor(parentDraw.x, WINDOW_H - parentDraw.y - parentDraw.h, parentDraw.w, parentDraw.h);
+        glEnable(GL_SCISSOR_TEST);
+    }
+    switch(c.getType())
+    {
+        case SCROLLBLOCK:
+            drawScrollBlock((ScrollBlock&) c);
+            break;
+        case BUTTON:
+            drawButton((Button&) c);
+            break;
+        case LABEL:
+            drawLabel((Label&) c);
+            break;
+        case FIELD:
+            drawField((Field&) c);
+            break;
+        case MULTISELECT:
+            drawMultiSelect((MultiSelect&) c);
+            break;
+        case SCENE:
+            break;
+    }
+    //now go in one level and draw child components of c
+    for(Component* child : c.getChildren())
+    {
+        intRect_t& crect = child->getDrawRect();
+        if(crect.x <= drect.x + drect.w && crect.x + crect.w >= drect.x
+           && crect.y <= drect.y + drect.h && crect.y + crect.h >= drect.y)
         {
-            case BUTTON:
-                drawButton(dynamic_cast<Button*>(c));
-                break;
-            case FIELD:
-                drawField(dynamic_cast<Field*>(c));
-                break;
-            case LABEL:
-                drawLabel(dynamic_cast<Label*>(c));
-                break;
-            case SCROLLBLOCK:
-                drawScrollBlock(dynamic_cast<ScrollBlock*>(c));
-                break;
-            default:
-                glDisable(GL_TEXTURE_2D);
-                glColor3f(1, 0.5, 0);
-                glBegin(GL_TRIANGLES);
-                glVertex2i(100, 100);
-                glVertex2i(200, 100);
-                glVertex2i(100, 200);
-                glEnd();
-                cout << "Error: Unknown component type" << endl;
+            drawComponent(*child);
         }
+    }
+    glDisable(GL_SCISSOR_TEST);
+}
+
+void view::drawMultiSelect(MultiSelect& ms)
+{
+    vector<string>& list = ms.getOptions();
+    intRect_t& msrect = ms.getDrawRect();
+    glDisable(GL_TEXTURE_2D);
+    glColor3f(UI_BG_R, UI_BG_G, UI_BG_B);
+    glBegin(GL_QUADS);
+    glVertex2i(msrect.x, msrect.y);
+    glVertex2i(msrect.x + msrect.w, msrect.y);
+    glVertex2i(msrect.x + msrect.w, msrect.y + msrect.h);
+    glVertex2i(msrect.x, msrect.y + msrect.h);
+    glEnd();
+    if(ms.getSelection() != -1)
+    {
+        glColor3f(UI_FG_R, UI_FG_G, UI_FG_B);
+        int optY = msrect.y + ms.getSelection() * ms.getOptHeight();
+        glBegin(GL_QUADS);
+        glVertex2i(msrect.x, optY);
+        glVertex2i(msrect.x + msrect.w, optY);
+        glVertex2i(msrect.x + msrect.w, optY + PAD);
+        glVertex2i(msrect.x, optY + PAD);
+        glEnd();
+        glBegin(GL_QUADS);
+        glVertex2i(msrect.x, optY + PAD);
+        glVertex2i(msrect.x + PAD, optY + PAD);
+        glVertex2i(msrect.x + PAD, optY + ms.getOptHeight() - PAD);
+        glVertex2i(msrect.x, optY + ms.getOptHeight() - PAD);
+        glEnd();
+        glBegin(GL_QUADS);
+        glVertex2i(msrect.x + msrect.w - PAD, optY + PAD);
+        glVertex2i(msrect.x + msrect.w, optY + PAD);
+        glVertex2i(msrect.x + msrect.w, optY + ms.getOptHeight() - PAD);
+        glVertex2i(msrect.x + msrect.w - PAD, optY + ms.getOptHeight() - PAD);
+        glEnd();
+        glBegin(GL_QUADS);
+        glVertex2i(msrect.x, optY + ms.getOptHeight() - PAD);
+        glVertex2i(msrect.x + msrect.w, optY + ms.getOptHeight() - PAD);
+        glVertex2i(msrect.x + msrect.w, optY + ms.getOptHeight());
+        glVertex2i(msrect.x, optY + ms.getOptHeight());
+        glEnd();
+    }
+    for(int i = 0; i < int(list.size()); i++)
+    {
+        drawString(list[i], PAD + msrect.x, PAD + msrect.y + i * ms.getOptHeight(), ms.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
     }
 }
 
-void view::drawLabel(Label* l)
+void view::drawLabel(Label& l)
 {
-    intRect_t& lrect = l->getDrawRect();
-    drawString(l->getText(), lrect.x + l->getTextLoc().x, lrect.y + l->getTextLoc().y, l->getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
+    intRect_t& lrect = l.getDrawRect();
+    drawString(l.getText(), lrect.x + l.getTextLoc().x, lrect.y + l.getTextLoc().y, l.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
-void view::drawField(Field* f)
+void view::drawField(Field& f)
 {
-    intRect_t curRect = f->getDrawRect();
+    intRect_t& curRect = f.getDrawRect();
     glDisable(GL_TEXTURE_2D);
     glColor3f(UI_BG_R, UI_BG_G, UI_BG_B);
     glBegin(GL_QUADS);
@@ -125,13 +187,13 @@ void view::drawField(Field* f)
     glVertex2i(curRect.x, curRect.y);
     glVertex2i(curRect.x, curRect.y + curRect.h);
     glEnd();
-    drawString(f->getText(), curRect.x + PAD, curRect.y + PAD, f->getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
+    drawString(f.getText(), curRect.x + PAD, curRect.y + PAD, f.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
-void view::drawButton(Button* b)
+void view::drawButton(Button& b)
 {
     float colorMult;
-    if(!b->isMouseOver())
+    if(!b.isMouseOver())
     {
         colorMult = 1.0f;
     }
@@ -139,7 +201,7 @@ void view::drawButton(Button* b)
     {
         colorMult = 1.0f / SHADE;
     }
-    intRect_t rect = b->getDrawRect();         //initalize copy, don't modify
+    intRect_t rect = b.getDrawRect();         //initalize copy, don't modify
     glDisable(GL_TEXTURE_2D);
     glColor3f(UI_BG_R, UI_BG_G, UI_BG_B);
     glBegin(GL_QUADS);
@@ -174,27 +236,25 @@ void view::drawButton(Button* b)
     glVertex2i(rect.x + rect.w, rect.y + rect.h);
     glVertex2i(rect.x, rect.y + rect.h);
     glEnd();
-    drawString(b->getText(), b->getTextLoc().x + rect.x, b->getTextLoc().y + rect.y, b->getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
+    drawString(b.getText(), b.getTextLoc().x + rect.x, b.getTextLoc().y + rect.y, b.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
-void view::drawScrollBlock(ScrollBlock* sb)
+void view::drawScrollBlock(ScrollBlock& sb)
 {
     glColor4f(UI_BG_R * SHADE, UI_BG_G * SHADE, UI_BG_B * SHADE, 1);
     glDisable(GL_TEXTURE_2D);
-    intRect_t* sbrect = &sb->getDrawRect();
+    intRect_t& sbrect = sb.getDrawRect();
     glBegin(GL_QUADS);
-    glVertex2i(sbrect->x, sbrect->y);
-    glVertex2i(sbrect->x + sbrect->w, sbrect->y);
-    glVertex2i(sbrect->x + sbrect->w, sbrect->y + sbrect->h);
-    glVertex2i(sbrect->x, sbrect->y + sbrect->h);
+    glVertex2i(sbrect.x, sbrect.y);
+    glVertex2i(sbrect.x + sbrect.w, sbrect.y);
+    glVertex2i(sbrect.x + sbrect.w, sbrect.y + sbrect.h);
+    glVertex2i(sbrect.x, sbrect.y + sbrect.h);
     glEnd();
     //For some reason glScissor wants (x, y) to be lower-left corner
-    glEnable(GL_SCISSOR_TEST);  //enable scissor clipping to sb rectangle
-    glScissor(sbrect->x, WINDOW_H - sbrect->y - sbrect->h, sbrect->w, sbrect->h);
-    if(sb->hasBar())
+    if(sb.hasBar())
     {
-        intRect_t bar = sb->getBarRect();
-        glDisable(GL_TEXTURE_2D);
+        intRect_t bar = sb.getBarRect();
+        
         glColor3f(UI_FG_R, UI_FG_G, UI_FG_B);
         glBegin(GL_QUADS);
         glVertex2i(bar.x, bar.y);
@@ -203,7 +263,6 @@ void view::drawScrollBlock(ScrollBlock* sb)
         glVertex2i(bar.x, bar.y + bar.h);
         glEnd();
     }
-    glDisable(GL_SCISSOR_TEST);
 }
 
 void view::configGL()
@@ -366,6 +425,10 @@ void view::initSDLVideo()
     }
     SDL_GL_SetSwapInterval(1);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if(TTF_Init() == -1)
+    {
+        cout << "Failed to initialize TTF API." << endl;
+    }
 }
 
 void view::initAtlas()
@@ -387,4 +450,34 @@ void view::initAtlas()
         }
     }
     mainAtlas->bind();
+}
+
+void view::initFont()
+{
+    path fontPath = initial_path() / BIN_TO_ROOT / "data/font.ttf";
+    font = TTF_OpenFont(fontPath.c_str(), 72);
+    if(!font)
+    {
+        cout << "Error: Failed to load font." << endl;
+        cout << "Is a font.ttf in Magnate/data?" << endl;
+    }
+    int trash;
+    //for monospace font, this gets the right FONTW and FONTH every time,
+    //for arbitrary glyph in font (here I use 'a')
+    TTF_GlyphMetrics(font, 'a' , &trash, &trash, &trash, &trash, &FONTW);
+    TTF_SizeText(font, "a", &trash, &FONTH);
+}
+
+void view::renderText(std::string text, float r, float g, float b, float fontScale)
+{
+    SDL_Color tcol;
+    tcol.r = r * 255;
+    tcol.g = g * 255;
+    tcol.b = b * 255;
+    tcol.a = 255;
+    SDL_Surface* surface = TTF_RenderText_Solid(font, text.c_str(), tcol);
+    if(!surface)
+    {
+        cout << "Error when rendering text." << endl;
+    }
 }

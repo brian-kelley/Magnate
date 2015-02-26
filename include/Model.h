@@ -20,8 +20,8 @@ namespace model
 {
     extern void init();
     extern void update();
-    extern World* getCurrentWorld();
-    extern World* currentWorld;
+    extern World& getCurrentWorld();
+    extern World currentWorld;
 }
 
 #endif
