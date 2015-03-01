@@ -13,7 +13,6 @@ using namespace constants;
 using namespace Control;
 using namespace boost::filesystem;
 
-Field* Control::currentField;
 Scene* Control::currentScene;
 bool Control::terminating;
 bool Control::updatingView;
@@ -50,7 +49,7 @@ namespace ui        //place for callbacks etc.
 void Control::init()
 {
     view::init();
-    SaveManager::init();
+    SaveManager::init(&currentScene);
     initScenes();
     oldWindowW = constants::WINDOW_W;
     oldWindowH = constants::WINDOW_H;
@@ -60,7 +59,6 @@ void Control::init()
     trackingMouse = true;
     trackingKeyboard = true;
     currentEvent = new SDL_Event();
-    currentField = nullptr;
     currentScene = scenes[MAIN_MENU];
     model::init();
 }
@@ -147,10 +145,10 @@ bool Control::isTerminating()
 
 void Control::processKeyboardEvent(SDL_Event &e)
 {
-    //first, see if the event applies to a field
-    if(currentField)
+    //If there is an active field, pass this event to it
+    if(Field::currentField)
     {
-        currentField->processKey(e);
+        Field::currentField->processKey(e);
     }
 }
 
@@ -158,19 +156,23 @@ void Control::processMouseButtonEvent(SDL_Event &e)
 {
     if(e.button.state == SDL_PRESSED && e.button.button == SDL_BUTTON_LEFT)
     {
-        (currentScene)->processLeftClick();
+        if(Field::currentField)
+        {
+            Field::currentField->deactivate();
+        }
+        currentScene->processLeftClick();
     }
 }
 
 void Control::processMouseMotionEvent()
 {
     SDL_GetMouseState(&mouseX, &mouseY);
-    ((Component*) currentScene)->processMouseMotion();
+    currentScene->processMouseMotion();
 }
 
 void Control::processMouseWheelEvent(SDL_Event &e)
 {
-    ((Component*) currentScene)->processScroll(e.wheel);
+    currentScene->processScroll(e.wheel);
 }
 
 void Control::processWindowEvent(SDL_Event &e)
@@ -228,10 +230,10 @@ void Control::initScenes()
 {
     /* Main menu */
     Scene* mainMenu = new Scene();
-    new Button(320, 180, 240, 100, "Start Game", &ui::mainStartButton, mainMenu);
-    new Button(320, 300, 240, 100, "Quit Game", &ui::mainQuitButton, mainMenu);
+    new Button(320, 180, 240, 100, "Start Game", ui::mainStartButton, mainMenu);
+    new Button(320, 300, 240, 100, "Quit Game", ui::mainQuitButton, mainMenu);
     scenes[MAIN_MENU] = mainMenu;
-    SaveManager::initMenu(&ui::saveBackButton, &ui::saveGameButton);
+    SaveManager::initMenu(&currentScene, ui::saveBackButton, ui::saveGameButton);
     scenes[SAVE_MENU] = SaveManager::getScene();
 }
 

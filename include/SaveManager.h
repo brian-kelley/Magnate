@@ -23,17 +23,24 @@
 
 namespace SaveManager
 {
-    extern void init();
+    extern void init(Scene** currentSceneArg);
     extern void refreshSaveList();
     extern std::vector<std::string>& listSaves();
     extern World* loadWorld(std::string worldFolder);
     extern void deleteWorld(std::string worldFolder);
-    extern void initMenu(callback_t toMain, callback_t toGame);
+    extern void initMenu(Scene** currentScenePtr, callback_t toMain, callback_t toGame);
     extern int getNumSaves();
     extern Scene* getScene();
     extern std::vector<std::string> saves;
     extern Scene* menu;
+    extern Scene* renaming;
+    extern Scene** currentScenePtr;
+    extern Field* renamingField;
+    extern void enterRename(void* arg);
     extern void rename(void* arg);
+    extern void renameCancel(void* arg);
+    extern void renameOK(void* arg);
+    extern void enterRename();
     extern MultiSelect* saveSelect;
 };
 

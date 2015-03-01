@@ -1,1 +1,1 @@
-java AtlasBuilder main 1024
+java AtlasBuilder main 2048

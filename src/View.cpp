@@ -19,7 +19,6 @@ SDL_Window* view::window;
 SDL_Renderer* view::renderer;
 SDL_GLContext view::context;
 Atlas* view::mainAtlas;
-TTF_Font* view::font;
 
 void view::init(int screenX, int screenY)
 {
@@ -28,7 +27,6 @@ void view::init(int screenX, int screenY)
     initSDLVideo();
     configGL();
     initAtlas();
-    initFont();
 }
 
 void view::dispose()
@@ -63,7 +61,7 @@ void view::drawBuilding(Building& b)
 
 void view::drawWorld(World& currentWorld)   //probably too general of a function
 {
-    
+
 }
 
 void view::drawComponent(Component& c)
@@ -187,7 +185,7 @@ void view::drawField(Field& f)
     glVertex2i(curRect.x, curRect.y);
     glVertex2i(curRect.x, curRect.y + curRect.h);
     glEnd();
-    drawString(f.getText(), curRect.x + PAD, curRect.y + PAD, f.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
+    drawString(f.getText(), curRect.x + f.getTextLoc().x, curRect.y + f.getTextLoc().y, f.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
 void view::drawButton(Button& b)
@@ -254,7 +252,7 @@ void view::drawScrollBlock(ScrollBlock& sb)
     if(sb.hasBar())
     {
         intRect_t bar = sb.getBarRect();
-        
+
         glColor3f(UI_FG_R, UI_FG_G, UI_FG_B);
         glBegin(GL_QUADS);
         glVertex2i(bar.x, bar.y);
@@ -337,6 +335,7 @@ void view::drawString(string text, int x, int y, float scale)
 void view::drawString(string text, int x, int y, float scale, float r, float g, float b)
 {
     glColor3f(r, g, b);
+    glEnable(GL_BLEND);
     for(int i = 0; i < text.size(); i++)
     {
         if(text[i] != ' ')
@@ -425,15 +424,11 @@ void view::initSDLVideo()
     }
     SDL_GL_SetSwapInterval(1);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if(TTF_Init() == -1)
-    {
-        cout << "Failed to initialize TTF API." << endl;
-    }
 }
 
 void view::initAtlas()
 {
-    path imgPath = initial_path() / ".." / "assets" / "main_atlas.png";
+    path imgPath = initial_path() / BIN_TO_ROOT / "assets" / "main_atlas.png";
     int imgFlags = IMG_INIT_PNG;
     if(!(IMG_Init(imgFlags) & imgFlags))
     {
@@ -450,34 +445,4 @@ void view::initAtlas()
         }
     }
     mainAtlas->bind();
-}
-
-void view::initFont()
-{
-    path fontPath = initial_path() / BIN_TO_ROOT / "data/font.ttf";
-    font = TTF_OpenFont(fontPath.c_str(), 72);
-    if(!font)
-    {
-        cout << "Error: Failed to load font." << endl;
-        cout << "Is a font.ttf in Magnate/data?" << endl;
-    }
-    int trash;
-    //for monospace font, this gets the right FONTW and FONTH every time,
-    //for arbitrary glyph in font (here I use 'a')
-    TTF_GlyphMetrics(font, 'a' , &trash, &trash, &trash, &trash, &FONTW);
-    TTF_SizeText(font, "a", &trash, &FONTH);
-}
-
-void view::renderText(std::string text, float r, float g, float b, float fontScale)
-{
-    SDL_Color tcol;
-    tcol.r = r * 255;
-    tcol.g = g * 255;
-    tcol.b = b * 255;
-    tcol.a = 255;
-    SDL_Surface* surface = TTF_RenderText_Solid(font, text.c_str(), tcol);
-    if(!surface)
-    {
-        cout << "Error when rendering text." << endl;
-    }
 }

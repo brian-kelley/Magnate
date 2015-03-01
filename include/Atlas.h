@@ -26,6 +26,7 @@
 #include <boost/filesystem.hpp>
 #endif
 #include <stdio.h>
+#include <stdlib.h>
 #include <iostream>
 #include <string>
 #include <ios>

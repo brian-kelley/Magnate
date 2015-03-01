@@ -48,7 +48,6 @@ namespace Control
     extern std::map<SNAME, Scene*> scenes;
     extern SDL_Event* currentEvent;
     extern Scene* currentScene;
-    extern Field* currentField;     //the label that currently has keyboard focus, if any
     extern void processWindowResize();
     extern void processWindowEvent(SDL_Event& e);
     extern void processMouseMotionEvent();

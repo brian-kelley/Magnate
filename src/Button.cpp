@@ -75,5 +75,8 @@ void Button::processMouseMotion()
 
 void Button::processLeftClick()
 {
-    (*callback) (this);
+    if(callback)
+    {
+        (*callback) (this);
+    }
 }

@@ -44,7 +44,6 @@ namespace view
     extern SDL_Renderer* renderer;
     extern SDL_GLContext context;
     extern Atlas* mainAtlas;
-    extern TTF_Font* font;
     //Publicly used functions
     extern void init(int screenX = 0, int screenY = 0);
     extern void dispose();
@@ -59,7 +58,6 @@ namespace view
     extern void configGL();
     extern void initSDLVideo();
     extern void initAtlas();
-    extern void initFont();
     extern void drawCuboid(Cuboid& c);
     extern void drawBuilding(Building& b);
     extern void drawComponent(Component& c);
@@ -71,7 +69,6 @@ namespace view
     extern void drawString(std::string text, int x, int y);
     extern void drawString(std::string text, int x, int y, float scale);
     extern void drawString(std::string text, int x, int y, float scale, float r, float g, float b);
-    extern void renderText(std::string text, float r, float g, float b, float fontScale);
 }
 
 #endif

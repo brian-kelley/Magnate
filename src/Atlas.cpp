@@ -141,13 +141,13 @@ void Atlas::parseTiles(path fpath)
                     index = 0;
                     buffer.name = line.substr(0, line.find(' '));
                     index = line.find(' ') + 1;
-                    buffer.x = float(stoi(line.substr(index, line.find(' ', index)))) / size;
+                    buffer.x = float(atoi(line.substr(index, line.find(' ', index)).c_str())) / size;
                     index = line.find(' ', index) + 1;
-                    buffer.y = float(stoi(line.substr(index, line.find(' ', index)))) / size;
+                    buffer.y = float(atoi(line.substr(index, line.find(' ', index)).c_str())) / size;
                     index = line.find(' ', index) + 1;
-                    buffer.width = float(stoi(line.substr(index, line.find(' ', index)))) / size;
+                    buffer.width = float(atoi(line.substr(index, line.find(' ', index)).c_str())) / size;
                     index = line.find(' ', index) + 1;
-                    buffer.height = float(stoi(line.substr(index, line.find(' ', index)))) / size;
+                    buffer.height = float(atoi(line.substr(index, line.find(' ', index)).c_str())) / size;
                     tiles.push_back(buffer);
                 }
                 else
