@@ -112,7 +112,7 @@ void Atlas::initCharTiles()
     this->charTiles['|'] = tileNames["bar"];
     this->charTiles[':'] = tileNames["colon"];
     this->charTiles[';'] = tileNames["semicolon"];
-    this->charTiles['"'] = tileNames["quote"];
+    this->charTiles['"'] = tileNames["quotation"];
     this->charTiles['\''] = tileNames["apostrophe"];
     this->charTiles[','] = tileNames["comma"];
     this->charTiles['.'] = tileNames["period"];

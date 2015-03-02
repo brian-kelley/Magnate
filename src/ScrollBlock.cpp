@@ -32,6 +32,7 @@ void ScrollBlock::updateCanvasHeight(int newHeight) //call this when need more s
     {
         canvH = newHeight;
     }
+    fCanvH = float(canvH) / WINDOW_H;
     calcBarPlacement();
 }
 
@@ -72,16 +73,6 @@ void ScrollBlock::processMouseMotionEvent(SDL_MouseMotionEvent &e) {}
 bool ScrollBlock::isActive()
 {
     return active;
-}
-
-void ScrollBlock::activate()
-{
-    active = true;
-}
-
-void ScrollBlock::deactivate()
-{
-    active = false;
 }
 
 void ScrollBlock::calcBarPlacement()
@@ -129,4 +120,24 @@ void ScrollBlock::calcOffsets()
 {
     Component::calcOffsets();   //otherwise, use same xy values from Component
     yOffset -= viewport;
+}
+
+int ScrollBlock::getCanvasHeight()
+{
+    return canvH;
+}
+
+void ScrollBlock::matchCanvasToContents()
+{
+    int maxY = 0;
+    int bottom;
+    for(Component* c : children)
+    {
+        bottom = c->getLocalRect().y + c->getLocalRect().h;
+        if(bottom > maxY)
+        {
+            maxY = bottom;
+        }
+    }
+    updateCanvasHeight(maxY + PAD);
 }

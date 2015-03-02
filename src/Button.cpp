@@ -75,7 +75,7 @@ void Button::processMouseMotion()
 
 void Button::processLeftClick()
 {
-    if(callback)
+    if(callback && isMouseOver())
     {
         (*callback) (this);
     }

@@ -35,12 +35,12 @@ public:
     void processMouseMotionEvent(SDL_MouseMotionEvent& e);
     Field* getCurrentField();
     bool isActive();
-    void activate();
-    void deactivate();
     void calcBarPlacement();
     intRect_t getBarRect();
     bool hasBar();
     void calcOffsets(); //override component method since SB can scroll
+    int getCanvasHeight();
+    void matchCanvasToContents();
 private:
     int canvH;            //height of the canvas, in pixels
     float fCanvH;         //height of the canvas relative to window height
@@ -51,11 +51,4 @@ private:
     Field* currentField;
 };
 
-#endif /* defined(__Magnate__ScrollBlock__) */
-
-/*
- -when drawing scroll blocks, compare each subcomponent to the top/bottom edge of viewport and alter subcomponent drawing routine to clip to edge
- -when scroll block receives mouse wheel event, modify viewport accordingly and then clamp viewport to canvas boundaries
- -when scrollblock receives click event, convert to local canvas position and process like Control does for scenes
- -scroll block needs to have Label* currentLabel to process kbd input (the sb itself will have the keyboard focus within top-level scene
- */
+#endif

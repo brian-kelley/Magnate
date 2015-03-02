@@ -24,20 +24,11 @@ void Label::updateText(string newText)
 
 void Label::calcTextPlacement()
 {
-    float fontScaleX = (localRect.w - constants::PAD * 2) / (float) constants::FONTW;
+    float fontScaleX = (localRect.w - constants::PAD * 2) / (float) constants::FONTW * text.size();
     float fontScaleY = (localRect.h - constants::PAD * 2) / (float) constants::FONTH;
-    if(fontScaleX < fontScaleY)
-    {
-        this->fontScale = fontScaleX;
-        this->textLoc.x = constants::PAD;
-        this->textLoc.y = constants::PAD + 0.5 * constants::FONTH * (fontScaleY - fontScaleX);
-    }
-    else
-    {
-        this->fontScale = fontScaleY;
-        this->textLoc.x = constants::PAD + 0.5 * constants::FONTH * (int) text.length() * (fontScaleX - fontScaleY);
-        this->textLoc.y = constants::PAD;
-    }
+    fontScale = fontScaleX < fontScaleY ? fontScaleX : fontScaleY;
+    textLoc.x = (localRect.w - (fontScale * constants::FONTW * text.size())) / 2;
+    textLoc.y = constants::PAD;
 }
 
 string Label::getText()

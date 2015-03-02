@@ -49,7 +49,7 @@ namespace ui        //place for callbacks etc.
 void Control::init()
 {
     view::init();
-    SaveManager::init(&currentScene);
+    SaveManager::init(&currentScene, &ui::saveBackButton, &ui::saveGameButton);
     initScenes();
     oldWindowW = constants::WINDOW_W;
     oldWindowH = constants::WINDOW_H;
@@ -156,10 +156,6 @@ void Control::processMouseButtonEvent(SDL_Event &e)
 {
     if(e.button.state == SDL_PRESSED && e.button.button == SDL_BUTTON_LEFT)
     {
-        if(Field::currentField)
-        {
-            Field::currentField->deactivate();
-        }
         currentScene->processLeftClick();
     }
 }
@@ -230,10 +226,10 @@ void Control::initScenes()
 {
     /* Main menu */
     Scene* mainMenu = new Scene();
-    new Button(320, 180, 240, 100, "Start Game", ui::mainStartButton, mainMenu);
-    new Button(320, 300, 240, 100, "Quit Game", ui::mainQuitButton, mainMenu);
+    new Button(320, 200, 240, 100, "Start Game", ui::mainStartButton, mainMenu);
+    new Button(320, 320, 240, 100, "Quit Game", ui::mainQuitButton, mainMenu);
+    new Label(320, 90, 200, 100, "Magnate", mainMenu);
     scenes[MAIN_MENU] = mainMenu;
-    SaveManager::initMenu(&currentScene, ui::saveBackButton, ui::saveGameButton);
     scenes[SAVE_MENU] = SaveManager::getScene();
 }
 

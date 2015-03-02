@@ -18,24 +18,27 @@
 class MultiSelect : public Component
 {
 public:
-    MultiSelect(int x, int y, int width, int height, int optHeight, Component* parentComp);
+    MultiSelect(int x, int y, int width, int height, int optHeight, Component* parentComp, bool center = true);
     void addOption(std::string newOption);
     int getNumOptions();
     void removeOption(int which);
     int getOptHeight();
     void processLeftClick();
     int getSelection();
-    std::string getSelectionText();
+    std::string& getSelectionText();
     std::vector<std::string>& getOptions();
     void processResize();
     void clearSelection();
     float getFontScale();
+    int findSelection(std::string text);
 private:
     std::vector<std::string> options;
     int optHeight;
     float fOptHeight;
     int selection;
     float fontScale;
+    void matchSizeToOptions();
+    void calcDrawRect();
 };
 
 #endif /* defined(__Magnate__MultiSelect__) */

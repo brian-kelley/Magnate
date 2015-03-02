@@ -31,7 +31,7 @@ int main(int argc, const char* argv[])
         int delay = 16 - (SDL_GetTicks() - ticks);
         if(delay > 0)
         {
-            //            SDL_Delay(delay);
+            SDL_Delay(delay);
         }
     }
     Control::dispose();

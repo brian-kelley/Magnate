@@ -11,8 +11,8 @@
 using namespace std;
 using namespace constants;
 
-MultiSelect::MultiSelect(int x, int y, int width, int height, int optHeight, Component* parentComp)
-: Component(x, y, width, height, true, parentComp, MULTISELECT)
+MultiSelect::MultiSelect(int x, int y, int width, int height, int optHeight, Component* parentComp, bool center)
+: Component(x, y, width, height, center, parentComp, MULTISELECT)
 {
     selection = -1;
     this->optHeight = optHeight;
@@ -31,6 +31,7 @@ void MultiSelect::processResize()
 void MultiSelect::addOption(std::string newOption)
 {
     options.push_back(newOption);
+    matchSizeToOptions();
 }
 
 int MultiSelect::getNumOptions()
@@ -41,6 +42,7 @@ int MultiSelect::getNumOptions()
 void MultiSelect::removeOption(int which)
 {
     options.erase(options.begin() + which);
+    matchSizeToOptions();
 }
 
 int MultiSelect::getOptHeight()
@@ -50,10 +52,13 @@ int MultiSelect::getOptHeight()
 
 void MultiSelect::processLeftClick()
 {
-    selection = (mouseY - yOffset) / optHeight;
-    if(selection >= options.size())
+    if(isMouseOver())
     {
-        selection = -1;
+        selection = (mouseY - yOffset) / optHeight;
+        if(selection >= options.size() || selection < 0)
+        {
+            selection = -1;
+        }
     }
 }
 
@@ -62,16 +67,9 @@ int MultiSelect::getSelection()
     return selection;
 }
 
-string MultiSelect::getSelectionText()
+string& MultiSelect::getSelectionText()
 {
-    if(selection == -1)
-    {
-        return "";
-    }
-    else
-    {
-        return options[selection];
-    }
+    return options[selection];
 }
 
 vector<string>& MultiSelect::getOptions()
@@ -87,4 +85,40 @@ void MultiSelect::clearSelection()
 float MultiSelect::getFontScale()
 {
     return fontScale;
+}
+
+void MultiSelect::matchSizeToOptions()
+{
+    //Set height based on number of options and height of each
+    if(options.size() != 0)
+    {
+        localRect.h = options.size() * optHeight;
+        if(parent)
+        {
+            localFloatRect.h = float(localRect.h) / parent->getDrawRect().h;
+        }
+        else
+        {
+            localFloatRect.h = float(localRect.h) / constants::WINDOW_H;
+        }
+    }
+    calcDrawRect();
+}
+
+void MultiSelect::calcDrawRect()
+{
+    Component::calcDrawRect();
+    drawRect.h = localRect.h;
+}
+
+int MultiSelect::findSelection(std::string text)
+{
+    for(int index = 0; index < int(options.size()); index++)
+    {
+        if(options[index] == text)
+        {
+            return index;
+        }
+    }
+    return -1;
 }

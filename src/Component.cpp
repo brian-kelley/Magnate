@@ -106,10 +106,7 @@ void Component::processLeftClick()
 {
     for(Component* c : children)
     {
-        if(c->isMouseOver())
-        {
-            c->processLeftClick();
-        }
+        c->processLeftClick();
     }
 }
 
@@ -196,4 +193,9 @@ void Component::processResize()
 CTYPE Component::getType()
 {
     return type;
+}
+
+intRect_t& Component::getLocalRect()
+{
+    return localRect;
 }

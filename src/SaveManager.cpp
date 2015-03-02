@@ -14,16 +14,61 @@ using namespace SaveManager;
 
 Scene* SaveManager::menu;
 Scene* SaveManager::renaming;
-MultiSelect* SaveManager::saveSelect;
-vector<string> SaveManager::saves;
-Scene** SaveManager::currentScenePtr;
+Scene* SaveManager::creatingNew;
+Scene* SaveManager::deleting;
 Field* SaveManager::renamingField;
+Field* SaveManager::namingNewField;
+MultiSelect* SaveManager::saveSelect;
+Label* SaveManager::creatingNewWarning;
+Label* SaveManager::renamingWarning;
+Label* SaveManager::deletingName;
+Scene** SaveManager::currentScenePtr;
+vector<string> SaveManager::saves;
 
-void SaveManager::init(Scene** currentSceneArg)
+void SaveManager::init(Scene** currentSceneArg, callback_t toMain, callback_t toGame)
 {
     refreshSaveList();
-    menu = new Scene();
     currentScenePtr = currentSceneArg;
+    initUI(toMain, toGame);
+}
+
+void SaveManager::initUI(callback_t toMain, callback_t toGame)
+{
+    menu = new Scene();
+    renaming = new Scene();
+    creatingNew = new Scene();
+    deleting = new Scene();
+    new Label(320, 40, 200, 60, "Select a save file", menu);
+    new Button(64, 430, 110, 60, "Back", toMain, menu);
+    new Button(192, 430, 110, 60, "Rename", enterRename, menu);
+    new Button(320, 430, 110, 60, "Create", createNew, menu);
+    new Button(448, 430, 110, 60, "Load", toGame, menu);
+    new Button(576, 430, 110, 60, "Delete", deleteWorld, menu);
+    ScrollBlock* listSB = new ScrollBlock(320, 220, 550, 300, menu, 1);
+    saveSelect = new MultiSelect(constants::PAD, constants::PAD, listSB->getDrawRect().w - 3 * constants::PAD - constants::BAR_WIDTH, 280, 50, listSB, false);
+    for(int i = 0; i < int(saves.size()); i++)
+    {
+        saveSelect->addOption(saves[i]);
+    }
+    listSB->updateCanvasHeight(saveSelect->getNumOptions() * 50 + constants::PAD * 2);
+    renamingField = new Field(320, 100, 600, 50, "", nullptr, renaming);
+    new Button(250, 250, 100, 50, "OK", renameOK, renaming);
+    new Button(390, 250, 100, 50, "Cancel", renameCancel, renaming);
+    new Button(250, 250, 100, 50, "OK", createNewOK, creatingNew);
+    new Button(390, 250, 100, 50, "Cancel", createNewCancel, creatingNew);
+    namingNewField = new Field(320, 100, 600, 50, "", nullptr, creatingNew);
+    new Button(400, 300, 100, 50, "Yes", deleteOK, deleting);
+    new Button(240, 300, 100, 50, "Cancel", deleteCancel, deleting);
+    new Label(320, 100, 630, 50, "Are you sure you want to delete", deleting);
+    deletingName = new Label(320, 150, 630, 50, "", deleting);
+}
+
+void SaveManager::disposeUI()
+{
+    delete menu;
+    delete renaming;
+    delete creatingNew;
+    delete deleting;
 }
 
 World* SaveManager::loadWorld(string worldFolder)
@@ -31,18 +76,6 @@ World* SaveManager::loadWorld(string worldFolder)
     /* TODO: When world structure is implemented, allocate memory for it
      and load it from file. */
     return nullptr;
-}
-
-void SaveManager::deleteWorld(string worldFolder)
-{
-    path wPath = initial_path() / constants::BIN_TO_ROOT / "saves" / worldFolder;
-    if(exists(wPath))
-    {
-        if(!boost::filesystem::remove(wPath))
-        {
-            cout << "Error: Failed to delete world: " << worldFolder << endl;
-        }
-    }
 }
 
 void SaveManager::refreshSaveList()
@@ -81,18 +114,12 @@ Scene* SaveManager::getScene()
 
 void SaveManager::enterRename(void* arg)
 {
-    renamingField->setText(saveSelect->getSelectionText());
-    *currentScenePtr = renaming;
-}
-
-void SaveManager::rename(void* arg)
-{
-    cout << "Trying to rename a something." << endl;
-    if(renamingField->isActive())
+    if(saveSelect->getSelection() != -1)
     {
-        renamingField->deactivate();
+        renamingField->setText(saveSelect->getSelectionText());
+        renamingField->activate();
+        *currentScenePtr = renaming;
     }
-    *currentScenePtr = menu;
 }
 
 void SaveManager::renameCancel(void *arg)
@@ -107,23 +134,103 @@ void SaveManager::renameCancel(void *arg)
 
 void SaveManager::renameOK(void* arg)
 {
-    cout << "Would be renaming a somethign right here." << endl;
+    path renamingPath = initial_path() / constants::BIN_TO_ROOT / "saves" / saveSelect->getSelectionText();
+    if(renamingField->isActive())
+    {
+        renamingField->deactivate();
+    }
+    string newName = renamingField->getText();
+    if(strpbrk(newName.c_str(), "\\/:*?\"<>|") != NULL)
+    {
+        new Label(320, 200, 300, 70, "\\/:*?\"<>| not allowed in save file names.", renaming);
+    }
+    else if(newName != "")
+    {
+        //Actually do the filesystem action of renaming the folder
+        boost::filesystem::rename(renamingPath, initial_path() / constants::BIN_TO_ROOT / "saves" / newName);
+        refreshSaveList();
+        if(saveSelect->getSelection() != -1)
+        {
+            saveSelect->getSelectionText() = newName;
+        }
+        *currentScenePtr = menu;
+    }
+}
+
+void SaveManager::createNew(void *arg)
+{
+    namingNewField->setText("");
+    namingNewField->activate();
+    *currentScenePtr = creatingNew;
+}
+
+void SaveManager::createNewCancel(void *arg)
+{
+    if(creatingNew->isActive())
+    {
+        creatingNew->deactivate();
+    }
     *currentScenePtr = menu;
 }
 
-void SaveManager::initMenu(Scene** currentScene, callback_t toMain, callback_t toGame)
+void SaveManager::createNewOK(void *arg)
 {
-    new Button(140, 430, 150, 60, "Back", toMain, menu);
-    new Button(320, 430, 150, 60, "Rename", enterRename, menu);
-    new Button(500, 430, 150, 60, "Load", toGame, menu);
-    ScrollBlock* listSB = new ScrollBlock(320, 220, 550, 300, menu, saves.size() * 50);
-    saveSelect = new MultiSelect(275, 150, 500, 280, 50, listSB);
-    for(int i = 0; i < int(saves.size()); i++)
+    if(namingNewField->isActive())
     {
-        saveSelect->addOption(saves[i]);
+        namingNewField->deactivate();
     }
-    renaming = new Scene();
-    renamingField = new Field(320, 100, 600, 50, "", nullptr, renaming);
-    new Button(250, 250, 100, 50, "OK", renameOK, renaming);
-    new Button(390, 250, 100, 50, "Cancel", renameCancel, renaming);
+    string newName = namingNewField->getText();
+    if(newName.size() != 0)
+    {
+        if(strpbrk(newName.c_str(), "\\/:*?\"<>|") != NULL)
+        {
+            new Label(320, 200, 300, 70, "\\/:*?\"<>| not allowed in save file names.", renaming);
+        }
+        else
+        {
+            boost::filesystem::create_directory(initial_path() / constants::BIN_TO_ROOT / "saves" / newName);
+            refreshSaveList();
+            saveSelect->addOption(newName);
+            ((ScrollBlock*) saveSelect->getParent())->matchCanvasToContents();
+        }
+    }
+    *currentScenePtr = menu;
+}
+
+void SaveManager::deleteWorld(void *arg)
+{
+    if(saveSelect->getSelection() != -1)
+    {
+        deletingName->updateText("\"" + saveSelect->getSelectionText() + "\"?");
+        *currentScenePtr = deleting;
+    }
+}
+
+void SaveManager::deleteOK(void* arg)
+{
+    //Delete the folder
+    path deletePath = initial_path() / constants::BIN_TO_ROOT / "saves" / saveSelect->getSelectionText();
+    try
+    {
+        boost::filesystem::remove(deletePath);
+    }
+    catch (boost::filesystem::filesystem_error fe)
+    {
+        *currentScenePtr = menu;
+        return;
+    }
+    refreshSaveList();
+    int selectRemove = saveSelect->findSelection(saveSelect->getSelectionText());
+    if(selectRemove != -1)
+    {
+        saveSelect->removeOption(selectRemove);
+        saveSelect->clearSelection();
+        ((ScrollBlock*) saveSelect->getParent())->matchCanvasToContents();
+    }
+    *currentScenePtr = menu;
+}
+
+void SaveManager::deleteCancel(void* arg)
+{
+    *currentScenePtr = menu;
 }

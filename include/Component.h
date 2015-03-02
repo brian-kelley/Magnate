@@ -45,6 +45,7 @@ public:
     std::vector<Component*>& getChildren();
     bool isMouseOver();
     intRect_t& getDrawRect();
+    intRect_t& getLocalRect();
     virtual void processMouseMotion();
     virtual void processLeftClick();
     virtual void processScroll(SDL_MouseWheelEvent& e);
