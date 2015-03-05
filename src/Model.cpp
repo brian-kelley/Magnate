@@ -11,7 +11,7 @@
 using namespace std;
 using namespace model;
 
-World model::currentWorld;
+World model::currentWorld("lol", false);
 
 void model::init()
 {

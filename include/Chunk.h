@@ -10,12 +10,19 @@
 #define __MagIndev__Chunk__
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+#include "Terrain.h"
 
 class Chunk
 {
 public:
+    static const int CHUNK_SIZE = 64;
     Chunk(int, int);
     ~Chunk();
+    void generateTerrain(Chunk* left, Chunk* top, Chunk* right, Chunk* bottom);
+    GROUND ground[CHUNK_SIZE][CHUNK_SIZE];
+    void setTerrain(int x, int y, GROUND gtype);
 private:
     int x;
     int y;

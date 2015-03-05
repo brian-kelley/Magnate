@@ -71,11 +71,16 @@ void SaveManager::disposeUI()
     delete deleting;
 }
 
-World* SaveManager::loadWorld(string worldFolder)
+World* SaveManager::loadWorld(string worldName)
 {
-    /* TODO: When world structure is implemented, allocate memory for it
-     and load it from file. */
-    return nullptr;
+    path worldPath = initial_path() / constants::BIN_TO_ROOT / "saves" / string(worldName + ".mag");
+    //Path doesn't exist === need to create new file and generate world
+    World* loadingWorld = new World(worldName, exists(worldPath));
+    if(!loadingWorld)
+    {
+        cout << "Fatal error when loading or generating world." << endl;
+    }
+    return loadingWorld ? loadingWorld : nullptr;
 }
 
 void SaveManager::refreshSaveList()
@@ -88,7 +93,7 @@ void SaveManager::refreshSaveList()
         directory_iterator end;
         while(dirIter != end)
         {
-            if(is_directory(dirIter->path()))
+            if(!is_directory(dirIter->path()) && dirIter->path().stem() != "")
             {
                 saves.push_back(((dirIter->path()).stem()).string());
             }

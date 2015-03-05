@@ -30,7 +30,7 @@ float constants::HMULT = -80.0;
 
 #ifdef __APPLE__
 string constants::BIN_TO_ROOT = "../..";
-//Don't know exactly what linux/win values will be
+//Don't know yet exactly what linux/win values will be
 #elif __linux
 string constants::BIN_TO_ROOT = "../..";
 #elif _WIN32

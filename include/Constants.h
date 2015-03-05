@@ -9,6 +9,8 @@
 #ifndef MagIndev_Constants_h
 #define MagIndev_Constants_h
 
+#define WORLD_SIZE 5000
+
 #include <cstdint>
 #include <string>
 

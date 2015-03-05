@@ -10,6 +10,8 @@
 #include <vector>
 #include <SDL2/SDL.h>
 #include <boost/filesystem.hpp>
+#include <stdlib.h>
+#include <time.h>
 #include "Control.h"
 #include "Button.h"
 
@@ -18,6 +20,7 @@ using namespace boost::filesystem;
 
 int main(int argc, const char* argv[])
 {
+    srand(time(NULL));
     Control::init();
     int ticks;
     while(true)

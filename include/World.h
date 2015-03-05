@@ -9,15 +9,39 @@
 #ifndef __MagIndev__World__
 #define __MagIndev__World__
 
+#include <boost/filesystem.hpp>
 #include <stdio.h>
+#include <vector>
 #include <iostream>
+#include "Chunk.h"
+#include "Constants.h"
+
+//2 bytes per node seems pretty good for the terrain i guess
+typedef struct
+{
+    //0 (sea level?) to 255 (mountain peaks?)
+    unsigned char height;
+    //ground type of tile with node as upper-left corner
+    GROUND g;
+} terrainMeshNode_t;
 
 class World
 {
 public:
-    
+    //saveName = name of folder in saves,
+    World(std::string saveName, bool generate);
+    ~World();
+    static std::string currentSaveName;
+    bool isValidTile(int x, int y);
 private:
-    
+    //data
+    long seed;
+    terrainMeshNode_t terrain[WORLD_SIZE][WORLD_SIZE];
+    //methods
+    void generate();
+    void populateTerrain();
+    void readWorld();
+    void writeWorld();
 };
 
 #endif
