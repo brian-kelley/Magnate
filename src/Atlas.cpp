@@ -16,20 +16,27 @@ Atlas::Atlas(string atlasName, SDL_Renderer* renderer)
     path imagePath = initial_path() / constants::BIN_TO_ROOT / "assets" / (atlasName + "_atlas.png");
     path tilePath = initial_path() / constants::BIN_TO_ROOT / "data" / (atlasName + "_tiles.txt");
     SDL_Surface* loadedSurface = IMG_Load(imagePath.string().c_str());
-    size = loadedSurface->w;
+    this->size = loadedSurface->w;
+    /*
     this->tex = SDL_CreateTextureFromSurface(renderer, loadedSurface);
-    parseTiles(tilePath);
     if(this->tex == nullptr)
     {
         cout << "Error: could not convert surface to tex." << endl;
         cout << SDL_GetError() << endl;
-    }
+    }*/
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, loadedSurface->w, loadedSurface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, loadedSurface->pixels);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    parseTiles(tilePath);
     for(int i = 0; i < (int) tiles.size(); i++)
     {
         this->tileNames[tiles[i].name] = i;
     }
-    SDL_FreeSurface(loadedSurface);
     initCharTiles();
+    SDL_FreeSurface(loadedSurface);
 }
 
 Atlas::~Atlas()
@@ -63,6 +70,7 @@ void Atlas::bind()
     if(SDL_GL_BindTexture(this->tex, nullptr, nullptr) != 0)
     {
         cout << "Error binding atlas to GL context." << endl;
+        exit(2);
     }
 }
 

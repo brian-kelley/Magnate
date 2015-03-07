@@ -41,7 +41,10 @@ namespace ui        //place for callbacks etc.
     }
     void saveGameButton(void* obj)
     {
+        //If you get here without errors, SaveManager has ptr
+        //to the right world object to use for game
         clearEnables();
+        model::currentWorld = SaveManager::getWorld();
         currentScene = scenes[GAME];
     }
 }
@@ -72,6 +75,7 @@ void Control::dispose()
     }
     //immediately remove all the dangling pointers left over
     scenes.clear();
+    view::dispose();
 }
 
 void Control::update()
@@ -134,7 +138,7 @@ void Control::update()
         }
     }
     view::prepareFrame();
-    view::drawComponent(*currentScene);
+    UIRenderer::drawComponent(*currentScene);
     view::finalizeFrame();
 }
 
@@ -231,6 +235,9 @@ void Control::initScenes()
     new Label(320, 90, 200, 100, "Magnate", mainMenu);
     scenes[MAIN_MENU] = mainMenu;
     scenes[SAVE_MENU] = SaveManager::getScene();
+    Scene* gameTemp = new Scene();
+    new Label(320, 240, 300, 80, "You are in the game!", gameTemp);
+    scenes[GAME] = gameTemp;
 }
 
 void Control::clearEnables()      //clear currentField and button hovers in current scene

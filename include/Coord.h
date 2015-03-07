@@ -10,11 +10,20 @@
 #define __Magnate__Coord__
 
 #include "Constants.h"
+#include <SDL2/SDL.h>
 
-int ix(double i, double j);
-int jy(double i, double j);
-double xi(int x, int y);
-double yj(int x, int y);
-bool rectInside(intRect_t* small, intRect_t* big);
-
+namespace coord
+{
+    extern SDL_Point project3DPoint(double i, double j, double h);
+    extern int ix(double i, double j);
+    extern int jy(double i, double j);
+    extern double xi(int x, int y);
+    extern double yj(int x, int y);
+    extern bool rectInside(intRect_t* small, intRect_t* big);
+    //Base tile height (px)
+    const int ISO_WIDTH = 64;
+    const int ISO_LENGTH = ISO_WIDTH * 2;
+    //Tiles can be 128 long, 64 high, and 1 unit of height in 3D space translates to this height (px) of screen space
+    const int ISO_HEIGHT = ISO_WIDTH * 5 / 4;
+};
 #endif

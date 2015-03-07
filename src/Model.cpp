@@ -11,7 +11,7 @@
 using namespace std;
 using namespace model;
 
-World model::currentWorld("lol", false);
+World* model::currentWorld;
 
 void model::init()
 {
@@ -25,5 +25,5 @@ void model::update()
 
 World& model::getCurrentWorld()
 {
-    return currentWorld;
+    return *currentWorld;
 }

@@ -33,6 +33,7 @@ namespace SaveManager
     extern Label* creatingNewWarning;
     extern Label* renamingWarning;
     extern Label* deletingName;
+    extern World* loadedWorld;
     //Other variables
     extern Scene** currentScenePtr;
     extern std::vector<std::string> saves;
@@ -42,7 +43,7 @@ namespace SaveManager
     extern void disposeUI();
     extern void refreshSaveList();
     extern std::vector<std::string>& listSaves();
-    extern World* loadWorld(std::string worldFolder);
+    extern World* getWorld();
     extern int getNumSaves();
     extern Scene* getScene();
     extern void enterRename(void* arg);
@@ -55,6 +56,8 @@ namespace SaveManager
     extern void deleteOK(void* arg);
     extern void deleteCancel(void* arg);
     extern void enterRename();
+    extern void loadWorldBtn(void* arg);
+    extern callback_t transitionToGame;
 };
 
 #endif /* defined(__Magnate__SaveManager__) */

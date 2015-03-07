@@ -24,6 +24,8 @@ Label* SaveManager::renamingWarning;
 Label* SaveManager::deletingName;
 Scene** SaveManager::currentScenePtr;
 vector<string> SaveManager::saves;
+callback_t SaveManager::transitionToGame;
+World* SaveManager::loadedWorld;
 
 void SaveManager::init(Scene** currentSceneArg, callback_t toMain, callback_t toGame)
 {
@@ -38,11 +40,12 @@ void SaveManager::initUI(callback_t toMain, callback_t toGame)
     renaming = new Scene();
     creatingNew = new Scene();
     deleting = new Scene();
+    transitionToGame = toGame;
     new Label(320, 40, 200, 60, "Select a save file", menu);
     new Button(64, 430, 110, 60, "Back", toMain, menu);
     new Button(192, 430, 110, 60, "Rename", enterRename, menu);
     new Button(320, 430, 110, 60, "Create", createNew, menu);
-    new Button(448, 430, 110, 60, "Load", toGame, menu);
+    new Button(448, 430, 110, 60, "Load", loadWorldBtn, menu);
     new Button(576, 430, 110, 60, "Delete", deleteWorld, menu);
     ScrollBlock* listSB = new ScrollBlock(320, 220, 550, 300, menu, 1);
     saveSelect = new MultiSelect(constants::PAD, constants::PAD, listSB->getDrawRect().w - 3 * constants::PAD - constants::BAR_WIDTH, 280, 50, listSB, false);
@@ -71,16 +74,9 @@ void SaveManager::disposeUI()
     delete deleting;
 }
 
-World* SaveManager::loadWorld(string worldName)
+World* SaveManager::getWorld()
 {
-    path worldPath = initial_path() / constants::BIN_TO_ROOT / "saves" / string(worldName + ".mag");
-    //Path doesn't exist === need to create new file and generate world
-    World* loadingWorld = new World(worldName, exists(worldPath));
-    if(!loadingWorld)
-    {
-        cout << "Fatal error when loading or generating world." << endl;
-    }
-    return loadingWorld ? loadingWorld : nullptr;
+    return loadedWorld;
 }
 
 void SaveManager::refreshSaveList()
@@ -139,7 +135,7 @@ void SaveManager::renameCancel(void *arg)
 
 void SaveManager::renameOK(void* arg)
 {
-    path renamingPath = initial_path() / constants::BIN_TO_ROOT / "saves" / saveSelect->getSelectionText();
+    path renamingPath = initial_path() / constants::BIN_TO_ROOT / "saves" / string(saveSelect->getSelectionText() + ".mag");
     if(renamingField->isActive())
     {
         renamingField->deactivate();
@@ -152,7 +148,8 @@ void SaveManager::renameOK(void* arg)
     else if(newName != "")
     {
         //Actually do the filesystem action of renaming the folder
-        boost::filesystem::rename(renamingPath, initial_path() / constants::BIN_TO_ROOT / "saves" / newName);
+        path newPath = initial_path() / constants::BIN_TO_ROOT / "saves" / string(newName + ".mag");
+        boost::filesystem::rename(renamingPath, newPath);
         refreshSaveList();
         if(saveSelect->getSelection() != -1)
         {
@@ -193,8 +190,6 @@ void SaveManager::createNewOK(void *arg)
         }
         else
         {
-            boost::filesystem::create_directory(initial_path() / constants::BIN_TO_ROOT / "saves" / newName);
-            refreshSaveList();
             saveSelect->addOption(newName);
             ((ScrollBlock*) saveSelect->getParent())->matchCanvasToContents();
         }
@@ -238,4 +233,27 @@ void SaveManager::deleteOK(void* arg)
 void SaveManager::deleteCancel(void* arg)
 {
     *currentScenePtr = menu;
+}
+
+void SaveManager::loadWorldBtn(void *arg)
+{
+    if(saveSelect->getSelection() != -1)
+    {
+        cout << "Here comes selectoin text: \"" << saveSelect->getSelectionText() << "\"\n";
+        path worldPath = initial_path() / constants::BIN_TO_ROOT / "saves" / string(saveSelect->getSelectionText() + ".mag");
+        if(exists(worldPath))
+        {
+            cout << "World file already exists, will read." << endl;
+        }
+        else
+        {
+            cout << "World file does not exist, will be created." << endl;
+        }
+        loadedWorld = new World(saveSelect->getSelectionText(), !exists(worldPath));
+        if(!loadedWorld)
+        {
+            cout << "Fatal error when loading or generating world." << endl;
+        }
+        transitionToGame(arg);
+    }
 }

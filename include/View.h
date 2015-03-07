@@ -23,6 +23,8 @@
 #endif
 #include <iostream>
 #include <vector>
+#include "UIRenderer.h"
+#include "RenderRoutines.h"
 #include "Model.h"
 #include "Atlas.h"
 #include "Building.h"
@@ -34,41 +36,27 @@
 #include "MultiSelect.h"
 #include "Coord.h"
 #include "Constants.h"
+#include "Terrain.h"
 
 namespace view
 {
     //Private data members
-    extern int scrX;
-    extern int scrY;
     extern SDL_Window* window;
     extern SDL_Renderer* renderer;
     extern SDL_GLContext context;
     extern Atlas* mainAtlas;
     //Publicly used functions
-    extern void init(int screenX = 0, int screenY = 0);
+    extern void init();
     extern void dispose();
     extern void updateWindowSize();
     extern void drawWorld(World& currentWorld);
     extern void prepareFrame();
     extern void finalizeFrame();
     //Privately used functions
-    extern void blit(int tex, int x, int y);
-    extern void blit(int tex, int x1, int y1, int x2, int y2);
     extern void frame();
     extern void configGL();
     extern void initSDLVideo();
-    extern void initAtlas();
-    extern void drawCuboid(Cuboid& c);
     extern void drawBuilding(Building& b);
-    extern void drawComponent(Component& c);
-    extern void drawButton(Button& b);
-    extern void drawLabel(Label& l);
-    extern void drawField(Field& f);
-    extern void drawScrollBlock(ScrollBlock& sb);
-    extern void drawMultiSelect(MultiSelect& ms);
-    extern void drawString(std::string text, int x, int y);
-    extern void drawString(std::string text, int x, int y, float scale);
-    extern void drawString(std::string text, int x, int y, float scale, float r, float g, float b);
 }
 
 #endif

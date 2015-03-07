@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include "Chunk.h"
 #include "Constants.h"
 
@@ -33,9 +34,11 @@ public:
     ~World();
     static std::string currentSaveName;
     bool isValidTile(int x, int y);
+    GROUND getTerrainType(int x, int y);
+    int getTerrainHeight(int x, int y);
 private:
     //data
-    long seed;
+    uint64_t seed;
     terrainMeshNode_t terrain[WORLD_SIZE][WORLD_SIZE];
     //methods
     void generate();

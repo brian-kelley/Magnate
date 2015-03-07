@@ -56,7 +56,7 @@ bool Building::isFront(Cuboid* c1, Cuboid* c2)
         return false;
     }
     //otherwise, determine which box is "in front":
-    if(jy(c1->getX(), c1->getY() + c1->getWidth()) > jy(c2->getX(), c2->getY() + c2->getWidth()))
+    if(coord::jy(c1->getX(), c1->getY() + c1->getWidth()) > coord::jy(c2->getX(), c2->getY() + c2->getWidth()))
     {
         return true;
     }

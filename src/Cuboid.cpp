@@ -31,20 +31,20 @@ Cuboid::~Cuboid()
 
 void Cuboid::initDrawCoords()
 {
-    int baseX = ix(x, y);
-    int baseY = jy(x, y);
-    draw.x2 = ix(x, y) - baseX;
-    draw.y2 = jy(x, y) + (int) (constants::HMULT * (z + height)) - baseY;
-    draw.x3 = ix(x, y + width) - baseX;
-    draw.y3 = jy(x, y + width) + (int) (constants::HMULT * (z + height)) - baseY;
-    draw.x4 = ix(x, y + width) - baseX;
-    draw.y4 = jy(x, y + width) + (int) (constants::HMULT * z) - baseY;
-    draw.x5 = ix(x + length, y) - baseX;
-    draw.y5 = jy(x + length, y) + (int) (constants::HMULT * (z + height)) - baseY;
-    draw.x6 = ix(x + length, y + width) - baseX;
-    draw.y6 = jy(x + length, y + width) + (int) (constants::HMULT * (z + height)) - baseY;
-    draw.x7 = ix(x + length, y + width) - baseX;
-    draw.y7 = jy(x + length, y + width) + (int) (constants::HMULT * (z)) - baseY;
+    int baseX = coord::ix(x, y);
+    int baseY = coord::jy(x, y);
+    draw.x2 = coord::ix(x, y) - baseX;
+    draw.y2 = coord::jy(x, y) + (int) (constants::HMULT * (z + height)) - baseY;
+    draw.x3 = coord::ix(x, y + width) - baseX;
+    draw.y3 = coord::jy(x, y + width) + (int) (constants::HMULT * (z + height)) - baseY;
+    draw.x4 = coord::ix(x, y + width) - baseX;
+    draw.y4 = coord::jy(x, y + width) + (int) (constants::HMULT * z) - baseY;
+    draw.x5 = coord::ix(x + length, y) - baseX;
+    draw.y5 = coord::jy(x + length, y) + (int) (constants::HMULT * (z + height)) - baseY;
+    draw.x6 = coord::ix(x + length, y + width) - baseX;
+    draw.y6 = coord::jy(x + length, y + width) + (int) (constants::HMULT * (z + height)) - baseY;
+    draw.x7 = coord::ix(x + length, y + width) - baseX;
+    draw.y7 = coord::jy(x + length, y + width) + (int) (constants::HMULT * (z)) - baseY;
 }
 
 double Cuboid::getX()

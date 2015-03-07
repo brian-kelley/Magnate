@@ -27,6 +27,8 @@ float constants::UI_FG_G = 0.75;
 float constants::UI_FG_B = 0.75;
 float constants::SHADE = 0.85;
 float constants::HMULT = -80.0;
+long int constants::screenX = 0;
+long int constants::screenY = 0;
 
 #ifdef __APPLE__
 string constants::BIN_TO_ROOT = "../..";
@@ -34,5 +36,5 @@ string constants::BIN_TO_ROOT = "../..";
 #elif __linux
 string constants::BIN_TO_ROOT = "../..";
 #elif _WIN32
-string constants::BIN_TO_ROOT = "../..";
+string constants::BIN_TO_ROOT = "..";
 #endif

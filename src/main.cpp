@@ -18,7 +18,7 @@
 using namespace std;
 using namespace boost::filesystem;
 
-int main(int argc, const char* argv[])
+int main(int argc, char** argv)
 {
     srand(time(NULL));
     Control::init();

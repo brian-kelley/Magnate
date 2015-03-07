@@ -9,7 +9,7 @@
 #ifndef MagIndev_Constants_h
 #define MagIndev_Constants_h
 
-#define WORLD_SIZE 5000
+#define WORLD_SIZE 2500
 
 #include <cstdint>
 #include <string>
@@ -66,6 +66,8 @@ namespace constants
     extern float SHADE;
     extern float HMULT;
     extern std::string BIN_TO_ROOT;
+    extern long int screenX;
+    extern long int screenY;
 }
 
 #endif
