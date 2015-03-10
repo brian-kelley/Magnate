@@ -74,13 +74,13 @@ void RenderRoutines::isoBlit(int tex, int i, int j, int h1, int h2, int h3, int 
     SDL_Point destPt = coord::project3DPoint(i, j, h1);
     glVertex2i(destPt.x, destPt.y);
     glTexCoord2f(srcRect.x + srcRect.w, srcRect.y);
-    destPt = coord::project3DPoint(i + 1, j, h2);
+    destPt = coord::project3DPoint(i + TERRAIN_TILE_SIZE, j, h2);
     glVertex2i(destPt.x, destPt.y);
     glTexCoord2f(srcRect.x + srcRect.w, srcRect.y + srcRect.h);
-    destPt = coord::project3DPoint(i + 1, j + 1, h3);
+    destPt = coord::project3DPoint(i + TERRAIN_TILE_SIZE, j + TERRAIN_TILE_SIZE, h3);
     glVertex2i(destPt.x, destPt.y);
     glTexCoord2f(srcRect.x, srcRect.y + srcRect.h);
-    destPt = coord::project3DPoint(i, j + 1, h4);
+    destPt = coord::project3DPoint(i, j + TERRAIN_TILE_SIZE, h4);
     glVertex2i(destPt.x, destPt.y);
     glEnd();
 }
@@ -173,4 +173,9 @@ void RenderRoutines::drawCuboid(Cuboid& c)
                  mainAtlas->tileY(c.getRight()) + mainAtlas->tileH(c.getRight()));
     glVertex2i(posX + c.draw.x4, posY + c.draw.y4);
     glEnd();
+}
+
+int RenderRoutines::texNumFromStr(std::string name)
+{
+    return mainAtlas->tileFromName(name);
 }

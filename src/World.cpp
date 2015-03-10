@@ -54,6 +54,7 @@ void World::generate()
     cout << "Done with world generation." << endl;
 }
 
+/*
 void World::populateTerrain()
 {
     cout << "Starting terrain gen." << endl;
@@ -100,6 +101,7 @@ void World::populateTerrain()
     }
     cout << "Finishing first terrain smoothing." << endl;
 }
+*/
 
 void World::writeWorld()
 {

@@ -17,13 +17,6 @@ Atlas::Atlas(string atlasName, SDL_Renderer* renderer)
     path tilePath = initial_path() / constants::BIN_TO_ROOT / "data" / (atlasName + "_tiles.txt");
     SDL_Surface* loadedSurface = IMG_Load(imagePath.string().c_str());
     this->size = loadedSurface->w;
-    /*
-    this->tex = SDL_CreateTextureFromSurface(renderer, loadedSurface);
-    if(this->tex == nullptr)
-    {
-        cout << "Error: could not convert surface to tex." << endl;
-        cout << SDL_GetError() << endl;
-    }*/
     GLuint texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);

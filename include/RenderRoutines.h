@@ -29,6 +29,7 @@ namespace RenderRoutines
     extern void blit(int tex, int x, int y);
     extern void blit(int tex, int x1, int y1, int x2, int y2);
     extern void drawCuboid(Cuboid& c);
+    extern int texNumFromStr(std::string name);
 }
 
 #endif

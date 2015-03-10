@@ -41,6 +41,12 @@ typedef struct
     float height;
 } tileData_t;
 
+typedef struct
+{
+    double i;
+    double j;
+} isoPoint_t;
+
 //Pass pointer to anything in callback, unsafe but useful
 //Callback function itself has to know what type the actual object has
 
@@ -68,6 +74,7 @@ namespace constants
     extern std::string BIN_TO_ROOT;
     extern long int screenX;
     extern long int screenY;
+    const double TERRAIN_TILE_SIZE = 0.25;
 }
 
 #endif

@@ -25,5 +25,22 @@ namespace coord
     const int ISO_LENGTH = ISO_WIDTH * 2;
     //Tiles can be 128 long, 64 high, and 1 unit of height in 3D space translates to this height (px) of screen space
     const int ISO_HEIGHT = ISO_WIDTH * 5 / 4;
+
+    /* sideways diagram of flat floor tile:
+      /\      ]-|
+     /  \       |           ^ Left on screen
+    /    \      |- Length   ------> Upwards on screen
+    \    /      |           v Right on screen
+     \  /       |
+      \/      ]-|
+    /      \
+   /        \
+  v          v (+j direction)
+ (+i direction)
+   |-----|
+      |
+    Width
+
+    */
 };
 #endif

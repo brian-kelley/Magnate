@@ -16,15 +16,7 @@
 #include <fstream>
 #include "Chunk.h"
 #include "Constants.h"
-
-//2 bytes per node seems pretty good for the terrain i guess
-typedef struct
-{
-    //0 (sea level?) to 255 (mountain peaks?)
-    unsigned char height;
-    //ground type of tile with node as upper-left corner
-    GROUND g;
-} terrainMeshNode_t;
+#include "Terrain.h"
 
 class World
 {
@@ -39,7 +31,6 @@ public:
 private:
     //data
     uint64_t seed;
-    terrainMeshNode_t terrain[WORLD_SIZE][WORLD_SIZE];
     //methods
     void generate();
     void populateTerrain();

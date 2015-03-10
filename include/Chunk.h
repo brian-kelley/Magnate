@@ -17,15 +17,19 @@
 class Chunk
 {
 public:
-    static const int CHUNK_SIZE = 64;
-    Chunk(int, int);
+    static const int CHUNK_SIZE = 128;
+    //Chunks are always aligned with the boundary i and j values CHUNK_SIZE * TERRAIN_TILE_SIZE
+    //so constructor should take integers even though tiles exist in double, double coordinates
+    Chunk(int i, int j);
     ~Chunk();
-    void generateTerrain(Chunk* left, Chunk* top, Chunk* right, Chunk* bottom);
-    GROUND ground[CHUNK_SIZE][CHUNK_SIZE];
-    void setTerrain(int x, int y, GROUND gtype);
+    tNode_t mesh[CHUNK_SIZE][CHUNK_SIZE];
+    double getIOffset();
+    double getJOffset();
+    int getI();
+    int getJ();
 private:
-    int x;
-    int y;
+    int i;
+    int j;
 };
 
 #endif /* defined(__MagIndev__Chunk__) */
