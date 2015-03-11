@@ -16,11 +16,19 @@ Atlas::Atlas(string atlasName, SDL_Renderer* renderer)
     path imagePath = initial_path() / constants::BIN_TO_ROOT / "assets" / (atlasName + "_atlas.png");
     path tilePath = initial_path() / constants::BIN_TO_ROOT / "data" / (atlasName + "_tiles.txt");
     SDL_Surface* loadedSurface = IMG_Load(imagePath.string().c_str());
+    SDL_PixelFormat* fmt = loadedSurface->format;
     this->size = loadedSurface->w;
     GLuint texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, loadedSurface->w, loadedSurface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, loadedSurface->pixels);
+    if(fmt->format == SDL_PIXELFORMAT_RGBA8888)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, loadedSurface->w, loadedSurface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, loadedSurface->pixels);
+    }
+    else if(fmt->format == SDL_PIXELFORMAT_ARGB8888)
+    {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, loadedSurface->w, loadedSurface->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, loadedSurface->pixels);
+    }
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     parseTiles(tilePath);

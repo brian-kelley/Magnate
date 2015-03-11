@@ -64,6 +64,8 @@ void Control::init()
     currentEvent = new SDL_Event();
     currentScene = scenes[MAIN_MENU];
     model::init();
+    //Trap mouse in window
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 }
 
 void Control::dispose()
@@ -139,6 +141,13 @@ void Control::update()
     }
     view::prepareFrame();
     UIRenderer::drawComponent(*currentScene);
+    if(currentScene == scenes[GAME])
+    {
+        WorldRenderer::render();
+    }
+    glDisable(GL_SCISSOR_TEST);
+    glColor3f(1, 1, 1);
+    RenderRoutines::blit(RenderRoutines::mainAtlas->tileFromName("cursor"), mouseX, mouseY);
     view::finalizeFrame();
 }
 

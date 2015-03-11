@@ -12,7 +12,7 @@ using namespace std;
 using namespace constants;
 using namespace coord;
 
-map<SDL_Point, Chunk*> WorldRenderer::chunkCache;
+map<Point, Chunk*> WorldRenderer::chunkCache;
 
 void WorldRenderer::render()
 {
@@ -32,7 +32,7 @@ void WorldRenderer::updateChunkCache()
 {
     //Ideally, absolute maximum of 4 chunks should be visible at any one time
     //Therefore, only need to check that the four corners of the viewport are covered by chunkCache
-    SDL_Point checkPt;
+    Point checkPt;
     checkPt.x = int(xi(screenX, screenY)) / Chunk::CHUNK_SIZE;
     checkPt.y = int(yj(screenX, screenY)) / Chunk::CHUNK_SIZE;
     if(chunkCache.find(checkPt) == chunkCache.end())
@@ -62,7 +62,7 @@ void WorldRenderer::updateChunkCache()
 
 void WorldRenderer::drawTerrain()
 {
-    SDL_Point loc;
+    Point loc;
     loc.x = int(xi(screenX, screenY)) / Chunk::CHUNK_SIZE;
     loc.y = int(yj(screenX, screenY)) / Chunk::CHUNK_SIZE;
     drawChunk(chunkCache[loc]);
@@ -110,10 +110,10 @@ void WorldRenderer::drawChunk(Chunk* c)
     {
         for(int j = 0; j < Chunk::CHUNK_SIZE - 1; j++)
         {
-            SDL_Point nodeDst = coord::project3DPoint(draw->getIOffset() + TERRAIN_TILE_SIZE * i, draw->getJOffset() + TERRAIN_TILE_SIZE * j, draw->mesh[i][j].height / 256.0);
-            if(nodeDst.x > screenX && nodeDst.x < screenX + WINDOW_W)
+            Point nodeDst = coord::project3DPoint(draw->getIOffset() + TERRAIN_TILE_SIZE * i, draw->getJOffset() + TERRAIN_TILE_SIZE * j, draw->mesh[i][j].height / 256.0);
+            if(nodeDst.x + ISO_WIDTH / 2 > screenX && nodeDst.x - ISO_WIDTH < screenX + WINDOW_W)
             {
-                if(nodeDst.y > screenY && nodeDst.y < screenY + WINDOW_H)
+                if(nodeDst.y + ISO_HEIGHT / 2 > screenY && nodeDst.y - ISO_HEIGHT / 2 < screenY + WINDOW_H)
                 {
                     RenderRoutines::isoBlit(Terrain::terrainTextures[draw->mesh[i][j].g],
                                             draw->getIOffset() + TERRAIN_TILE_SIZE * i,

@@ -14,9 +14,10 @@
 using namespace std;
 using namespace constants;
 using namespace coord;
+using namespace RenderRoutines;
 
 long int Terrain::wseed;
-map<GROUND, int> terrainTextures;
+map<GROUND, int> Terrain::terrainTextures;
 
 void Terrain::init(long int seed)
 {
@@ -31,7 +32,7 @@ void Terrain::init(long int seed)
 tNode_t Terrain::generateNode(double i, double j)
 {
     tNode_t node;
-    node.g = rand() % GROUND::NUM_TYPES;
-    node->height = rand() % 0xFF;
+    node.g = (GROUND) (rand() % GROUND::NUM_TYPES);
+    node.height = rand() % 0xFF;
     return node;
 }

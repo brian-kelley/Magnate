@@ -47,6 +47,24 @@ typedef struct
     double j;
 } isoPoint_t;
 
+struct Point
+{
+    int x;
+    int y;
+    bool operator<(const Point& param) const
+    {
+        if(x < param.x)
+            return false;
+        if(x > param.x)
+            return true;
+        if(y < param.y)
+            return false;
+        if(y > param.y)
+            return true;
+        return false;
+    }
+};
+
 //Pass pointer to anything in callback, unsafe but useful
 //Callback function itself has to know what type the actual object has
 

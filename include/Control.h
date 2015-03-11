@@ -29,6 +29,7 @@
 #include "Scene.h"
 #include "Constants.h"
 #include "SaveManager.h"
+#include "WorldRenderer.h"
 
 namespace Control
 {

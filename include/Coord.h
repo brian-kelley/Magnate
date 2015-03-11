@@ -14,7 +14,7 @@
 
 namespace coord
 {
-    extern SDL_Point project3DPoint(double i, double j, double h);
+    extern Point project3DPoint(double i, double j, double h);
     extern int ix(double i, double j);
     extern int jy(double i, double j);
     extern double xi(int x, int y);

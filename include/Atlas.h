@@ -60,6 +60,10 @@ public:
     {
         return this->tiles[index].height;
     }
+    int getSize()
+    {
+        return size;
+    }
 private:
     SDL_Texture* tex;
     int size;

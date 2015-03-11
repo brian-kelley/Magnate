@@ -38,9 +38,9 @@ bool coord::rectInside(intRect_t* small, intRect_t* big)
     return false;
 }
 
-SDL_Point coord::project3DPoint(double i, double j, double h)
+Point coord::project3DPoint(double i, double j, double h)
 {
-    SDL_Point ret;
+    Point ret;
     ret.x = ix(i, j);
     ret.y = jy(i, j);
     ret.y -= h * ISO_HEIGHT;

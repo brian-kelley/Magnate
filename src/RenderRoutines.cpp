@@ -63,7 +63,6 @@ void RenderRoutines::drawString(string text, int x, int y, float scale, float r,
 void RenderRoutines::isoBlit(int tex, int i, int j, int h1, int h2, int h3, int h4)
 {
     glEnable(GL_TEXTURE_2D);
-    glDisable(GL_SCISSOR_TEST);
     glBegin(GL_QUADS);
     floatRect_t srcRect;
     srcRect.x = mainAtlas->tileX(tex);
@@ -71,7 +70,7 @@ void RenderRoutines::isoBlit(int tex, int i, int j, int h1, int h2, int h3, int 
     srcRect.w = mainAtlas->tileW(tex);
     srcRect.h = mainAtlas->tileH(tex);
     glTexCoord2f(srcRect.x, srcRect.y);
-    SDL_Point destPt = coord::project3DPoint(i, j, h1);
+    Point destPt = coord::project3DPoint(i, j, h1);
     glVertex2i(destPt.x, destPt.y);
     glTexCoord2f(srcRect.x + srcRect.w, srcRect.y);
     destPt = coord::project3DPoint(i + TERRAIN_TILE_SIZE, j, h2);
@@ -87,21 +86,7 @@ void RenderRoutines::isoBlit(int tex, int i, int j, int h1, int h2, int h3, int 
 
 void RenderRoutines::blit(int index, int x, int y)
 {
-    glEnable(GL_TEXTURE_2D);
-    glBegin(GL_QUADS);
-    glTexCoord2f(mainAtlas->tileX(index), mainAtlas->tileY(index));
-    glVertex2i(x, y);
-    glTexCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),
-                 mainAtlas->tileY(index));
-    glVertex2i(x + mainAtlas->tileW(index), y);
-    glTexCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),
-                 mainAtlas->tileY(index) + mainAtlas->tileH(index));
-    glVertex2i(x + mainAtlas->tileW(index),
-               y + mainAtlas->tileH(index));
-    glTexCoord2f(mainAtlas->tileX(index),
-                 mainAtlas->tileY(index) + mainAtlas->tileH(index));
-    glVertex2i(x, y + mainAtlas->tileH(index));
-    glEnd();
+    blit(index, x, y, x + mainAtlas->getSize() * mainAtlas->tileW(index), y + mainAtlas->getSize() * mainAtlas->tileH(index));
 }
 
 void RenderRoutines::blit(int index, int x1, int y1, int x2, int y2)

@@ -21,7 +21,7 @@
 namespace WorldRenderer
 {
     const int MAX_CHUNK_CACHE = 100;
-    extern std::map<SDL_Point, Chunk*> chunkCache;
+    extern std::map<Point, Chunk*> chunkCache;
     extern void render();
     extern void trimChunkCache();
     extern void updateChunkCache();

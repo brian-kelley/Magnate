@@ -33,7 +33,6 @@ private:
     uint64_t seed;
     //methods
     void generate();
-    void populateTerrain();
     void readWorld();
     void writeWorld();
 };
