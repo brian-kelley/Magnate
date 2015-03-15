@@ -16,9 +16,10 @@ Chunk::Chunk(int i, int j)
     this->i = i;
     this->j = j;
     double iIter = getIOffset();
-    double jIter = getJOffset();
+    double jIter;
     for(int i = 0; i < CHUNK_SIZE; i++)
     {
+        jIter = getJOffset();
         for(int j = 0; j < CHUNK_SIZE; j++)
         {
             mesh[i][j] = Terrain::generateNode(iIter, jIter);

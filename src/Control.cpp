@@ -46,6 +46,7 @@ namespace ui        //place for callbacks etc.
         clearEnables();
         model::currentWorld = SaveManager::getWorld();
         currentScene = scenes[GAME];
+        WorldRenderer::preload();
     }
 }
 
@@ -139,13 +140,28 @@ void Control::update()
                 break;
         }
     }
+    if(currentScene == scenes[GAME])
+    {
+        int dScreenX = 0;
+        int dScreenY = 0;
+        const int PAN_SPEED = 20;
+        if(mouseX == 0)
+            dScreenX -= PAN_SPEED;
+        if(mouseX == WINDOW_W - 1)
+            dScreenX += PAN_SPEED;
+        if(mouseY == 0)
+            dScreenY -= PAN_SPEED;
+        if(mouseY == WINDOW_H - 1)
+            dScreenY += PAN_SPEED;
+        screenX += dScreenX;
+        screenY += dScreenY;
+    }
     view::prepareFrame();
     UIRenderer::drawComponent(*currentScene);
     if(currentScene == scenes[GAME])
     {
         WorldRenderer::render();
     }
-    glDisable(GL_SCISSOR_TEST);
     glColor3f(1, 1, 1);
     RenderRoutines::blit(RenderRoutines::mainAtlas->tileFromName("cursor"), mouseX, mouseY);
     view::finalizeFrame();
@@ -244,9 +260,8 @@ void Control::initScenes()
     new Label(320, 90, 200, 100, "Magnate", mainMenu);
     scenes[MAIN_MENU] = mainMenu;
     scenes[SAVE_MENU] = SaveManager::getScene();
-    Scene* gameTemp = new Scene();
-    new Label(320, 240, 300, 80, "You are in the game!", gameTemp);
-    scenes[GAME] = gameTemp;
+    Scene* gameOverlay = new Scene();
+    scenes[GAME] = gameOverlay;
 }
 
 void Control::clearEnables()      //clear currentField and button hovers in current scene

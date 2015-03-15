@@ -21,10 +21,11 @@ namespace coord
     extern double yj(int x, int y);
     extern bool rectInside(intRect_t* small, intRect_t* big);
     //Base tile height (px)
-    const int ISO_WIDTH = 64;
-    const int ISO_LENGTH = ISO_WIDTH * 2;
+    const double ISO_WIDTH = 64;
+    const double ISO_LENGTH = ISO_WIDTH * 2;
     //Tiles can be 128 long, 64 high, and 1 unit of height in 3D space translates to this height (px) of screen space
-    const int ISO_HEIGHT = ISO_WIDTH * 5 / 4;
+    //Here the height comes out to 80, which looks pretty good
+    const double ISO_HEIGHT = ISO_WIDTH * 5 / 4;
 
     /* sideways diagram of flat floor tile:
       /\      ]-|

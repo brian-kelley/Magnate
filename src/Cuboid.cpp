@@ -34,17 +34,17 @@ void Cuboid::initDrawCoords()
     int baseX = coord::ix(x, y);
     int baseY = coord::jy(x, y);
     draw.x2 = coord::ix(x, y) - baseX;
-    draw.y2 = coord::jy(x, y) + (int) (constants::HMULT * (z + height)) - baseY;
-    draw.x3 = coord::ix(x, y + width) - baseX;
-    draw.y3 = coord::jy(x, y + width) + (int) (constants::HMULT * (z + height)) - baseY;
-    draw.x4 = coord::ix(x, y + width) - baseX;
-    draw.y4 = coord::jy(x, y + width) + (int) (constants::HMULT * z) - baseY;
-    draw.x5 = coord::ix(x + length, y) - baseX;
-    draw.y5 = coord::jy(x + length, y) + (int) (constants::HMULT * (z + height)) - baseY;
+    draw.y2 = coord::jy(x, y) - (int) (coord::ISO_HEIGHT * (z + height)) - baseY;
+    draw.x3 = coord::ix(x + length, y) - baseX;
+    draw.y3 = coord::jy(x + length, y) - (int) (coord::ISO_HEIGHT * (z + height)) - baseY;
+    draw.x4 = coord::ix(x + length, y) - baseX;
+    draw.y4 = coord::jy(x + length, y) - (int) (coord::ISO_HEIGHT * z) - baseY;
+    draw.x5 = coord::ix(x, y + width) - baseX;
+    draw.y5 = coord::jy(x, y + width) - (int) (coord::ISO_HEIGHT * (z + height)) - baseY;
     draw.x6 = coord::ix(x + length, y + width) - baseX;
-    draw.y6 = coord::jy(x + length, y + width) + (int) (constants::HMULT * (z + height)) - baseY;
+    draw.y6 = coord::jy(x + length, y + width) - (int) (coord::ISO_HEIGHT * (z + height)) - baseY;
     draw.x7 = coord::ix(x + length, y + width) - baseX;
-    draw.y7 = coord::jy(x + length, y + width) + (int) (constants::HMULT * (z)) - baseY;
+    draw.y7 = coord::jy(x + length, y + width) - (int) (coord::ISO_HEIGHT * (z)) - baseY;
 }
 
 double Cuboid::getX()

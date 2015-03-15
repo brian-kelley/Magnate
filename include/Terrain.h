@@ -22,6 +22,7 @@ enum GROUND : unsigned char
     PLAINS,
     FOREST,
     MOUNTAINS,
+    DESERT,
     NUM_TYPES
 };
 

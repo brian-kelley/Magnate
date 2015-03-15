@@ -9,43 +9,54 @@
 #ifndef MagIndev_Constants_h
 #define MagIndev_Constants_h
 
-#define WORLD_SIZE 2500
-
 #include <cstdint>
 #include <string>
 
 //Structs used all over the place
 
-typedef struct
+struct floatRect_t
 {
     float x;
     float y;
     float w;
     float h;
-} floatRect_t;
+};
 
-typedef struct
+struct intRect_t
 {
     int x;
     int y;
     int w;
     int h;
-} intRect_t;
+};
 
-typedef struct
+struct tileData_t
 {
     std::string name;
     float x;
     float y;
     float width;
     float height;
-} tileData_t;
+};
 
-typedef struct
+struct isoPoint_t
 {
     double i;
     double j;
-} isoPoint_t;
+    bool operator<(const isoPoint_t& param) const
+    {
+        if(i < param.i)
+            return false;
+        if(i > param.i)
+            return true;
+        if(j < param.j)
+            return false;
+        if(j > param.j)
+            return true;
+        return false;
+    }
+
+};
 
 struct Point
 {

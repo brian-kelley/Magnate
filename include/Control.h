@@ -15,7 +15,7 @@
 #elif __linux
 #include <SDL2/SDL.h>
 #elif _WIN32
-#include <SDL2\SDL.h>
+#include <SDL2/SDL.h>
 #endif
 #include <stdio.h>
 #include <cstdint>

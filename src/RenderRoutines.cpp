@@ -60,26 +60,28 @@ void RenderRoutines::drawString(string text, int x, int y, float scale, float r,
     }
 }
 
-void RenderRoutines::isoBlit(int tex, int i, int j, int h1, int h2, int h3, int h4)
+void RenderRoutines::isoBlit(int tex, double i, double j, int h1, int h2, int h3, int h4)
 {
     glEnable(GL_TEXTURE_2D);
-    glBegin(GL_QUADS);
+    float shading = 1.0 - 0.6 * (abs(h1 - h2) + abs(h2 - h3) + abs(h3 - h4) + abs(h4 - h1)) / coord::ISO_HEIGHT;
+    glColor3f(shading, shading, shading);
     floatRect_t srcRect;
     srcRect.x = mainAtlas->tileX(tex);
     srcRect.y = mainAtlas->tileY(tex);
     srcRect.w = mainAtlas->tileW(tex);
     srcRect.h = mainAtlas->tileH(tex);
+    glBegin(GL_QUADS);
     glTexCoord2f(srcRect.x, srcRect.y);
-    Point destPt = coord::project3DPoint(i, j, h1);
+    Point destPt = coord::project3DPoint(i, j, float(h1) / coord::ISO_HEIGHT);
     glVertex2i(destPt.x, destPt.y);
     glTexCoord2f(srcRect.x + srcRect.w, srcRect.y);
-    destPt = coord::project3DPoint(i + TERRAIN_TILE_SIZE, j, h2);
+    destPt = coord::project3DPoint(i, j + TERRAIN_TILE_SIZE, float(h2) / coord::ISO_HEIGHT);
     glVertex2i(destPt.x, destPt.y);
     glTexCoord2f(srcRect.x + srcRect.w, srcRect.y + srcRect.h);
-    destPt = coord::project3DPoint(i + TERRAIN_TILE_SIZE, j + TERRAIN_TILE_SIZE, h3);
+    destPt = coord::project3DPoint(i + TERRAIN_TILE_SIZE, j + TERRAIN_TILE_SIZE, float(h3) / coord::ISO_HEIGHT);
     glVertex2i(destPt.x, destPt.y);
     glTexCoord2f(srcRect.x, srcRect.y + srcRect.h);
-    destPt = coord::project3DPoint(i, j + TERRAIN_TILE_SIZE, h4);
+    destPt = coord::project3DPoint(i + TERRAIN_TILE_SIZE, j, float(h4) / coord::ISO_HEIGHT);
     glVertex2i(destPt.x, destPt.y);
     glEnd();
 }

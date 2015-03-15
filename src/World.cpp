@@ -38,6 +38,8 @@ World::World(std::string saveName, bool willGenerate)
         readWorld();
     }
     cout << "Successfully ran World constructor." << endl;
+    Terrain::init(seed);
+    
 }
 
 World::~World()

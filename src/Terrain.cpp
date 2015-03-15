@@ -27,12 +27,13 @@ void Terrain::init(long int seed)
     terrainTextures[PLAINS] = texNumFromStr("grass");
     terrainTextures[FOREST] = texNumFromStr("forest");
     terrainTextures[MOUNTAINS] = texNumFromStr("mountains");
+    terrainTextures[DESERT] = texNumFromStr("sand");
 }
 
 tNode_t Terrain::generateNode(double i, double j)
 {
     tNode_t node;
     node.g = (GROUND) (rand() % GROUND::NUM_TYPES);
-    node.height = rand() % 0xFF;
+    node.height = (rand() % 5) & 0xFF;
     return node;
 }
