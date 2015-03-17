@@ -22,7 +22,6 @@ map<GROUND, int> Terrain::terrainTextures;
 void Terrain::init(long int seed)
 {
     wseed = seed;
-    //Manually map ground types to their textures
     terrainTextures[WATER] = texNumFromStr("water");
     terrainTextures[PLAINS] = texNumFromStr("grass");
     terrainTextures[FOREST] = texNumFromStr("forest");
@@ -33,7 +32,7 @@ void Terrain::init(long int seed)
 tNode_t Terrain::generateNode(double i, double j)
 {
     tNode_t node;
-    node.g = (GROUND) (rand() % GROUND::NUM_TYPES);
-    node.height = (rand() % 5) & 0xFF;
+    node.g = (GROUND) ((abs(int(i / 2))) % GROUND::NUM_TYPES);
+    node.height = 0;
     return node;
 }

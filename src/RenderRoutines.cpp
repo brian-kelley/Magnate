@@ -63,7 +63,7 @@ void RenderRoutines::drawString(string text, int x, int y, float scale, float r,
 void RenderRoutines::isoBlit(int tex, double i, double j, int h1, int h2, int h3, int h4)
 {
     glEnable(GL_TEXTURE_2D);
-    float shading = 1.0 - 0.6 * (abs(h1 - h2) + abs(h2 - h3) + abs(h3 - h4) + abs(h4 - h1)) / coord::ISO_HEIGHT;
+    float shading = 1.0 - 0.5 * (abs(h1 - h2) + abs(h2 - h3) + abs(h3 - h4) + abs(h4 - h1)) / coord::ISO_HEIGHT;
     glColor3f(shading, shading, shading);
     floatRect_t srcRect;
     srcRect.x = mainAtlas->tileX(tex);

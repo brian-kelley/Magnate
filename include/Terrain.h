@@ -32,12 +32,6 @@ typedef struct
     unsigned char height;
 } tNode_t;
 
-/*  -I think only 3 links are needed between nodes
-    -origin stores ptr to the node at the top-left corner
-    -rendering just involves moving west, then drawing between every node encountered straight north or south
-    -When view moves, try to place newly visible nodes in the mem locations of ones that just moved offscreen (for speed i guess)
-*/
-
 namespace Terrain
 {
     extern long int wseed;

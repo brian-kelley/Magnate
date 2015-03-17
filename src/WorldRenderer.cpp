@@ -36,9 +36,19 @@ void WorldRenderer::render()
 
 void WorldRenderer::trimChunkCache()
 {
-    while(chunkCache.size() > MAX_CHUNK_CACHE)
+    if(chunkCache.size() > MAX_CHUNK_CACHE)
     {
-        chunkCache.erase(chunkCache.begin());
+        int curI = pixelToChunk(screenX, screenY).first;
+        int curJ = pixelToChunk(screenX, screenY).second;
+        for(auto i : chunkCache)
+        {
+            int distance = abs(curI - i.first.first) + abs(curJ - i.first.second);
+            if(distance + 1 > sqrt(MAX_CHUNK_CACHE))
+            {
+                delete i.second;
+                chunkCache.erase(i.first);
+            }
+        }
     }
 }
 
@@ -49,13 +59,13 @@ void WorldRenderer::drawTerrain()
     //test which chunks screen edge midpoints are in
     renderQueue.insert(pixelToChunk(screenX + WINDOW_W / 2, screenY));
     renderQueue.insert(pixelToChunk(screenX + WINDOW_W, screenY + WINDOW_H / 2));
-    renderQueue.insert(pixelToChunk(screenX + WINDOW_W / 2, screenY + WINDOW_H));
+    renderQueue.insert(pixelToChunk(screenX + WINDOW_W / 2, screenY + WINDOW_H + 256.0));
     renderQueue.insert(pixelToChunk(screenX, screenY + WINDOW_H / 2));
     //test corners
     renderQueue.insert(pixelToChunk(screenX, screenY));
     renderQueue.insert(pixelToChunk(screenX + WINDOW_W, screenY));
-    renderQueue.insert(pixelToChunk(screenX + WINDOW_W, screenY + WINDOW_H));
-    renderQueue.insert(pixelToChunk(screenX, screenY + WINDOW_H));
+    renderQueue.insert(pixelToChunk(screenX + WINDOW_W, screenY + WINDOW_H + 256.0));
+    renderQueue.insert(pixelToChunk(screenX, screenY + WINDOW_H + 256.0));
     //need to populatethis value after checking if there's a 4-way chunk intersection onscreen
     pair<int, int> local = pixelToChunk(screenX, screenY);
     int minI = local.first + 3;
@@ -165,10 +175,12 @@ void WorldRenderer::drawChunk(Chunk* c)
 {
     for(int i = 0; i < Chunk::CHUNK_SIZE - 1; i++)
     {
+        
         for(int j = 0; j < Chunk::CHUNK_SIZE - 1; j++)
         {
-            Point p = project3DPoint(c->getIOffset() + TERRAIN_TILE_SIZE * i, c->getJOffset() + TERRAIN_TILE_SIZE * j, 0);
-            if(p.x > -50 && p.x < WINDOW_W + 50 && p.y > -30 && p.y < WINDOW_H + 30)
+            const int THRESHOLD = ISO_WIDTH / 2;
+            Point p = project3DPoint(c->getIOffset() + TERRAIN_TILE_SIZE * i, c->getJOffset() + TERRAIN_TILE_SIZE * j, c->mesh[i][j].height / ISO_HEIGHT);
+            if(p.x > -THRESHOLD && p.x < WINDOW_W + THRESHOLD && p.y > -THRESHOLD && p.y < WINDOW_H + THRESHOLD)
             {
                 RenderRoutines::isoBlit(Terrain::terrainTextures[c->mesh[i][j].g],
                                         c->getIOffset() + TERRAIN_TILE_SIZE * i,

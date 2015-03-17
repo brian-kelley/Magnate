@@ -21,14 +21,11 @@ Atlas::Atlas(string atlasName, SDL_Renderer* renderer)
     GLuint texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
-    if(fmt->format == SDL_PIXELFORMAT_RGBA8888)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, loadedSurface->w, loadedSurface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, loadedSurface->pixels);
-    }
-    else if(fmt->format == SDL_PIXELFORMAT_ARGB8888)
-    {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, loadedSurface->w, loadedSurface->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, loadedSurface->pixels);
-    }
+    #ifdef _WIN32
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, loadedSurface->w, loadedSurface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, loadedSurface->pixels);
+    #elif __APPLE__
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, loadedSurface->w, loadedSurface->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, loadedSurface->pixels);
+    #endif
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     parseTiles(tilePath);

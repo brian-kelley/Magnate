@@ -144,7 +144,7 @@ void Control::update()
     {
         int dScreenX = 0;
         int dScreenY = 0;
-        const int PAN_SPEED = 20;
+        const int PAN_SPEED = 15;
         if(mouseX == 0)
             dScreenX -= PAN_SPEED;
         if(mouseX == WINDOW_W - 1)
