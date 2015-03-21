@@ -166,3 +166,13 @@ int RenderRoutines::texNumFromStr(std::string name)
 {
     return mainAtlas->tileFromName(name);
 }
+
+floatRect_t RenderRoutines::getTexCoords(int index)
+{
+    floatRect_t ret;
+    ret.x = mainAtlas->tileX(index);
+    ret.y = mainAtlas->tileY(index);
+    ret.w = mainAtlas->tileW(index);
+    ret.h = mainAtlas->tileH(index);
+    return ret;
+}

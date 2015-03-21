@@ -47,14 +47,3 @@ Point coord::project3DPoint(double i, double j, double h)
     //printf("(%.2f, %.2f, %.2f) mapped to (%d, %d)\n\n", i, j, h, ret.x, ret.y);
     return ret;
 }
-/*
- length / 2 * (i + j) = x
- width / 2 * (i - j) = y
- i + j = 2x / length
- i - j = 2y / width
- 2i = 2x / length + 2y / width
- i = x / length + y / width
- j = 2x / length - i
- j = 2x / length - x / length - y / width
- j = x / length - y / width
-*/

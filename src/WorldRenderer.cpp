@@ -13,9 +13,28 @@ using namespace constants;
 using namespace coord;
 
 map<pair<int, int>, Chunk*> WorldRenderer::chunkCache;
+//4 vertices, each with 2 floats
+float terrainUV[GROUND::NUM_TYPES * 4 * 2];
 
 void WorldRenderer::preload()
 {
+    //Init fast array of float rect stuff
+    //Ideally this will iterate through every ground type (hopefully)
+    int i = 0;
+    for(GROUND g = (GROUND) 0; g < NUM_TYPES; g = (GROUND) ((int) g + 1))
+    {
+        int terrainTexID = Terrain::terrainTextures[g];
+        floatRect_t uvrect = RenderRoutines::getTexCoords(terrainTexID);
+        terrainUV[8 * i + 0] = uvrect.x;
+        terrainUV[8 * i + 1] = uvrect.y;
+        terrainUV[8 * i + 2] = uvrect.x + uvrect.w;
+        terrainUV[8 * i + 3] = uvrect.y;
+        terrainUV[8 * i + 4] = uvrect.x + uvrect.w;
+        terrainUV[8 * i + 5] = uvrect.y + uvrect.h;
+        terrainUV[8 * i + 6] = uvrect.x;
+        terrainUV[8 * i + 7] = uvrect.y + uvrect.h;
+        i++;
+    }
     int sideLen = sqrt(MAX_CHUNK_CACHE);
     pair<int, int> screenPos = pixelToChunk(screenX, screenY);
     screenPos.first -= sideLen / 2;
@@ -173,23 +192,60 @@ void WorldRenderer::drawTerrain()
 //Draws every tile that can be drawn with only the nodes in this chunk (lacks 2 edges)
 void WorldRenderer::drawChunk(Chunk* c)
 {
+    /*
+    GROUND test = WATER;
+    glBegin(GL_QUADS);
+    glTexCoord2f(terrainUV[test * 8], terrainUV[test * 8 + 1]);
+    glVertex2i(10, 10);
+    glTexCoord2f(terrainUV[test * 8 + 2], terrainUV[test * 8 + 3]);
+    glVertex2i(30, 10);
+    glTexCoord2f(terrainUV[test * 8 + 4], terrainUV[test * 8 + 5]);
+    glVertex2i(30, 30);
+    glTexCoord2f(terrainUV[test * 8 + 6], terrainUV[test * 8 + 7]);
+    glVertex2i(10, 30);
+    glEnd();
+    */
+    int rowStart, rowEnd;
+    const double tw = ISO_LENGTH / 2 * TERRAIN_TILE_SIZE;
+    const double th = ISO_WIDTH / 2 * TERRAIN_TILE_SIZE;
     for(int i = 0; i < Chunk::CHUNK_SIZE - 1; i++)
     {
-        
-        for(int j = 0; j < Chunk::CHUNK_SIZE - 1; j++)
+        int tempx = coord::project3DPoint(c->getIOffset() + i * TERRAIN_TILE_SIZE, c->getJOffset(), 0).x;
+        rowStart = -float(tempx) / tw - 1;
+        if(rowStart < 0)
+            rowStart = 0;
+        if(rowStart > Chunk::CHUNK_SIZE - 1)
+            continue;
+        tempx = coord::project3DPoint(c->getIOffset() + i * TERRAIN_TILE_SIZE, c->getJOffset() + (Chunk::CHUNK_SIZE - 1) * TERRAIN_TILE_SIZE, 0).x;
+        rowEnd = Chunk::CHUNK_SIZE - float(tempx - WINDOW_W) / tw;
+        if(rowEnd >= Chunk::CHUNK_SIZE)
+            rowEnd = Chunk::CHUNK_SIZE - 1;
+        if(rowEnd < 0)
+            continue;
+        Point vertex = coord::project3DPoint(c->getIOffset() + i * TERRAIN_TILE_SIZE, c->getJOffset() + rowStart * TERRAIN_TILE_SIZE, c->mesh[i][rowStart].height / ISO_HEIGHT);
+        GROUND nodeG;
+        glColor3f(1, 1, 1);
+        for(int j = rowStart; j <= rowEnd; j++)
         {
-            const int THRESHOLD = ISO_WIDTH / 2;
-            Point p = project3DPoint(c->getIOffset() + TERRAIN_TILE_SIZE * i, c->getJOffset() + TERRAIN_TILE_SIZE * j, c->mesh[i][j].height / ISO_HEIGHT);
-            if(p.x > -THRESHOLD && p.x < WINDOW_W + THRESHOLD && p.y > -THRESHOLD && p.y < WINDOW_H + THRESHOLD)
-            {
-                RenderRoutines::isoBlit(Terrain::terrainTextures[c->mesh[i][j].g],
-                                        c->getIOffset() + TERRAIN_TILE_SIZE * i,
-                                        c->getJOffset() + TERRAIN_TILE_SIZE * j,
-                                        c->mesh[i][j].height,
-                                        c->mesh[i][j + 1].height,
-                                        c->mesh[i + 1][j + 1].height,
-                                        c->mesh[i + 1][j].height);
-            }
+            nodeG = c->mesh[i][j].g;
+            glBegin(GL_QUADS);
+            glTexCoord2f(terrainUV[nodeG * 8], terrainUV[nodeG * 8 + 1]);
+            glVertex2s(vertex.x, vertex.y);
+            vertex.x += tw;
+            vertex.y += c->mesh[i][j].height - c->mesh[i][j + 1].height - th;
+            Point next = vertex;
+            glTexCoord2f(terrainUV[nodeG * 8 + 2], terrainUV[nodeG * 8 + 3]);
+            glVertex2s(vertex.x, vertex.y);
+            vertex.x += tw;
+            vertex.y += c->mesh[i][j + 1].height - c->mesh[i + 1][j + 1].height + th;
+            glTexCoord2f(terrainUV[nodeG * 8 + 4], terrainUV[nodeG * 8 + 5]);
+            glVertex2s(vertex.x, vertex.y);
+            vertex.x -= tw;
+            vertex.y += c->mesh[i + 1][j + 1].height - c->mesh[i + 1][j].height + th;
+            glTexCoord2f(terrainUV[nodeG * 8 + 6], terrainUV[nodeG * 8 + 7]);
+            glVertex2s(vertex.x, vertex.y);
+            vertex = next;
+            glEnd();
         }
     }
 }
