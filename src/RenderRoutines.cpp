@@ -60,10 +60,10 @@ void RenderRoutines::drawString(string text, int x, int y, float scale, float r,
     }
 }
 
-void RenderRoutines::isoBlit(int tex, double i, double j, int h1, int h2, int h3, int h4)
+void RenderRoutines::isoBlit(int tex, double i, double j, unsigned char h1, unsigned char h2, unsigned char h3, unsigned char h4)
 {
     glEnable(GL_TEXTURE_2D);
-    float shading = 1.0 - 0.5 * (abs(h1 - h2) + abs(h2 - h3) + abs(h3 - h4) + abs(h4 - h1)) / coord::ISO_HEIGHT;
+    float shading = calcTileShade(h1, h2, h3, h4);
     glColor3f(shading, shading, shading);
     floatRect_t srcRect;
     srcRect.x = mainAtlas->tileX(tex);
@@ -175,4 +175,9 @@ floatRect_t RenderRoutines::getTexCoords(int index)
     ret.w = mainAtlas->tileW(index);
     ret.h = mainAtlas->tileH(index);
     return ret;
+}
+
+float RenderRoutines::calcTileShade(unsigned char h1, unsigned char h2, unsigned char h3, unsigned char h4)
+{
+    return 1.0 - 0.5 * (abs(h1 - h2) + abs(h2 - h3) + abs(h3 - h4) + abs(h4 - h1)) / coord::ISO_HEIGHT;
 }

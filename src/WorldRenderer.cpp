@@ -192,19 +192,7 @@ void WorldRenderer::drawTerrain()
 //Draws every tile that can be drawn with only the nodes in this chunk (lacks 2 edges)
 void WorldRenderer::drawChunk(Chunk* c)
 {
-    /*
-    GROUND test = WATER;
-    glBegin(GL_QUADS);
-    glTexCoord2f(terrainUV[test * 8], terrainUV[test * 8 + 1]);
-    glVertex2i(10, 10);
-    glTexCoord2f(terrainUV[test * 8 + 2], terrainUV[test * 8 + 3]);
-    glVertex2i(30, 10);
-    glTexCoord2f(terrainUV[test * 8 + 4], terrainUV[test * 8 + 5]);
-    glVertex2i(30, 30);
-    glTexCoord2f(terrainUV[test * 8 + 6], terrainUV[test * 8 + 7]);
-    glVertex2i(10, 30);
-    glEnd();
-    */
+    int numtiles = 0;
     int rowStart, rowEnd;
     const double tw = ISO_LENGTH / 2 * TERRAIN_TILE_SIZE;
     const double th = ISO_WIDTH / 2 * TERRAIN_TILE_SIZE;
@@ -222,32 +210,51 @@ void WorldRenderer::drawChunk(Chunk* c)
             rowEnd = Chunk::CHUNK_SIZE - 1;
         if(rowEnd < 0)
             continue;
-        Point vertex = coord::project3DPoint(c->getIOffset() + i * TERRAIN_TILE_SIZE, c->getJOffset() + rowStart * TERRAIN_TILE_SIZE, c->mesh[i][rowStart].height / ISO_HEIGHT);
+        Point up = coord::project3DPoint(c->getIOffset() + i * TERRAIN_TILE_SIZE, c->getJOffset() + rowStart * TERRAIN_TILE_SIZE, c->mesh[i][rowStart].height / ISO_HEIGHT);
+        if(up.y > WINDOW_H + th)
+        {
+            while(up.y > WINDOW_H + th)
+            {
+                rowStart++;
+                if(rowStart == rowEnd)
+                    continue;
+                up.x += tw;
+                up.y += c->mesh[i][rowStart].height - c->mesh[i][rowStart + 1].height - th;
+            }
+        }
+        Point right = up;
+        right.x += tw;
+        right.y += c->mesh[i][rowStart].height - c->mesh[i + 1][rowStart].height + th;
+        Point left, down;
         GROUND nodeG;
-        glColor3f(1, 1, 1);
         for(int j = rowStart; j <= rowEnd; j++)
         {
+            //up->left, right->down
+            left = up;
+            down = right;
+            up.x += tw;
+            up.y += c->mesh[i][j].height - c->mesh[i][j + 1].height - th;
+            right.x += tw;
+            right.y += c->mesh[i + 1][j].height - c->mesh[i + 1][j + 1].height - th;
+            if(down.y < -th)
+                break;
+            numtiles++;
+            float tileShade = RenderRoutines::calcTileShade(c->mesh[i][j].height, c->mesh[i][j + 1].height, c->mesh[i + 1][j + 1].height, c->mesh[i + 1][j].height);
+            glColor3f(tileShade, tileShade, tileShade);
             nodeG = c->mesh[i][j].g;
             glBegin(GL_QUADS);
             glTexCoord2f(terrainUV[nodeG * 8], terrainUV[nodeG * 8 + 1]);
-            glVertex2s(vertex.x, vertex.y);
-            vertex.x += tw;
-            vertex.y += c->mesh[i][j].height - c->mesh[i][j + 1].height - th;
-            Point next = vertex;
+            glVertex2s(left.x, left.y);
             glTexCoord2f(terrainUV[nodeG * 8 + 2], terrainUV[nodeG * 8 + 3]);
-            glVertex2s(vertex.x, vertex.y);
-            vertex.x += tw;
-            vertex.y += c->mesh[i][j + 1].height - c->mesh[i + 1][j + 1].height + th;
+            glVertex2s(up.x, up.y);
             glTexCoord2f(terrainUV[nodeG * 8 + 4], terrainUV[nodeG * 8 + 5]);
-            glVertex2s(vertex.x, vertex.y);
-            vertex.x -= tw;
-            vertex.y += c->mesh[i + 1][j + 1].height - c->mesh[i + 1][j].height + th;
+            glVertex2s(right.x, right.y);
             glTexCoord2f(terrainUV[nodeG * 8 + 6], terrainUV[nodeG * 8 + 7]);
-            glVertex2s(vertex.x, vertex.y);
-            vertex = next;
+            glVertex2s(down.x, down.y);
             glEnd();
         }
     }
+    cout << numtiles << endl;
 }
 
 pair<int, int> WorldRenderer::pixelToChunk(int scrX, int scrY)

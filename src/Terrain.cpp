@@ -33,6 +33,8 @@ tNode_t Terrain::generateNode(double i, double j)
 {
     tNode_t node;
     node.g = (GROUND) ((abs(int(i / 2))) % GROUND::NUM_TYPES);
+    node.height = 100 + rand() % 12;
+    node.g = WATER;
     node.height = 0;
     return node;
 }
