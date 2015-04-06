@@ -32,9 +32,7 @@ void Terrain::init(long int seed)
 tNode_t Terrain::generateNode(double i, double j)
 {
     tNode_t node;
-    node.g = (GROUND) ((abs(int(i / 2))) % GROUND::NUM_TYPES);
-    node.height = 100 + rand() % 12;
-    node.g = WATER;
-    node.height = 0;
+    node.g = (GROUND) ((abs(int(j * 4))) % GROUND::NUM_TYPES);
+    node.height = rand() % 20;
     return node;
 }

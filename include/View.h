@@ -37,6 +37,7 @@
 #include "Coord.h"
 #include "Constants.h"
 #include "Terrain.h"
+#include "Renderer.h"
 
 namespace view
 {

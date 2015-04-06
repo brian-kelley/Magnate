@@ -16,7 +16,6 @@ Atlas::Atlas(string atlasName, SDL_Renderer* renderer)
     path imagePath = initial_path() / constants::BIN_TO_ROOT / "assets" / (atlasName + "_atlas.png");
     path tilePath = initial_path() / constants::BIN_TO_ROOT / "data" / (atlasName + "_tiles.txt");
     SDL_Surface* loadedSurface = IMG_Load(imagePath.string().c_str());
-    SDL_PixelFormat* fmt = loadedSurface->format;
     this->size = loadedSurface->w;
     GLuint texture;
     glGenTextures(1, &texture);
@@ -26,8 +25,8 @@ Atlas::Atlas(string atlasName, SDL_Renderer* renderer)
     #elif __APPLE__
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, loadedSurface->w, loadedSurface->h, 0, GL_BGRA, GL_UNSIGNED_BYTE, loadedSurface->pixels);
     #endif
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     parseTiles(tilePath);
     for(int i = 0; i < (int) tiles.size(); i++)
     {

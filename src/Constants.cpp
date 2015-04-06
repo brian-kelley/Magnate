@@ -9,6 +9,7 @@
 #include "Constants.h"
 
 using namespace std;
+using namespace constants;
 
 int constants::mouseX = 0;
 int constants::mouseY = 0;
@@ -29,6 +30,10 @@ float constants::SHADE = 0.85;
 float constants::HMULT = -80.0;
 long int constants::screenX = 0;
 long int constants::screenY = 0;
+
+short* constants::vertbuf = new short[2 * VBO_SIZE];
+float* constants::colorbuf = new float[3 * VBO_SIZE];
+float* constants::texcoordbuf = new float[2 * VBO_SIZE];
 
 #ifdef __APPLE__
 string constants::BIN_TO_ROOT = "../..";

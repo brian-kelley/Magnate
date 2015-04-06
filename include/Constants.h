@@ -104,6 +104,13 @@ namespace constants
     extern long int screenX;
     extern long int screenY;
     const double TERRAIN_TILE_SIZE = 0.25;
+    const int VBO_SIZE = 10000;
+    extern short* vertbufIter;
+    extern short* vertbuf;
+    extern float* colorbufIter;
+    extern float* colorbuf;
+    extern float* texcoordbufIter;
+    extern float* texcoordbuf;
 }
 
 #endif

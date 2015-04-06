@@ -30,8 +30,10 @@
 #include "Constants.h"
 #include "SaveManager.h"
 #include "WorldRenderer.h"
+#include "Renderer.h"
 
 namespace Control
+
 {
     extern void init();
     extern void dispose();

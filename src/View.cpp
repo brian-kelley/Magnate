@@ -27,11 +27,13 @@ void view::init()
     initSDLVideo();
     configGL();
     RenderRoutines::initAtlas(renderer);
+    Renderer::initAll();
 }
 
 void view::dispose()
 {
     delete mainAtlas;
+    Renderer::dispose();
     SDL_DestroyRenderer(renderer);
     renderer = nullptr;
     SDL_DestroyWindow(window);
@@ -43,10 +45,12 @@ void view::dispose()
 void view::prepareFrame()
 {
     glClear(GL_COLOR_BUFFER_BIT);
+    Renderer::startFrame();
 }
 
 void view::finalizeFrame()
 {
+    Renderer::endFrame();
     SDL_GL_SwapWindow(window);
 }
 

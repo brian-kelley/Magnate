@@ -12,6 +12,7 @@
 using namespace std;
 using namespace constants;
 using namespace RenderRoutines;
+using namespace Renderer;
 
 void UIRenderer::drawComponent(Component& c)
 {
@@ -65,42 +66,32 @@ void UIRenderer::drawMultiSelect(MultiSelect& ms)
     {
         vector<string>& list = ms.getOptions();
         intRect_t& msrect = ms.getDrawRect();
-        glDisable(GL_TEXTURE_2D);
-        glColor3f(UI_BG_R, UI_BG_G, UI_BG_B);
-        glBegin(GL_QUADS);
-        glVertex2i(msrect.x, msrect.y);
-        glVertex2i(msrect.x + msrect.w, msrect.y);
-        glVertex2i(msrect.x + msrect.w, msrect.y + msrect.h);
-        glVertex2i(msrect.x, msrect.y + msrect.h);
-        glEnd();
+        disableTexture();
+        color3f(UI_BG_R, UI_BG_G, UI_BG_B);
+        vertex2i(msrect.x, msrect.y);
+        vertex2i(msrect.x + msrect.w, msrect.y);
+        vertex2i(msrect.x + msrect.w, msrect.y + msrect.h);
+        vertex2i(msrect.x, msrect.y + msrect.h);
         if(ms.getSelection() != -1)
         {
-            glColor3f(UI_FG_R, UI_FG_G, UI_FG_B);
+            color3f(UI_FG_R, UI_FG_G, UI_FG_B);
             int optY = msrect.y + ms.getSelection() * ms.getOptHeight();
-            glBegin(GL_QUADS);
-            glVertex2i(msrect.x, optY);
-            glVertex2i(msrect.x + msrect.w, optY);
-            glVertex2i(msrect.x + msrect.w, optY + PAD);
-            glVertex2i(msrect.x, optY + PAD);
-            glEnd();
-            glBegin(GL_QUADS);
-            glVertex2i(msrect.x, optY + PAD);
-            glVertex2i(msrect.x + PAD, optY + PAD);
-            glVertex2i(msrect.x + PAD, optY + ms.getOptHeight() - PAD);
-            glVertex2i(msrect.x, optY + ms.getOptHeight() - PAD);
-            glEnd();
-            glBegin(GL_QUADS);
-            glVertex2i(msrect.x + msrect.w - PAD, optY + PAD);
-            glVertex2i(msrect.x + msrect.w, optY + PAD);
-            glVertex2i(msrect.x + msrect.w, optY + ms.getOptHeight() - PAD);
-            glVertex2i(msrect.x + msrect.w - PAD, optY + ms.getOptHeight() - PAD);
-            glEnd();
-            glBegin(GL_QUADS);
-            glVertex2i(msrect.x, optY + ms.getOptHeight() - PAD);
-            glVertex2i(msrect.x + msrect.w, optY + ms.getOptHeight() - PAD);
-            glVertex2i(msrect.x + msrect.w, optY + ms.getOptHeight());
-            glVertex2i(msrect.x, optY + ms.getOptHeight());
-            glEnd();
+            vertex2i(msrect.x, optY);
+            vertex2i(msrect.x + msrect.w, optY);
+            vertex2i(msrect.x + msrect.w, optY + PAD);
+            vertex2i(msrect.x, optY + PAD);
+            vertex2i(msrect.x, optY + PAD);
+            vertex2i(msrect.x + PAD, optY + PAD);
+            vertex2i(msrect.x + PAD, optY + ms.getOptHeight() - PAD);
+            vertex2i(msrect.x, optY + ms.getOptHeight() - PAD);
+            vertex2i(msrect.x + msrect.w - PAD, optY + PAD);
+            vertex2i(msrect.x + msrect.w, optY + PAD);
+            vertex2i(msrect.x + msrect.w, optY + ms.getOptHeight() - PAD);
+            vertex2i(msrect.x + msrect.w - PAD, optY + ms.getOptHeight() - PAD);
+            vertex2i(msrect.x, optY + ms.getOptHeight() - PAD);
+            vertex2i(msrect.x + msrect.w, optY + ms.getOptHeight() - PAD);
+            vertex2i(msrect.x + msrect.w, optY + ms.getOptHeight());
+            vertex2i(msrect.x, optY + ms.getOptHeight());
         }
         for(int i = 0; i < int(list.size()); i++)
         {

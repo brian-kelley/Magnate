@@ -12,6 +12,7 @@
 using namespace std;
 using namespace constants;
 using namespace RenderRoutines;
+using namespace Renderer;
 
 Atlas* RenderRoutines::mainAtlas;
 
@@ -47,7 +48,7 @@ void RenderRoutines::drawString(string text, int x, int y, float scale)
 
 void RenderRoutines::drawString(string text, int x, int y, float scale, float r, float g, float b)
 {
-    glColor3f(r, g, b);
+    color3f(r, g, b);
     glEnable(GL_BLEND);
     for(int i = 0; i < text.size(); i++)
     {
@@ -93,20 +94,18 @@ void RenderRoutines::blit(int index, int x, int y)
 
 void RenderRoutines::blit(int index, int x1, int y1, int x2, int y2)
 {
-    glEnable(GL_TEXTURE_2D);
-    glBegin(GL_QUADS);
-    glTexCoord2f(mainAtlas->tileX(index), mainAtlas->tileY(index));
-    glVertex2i(x1, y1);
-    glTexCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),
+    enableTexture();
+    texCoord2f(mainAtlas->tileX(index), mainAtlas->tileY(index));
+    vertex2i(x1, y1);
+    texCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),
                  mainAtlas->tileY(index));
-    glVertex2i(x2, y1);
-    glTexCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),
+    vertex2i(x2, y1);
+    texCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),
                  mainAtlas->tileY(index) + mainAtlas->tileH(index));
-    glVertex2i(x2, y2);
-    glTexCoord2f(mainAtlas->tileX(index),
+    vertex2i(x2, y2);
+    texCoord2f(mainAtlas->tileX(index),
                  mainAtlas->tileY(index) + mainAtlas->tileH(index));
-    glVertex2i(x1, y2);
-    glEnd();
+    vertex2i(x1, y2);
 }
 
 void RenderRoutines::drawCuboid(Cuboid& c)

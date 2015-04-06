@@ -16,6 +16,8 @@ map<pair<int, int>, Chunk*> WorldRenderer::chunkCache;
 //4 vertices, each with 2 floats
 float terrainUV[GROUND::NUM_TYPES * 4 * 2];
 
+bool ptInScreen(Point p);
+
 void WorldRenderer::preload()
 {
     //Init fast array of float rect stuff
@@ -25,14 +27,15 @@ void WorldRenderer::preload()
     {
         int terrainTexID = Terrain::terrainTextures[g];
         floatRect_t uvrect = RenderRoutines::getTexCoords(terrainTexID);
-        terrainUV[8 * i + 0] = uvrect.x;
-        terrainUV[8 * i + 1] = uvrect.y;
-        terrainUV[8 * i + 2] = uvrect.x + uvrect.w;
-        terrainUV[8 * i + 3] = uvrect.y;
-        terrainUV[8 * i + 4] = uvrect.x + uvrect.w;
-        terrainUV[8 * i + 5] = uvrect.y + uvrect.h;
-        terrainUV[8 * i + 6] = uvrect.x;
-        terrainUV[8 * i + 7] = uvrect.y + uvrect.h;
+        float eps = 1e-4;
+        terrainUV[8 * i + 0] = uvrect.x + eps;
+        terrainUV[8 * i + 1] = uvrect.y + eps;
+        terrainUV[8 * i + 2] = uvrect.x + uvrect.w - eps;
+        terrainUV[8 * i + 3] = uvrect.y + eps;
+        terrainUV[8 * i + 4] = uvrect.x + uvrect.w - eps;
+        terrainUV[8 * i + 5] = uvrect.y + uvrect.h - eps;
+        terrainUV[8 * i + 6] = uvrect.x + eps;
+        terrainUV[8 * i + 7] = uvrect.y + uvrect.h - eps;
         i++;
     }
     int sideLen = sqrt(MAX_CHUNK_CACHE);
@@ -85,7 +88,7 @@ void WorldRenderer::drawTerrain()
     renderQueue.insert(pixelToChunk(screenX + WINDOW_W, screenY));
     renderQueue.insert(pixelToChunk(screenX + WINDOW_W, screenY + WINDOW_H + 256.0));
     renderQueue.insert(pixelToChunk(screenX, screenY + WINDOW_H + 256.0));
-    //need to populatethis value after checking if there's a 4-way chunk intersection onscreen
+    //need to populate this value after checking if there's a 4-way chunk intersection onscreen
     pair<int, int> local = pixelToChunk(screenX, screenY);
     int minI = local.first + 3;
     int maxI = local.first - 3;
@@ -127,33 +130,17 @@ void WorldRenderer::drawTerrain()
         Chunk* north = chunkCache[pair<int, int>(minI, maxJ)];
         Chunk* south = chunkCache[pair<int, int>(maxI, minJ)];
         drawChunk(north);
-        //west-north border, ground comes from edge of west
-        for(int i = 0; i < Chunk::CHUNK_SIZE - 1; i++)
-        {
-            RenderRoutines::isoBlit(Terrain::terrainTextures[west->mesh[i][Chunk::CHUNK_SIZE - 1].g], west->getIOffset() + TERRAIN_TILE_SIZE * i, north->getJOffset() - TERRAIN_TILE_SIZE, west->mesh[i][Chunk::CHUNK_SIZE - 1].height, north->mesh[i][0].height, north->mesh[i + 1][0].height, west->mesh[i + 1][Chunk::CHUNK_SIZE - 1].height);
-        }
-        //north-east border, ground comes from north
-        for(int j = 0; j < Chunk::CHUNK_SIZE - 1; j++)
-        {
-            RenderRoutines::isoBlit(Terrain::terrainTextures[north->mesh[Chunk::CHUNK_SIZE - 1][j].g], east->getIOffset() - TERRAIN_TILE_SIZE, east->getJOffset() + j * TERRAIN_TILE_SIZE, north->mesh[Chunk::CHUNK_SIZE - 1][j].height, north->mesh[Chunk::CHUNK_SIZE - 1][j + 1].height, east->mesh[0][j + 1].height, east->mesh[0][j].height);
-        }
-        //center tile in 4-way intersection that isn't covered by the edge loops
-        RenderRoutines::isoBlit(Terrain::terrainTextures[west->mesh[Chunk::CHUNK_SIZE - 1][Chunk::CHUNK_SIZE - 1].g], east->getIOffset() - TERRAIN_TILE_SIZE, east->getJOffset() - TERRAIN_TILE_SIZE, west->mesh[Chunk::CHUNK_SIZE - 1][Chunk::CHUNK_SIZE - 1].height, north->mesh[Chunk::CHUNK_SIZE - 1][0].height, east->mesh[0][0].height, south->mesh[0][Chunk::CHUNK_SIZE - 1].height);
+        drawChunkBorder(north, west);
+        drawChunkBorder(north, east);
+        //center tile in 4-way intersection that isn't covered by the edges
+        drawChunkIntersection(north, west, east, south);
         drawChunk(west);
         drawChunk(east);
-        //west-south border, ground from west
-        for(int i = 0; i < Chunk::CHUNK_SIZE - 1; i++)
-        {
-            RenderRoutines::isoBlit(Terrain::terrainTextures[west->mesh[Chunk::CHUNK_SIZE - 1][i].g], south->getIOffset() - TERRAIN_TILE_SIZE, south->getJOffset() + TERRAIN_TILE_SIZE * i, west->mesh[Chunk::CHUNK_SIZE - 1][i].height, west->mesh[Chunk::CHUNK_SIZE - 1][i + 1].height, south->mesh[0][i + 1].height, south->mesh[0][i].height);
-        }
-        //south-east border, ground from south
-        for(int i = 0; i < Chunk::CHUNK_SIZE - 1; i++)
-        {
-            RenderRoutines::isoBlit(Terrain::terrainTextures[south->mesh[i][Chunk::CHUNK_SIZE - 1].g], east->getIOffset() + TERRAIN_TILE_SIZE * i, east->getJOffset() - TERRAIN_TILE_SIZE, south->mesh[i][Chunk::CHUNK_SIZE - 1].height, east->mesh[i][0].height, east->mesh[i + 1][0].height, south->mesh[i + 1][Chunk::CHUNK_SIZE - 1].height);
-        }
+        drawChunkBorder(west, south);
+        drawChunkBorder(south, east);
         drawChunk(south);
     }
-    else if(minI != maxI)   //two adjacent chunks that only differ in I, J same for both
+    else if(minI != maxI)   //two adjacent chunks that only differ in I
     {
         pair<int, int> point;
         point.first = minI;
@@ -164,10 +151,7 @@ void WorldRenderer::drawTerrain()
         assertInCache(point);
         Chunk* bottomRight = chunkCache[point];
         drawChunk(topLeft);
-        for(int i = 0; i < Chunk::CHUNK_SIZE - 1; i++)
-        {
-            RenderRoutines::isoBlit(Terrain::terrainTextures[topLeft->mesh[Chunk::CHUNK_SIZE - 1][i].g], bottomRight->getIOffset() - TERRAIN_TILE_SIZE, bottomRight->getJOffset() + i * TERRAIN_TILE_SIZE, topLeft->mesh[Chunk::CHUNK_SIZE - 1][i].height, topLeft->mesh[Chunk::CHUNK_SIZE - 1][i + 1].height, bottomRight->mesh[0][i + 1].height, bottomRight->mesh[0][i].height);
-        }
+        drawChunkBorder(topLeft, bottomRight);
         drawChunk(bottomRight);
     }
     else if(minJ != maxJ)   //2 that only differ in J, I same for both
@@ -181,10 +165,7 @@ void WorldRenderer::drawTerrain()
         assertInCache(point);
         Chunk* topRight = chunkCache[point];
         drawChunk(topRight);
-        for(int i = 0; i < Chunk::CHUNK_SIZE - 1; i++)
-        {
-            RenderRoutines::isoBlit(Terrain::terrainTextures[bottomLeft->mesh[i][Chunk::CHUNK_SIZE - 1].g], bottomLeft->getIOffset() + i * TERRAIN_TILE_SIZE, topRight->getJOffset() - TERRAIN_TILE_SIZE, bottomLeft->mesh[i][Chunk::CHUNK_SIZE - 1].height, topRight->mesh[i][0].height, topRight->mesh[i + 1][0].height, bottomLeft->mesh[i + 1][Chunk::CHUNK_SIZE - 1].height);
-        }
+        drawChunkBorder(bottomLeft, topRight);
         drawChunk(bottomLeft);
     }
 }
@@ -192,85 +173,77 @@ void WorldRenderer::drawTerrain()
 //Draws every tile that can be drawn with only the nodes in this chunk (lacks 2 edges)
 void WorldRenderer::drawChunk(Chunk* c)
 {
-    int numtiles = 0;
-    int rowStart, rowEnd;
-    const double tw = ISO_LENGTH / 2 * TERRAIN_TILE_SIZE;
-    const double th = ISO_WIDTH / 2 * TERRAIN_TILE_SIZE;
+    int baseX, baseY;
+    Point left, right, top, bottom;
+    const int TL = TERRAIN_TILE_SIZE * ISO_LENGTH / 2;
+    const int TW = TERRAIN_TILE_SIZE * ISO_WIDTH / 2;
     for(int i = 0; i < Chunk::CHUNK_SIZE - 1; i++)
     {
-        int tempx = coord::project3DPoint(c->getIOffset() + i * TERRAIN_TILE_SIZE, c->getJOffset(), 0).x;
-        rowStart = -float(tempx) / tw - 1;
-        if(rowStart < 0)
-            rowStart = 0;
-        if(rowStart > Chunk::CHUNK_SIZE - 1)
-            continue;
-        tempx = coord::project3DPoint(c->getIOffset() + i * TERRAIN_TILE_SIZE, c->getJOffset() + (Chunk::CHUNK_SIZE - 1) * TERRAIN_TILE_SIZE, 0).x;
-        rowEnd = Chunk::CHUNK_SIZE - float(tempx - WINDOW_W) / tw;
-        if(rowEnd >= Chunk::CHUNK_SIZE)
-            rowEnd = Chunk::CHUNK_SIZE - 1;
-        if(rowEnd < 0)
-            continue;
-        Point up = coord::project3DPoint(c->getIOffset() + i * TERRAIN_TILE_SIZE, c->getJOffset() + rowStart * TERRAIN_TILE_SIZE, c->mesh[i][rowStart].height / ISO_HEIGHT);
-        if(up.y > WINDOW_H + th)
+        Point rowbase = coord::project3DPoint(c->getIOffset() + i * TERRAIN_TILE_SIZE, c->getJOffset(), 0);
+        baseX = rowbase.x;
+        baseY = rowbase.y;
+        //this true when drawing the tiles, not just iterating over them
+        bool rowStarted = false;
+        for(int j = 0; j < Chunk::CHUNK_SIZE - 1; j++)
         {
-            while(up.y > WINDOW_H + th)
+            GROUND ng = c->mesh[i][j].g;
+            left.x = baseX;
+            left.y = baseY - c->mesh[i][j].height;
+            top.x = baseX + TL;
+            top.y = baseY - c->mesh[i][j + 1].height - TW;
+            bottom.x = top.x;
+            bottom.y = baseY - c->mesh[i + 1][j].height + TW;
+            right.x = bottom.x + TL;
+            right.y = baseY - c->mesh[i + 1][j + 1].height;
+            baseX += TL;
+            baseY -= TW;
+            if(!rowStarted && right.x > 0 && (left.y < WINDOW_H + TW || right.y < WINDOW_H + TW || top.y < WINDOW_H + TW || bottom.y < WINDOW_H + TW))
             {
-                rowStart++;
-                if(rowStart == rowEnd)
-                    continue;
-                up.x += tw;
-                up.y += c->mesh[i][rowStart].height - c->mesh[i][rowStart + 1].height - th;
+                rowStarted = true;
+            }
+            if(rowStarted)
+            {
+                //Now test whether
+                if(left.x > WINDOW_W || (left.y < 0 && right.y < 0 && top.y < 0 && bottom.y < 0))
+                {
+                    break;
+                }
+                //Draw
+                float tshade = RenderRoutines::calcTileShade(c->mesh[i][j].height, c->mesh[i + 1][j].height, c->mesh[i][j + 1].height, c->mesh[i + 1][j + 1].height);
+                glColor3f(tshade, tshade, tshade);
+                glBegin(GL_QUADS);
+                glTexCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
+                glVertex2s(left.x, left.y);
+                glTexCoord2f(terrainUV[ng * 8 + 2], terrainUV[ng * 8 + 3]);
+                glVertex2s(top.x, top.y);
+                glTexCoord2f(terrainUV[ng * 8 + 4], terrainUV[ng * 8 + 5]);
+                glVertex2s(right.x, right.y);
+                glTexCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
+                glVertex2s(bottom.x, bottom.y);
+                glEnd();
             }
         }
-        Point right = up;
-        right.x += tw;
-        right.y += c->mesh[i][rowStart].height - c->mesh[i + 1][rowStart].height + th;
-        Point left, down;
-        GROUND nodeG;
-        for(int j = rowStart; j <= rowEnd; j++)
-        {
-            //up->left, right->down
-            left = up;
-            down = right;
-            up.x += tw;
-            up.y += c->mesh[i][j].height - c->mesh[i][j + 1].height - th;
-            right.x += tw;
-            right.y += c->mesh[i + 1][j].height - c->mesh[i + 1][j + 1].height - th;
-            if(down.y < -th)
-                break;
-            numtiles++;
-            float tileShade = RenderRoutines::calcTileShade(c->mesh[i][j].height, c->mesh[i][j + 1].height, c->mesh[i + 1][j + 1].height, c->mesh[i + 1][j].height);
-            glColor3f(tileShade, tileShade, tileShade);
-            nodeG = c->mesh[i][j].g;
-            glBegin(GL_QUADS);
-            glTexCoord2f(terrainUV[nodeG * 8], terrainUV[nodeG * 8 + 1]);
-            glVertex2s(left.x, left.y);
-            glTexCoord2f(terrainUV[nodeG * 8 + 2], terrainUV[nodeG * 8 + 3]);
-            glVertex2s(up.x, up.y);
-            glTexCoord2f(terrainUV[nodeG * 8 + 4], terrainUV[nodeG * 8 + 5]);
-            glVertex2s(right.x, right.y);
-            glTexCoord2f(terrainUV[nodeG * 8 + 6], terrainUV[nodeG * 8 + 7]);
-            glVertex2s(down.x, down.y);
-            glEnd();
-        }
     }
-    cout << numtiles << endl;
 }
 
 void WorldRenderer::drawChunkBorder(Chunk *c1, Chunk *c2)
 {
-    double tw = TERRAIN_TILE_SIZE * ISO_LENGTH / 2;
-    double th = TERRAIN_TILE_SIZE * ISO_WIDTH / 2;
+    const int TL = TERRAIN_TILE_SIZE * ISO_LENGTH / 2;
+    const int TW = TERRAIN_TILE_SIZE * ISO_WIDTH / 2;
+    bool rowStarted = false;
+    int baseX, baseY;
+    Point left, right, top, bottom;
     /*
      Want this arrangement in space: (1st condition)
       2
      1
-     or this: (2nd, else if...)
+     or this: (2nd, else if {})
      1
       2
      */
     if(c1->getJ() != c2->getJ())
     {
+        assert(c1->getI() == c2->getI());
         //Order c1, c2 so that c1 is southwest of c2
         if(c1->getJ() > c2->getJ())
         {
@@ -278,91 +251,130 @@ void WorldRenderer::drawChunkBorder(Chunk *c1, Chunk *c2)
             c1 = c2;
             c2 = temp;
         }
-        Point left = coord::project3DPoint(c1->getIOffset(), c1->getJOffset() + TERRAIN_TILE_SIZE * (Chunk::CHUNK_SIZE - 1), c1->mesh[0][Chunk::CHUNK_SIZE - 1].height / ISO_HEIGHT);
-        //Set i to the optimal starting point before entering loop, not in
-        int i = 0;
-        while(left.x < -tw || left.y < -th)
+        Point base = coord::project3DPoint(c2->getIOffset(), c2->getJOffset() - TERRAIN_TILE_SIZE, 0);
+        baseX = base.x;
+        baseY = base.y;
+        for(int i = 0; i < Chunk::CHUNK_SIZE; i++)
         {
-            left.x += tw;
-            left.y += c1->mesh[i][Chunk::CHUNK_SIZE - 1].height + c1->mesh[i + 1][Chunk::CHUNK_SIZE - 1].height + th;
-            i++;
-            if(i == Chunk::CHUNK_SIZE - 1)
-                return;
-        }
-        Point top, bottom, right;
-        for(; i < Chunk::CHUNK_SIZE - 1; i++)
-        {
-            //and then stop drawing when things go off the other end of screen
-            if(left.x > WINDOW_W + tw || left.y > WINDOW_H + th)
-                break;
-            //left is set properly, other 3 aren't, so do that based on left
-            top.x = left.x + tw;
-            top.y = left.y - c1->mesh[i][Chunk::CHUNK_SIZE - 1].height + c2->mesh[i][0].height - th;
-            bottom.x = left.x + tw;
-            bottom.y = left.y + c1->mesh[i][Chunk::CHUNK_SIZE - 1].height + c1->mesh[i + 1][Chunk::CHUNK_SIZE - 1].height + th;
-            right.x = bottom.x + tw;
-            right.y = bottom.y + c1->mesh[i + 1][Chunk::CHUNK_SIZE - 1].height - c2->mesh[i + 1][0].height - th;
-            //Use RR's tile shade func
-            float tshade = RenderRoutines::calcTileShade(c1->mesh[i][Chunk::CHUNK_SIZE - 1].height, c2->mesh[i][0].height, c2->mesh[i + 1][0].height, c1->mesh[i + 1][Chunk::CHUNK_SIZE - 1].height);
-            glColor3f(tshade, tshade, tshade);
-            GROUND ng = c1->mesh[i][Chunk::CHUNK_SIZE - 1].g;
-            glBegin(GL_QUADS);
-            glTexCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
-            glVertex2s(left.x, left.y);
-            glTexCoord2f(terrainUV[ng * 8 + 2], terrainUV[ng * 8 + 3]);
-            glVertex2s(top.x, top.y);
-            glTexCoord2f(terrainUV[ng * 8 + 4], terrainUV[ng * 8 + 5]);
-            glVertex2s(right.x, right.y);
-            glTexCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
-            glVertex2s(bottom.x, bottom.y);
-            glEnd();
+            left.x = baseX;
+            left.y = baseY - c1->mesh[i][Chunk::CHUNK_SIZE - 1].height;
+            top.x = baseX + TL;
+            top.y = baseY - c2->mesh[i][0].height - TW;
+            bottom.x = top.x;
+            bottom.y = baseY - c1->mesh[i + 1][Chunk::CHUNK_SIZE - 1].height + TW;
+            right.x = top.x + TL;
+            right.y = baseY - c2->mesh[i + 1][0].height;
+            if(!rowStarted && right.x > 0 && (left.y > 0 || right.y > 0 || top.y > 0 || bottom.y > 0))
+            {
+                rowStarted = true;
+            }
+            if(rowStarted)
+            {
+                //break if row has gone offscreen
+                if(left.x > WINDOW_W || (left.y > WINDOW_H && right.y > WINDOW_H && bottom.y > WINDOW_H && top.y > WINDOW_H))
+                {
+                    return;
+                }
+                float tshade = RenderRoutines::calcTileShade(c1->mesh[i][Chunk::CHUNK_SIZE - 1].height, c2->mesh[i][0].height, c2->mesh[i + 1][0].height, c1->mesh[i + 1][Chunk::CHUNK_SIZE - 1].height);
+                GROUND ng = c1->mesh[i][Chunk::CHUNK_SIZE - 1].g;
+                glColor3f(tshade, tshade, tshade);
+                glBegin(GL_QUADS);
+                glTexCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
+                glVertex2s(left.x, left.y);
+                glTexCoord2f(terrainUV[ng * 8 + 2], terrainUV[ng * 8 + 3]);
+                glVertex2s(top.x, top.y);
+                glTexCoord2f(terrainUV[ng * 8 + 4], terrainUV[ng * 8 + 5]);
+                glVertex2s(right.x, right.y);
+                glTexCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
+                glVertex2s(bottom.x, bottom.y);
+                glEnd();
+            }
+            base.x += TL;
+            base.y += TW;
         }
     }
     else if(c1->getI() != c2->getI())
     {
+        assert(c1->getJ() == c2->getJ());
         if(c1->getI() > c2->getI())
         {
             Chunk* temp = c1;
             c1 = c2;
             c2 = temp;
         }
-        int j = 0;
-        Point left = coord::project3DPoint(c2->getIOffset() - TERRAIN_TILE_SIZE, c2->getJOffset(), c1->mesh[Chunk::CHUNK_SIZE - 1][0].height / ISO_HEIGHT);
-        while(left.x < -tw || left.y > WINDOW_H + th)
+        Point base = coord::project3DPoint(c2->getIOffset() - TERRAIN_TILE_SIZE, c2->getJOffset() + TERRAIN_TILE_SIZE * (Chunk::CHUNK_SIZE - 2), 0);
+        baseX = base.x;
+        baseY = base.y;
+        for(int j = Chunk::CHUNK_SIZE - 2; j >= 0; j--)
         {
-            left.x += tw;
-            left.y += c1->mesh[Chunk::CHUNK_SIZE - 1][j].height - c1->mesh[Chunk::CHUNK_SIZE - 1][j + 1].height - th;
-            j++;
-            if(j == Chunk::CHUNK_SIZE - 1)
-                return;
-        }
-        Point top, bottom, right;
-        for(; j < Chunk::CHUNK_SIZE - 1; j++)
-        {
-            //detect going off screen
-            if(left.x > WINDOW_W + tw || left.y < -th)
-                break;
-            top.x = left.x + tw;
-            top.y = left.y + c1->mesh[Chunk::CHUNK_SIZE - 1][j].height - c1->mesh[Chunk::CHUNK_SIZE - 1][j + 1].height - th;
-            bottom.x = left.x + tw;
-            bottom.y = left.y + c1->mesh[Chunk::CHUNK_SIZE - 1][j].height - c2->mesh[0][j].height + th;
-            right.x = bottom.x + tw;
-            right.y = bottom.y + c2->mesh[0][j].height - c2->mesh[0][j + 1].height - th;
-            float tshade = RenderRoutines::calcTileShade(c1->mesh[Chunk::CHUNK_SIZE - 1][j].height, c1->mesh[Chunk::CHUNK_SIZE - 1][j + 1].height, c2->mesh[0][j].height, c2->mesh[0][j + 1].height);
-            glColor3f(tshade, tshade, tshade);
-            GROUND ng = c1->mesh[Chunk::CHUNK_SIZE - 1][j].g;
-            glBegin(GL_QUADS);
-            glTexCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
-            glVertex2s(left.x, left.y);
-            glTexCoord2f(terrainUV[ng * 8 + 2], terrainUV[ng * 8 + 3]);
-            glVertex2s(top.x, top.y);
-            glTexCoord2f(terrainUV[ng * 8 + 4], terrainUV[ng * 8 + 5]);
-            glVertex2s(right.x, right.y);
-            glTexCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
-            glVertex2s(bottom.x, bottom.y);
-            glEnd();
+            left.x = baseX;
+            left.y = baseY - c1->mesh[Chunk::CHUNK_SIZE][j].height;
+            top.x = baseX + TL;
+            top.y = baseY - c1->mesh[Chunk::CHUNK_SIZE][j + 1].height - TW;
+            bottom.x = top.x;
+            bottom.y = baseY - c2->mesh[0][j].height + TW;
+            right.x = bottom.x + TL;
+            right.y = baseY - c2->mesh[0][j + 1].height;
+            if(!rowStarted && right.x > 0 && (left.y < WINDOW_H && right.y < WINDOW_H && bottom.y < WINDOW_H && top.y < WINDOW_H))
+            {
+                rowStarted = true;
+            }
+            if(rowStarted)
+            {
+                if(left.x > WINDOW_W || (left.y < 0 || right.y < 0 || top.y < 0 || bottom.y < 0))
+                {
+                    return;
+                }
+                float tshade = RenderRoutines::calcTileShade(c1->mesh[Chunk::CHUNK_SIZE - 1][j].height, c1->mesh[Chunk::CHUNK_SIZE - 1][j + 1].height, c2->mesh[0][j + 1].height, c2->mesh[0][j].height);
+                GROUND ng = c1->mesh[Chunk::CHUNK_SIZE - 1][j].g;
+                glColor3f(tshade, tshade, tshade);
+                glBegin(GL_QUADS);
+                glTexCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
+                glVertex2s(left.x, left.y);
+                glTexCoord2f(terrainUV[ng * 8 + 2], terrainUV[ng * 8 + 3]);
+                glVertex2s(top.x, top.y);
+                glTexCoord2f(terrainUV[ng * 8 + 4], terrainUV[ng * 8 + 5]);
+                glVertex2s(right.x, right.y);
+                glTexCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
+                glVertex2s(bottom.x, bottom.y);
+                glEnd();
+            }
+            baseX -= TL;
+            baseY += TW;
         }
     }
+}
+
+void WorldRenderer::drawChunkIntersection(Chunk *c1, Chunk *c2, Chunk *c3, Chunk *c4)
+{
+    /*
+     1
+    2 3
+     4
+     */
+    double tw = TERRAIN_TILE_SIZE * ISO_LENGTH / 2;
+    double th = TERRAIN_TILE_SIZE * ISO_WIDTH / 2;
+    GROUND ng = c2->mesh[Chunk::CHUNK_SIZE - 1][Chunk::CHUNK_SIZE - 1].g;
+    float tshade = RenderRoutines::calcTileShade(c2->mesh[Chunk::CHUNK_SIZE - 1][Chunk::CHUNK_SIZE -1 ].height, c1->mesh[Chunk::CHUNK_SIZE - 1][0].height, c3->mesh[0][0].height, c4->mesh[0][Chunk::CHUNK_SIZE - 1].height);
+    //Initialize to left first
+    Point p = coord::project3DPoint(c3->getIOffset() - TERRAIN_TILE_SIZE, c3->getJOffset() - TERRAIN_TILE_SIZE, c2->mesh[Chunk::CHUNK_SIZE - 1][Chunk::CHUNK_SIZE - 1].height / ISO_HEIGHT);
+    glColor3f(tshade, tshade, tshade);
+    glBegin(GL_QUADS);
+    glTexCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
+    glVertex2s(p.x, p.y);
+    p.x += tw;
+    p.y += c2->mesh[Chunk::CHUNK_SIZE - 1][Chunk::CHUNK_SIZE - 1].height - c1->mesh[Chunk::CHUNK_SIZE - 1][0].height - th;
+    glTexCoord2f(terrainUV[ng * 8 + 2], terrainUV[ng * 8 + 3]);
+    glVertex2s(p.x, p.y);
+    p.x += tw;
+    p.y += c1->mesh[Chunk::CHUNK_SIZE - 1][0].height - c3->mesh[0][0].height + th;
+    glTexCoord2f(terrainUV[ng * 8 + 4], terrainUV[ng * 8 + 5]);
+    glVertex2s(p.x, p.y);
+    p.x -= tw;
+    p.y += c3->mesh[0][0].height - c4->mesh[0][Chunk::CHUNK_SIZE - 1].height + th;
+    glTexCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
+    glVertex2s(p.x, p.y);
+    glEnd();
 }
 
 pair<int, int> WorldRenderer::pixelToChunk(int scrX, int scrY)
@@ -380,4 +392,12 @@ void WorldRenderer::assertInCache(pair<int, int> chunkLoc)
         chunkCache[chunkLoc] = new Chunk(chunkLoc.first, chunkLoc.second);
     }
     trimChunkCache();
+
+}
+
+bool ptInScreen(Point p)
+{
+    if(p.x >= 0 && p.x < WINDOW_W && p.y >= 0 && p.y < WINDOW_H)
+        return true;
+    return false;
 }

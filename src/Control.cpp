@@ -11,6 +11,7 @@
 using namespace std;
 using namespace constants;
 using namespace Control;
+using namespace Renderer;
 using namespace boost::filesystem;
 
 Scene* Control::currentScene;
@@ -157,13 +158,38 @@ void Control::update()
         screenY += dScreenY;
     }
     view::prepareFrame();
-    UIRenderer::drawComponent(*currentScene);
+    //UIRenderer::drawComponent(*currentScene);
     if(currentScene == scenes[GAME])
     {
-        WorldRenderer::render();
+        //    WorldRenderer::render();
     }
-    glColor3f(1, 1, 1);
-    RenderRoutines::blit(RenderRoutines::mainAtlas->tileFromName("cursor"), mouseX, mouseY);
+    enableTexture();
+    for(int asdf = 0; asdf < 1; asdf++)
+    {
+        color4f(1, 1, 1, 1);
+        texCoord2f(0, 0);
+        vertex2i(0, 0);
+        color4f(1, 0, 0, 1);
+        texCoord2f(1, 0);
+        vertex2i(640, 0);
+        color4f(0, 0, 1, 1);
+        texCoord2f(1, 1);
+        vertex2i(640, 480);
+        color4f(0, 1, 0, 1);
+        texCoord2f(0, 1);
+        vertex2i(0, 480);
+    }
+    /*
+    cout << "Begin printing all vertices." << endl;
+    for(auto i : Renderer::vertices)
+    {
+        cout << "Position (" << i.x << "," << i.y << ")\n";
+        cout << "Color (" << i.r << "," << i.g << "," << i.b << "," << i.a << ")\n";
+        cout << "Texcoord (" << i.u << "," << i.v << ")\n";
+    }
+    cout << "End printing all vertices." << endl;
+     */
+    //RenderRoutines::blit(RenderRoutines::mainAtlas->tileFromName("cursor"), mouseX, mouseY);
     view::finalizeFrame();
 }
 

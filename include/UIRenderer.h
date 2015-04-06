@@ -22,6 +22,7 @@
 #include "MultiSelect.h"
 #include "Field.h"
 #include "Scene.h"
+#include "Renderer.h"
 
 namespace UIRenderer
 {

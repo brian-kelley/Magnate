@@ -27,6 +27,8 @@ namespace WorldRenderer
     extern void trimChunkCache();
     extern void drawTerrain();
     extern void drawChunk(Chunk* c);
+    extern void drawChunkBorder(Chunk* c1, Chunk* c2);
+    extern void drawChunkIntersection(Chunk* c1, Chunk* c2, Chunk* c3, Chunk* c4);
     extern void assertInCache(std::pair<int, int> chunkLoc);
     extern std::pair<int, int> pixelToChunk(int scrX, int scrY);
 }
