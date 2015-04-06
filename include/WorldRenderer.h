@@ -17,6 +17,7 @@
 #include "Chunk.h"
 #include "RenderRoutines.h"
 #include "Constants.h"
+#include "Renderer.h"
 
 namespace WorldRenderer
 {

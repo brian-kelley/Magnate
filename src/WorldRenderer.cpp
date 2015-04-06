@@ -11,6 +11,7 @@
 using namespace std;
 using namespace constants;
 using namespace coord;
+using namespace Renderer;
 
 map<pair<int, int>, Chunk*> WorldRenderer::chunkCache;
 //4 vertices, each with 2 floats
@@ -210,16 +211,15 @@ void WorldRenderer::drawChunk(Chunk* c)
                 }
                 //Draw
                 float tshade = RenderRoutines::calcTileShade(c->mesh[i][j].height, c->mesh[i + 1][j].height, c->mesh[i][j + 1].height, c->mesh[i + 1][j + 1].height);
-                glColor3f(tshade, tshade, tshade);
-                glBegin(GL_QUADS);
-                glTexCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
-                glVertex2s(left.x, left.y);
-                glTexCoord2f(terrainUV[ng * 8 + 2], terrainUV[ng * 8 + 3]);
-                glVertex2s(top.x, top.y);
-                glTexCoord2f(terrainUV[ng * 8 + 4], terrainUV[ng * 8 + 5]);
-                glVertex2s(right.x, right.y);
-                glTexCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
-                glVertex2s(bottom.x, bottom.y);
+                color3f(tshade, tshade, tshade);
+                texCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
+                vertex2i(left.x, left.y);
+                texCoord2f(terrainUV[ng * 8 + 2], terrainUV[ng * 8 + 3]);
+                vertex2i(top.x, top.y);
+                texCoord2f(terrainUV[ng * 8 + 4], terrainUV[ng * 8 + 5]);
+                vertex2i(right.x, right.y);
+                texCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
+                vertex2i(bottom.x, bottom.y);
                 glEnd();
             }
         }
@@ -277,17 +277,15 @@ void WorldRenderer::drawChunkBorder(Chunk *c1, Chunk *c2)
                 }
                 float tshade = RenderRoutines::calcTileShade(c1->mesh[i][Chunk::CHUNK_SIZE - 1].height, c2->mesh[i][0].height, c2->mesh[i + 1][0].height, c1->mesh[i + 1][Chunk::CHUNK_SIZE - 1].height);
                 GROUND ng = c1->mesh[i][Chunk::CHUNK_SIZE - 1].g;
-                glColor3f(tshade, tshade, tshade);
-                glBegin(GL_QUADS);
-                glTexCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
-                glVertex2s(left.x, left.y);
-                glTexCoord2f(terrainUV[ng * 8 + 2], terrainUV[ng * 8 + 3]);
-                glVertex2s(top.x, top.y);
-                glTexCoord2f(terrainUV[ng * 8 + 4], terrainUV[ng * 8 + 5]);
-                glVertex2s(right.x, right.y);
-                glTexCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
-                glVertex2s(bottom.x, bottom.y);
-                glEnd();
+                color3f(tshade, tshade, tshade);
+                texCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
+                vertex2i(left.x, left.y);
+                texCoord2f(terrainUV[ng * 8 + 2], terrainUV[ng * 8 + 3]);
+                vertex2i(top.x, top.y);
+                texCoord2f(terrainUV[ng * 8 + 4], terrainUV[ng * 8 + 5]);
+                vertex2i(right.x, right.y);
+                texCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
+                vertex2i(bottom.x, bottom.y);
             }
             base.x += TL;
             base.y += TW;
@@ -327,17 +325,15 @@ void WorldRenderer::drawChunkBorder(Chunk *c1, Chunk *c2)
                 }
                 float tshade = RenderRoutines::calcTileShade(c1->mesh[Chunk::CHUNK_SIZE - 1][j].height, c1->mesh[Chunk::CHUNK_SIZE - 1][j + 1].height, c2->mesh[0][j + 1].height, c2->mesh[0][j].height);
                 GROUND ng = c1->mesh[Chunk::CHUNK_SIZE - 1][j].g;
-                glColor3f(tshade, tshade, tshade);
-                glBegin(GL_QUADS);
-                glTexCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
-                glVertex2s(left.x, left.y);
-                glTexCoord2f(terrainUV[ng * 8 + 2], terrainUV[ng * 8 + 3]);
-                glVertex2s(top.x, top.y);
-                glTexCoord2f(terrainUV[ng * 8 + 4], terrainUV[ng * 8 + 5]);
-                glVertex2s(right.x, right.y);
-                glTexCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
-                glVertex2s(bottom.x, bottom.y);
-                glEnd();
+                color3f(tshade, tshade, tshade);
+                texCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
+                vertex2i(left.x, left.y);
+                texCoord2f(terrainUV[ng * 8 + 2], terrainUV[ng * 8 + 3]);
+                vertex2i(top.x, top.y);
+                texCoord2f(terrainUV[ng * 8 + 4], terrainUV[ng * 8 + 5]);
+                vertex2i(right.x, right.y);
+                texCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
+                vertex2i(bottom.x, bottom.y);
             }
             baseX -= TL;
             baseY += TW;
@@ -358,23 +354,22 @@ void WorldRenderer::drawChunkIntersection(Chunk *c1, Chunk *c2, Chunk *c3, Chunk
     float tshade = RenderRoutines::calcTileShade(c2->mesh[Chunk::CHUNK_SIZE - 1][Chunk::CHUNK_SIZE -1 ].height, c1->mesh[Chunk::CHUNK_SIZE - 1][0].height, c3->mesh[0][0].height, c4->mesh[0][Chunk::CHUNK_SIZE - 1].height);
     //Initialize to left first
     Point p = coord::project3DPoint(c3->getIOffset() - TERRAIN_TILE_SIZE, c3->getJOffset() - TERRAIN_TILE_SIZE, c2->mesh[Chunk::CHUNK_SIZE - 1][Chunk::CHUNK_SIZE - 1].height / ISO_HEIGHT);
-    glColor3f(tshade, tshade, tshade);
-    glBegin(GL_QUADS);
-    glTexCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
-    glVertex2s(p.x, p.y);
+    color3f(tshade, tshade, tshade);
+    
+    texCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
+    vertex2i(p.x, p.y);
     p.x += tw;
     p.y += c2->mesh[Chunk::CHUNK_SIZE - 1][Chunk::CHUNK_SIZE - 1].height - c1->mesh[Chunk::CHUNK_SIZE - 1][0].height - th;
-    glTexCoord2f(terrainUV[ng * 8 + 2], terrainUV[ng * 8 + 3]);
-    glVertex2s(p.x, p.y);
+    texCoord2f(terrainUV[ng * 8 + 2], terrainUV[ng * 8 + 3]);
+    vertex2i(p.x, p.y);
     p.x += tw;
     p.y += c1->mesh[Chunk::CHUNK_SIZE - 1][0].height - c3->mesh[0][0].height + th;
-    glTexCoord2f(terrainUV[ng * 8 + 4], terrainUV[ng * 8 + 5]);
-    glVertex2s(p.x, p.y);
+    texCoord2f(terrainUV[ng * 8 + 4], terrainUV[ng * 8 + 5]);
+    vertex2i(p.x, p.y);
     p.x -= tw;
     p.y += c3->mesh[0][0].height - c4->mesh[0][Chunk::CHUNK_SIZE - 1].height + th;
-    glTexCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
-    glVertex2s(p.x, p.y);
-    glEnd();
+    texCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
+    vertex2i(p.x, p.y);
 }
 
 pair<int, int> WorldRenderer::pixelToChunk(int scrX, int scrY)

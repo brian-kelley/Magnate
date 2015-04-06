@@ -161,11 +161,10 @@ void Control::update()
     UIRenderer::drawComponent(*currentScene);
     if(currentScene == scenes[GAME])
     {
-        //    WorldRenderer::render();
+        WorldRenderer::render();
     }
     color3f(1, 1, 1);
     RenderRoutines::blit(RenderRoutines::mainAtlas->tileFromName("cursor"), mouseX, mouseY);
-    vertex2i(100, 300);
     view::finalizeFrame();
 }
 
