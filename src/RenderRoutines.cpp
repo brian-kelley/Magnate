@@ -94,7 +94,6 @@ void RenderRoutines::blit(int index, int x, int y)
 
 void RenderRoutines::blit(int index, int x1, int y1, int x2, int y2)
 {
-    enableTexture();
     texCoord2f(mainAtlas->tileX(index), mainAtlas->tileY(index));
     vertex2i(x1, y1);
     texCoord2f(mainAtlas->tileX(index) + mainAtlas->tileW(index),

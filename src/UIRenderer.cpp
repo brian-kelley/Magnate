@@ -109,25 +109,16 @@ void UIRenderer::drawLabel(Label& l)
 void UIRenderer::drawField(Field& f)
 {
     intRect_t& curRect = f.getDrawRect();
-    glDisable(GL_TEXTURE_2D);
-    glColor3f(UI_BG_R, UI_BG_G, UI_BG_B);
-    glBegin(GL_QUADS);
-    glVertex2i(curRect.x, curRect.y);
-    glVertex2i(curRect.x + curRect.w, curRect.y);
-    glVertex2i(curRect.x + curRect.w, curRect.y + curRect.h);
-    glVertex2i(curRect.x, curRect.y + curRect.h);
-    glEnd();
-    glColor3f(constants::UI_FG_R, constants::UI_FG_G, constants::UI_FG_B);
-    glBegin(GL_LINES);
-    glVertex2i(curRect.x, curRect.y);
-    glVertex2i(curRect.x + curRect.w, curRect.y);
-    glVertex2i(curRect.x + curRect.w, curRect.y);
-    glVertex2i(curRect.x + curRect.w, curRect.y + curRect.h);
-    glVertex2i(curRect.x + curRect.w, curRect.y + curRect.h);
-    glVertex2i(curRect.x, curRect.y + curRect.h);
-    glVertex2i(curRect.x, curRect.y);
-    glVertex2i(curRect.x, curRect.y + curRect.h);
-    glEnd();
+    disableTexture();
+    color3f(UI_FG_R, UI_FG_G, UI_FG_B);
+    vertex2i(curRect.x, curRect.y);
+    vertex2i(curRect.x + curRect.w, curRect.y);
+    vertex2i(curRect.x + curRect.w, curRect.y + curRect.h);
+    vertex2i(curRect.x, curRect.y + curRect.h);
+    color3f(UI_BG_R, UI_BG_G, UI_BG_B);
+    vertex2i(curRect.x + 1, curRect.y + 1);
+    vertex2i(curRect.x + curRect.w - 1, curRect.y + 1);
+    vertex2i(curRect.x + 1, curRect.y + curRect.h - 1);
     drawString(f.getText(), curRect.x + f.getTextLoc().x, curRect.y + f.getTextLoc().y, f.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
@@ -143,65 +134,50 @@ void UIRenderer::drawButton(Button& b)
         colorMult = 1.0f / SHADE;
     }
     intRect_t rect = b.getDrawRect();         //initalize copy, don't modify
-    glDisable(GL_TEXTURE_2D);
-    glColor3f(UI_BG_R, UI_BG_G, UI_BG_B);
-    glBegin(GL_QUADS);
-    glVertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
-    glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
-    glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
-    glVertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
-    glEnd();
-    glColor3f(UI_FG_R * colorMult, UI_FG_G * colorMult, UI_FG_B * colorMult);
-    glBegin(GL_QUADS);
-    glVertex2i(rect.x, rect.y);
-    glVertex2i(rect.x + rect.w, rect.y);
-    glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
-    glVertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
-    glEnd();
-    glBegin(GL_QUADS);
-    glVertex2i(rect.x, rect.y);
-    glVertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
-    glVertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
-    glVertex2i(rect.x, rect.y + rect.h);
-    glEnd();
-    glColor3f(UI_FG_R * colorMult * SHADE, UI_FG_G * colorMult * SHADE, UI_FG_B * colorMult * SHADE);
-    glBegin(GL_QUADS);
-    glVertex2i(rect.x + rect.w, rect.y);
-    glVertex2i(rect.x + rect.w, rect.y + rect.h);
-    glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
-    glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
-    glEnd();
-    glBegin(GL_QUADS);
-    glVertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
-    glVertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
-    glVertex2i(rect.x + rect.w, rect.y + rect.h);
-    glVertex2i(rect.x, rect.y + rect.h);
-    glEnd();
+    disableTexture();
+    color3f(UI_BG_R, UI_BG_G, UI_BG_B);
+    vertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
+    vertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
+    vertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
+    vertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
+    color3f(UI_FG_R * colorMult, UI_FG_G * colorMult, UI_FG_B * colorMult);
+    vertex2i(rect.x, rect.y);
+    vertex2i(rect.x + rect.w, rect.y);
+    vertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
+    vertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
+    vertex2i(rect.x, rect.y);
+    vertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
+    vertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
+    vertex2i(rect.x, rect.y + rect.h);
+    color3f(UI_FG_R * colorMult * SHADE, UI_FG_G * colorMult * SHADE, UI_FG_B * colorMult * SHADE);
+    vertex2i(rect.x + rect.w, rect.y);
+    vertex2i(rect.x + rect.w, rect.y + rect.h);
+    vertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
+    vertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
+    vertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
+    vertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
+    vertex2i(rect.x + rect.w, rect.y + rect.h);
+    vertex2i(rect.x, rect.y + rect.h);
     drawString(b.getText(), b.getTextLoc().x + rect.x, b.getTextLoc().y + rect.y, b.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
 }
 
 void UIRenderer::drawScrollBlock(ScrollBlock& sb)
 {
-    glColor4f(UI_BG_R * SHADE, UI_BG_G * SHADE, UI_BG_B * SHADE, 1);
-    glDisable(GL_TEXTURE_2D);
+    color3f(UI_BG_R * SHADE, UI_BG_G * SHADE, UI_BG_B * SHADE);
+    disableTexture();
     intRect_t& sbrect = sb.getDrawRect();
-    glBegin(GL_QUADS);
-    glVertex2i(sbrect.x, sbrect.y);
-    glVertex2i(sbrect.x + sbrect.w, sbrect.y);
-    glVertex2i(sbrect.x + sbrect.w, sbrect.y + sbrect.h);
-    glVertex2i(sbrect.x, sbrect.y + sbrect.h);
-    glEnd();
+    vertex2i(sbrect.x, sbrect.y);
+    vertex2i(sbrect.x + sbrect.w, sbrect.y);
+    vertex2i(sbrect.x + sbrect.w, sbrect.y + sbrect.h);
+    vertex2i(sbrect.x, sbrect.y + sbrect.h);
     //For some reason glScissor wants (x, y) to be lower-left corner
     if(sb.hasBar())
     {
         intRect_t bar = sb.getBarRect();
-        
-        glColor3f(UI_FG_R, UI_FG_G, UI_FG_B);
-        glBegin(GL_QUADS);
-        glVertex2i(bar.x, bar.y);
-        glVertex2i(bar.x + bar.w, bar.y);
-        glVertex2i(bar.x + bar.w, bar.y + bar.h);
-        glVertex2i(bar.x, bar.y + bar.h);
-        glEnd();
+        color3f(UI_FG_R, UI_FG_G, UI_FG_B);
+        vertex2i(bar.x, bar.y);
+        vertex2i(bar.x + bar.w, bar.y);
+        vertex2i(bar.x + bar.w, bar.y + bar.h);
+        vertex2i(bar.x, bar.y + bar.h);
     }
 }

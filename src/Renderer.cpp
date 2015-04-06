@@ -212,6 +212,7 @@ void Renderer::texCoord2f(float u, float v)
 {
     stateVertex.u = u;
     stateVertex.v = v;
+    textureOn = true;
 }
 
 void Renderer::saveVertex()
