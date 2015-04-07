@@ -171,7 +171,6 @@ void WorldRenderer::drawTerrain()
     }
 }
 
-//Draws every tile that can be drawn with only the nodes in this chunk (lacks 2 edges)
 void WorldRenderer::drawChunk(Chunk* c)
 {
     int baseX, baseY;
@@ -180,12 +179,11 @@ void WorldRenderer::drawChunk(Chunk* c)
     const int TW = TERRAIN_TILE_SIZE * ISO_WIDTH / 2;
     for(int i = 0; i < Chunk::CHUNK_SIZE - 1; i++)
     {
-        Point rowbase = coord::project3DPoint(c->getIOffset() + i * TERRAIN_TILE_SIZE, c->getJOffset(), 0);
+        Point rowbase = coord::project3DPoint(c->getIOffset() + i * TERRAIN_TILE_SIZE, c->getJOffset() + TERRAIN_TILE_SIZE * (Chunk::CHUNK_SIZE - 2), 0);
         baseX = rowbase.x;
         baseY = rowbase.y;
-        //this true when drawing the tiles, not just iterating over them
-        bool rowStarted = false;
-        for(int j = 0; j < Chunk::CHUNK_SIZE - 1; j++)
+        bool rowStarted;
+        for(int j = Chunk::CHUNK_SIZE - 2; j >= 0; j--)
         {
             GROUND ng = c->mesh[i][j].g;
             left.x = baseX;
@@ -196,20 +194,20 @@ void WorldRenderer::drawChunk(Chunk* c)
             bottom.y = baseY - c->mesh[i + 1][j].height + TW;
             right.x = bottom.x + TL;
             right.y = baseY - c->mesh[i + 1][j + 1].height;
-            baseX += TL;
-            baseY -= TW;
-            if(!rowStarted && right.x > 0 && (left.y < WINDOW_H + TW || right.y < WINDOW_H + TW || top.y < WINDOW_H + TW || bottom.y < WINDOW_H + TW))
+            baseX -= TL;
+            baseY += TW;
+            rowStarted = false;
+            if(!rowStarted && left.x < WINDOW_W && (left.y >= 0 || right.y >= 0 || top.y >= 0 || bottom.y >= 0))
             {
                 rowStarted = true;
             }
             if(rowStarted)
             {
-                //Now test whether
-                if(left.x > WINDOW_W || (left.y < 0 && right.y < 0 && top.y < 0 && bottom.y < 0))
+                //Now test whether is time to break out of
+                if(right.x < 0 && (left.y > WINDOW_H + TW && right.y > WINDOW_H + TW && top.y > WINDOW_H + TW && bottom.y > WINDOW_H + TW))
                 {
                     break;
                 }
-                //Draw
                 float tshade = RenderRoutines::calcTileShade(c->mesh[i][j].height, c->mesh[i + 1][j].height, c->mesh[i][j + 1].height, c->mesh[i + 1][j + 1].height);
                 color3f(tshade, tshade, tshade);
                 texCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
@@ -220,7 +218,6 @@ void WorldRenderer::drawChunk(Chunk* c)
                 vertex2i(right.x, right.y);
                 texCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
                 vertex2i(bottom.x, bottom.y);
-                glEnd();
             }
         }
     }
@@ -237,13 +234,12 @@ void WorldRenderer::drawChunkBorder(Chunk *c1, Chunk *c2)
      Want this arrangement in space: (1st condition)
       2
      1
-     or this: (2nd, else if {})
+     or this: (... else if {})
      1
       2
      */
     if(c1->getJ() != c2->getJ())
     {
-        assert(c1->getI() == c2->getI());
         //Order c1, c2 so that c1 is southwest of c2
         if(c1->getJ() > c2->getJ())
         {
@@ -254,7 +250,7 @@ void WorldRenderer::drawChunkBorder(Chunk *c1, Chunk *c2)
         Point base = coord::project3DPoint(c2->getIOffset(), c2->getJOffset() - TERRAIN_TILE_SIZE, 0);
         baseX = base.x;
         baseY = base.y;
-        for(int i = 0; i < Chunk::CHUNK_SIZE; i++)
+        for(int i = 0; i < Chunk::CHUNK_SIZE - 1; i++)
         {
             left.x = baseX;
             left.y = baseY - c1->mesh[i][Chunk::CHUNK_SIZE - 1].height;
@@ -264,6 +260,8 @@ void WorldRenderer::drawChunkBorder(Chunk *c1, Chunk *c2)
             bottom.y = baseY - c1->mesh[i + 1][Chunk::CHUNK_SIZE - 1].height + TW;
             right.x = top.x + TL;
             right.y = baseY - c2->mesh[i + 1][0].height;
+            baseX += TL;
+            baseY += TW;
             if(!rowStarted && right.x > 0 && (left.y > 0 || right.y > 0 || top.y > 0 || bottom.y > 0))
             {
                 rowStarted = true;
@@ -287,13 +285,10 @@ void WorldRenderer::drawChunkBorder(Chunk *c1, Chunk *c2)
                 texCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
                 vertex2i(bottom.x, bottom.y);
             }
-            base.x += TL;
-            base.y += TW;
         }
     }
     else if(c1->getI() != c2->getI())
     {
-        assert(c1->getJ() == c2->getJ());
         if(c1->getI() > c2->getI())
         {
             Chunk* temp = c1;
@@ -306,20 +301,22 @@ void WorldRenderer::drawChunkBorder(Chunk *c1, Chunk *c2)
         for(int j = Chunk::CHUNK_SIZE - 2; j >= 0; j--)
         {
             left.x = baseX;
-            left.y = baseY - c1->mesh[Chunk::CHUNK_SIZE][j].height;
+            left.y = baseY - c1->mesh[Chunk::CHUNK_SIZE - 1][j].height;
             top.x = baseX + TL;
-            top.y = baseY - c1->mesh[Chunk::CHUNK_SIZE][j + 1].height - TW;
+            top.y = baseY - c1->mesh[Chunk::CHUNK_SIZE - 1][j + 1].height - TW;
             bottom.x = top.x;
             bottom.y = baseY - c2->mesh[0][j].height + TW;
             right.x = bottom.x + TL;
             right.y = baseY - c2->mesh[0][j + 1].height;
-            if(!rowStarted && right.x > 0 && (left.y < WINDOW_H && right.y < WINDOW_H && bottom.y < WINDOW_H && top.y < WINDOW_H))
+            baseX -= TL;
+            baseY += TW;
+            if(!rowStarted && left.x < WINDOW_W && (left.y > 0 || right.y > 0 || bottom.y > 0 || top.y > 0))
             {
                 rowStarted = true;
             }
             if(rowStarted)
             {
-                if(left.x > WINDOW_W || (left.y < 0 || right.y < 0 || top.y < 0 || bottom.y < 0))
+                if(right.x < 0 || (left.y >= WINDOW_H && right.y >= WINDOW_H && top.y >= WINDOW_H && bottom.y >= WINDOW_H))
                 {
                     return;
                 }
@@ -335,8 +332,6 @@ void WorldRenderer::drawChunkBorder(Chunk *c1, Chunk *c2)
                 texCoord2f(terrainUV[ng * 8 + 6], terrainUV[ng * 8 + 7]);
                 vertex2i(bottom.x, bottom.y);
             }
-            baseX -= TL;
-            baseY += TW;
         }
     }
 }
@@ -355,7 +350,6 @@ void WorldRenderer::drawChunkIntersection(Chunk *c1, Chunk *c2, Chunk *c3, Chunk
     //Initialize to left first
     Point p = coord::project3DPoint(c3->getIOffset() - TERRAIN_TILE_SIZE, c3->getJOffset() - TERRAIN_TILE_SIZE, c2->mesh[Chunk::CHUNK_SIZE - 1][Chunk::CHUNK_SIZE - 1].height / ISO_HEIGHT);
     color3f(tshade, tshade, tshade);
-    
     texCoord2f(terrainUV[ng * 8], terrainUV[ng * 8 + 1]);
     vertex2i(p.x, p.y);
     p.x += tw;
