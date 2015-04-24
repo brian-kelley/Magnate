@@ -15,23 +15,6 @@
 #include "Coord.h"
 #include "RenderRoutines.h"
 
-//Don't manually assign int values to any of these!
-enum GROUND : unsigned char
-{
-    WATER,
-    PLAINS,
-    FOREST,
-    MOUNTAINS,
-    DESERT,
-    NUM_TYPES
-};
-
-typedef struct
-{
-    GROUND g;
-    unsigned char height;
-} tNode_t;
-
 namespace Terrain
 {
     extern long int wseed;

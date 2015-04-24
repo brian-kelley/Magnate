@@ -27,7 +27,8 @@ enum CTYPE
     FIELD,
     SCROLLBLOCK,
     SCENE,
-    MULTISELECT
+    MULTISELECT,
+    DRAGGABLE
 };
 
 class Component

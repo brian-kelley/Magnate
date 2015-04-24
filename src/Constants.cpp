@@ -31,10 +31,6 @@ float constants::HMULT = -80.0;
 long int constants::screenX = 0;
 long int constants::screenY = 0;
 
-short* constants::vertbuf = new short[2 * VBO_SIZE];
-float* constants::colorbuf = new float[3 * VBO_SIZE];
-float* constants::texcoordbuf = new float[2 * VBO_SIZE];
-
 #ifdef __APPLE__
 string constants::BIN_TO_ROOT = "../..";
 //Don't know yet exactly what linux/win values will be

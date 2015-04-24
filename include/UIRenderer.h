@@ -19,10 +19,12 @@
 #include "Button.h"
 #include "Label.h"
 #include "ScrollBlock.h"
+#include "Draggable.h"
 #include "MultiSelect.h"
 #include "Field.h"
 #include "Scene.h"
 #include "Renderer.h"
+#include "Building.h"
 
 namespace UIRenderer
 {
@@ -33,6 +35,7 @@ namespace UIRenderer
     extern void drawField(Field& f);
     extern void drawScrollBlock(ScrollBlock& sb);
     extern void drawMultiSelect(MultiSelect& ms);
+    extern void drawDraggable(Draggable& d);
 };
 
 #endif

@@ -27,6 +27,7 @@
 #include "Field.h"
 #include "Label.h"
 #include "Scene.h"
+#include "Draggable.h"
 #include "Constants.h"
 #include "SaveManager.h"
 #include "WorldRenderer.h"

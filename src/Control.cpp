@@ -64,7 +64,15 @@ void Control::init()
     trackingMouse = true;
     trackingKeyboard = true;
     currentEvent = new SDL_Event();
+    /* Normal game, go through main & save menus
     currentScene = scenes[MAIN_MENU];
+     */
+    //Debug mode, jump into 'asdf' for quicker testing
+    
+    currentScene = scenes[GAME];
+    SaveManager::loadTestWorld();
+    SaveManager::transitionToGame(nullptr);
+
     model::init();
     //Trap mouse in window
     SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -187,6 +195,13 @@ void Control::processMouseButtonEvent(SDL_Event &e)
     if(e.button.state == SDL_PRESSED && e.button.button == SDL_BUTTON_LEFT)
     {
         currentScene->processLeftClick();
+    }
+    else if(e.button.state == SDL_RELEASED && e.button.button == SDL_BUTTON_LEFT)
+    {
+        if(Draggable::activeDrag)
+        {
+            Draggable::activeDrag->deactivate();
+        }
     }
 }
 

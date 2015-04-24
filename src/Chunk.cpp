@@ -11,27 +11,19 @@
 using namespace std;
 using namespace constants;
 
+//Constructor is where terrain mesh generation happens i guess (diamond-square)
 Chunk::Chunk(int i, int j)
 {
+    cout << "Started Chunk constructor." << endl;
     this->i = i;
     this->j = j;
-    double iIter = getIOffset();
-    double jIter;
-    for(int i = 0; i < CHUNK_SIZE; i++)
-    {
-        jIter = getJOffset();
-        for(int j = 0; j < CHUNK_SIZE; j++)
-        {
-            mesh[i][j] = Terrain::generateNode(iIter, jIter);
-            jIter += TERRAIN_TILE_SIZE;
-        }
-        iIter += TERRAIN_TILE_SIZE;
-    }
+    TerrainGen::generate(mesh, i, j);
+    cout << "Finished Chunk constructor." << endl;
 }
 
 Chunk::~Chunk()
 {
-
+    
 }
 
 //add these offsets to tile coords within the chunk to get absolute coordinates in world

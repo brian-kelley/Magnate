@@ -57,6 +57,7 @@ namespace SaveManager
     extern void deleteCancel(void* arg);
     extern void enterRename();
     extern void loadWorldBtn(void* arg);
+    extern void loadTestWorld();
     extern callback_t transitionToGame;
 };
 

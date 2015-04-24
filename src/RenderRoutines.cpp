@@ -177,5 +177,5 @@ floatRect_t RenderRoutines::getTexCoords(int index)
 
 float RenderRoutines::calcTileShade(unsigned char h1, unsigned char h2, unsigned char h3, unsigned char h4)
 {
-    return 1.0 - 0.5 * (abs(h1 - h2) + abs(h2 - h3) + abs(h3 - h4) + abs(h4 - h1)) / coord::ISO_HEIGHT;
+    return 1.0 - 0.3 * (abs(h1 - h2) + abs(h2 - h3) + abs(h3 - h4) + abs(h4 - h1)) / coord::ISO_HEIGHT;
 }

@@ -257,3 +257,8 @@ void SaveManager::loadWorldBtn(void *arg)
         transitionToGame(arg);
     }
 }
+
+void SaveManager::loadTestWorld()
+{
+    loadedWorld = new World("asdf", !exists(initial_path() / constants::BIN_TO_ROOT / "saves" / "asdf"));
+}

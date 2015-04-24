@@ -44,6 +44,9 @@ void UIRenderer::drawComponent(Component& c)
         case MULTISELECT:
             drawMultiSelect((MultiSelect&) c);
             break;
+        case DRAGGABLE:
+            
+            break;
         case SCENE:
             break;
     }
@@ -179,5 +182,25 @@ void UIRenderer::drawScrollBlock(ScrollBlock& sb)
         vertex2i(bar.x + bar.w, bar.y);
         vertex2i(bar.x + bar.w, bar.y + bar.h);
         vertex2i(bar.x, bar.y + bar.h);
+    }
+}
+
+void UIRenderer::drawDraggable(Draggable& d)
+{
+    //First draw the image at base position, this will always happen,
+    //then draw the dragging image if d is active
+    switch(d.getImageType())
+    {
+        case IMAGE:
+            //Simply blit the image num as a texture ID
+            blit(d.getImageNum(), d.getDrawRect().x, d.getDrawRect().y);
+            if(d.isActive())
+            {
+                blit(d.getImageNum(), d.getDragPos().x, d.getDragPos().y);
+            }
+            break;
+        case BUILDING:
+            
+            break;
     }
 }

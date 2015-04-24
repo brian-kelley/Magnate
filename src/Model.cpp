@@ -15,7 +15,7 @@ World* model::currentWorld;
 
 void model::init()
 {
-    //TODO: Initialize model, using savename file?
+    
 }
 
 void model::update()

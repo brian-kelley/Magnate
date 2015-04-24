@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <string>
+#include <array>
 
 //Structs used all over the place
 
@@ -81,6 +82,25 @@ struct Point
 
 typedef void (*callback_t) (void*);
 
+enum GROUND : unsigned char
+{
+    WATER,
+    PLAINS,
+    FOREST,
+    MOUNTAINS,
+    DESERT,
+    NUM_TYPES
+};
+
+typedef struct
+{
+    GROUND g;
+    unsigned char height;
+} tNode_t;
+
+#define CHUNK_SIZE 129
+typedef tNode_t mesh_t[CHUNK_SIZE][CHUNK_SIZE];
+
 namespace constants
 {
     extern int mouseX;
@@ -104,13 +124,6 @@ namespace constants
     extern long int screenX;
     extern long int screenY;
     const double TERRAIN_TILE_SIZE = 0.25;
-    const int VBO_SIZE = 10000;
-    extern short* vertbufIter;
-    extern short* vertbuf;
-    extern float* colorbufIter;
-    extern float* colorbuf;
-    extern float* texcoordbufIter;
-    extern float* texcoordbuf;
 }
 
 #endif

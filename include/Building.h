@@ -27,4 +27,10 @@ private:
     bool isFront(Cuboid* c1, Cuboid* c2);
 };
 
+enum BUILDINGS
+{
+    FACTORY,
+    SOLAR_ARRAY
+};
+
 #endif

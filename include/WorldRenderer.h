@@ -21,7 +21,7 @@
 
 namespace WorldRenderer
 {
-    const int MAX_CHUNK_CACHE = 100;
+    const int MAX_CHUNK_CACHE = 25;
     extern std::map<std::pair<int, int>, Chunk*> chunkCache;
     extern void preload();
     extern void render();
