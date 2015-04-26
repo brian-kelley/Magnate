@@ -4,105 +4,141 @@ using namespace std;
 
 void TerrainGen::generate(mesh_t& dest, int i, int j)
 {
-    //i, j are signed, so add half of INT_MAX to them to constrain them to signed
     unsigned int si = (unsigned int) (i + INT_MAX / 2);
     unsigned int sj = (unsigned int) (j + INT_MAX / 2);
-    //Make sure the RNG behaves exactly the same, every ti e this function is run
-    //TODO: to make sure consistent behavior across platforms, use a boost::random prng instead?
-    //so, chunks get repeated every 65536 in any direction, this is OK
     srandom(((si & 0xFFFF) << 16) | (sj & 0xFFFF));
-    //For now, fill all with mountains to just look at form
-    for(int x = 0; x < CHUNK_SIZE; x++)
+    for(int i = 0; i < CHUNK_SIZE; i++)
     {
-        for(int y = 0; y < CHUNK_SIZE; y++)
+        for(int j = 0; j < CHUNK_SIZE; j++)
         {
-            dest[x][y].g = MOUNTAINS;
+            dest[i][j].g = MOUNTAINS;
+            dest[i][j].height = 0;
         }
     }
-    //Use diamond-square to assign initial rough heightmap, ground types later
-    //Could try to use this to match up with neighboring chunks, or seed for a certain kind of terrain in the chunk (flat, mountainous, sloping)
-    int size = CHUNK_SIZE - 1;
-    while(size > 1)
+    diamondSquare(dest);
+}
+
+//Generates height based on average surrounding height, and how fine grid is
+unsigned char TerrainGen::getHeight(int avg, int size)
+{
+    int range = double(size) / (CHUNK_SIZE - 1) * 255 * ROUGHNESS;
+    if(range == 0)
+        return avg;
+    int result = (avg + (random() % range) - (range / 2));
+    if(result < 0)
+        result = 0;
+    if(result > 255)
+        result = 255;
+    //cout << "Height is " << result << " for size " << size << " and avg " << avg << " and range " << range << endl;
+    return result;
+}
+
+void TerrainGen::diamondSquare(mesh_t& dest)
+{
+    //Manually create the first square, with each corner
+    dest[0][0].height = 128;
+    dest[CHUNK_SIZE - 1][0].height = 128;
+    dest[0][CHUNK_SIZE - 1].height = 128;
+    dest[CHUNK_SIZE - 1][CHUNK_SIZE - 1].height = 128;
+    //First diamond (puts pt at very center of chunk)
+    fillSquare(dest, (CHUNK_SIZE - 1) / 2, (CHUNK_SIZE - 1) / 2, CHUNK_SIZE - 1);
+    //repeatedly go over mesh and do these steps, making grid progressively finer
+    //(squares first, then diamonds)
+    //Note: if squares then diamonds, same size can be used each iteration
+    int size = (CHUNK_SIZE - 1) / 2;
+    while(size > 0)
     {
+        //Fill in the diamonds
+        //Iterate over all grid points, check if needs a diamond fill-in
+        for(int i = 0; i < CHUNK_SIZE; i += size)
+        {
+            for(int j = 0; j < CHUNK_SIZE; j += size)
+            {
+                if((i + j) % (size * 2) != 0)
+                {
+                    fillDiamond(dest, i, j, size * 2);
+                }
+            }
+        }
         for(int i = size / 2; i < CHUNK_SIZE; i += size)
         {
             for(int j = size / 2; j < CHUNK_SIZE; j += size)
             {
-                if(i % size != 0 || j % size != 0)
-                    square(dest, i, j, size);
-                if(size > 2)
-                    diamond(dest, i, j, size);
+                fillSquare(dest, i, j, size);
             }
         }
         size /= 2;
     }
 }
 
-void TerrainGen::square(mesh_t &dest, int x, int y, int size)
-{
-    //cout << "Doing square @ " << size << " and (" << x << "," << y << ")\n";
-    //If the size of the shape is 1, we're done. If smaller, something's wrong but return anyway.
-    if(size <= 1)
-        return;
-    int sum = 0;
-    int n = 0;
-    if(inMesh(x, y - size / 2))
-    {
-        sum += dest[x][y - size / 2].height;
-        n++;
-    }
-    if(inMesh(x + size / 2, y))
-    {
-        sum += dest[x + size / 2][y].height;
-        n++;
-    }
-    if(inMesh(x, y + size / 2))
-    {
-        sum += dest[x][y + size / 2].height;
-        n++;
-    }
-    if(inMesh(x - size / 2, y))
-    {
-        sum += dest[x - size / 2][y].height;
-        n++;
-    }
-    dest[x][y].height = getHeight(sum / n, size);
-    dest[x][y].g = DESERT;
-}
 void TerrainGen::diamond(mesh_t &dest, int x, int y, int size)
 {
-    //cout << "Doing diamond @ " << size << " and (" << x << "," << y << ")\n";
-    if(size <= 1)
-        return;
+    //this finds the value at x, y such that x, y are at the center
+    //of a square with size 'size' and adding the point creates diamonds
     int sum = 0;
     int n = 0;
+    //sometimes (x,y) is right on boundary of chunk so we have to check this
     if(inMesh(x - size / 2, y - size / 2))
     {
-        sum += dest[x - size / 2][y - size / 2].height;
         n++;
-    }
-    if(inMesh(x + size / 2, y - size / 2))
-    {
-        sum += dest[x + size / 2][y - size / 2].height;
-        n++;
-    }
-    if(inMesh(x + size / 2, y + size / 2))
-    {
-        sum += dest[x + size / 2][y + size / 2].height;
-        n++;
+        sum += (int) dest[x - size / 2][y - size / 2].height;
     }
     if(inMesh(x - size / 2, y + size / 2))
     {
-        sum += dest[x - size / 2][y + size / 2].height;
         n++;
+        sum += dest[x - size / 2][y + size / 2].height;
     }
+    if(inMesh(x + size / 2, y + size / 2))
+    {
+        n++;
+        sum += dest[x + size / 2][y + size / 2].height;
+    }
+    if(inMesh(x + size / 2, y - size / 2))
+    {
+        n++;
+        sum += dest[x + size / 2][y - size / 2].height;
+    }
+    //Put in height for center of square
+    if(n == 0)
+        return;
+    dest[x][y].height = getHeight(sum / n, size);
+    dest[x][y].g = DESERT;
+}
+
+void TerrainGen::square(mesh_t &dest, int x, int y, int size)
+{
+    //Square: Find height at center of diamond to create squares
+    int sum = 0;
+    int n = 0;
+    if(inMesh(x - size / 2, y))
+    {
+        n++;
+        sum += dest[x - size / 2][y].height;
+    }
+    if(inMesh(x + size / 2, y))
+    {
+        n++;
+        sum += dest[x + size / 2][y].height;
+    }
+    if(inMesh(x, y - size / 2))
+    {
+        n++;
+        sum += dest[x][y - size / 2].height;
+    }
+    if(inMesh(x, y + size / 2))
+    {
+        n++;
+        sum += dest[x][y + size / 2].height;
+    }
+    if(n == 0)
+        return;
     dest[x][y].height = getHeight(sum / n, size);
     dest[x][y].g = DESERT;
 }
 
 bool TerrainGen::inMesh(int x, int y)
 {
-    if(x >= 0 && x < CHUNK_SIZE && y >= 0 && y < CHUNK_SIZE)
+    if(x > 0 && x < CHUNK_SIZE && y > 0 && y < CHUNK_SIZE)
     {
         return true;
     }
@@ -112,26 +148,73 @@ bool TerrainGen::inMesh(int x, int y)
     }
 }
 
-unsigned char TerrainGen::getHeight(int avg, int size)
+void TerrainGen::fillDiamond(mesh_t &dest, int x, int y, int size)
 {
-    /*
-    if(size == CHUNK_SIZE - 1)
+    //place point at center of a diamond (square corner)
+    //size = total width/height of the diamond being filled in
+    int sum = 0;
+    int n = 0;
+    //cout << "Filling in diamond @ " << x << "," << y << " with size " << size << endl;
+    if(inMesh(x - size / 2, y))
     {
-        //For now, establish the first five major points with full range
-        return 128;
+        n++;
+        sum += (int) dest[x - size / 2][y].height;
+        //cout << "Using point " << x - size / 2 << "," << y << endl;
     }
-    int range = float(size) / (CHUNK_SIZE - 1) * 255 * ROUGHNESS;
-    //Set range to 1 if it's 0, to avoid div by zero error
-    if(avg + range > 255)
-        range = 255 - avg;
-    if(avg - range < 0)
-        range = avg;
-    if(range == 0)
-        range = 1;
-    int result = (avg + (random() % range) - (range / 2));
-    result &= 0xFF;
-    //cout << "Height is " << result << " for size " << size << " and avg " << avg << " and range " << range << endl;
-    return result;
-     */
-    return 0;
+    if(inMesh(x + size / 2, y))
+    {
+        n++;
+        sum += (int) dest[x + size / 2][y].height;
+        //cout << "Using point " << x + size / 2 << "," << y << endl;
+    }
+    if(inMesh(x, y - size / 2))
+    {
+        n++;
+        sum += (int) dest[x][y - size / 2].height;
+        //cout << "Using point " << x << "," << y - size / 2 << endl;
+    }
+    if(inMesh(x, y + size / 2))
+    {
+        n++;
+        sum += (int) dest[x][y + size / 2].height;
+        //cout << "Using point " << x << "," << y + size / 2 << endl;
+    }
+    if(n == 0)
+        return;
+    dest[x][y].height = getHeight(sum / n, size);
+    dest[x][y].g = DESERT;
+}
+
+void TerrainGen::fillSquare(mesh_t &dest, int x, int y, int size)
+{
+    int sum = 0;
+    int n = 0;
+    //cout << "Filling in square @ " << x << "," << y << " with size " << size << endl;
+    //sometimes (x,y) is right on boundary of chunk so we have to check this
+    //size is the side length of square being filled in
+    if(inMesh(x - size / 2, y - size / 2))
+    {
+        n++;
+        sum += (int) dest[x - size / 2][y - size / 2].height;
+    }
+    if(inMesh(x - size / 2, y + size / 2))
+    {
+        n++;
+        sum += (int) dest[x - size / 2][y + size / 2].height;
+    }
+    if(inMesh(x + size / 2, y + size / 2))
+    {
+        n++;
+        sum += (int) dest[x + size / 2][y + size / 2].height;
+    }
+    if(inMesh(x + size / 2, y - size / 2))
+    {
+        n++;
+        sum += (int) dest[x + size / 2][y - size / 2].height;
+    }
+    //Put in height for center of square
+    if(n == 0)
+        return;
+    dest[x][y].height = getHeight(sum / n, size);
+    dest[x][y].g = DESERT;
 }
