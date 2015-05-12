@@ -59,7 +59,7 @@ void view::drawBuilding(Building& b)
     //b's cuboids are already in correct order for rendering (back to front)
     for(int i = 0; i < b.numCuboids(); i++)
     {
-        drawCuboid(b.getCuboidRef(i));
+        drawCuboid(b.getCuboid(i));
     }
 }
 

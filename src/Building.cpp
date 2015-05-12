@@ -12,36 +12,32 @@ using namespace std;
 
 Building::Building()
 {
-    boxes = new vector<Cuboid>;
     //default constrcutor just tests out the rendering
     //simply make a cube that will show up on the screen when upper-left is at (0,0)
-    boxes->push_back(*(new Cuboid(0, 2, 0, 1, 1, 1, 0, 0, 1)));
+    boxes.push_back(*(new Cuboid(10, 12, 0, 1, 1, 1, 0, 0, 0, 0, 1)));
 }
 
-Building::~Building()
-{
-    delete[] this->boxes;
-}
+Building::~Building() {}
 
 void Building::addCuboid(Cuboid* c)
 {
-    if(this->boxes->size() == 0)
+    if(boxes.size() == 0)
     {
-        boxes->push_back(*c);
+        boxes.push_back(*c);
     }
     else
     {
-        for(vector<Cuboid>::iterator iter = boxes->begin(); iter != boxes->end(); ++iter)
+        for(vector<Cuboid>::iterator iter = boxes.begin(); iter != boxes.end(); ++iter)
         {
             //&*iter is a reference to the object pointed to by iter (i.e. pointer to actual cuboid)
             if(isFront(c, &(*(iter))))
             {
-                this->boxes->insert(iter, *c);
+                this->boxes.insert(iter, *c);
                 return;
             }
         }
     }
-    boxes->push_back(*c);
+    boxes.push_back(*c);
 }
 //Returns true iff c1 should be drawn after (in front of) c2
 bool Building::isFront(Cuboid* c1, Cuboid* c2)
@@ -63,12 +59,12 @@ bool Building::isFront(Cuboid* c1, Cuboid* c2)
     return false;
 }
 
-Cuboid& Building::getCuboidRef(int index)
+Cuboid& Building::getCuboid(int index)
 {
-    return (*this->boxes)[index];
+    return boxes[index];
 }
 
 int Building::numCuboids()
 {
-    return (int) this->boxes->size();
+    return (int) this->boxes.size();
 }

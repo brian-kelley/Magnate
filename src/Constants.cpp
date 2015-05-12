@@ -28,8 +28,9 @@ float constants::UI_FG_G = 0.75;
 float constants::UI_FG_B = 0.75;
 float constants::SHADE = 0.85;
 float constants::HMULT = -80.0;
-long int constants::screenX = 0;
+long int constants::screenX = 10000;
 long int constants::screenY = 0;
+VIEW_DIRECTION constants::viewDirection = NORTH;
 
 #ifdef __APPLE__
 string constants::BIN_TO_ROOT = "../..";

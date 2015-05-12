@@ -18,7 +18,7 @@ class Cuboid
 public:
     Cuboid(double x, double y, double z,
            double length, double width, double height,
-           int leftWall, int rightWall, int roof);
+           int wall1, int wall2, int wall3, int wall4, int roof);
     virtual ~Cuboid();
     void initDrawCoords();
     double getX();
@@ -27,8 +27,10 @@ public:
     double getWidth();
     double getLength();
     double getHeight();
-    int getLeft();
-    int getRight();
+    int getNEWall();
+    int getNWWall();
+    int getSEWall();
+    int getSWWall();
     int getRoof();
     /*************************
         ----5---
@@ -61,8 +63,10 @@ private:
     double length;
     double width;
     double height;
-    int left;
-    int right;
+    int nwWall;
+    int neWall;
+    int swWall;
+    int seWall;
     int roof;
 };
 

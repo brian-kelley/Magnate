@@ -23,6 +23,7 @@ int Control::oldWindowW;
 int Control::oldWindowH;
 SDL_Event* Control::currentEvent;
 map<SNAME, Scene*> Control::scenes;
+const Uint8* Control::keystate = NULL;
 
 namespace ui        //place for callbacks etc.
 {
@@ -67,12 +68,13 @@ void Control::init()
     /* Normal game, go through main & save menus
     currentScene = scenes[MAIN_MENU];
      */
-    //Debug mode, jump into 'asdf' for quicker testing
+    //Debug mode, jump into 'asdf' for quicker testing of actual gameplay
     
     currentScene = scenes[GAME];
     SaveManager::loadTestWorld();
     SaveManager::transitionToGame(nullptr);
-
+    
+    keystate = SDL_GetKeyboardState(NULL);
     model::init();
     //Trap mouse in window
     SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -94,6 +96,7 @@ void Control::update()
 {
     oldWindowW = constants::WINDOW_W;
     oldWindowH = constants::WINDOW_H;
+    keystate = SDL_GetKeyboardState(NULL);
     SDL_PumpEvents();
     while(SDL_PollEvent(currentEvent))
     {
@@ -102,19 +105,19 @@ void Control::update()
             case SDL_KEYDOWN:
                 if(trackingKeyboard)
                 {
-                    processKeyboardEvent(*currentEvent);
+                    processKeyEvent(*currentEvent);
                 }
                 break;
             case SDL_KEYUP:
                 if(trackingKeyboard)
                 {
-                    processKeyboardEvent(*currentEvent);
+                    processKeyEvent(*currentEvent);
                 }
                 break;
             case SDL_TEXTINPUT:
                 if(trackingKeyboard)
                 {
-                    processKeyboardEvent(*currentEvent);
+                    processKeyTypedEvent(*currentEvent);
                 }
                 break;
             case SDL_WINDOWEVENT:
@@ -151,26 +154,27 @@ void Control::update()
     }
     if(currentScene == scenes[GAME])
     {
-        int dScreenX = 0;
-        int dScreenY = 0;
-        const int PAN_SPEED = 15;
-        if(mouseX == 0)
-            dScreenX -= PAN_SPEED;
-        if(mouseX == WINDOW_W - 1)
-            dScreenX += PAN_SPEED;
-        if(mouseY == 0)
-            dScreenY -= PAN_SPEED;
-        if(mouseY == WINDOW_H - 1)
-            dScreenY += PAN_SPEED;
-        screenX += dScreenX;
-        screenY += dScreenY;
+        if(mouseX < 2 || keystate[SDL_SCANCODE_A])
+            WorldRenderer::panLeft();
+        if(mouseX > WINDOW_W - 3 || keystate[SDL_SCANCODE_D])
+            WorldRenderer::panRight();
+        if(mouseY < 2 || keystate[SDL_SCANCODE_W])
+            WorldRenderer::panUp();
+        if(mouseY > WINDOW_H - 3 || keystate[SDL_SCANCODE_S])
+            WorldRenderer::panDown();
     }
     view::prepareFrame();
     UIRenderer::drawComponent(*currentScene);
     if(currentScene == scenes[GAME])
     {
-        WorldRenderer::render();
+        WorldRenderer::render(*model::currentWorld);
     }
+    //Cuboid render test
+    int wallID = RenderRoutines::mainAtlas->tileFromName("wall");
+    int roofID = RenderRoutines::mainAtlas->tileFromName("roof");
+    Cuboid cube(10, 12, 0, 2.5, 1.5, 1, wallID, wallID, wallID, wallID, roofID);
+    RenderRoutines::drawCuboid(cube);
+    
     color3f(1, 1, 1);
     RenderRoutines::blit(RenderRoutines::mainAtlas->tileFromName("cursor"), mouseX, mouseY);
     view::finalizeFrame();
@@ -181,12 +185,26 @@ bool Control::isTerminating()
     return terminating;
 }
 
-void Control::processKeyboardEvent(SDL_Event &e)
+void Control::processKeyTypedEvent(SDL_Event &e)
 {
     //If there is an active field, pass this event to it
     if(Field::currentField)
     {
         Field::currentField->processKey(e);
+    }
+}
+
+void Control::processKeyEvent(SDL_Event &e)
+{
+    if(e.key.state == SDL_PRESSED)
+    {
+        if(currentScene == scenes[GAME])
+        {
+            if(e.key.keysym.scancode == SDL_SCANCODE_Q)
+                WorldRenderer::rotateLeft();
+            if(e.key.keysym.scancode == SDL_SCANCODE_E)
+                WorldRenderer::rotateRight();
+        }
     }
 }
 

@@ -10,13 +10,13 @@
 #define __MagIndev__World__
 
 #include <boost/filesystem.hpp>
-#include <stdio.h>
 #include <vector>
 #include <iostream>
 #include <fstream>
 #include "Chunk.h"
 #include "Constants.h"
 #include "Terrain.h"
+#include "TerrainGen.h"
 
 class World
 {
@@ -25,14 +25,18 @@ public:
     World(std::string saveName, bool generate);
     ~World();
     static std::string currentSaveName;
-    bool isValidTile(int x, int y);
-    GROUND getTerrainType(int x, int y);
-    int getTerrainHeight(int x, int y);
-private:
-    //data
-    uint64_t seed;
-    //methods
     void generate();
+    int getWorldLength();
+    Chunk* chunks[constants::WORLD_CHUNKS][constants::WORLD_CHUNKS];
+    //slow, worldwide tile access (use for world generation)
+    void setHeight(Height height, int wi, int wj);
+    void setGround(GROUND ground, int wi, int wj);
+    Height getHeight(int wi, int wj);
+    GROUND getGround(int wi, int wj);
+private:
+    //Length of world in either direction, in chunks
+    //data
+    int seed;
     void readWorld();
     void writeWorld();
 };

@@ -36,10 +36,10 @@
 namespace Control
 
 {
-    extern void init();
-    extern void dispose();
-    extern void update();
-    extern bool isTerminating();
+    void init();
+    void dispose();
+    void update();
+    bool isTerminating();
     enum SNAME
     {
         MAIN_MENU,
@@ -52,19 +52,21 @@ namespace Control
     extern std::map<SNAME, Scene*> scenes;
     extern SDL_Event* currentEvent;
     extern Scene* currentScene;
-    extern void processWindowResize();
-    extern void processWindowEvent(SDL_Event& e);
-    extern void processMouseMotionEvent();
-    extern void processMouseButtonEvent(SDL_Event& e);
-    extern void processMouseWheelEvent(SDL_Event& e);
-    extern void processKeyboardEvent(SDL_Event& e);
-    extern void updateUISize();
+    void processWindowResize();
+    void processWindowEvent(SDL_Event& e);
+    void processMouseMotionEvent();
+    void processMouseButtonEvent(SDL_Event& e);
+    void processMouseWheelEvent(SDL_Event& e);
+    void processKeyEvent(SDL_Event& e);
+    void processKeyTypedEvent(SDL_Event& e);
+    void updateUISize();
     extern bool terminating;
     extern bool updatingView;
     extern bool trackingMouse;
     extern bool trackingKeyboard;
-    extern void initScenes();
-    extern void clearEnables();
+    void initScenes();
+    void clearEnables();
+    extern const Uint8* keystate;
 }
 
 #endif

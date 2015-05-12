@@ -9,9 +9,8 @@
 #ifndef MagIndev_Constants_h
 #define MagIndev_Constants_h
 
-#include <cstdint>
 #include <string>
-#include <array>
+#include <cmath>
 
 //Structs used all over the place
 
@@ -92,14 +91,23 @@ enum GROUND : unsigned char
     NUM_TYPES
 };
 
+enum VIEW_DIRECTION
+{
+    NORTH,
+    SOUTH,
+    EAST,
+    WEST
+};
+
+//Type for terrain heightmap heights (uint8)
+
+typedef unsigned char Height;
+
 typedef struct
 {
     GROUND g;
-    unsigned char height;
+    Height height;
 } tNode_t;
-
-#define CHUNK_SIZE 129
-typedef tNode_t mesh_t[CHUNK_SIZE][CHUNK_SIZE];
 
 namespace constants
 {
@@ -124,6 +132,11 @@ namespace constants
     extern long int screenX;
     extern long int screenY;
     const double TERRAIN_TILE_SIZE = 0.25;
+    const int WORLD_SIZE = 1025;
+    const int CHUNK_SIZE = 61;
+    const int WORLD_CHUNKS = WORLD_SIZE / CHUNK_SIZE + ((((WORLD_SIZE / CHUNK_SIZE) * CHUNK_SIZE) == WORLD_SIZE) ? 0 : 1);
+    extern VIEW_DIRECTION viewDirection;
+    const int PAN_SPEED = 15;   //pixels per frame
 }
 
 #endif

@@ -10,7 +10,7 @@
 
 using namespace std;
 
-Cuboid::Cuboid(double x, double y, double z, double length, double width, double height, int leftWall, int rightWall, int roof)
+Cuboid::Cuboid(double x, double y, double z, double length, double width, double height, int wall1, int wall2, int wall3, int wall4, int roof)
 {
     this->x = x;
     this->y = y;
@@ -18,33 +18,16 @@ Cuboid::Cuboid(double x, double y, double z, double length, double width, double
     this->length = length;
     this->width = width;
     this->height = height;
-    this->left = leftWall;
-    this->right = rightWall;
+    nwWall = wall1;
+    neWall = wall2;
+    seWall = wall3;
+    swWall = wall4;
     this->roof = roof;
-    initDrawCoords();
 }
 
 Cuboid::~Cuboid()
 {
     //no deletes necessary
-}
-
-void Cuboid::initDrawCoords()
-{
-    int baseX = coord::ix(x, y);
-    int baseY = coord::jy(x, y);
-    draw.x2 = coord::ix(x, y) - baseX;
-    draw.y2 = coord::jy(x, y) - (int) (coord::ISO_HEIGHT * (z + height)) - baseY;
-    draw.x3 = coord::ix(x + length, y) - baseX;
-    draw.y3 = coord::jy(x + length, y) - (int) (coord::ISO_HEIGHT * (z + height)) - baseY;
-    draw.x4 = coord::ix(x + length, y) - baseX;
-    draw.y4 = coord::jy(x + length, y) - (int) (coord::ISO_HEIGHT * z) - baseY;
-    draw.x5 = coord::ix(x, y + width) - baseX;
-    draw.y5 = coord::jy(x, y + width) - (int) (coord::ISO_HEIGHT * (z + height)) - baseY;
-    draw.x6 = coord::ix(x + length, y + width) - baseX;
-    draw.y6 = coord::jy(x + length, y + width) - (int) (coord::ISO_HEIGHT * (z + height)) - baseY;
-    draw.x7 = coord::ix(x + length, y + width) - baseX;
-    draw.y7 = coord::jy(x + length, y + width) - (int) (coord::ISO_HEIGHT * (z)) - baseY;
 }
 
 double Cuboid::getX()
@@ -71,13 +54,21 @@ double Cuboid::getHeight()
 {
     return this->height;
 }
-int Cuboid::getLeft()
+int Cuboid::getNEWall()
 {
-    return this->left;
+    return neWall;
 }
-int Cuboid::getRight()
+int Cuboid::getNWWall()
 {
-    return this->right;
+    return nwWall;
+}
+int Cuboid::getSEWall()
+{
+    return seWall;
+}
+int Cuboid::getSWWall()
+{
+    return swWall;
 }
 int Cuboid::getRoof()
 {

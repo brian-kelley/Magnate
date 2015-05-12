@@ -8,24 +8,66 @@
 
 #include "Coord.h"
 
+using namespace constants;
+
 int coord::ix(double i, double j)
 {
-    return ISO_LENGTH / 2 * (i + j);
+    switch(viewDirection)
+    {
+        case NORTH:
+            return ISO_LENGTH / 2.0 * (i + j);
+        case WEST:
+            return ISO_LENGTH / 2.0 * (-i + j);
+        case EAST:
+            return ISO_LENGTH / 2.0 * (i - j);
+        case SOUTH:
+            return ISO_LENGTH / 2.0 * (-i - j);
+    }
 }
 
 int coord::jy(double i, double j)
 {
-    return ISO_WIDTH / 2 * (i - j);
+    switch(viewDirection)
+    {
+        case NORTH:
+            return ISO_WIDTH / 2.0 * (i - j);
+        case WEST:
+            return ISO_WIDTH / 2.0 * (i + j);
+        case EAST:
+            return ISO_WIDTH / 2.0 * (-i - j);
+        case SOUTH:
+            return ISO_WIDTH / 2.0 * (-i + j);
+    }
 }
 
 double coord::xi(int x, int y)
 {
-    return x / ISO_LENGTH + y / ISO_WIDTH;
+    switch(viewDirection)
+    {
+        case NORTH:
+            return x / double(ISO_LENGTH) + y / double(ISO_WIDTH);
+        case WEST:
+            return -x / double(ISO_LENGTH) + y / double(ISO_WIDTH);
+        case EAST:
+            return x / double(ISO_LENGTH) - y / double(ISO_WIDTH);
+        case SOUTH:
+            return -x / double(ISO_LENGTH) - y / double(ISO_WIDTH);
+    }
 }
 
 double coord::yj(int x, int y)
 {
-    return x / ISO_LENGTH - y / ISO_WIDTH;
+    switch(viewDirection)
+    {
+        case NORTH:
+            return x / double(ISO_LENGTH) - y / double(ISO_WIDTH);
+        case WEST:
+            return x / double(ISO_LENGTH) + y / double(ISO_WIDTH);
+        case EAST:
+            return -x / double(ISO_LENGTH) - y / double(ISO_WIDTH);
+        case SOUTH:
+            return -x / double(ISO_LENGTH) + y / double(ISO_WIDTH);
+    }
 }
 
 bool coord::rectInside(intRect_t* small, intRect_t* big)

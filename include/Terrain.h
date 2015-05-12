@@ -17,10 +17,8 @@
 
 namespace Terrain
 {
-    extern long int wseed;
-    extern void init(long int seed);
+    extern void init();
     extern std::map<GROUND, int> terrainTextures;
-    extern tNode_t generateNode(double i, double j);
 }
 
 #endif

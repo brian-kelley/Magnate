@@ -19,10 +19,10 @@ public:
     Building();
     virtual ~Building();
     int numCuboids();
-    Cuboid& getCuboidRef(int index);
+    Cuboid& getCuboid(int index);
 protected:
 private:
-    std::vector<Cuboid>* boxes;
+    std::vector<Cuboid> boxes;
     void addCuboid(Cuboid* c);
     bool isFront(Cuboid* c1, Cuboid* c2);
 };

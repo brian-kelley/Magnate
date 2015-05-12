@@ -21,17 +21,18 @@
 
 namespace WorldRenderer
 {
-    const int MAX_CHUNK_CACHE = 25;
-    extern std::map<std::pair<int, int>, Chunk*> chunkCache;
-    extern void preload();
-    extern void render();
-    extern void trimChunkCache();
-    extern void drawTerrain();
-    extern void drawChunk(Chunk* c);
-    extern void drawChunkBorder(Chunk* c1, Chunk* c2);
-    extern void drawChunkIntersection(Chunk* c1, Chunk* c2, Chunk* c3, Chunk* c4);
-    extern void assertInCache(std::pair<int, int> chunkLoc);
-    extern std::pair<int, int> pixelToChunk(int scrX, int scrY);
+    void preload();
+    void render(World& world);
+    void renderNorth(World& world);
+    void renderSouth(World& world);
+    void renderWest(World& world);
+    void renderEast(World& world);
+    void panUp();
+    void panDown();
+    void panLeft();
+    void panRight();
+    void rotateLeft(); // N > W > S > E > N
+    void rotateRight(); // N > E > S > W > N
 }
 
 #endif /* defined(__Magnate__WorldRenderer__) */

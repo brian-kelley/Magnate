@@ -8,27 +8,30 @@
 
 #ifndef __MagIndev__Chunk__
 #define __MagIndev__Chunk__
-#define CHUNK_SIZE 129
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
 #include <boost/multi_array.hpp>
 #include "Terrain.h"
-#include "TerrainGen.h"
+#include "Constants.h"
 
 class Chunk
 {
 public:
     //Chunks are always aligned with the boundary i and j values CHUNK_SIZE * TERRAIN_TILE_SIZE
     //so constructor should take integers even though tiles exist in double, double coordinates
+    Chunk();
     Chunk(int i, int j);
     ~Chunk();
     double getIOffset();
     double getJOffset();
     int getI();
     int getJ();
-    tNode_t mesh[CHUNK_SIZE][CHUNK_SIZE];
+    void setI(int i);
+    void setJ(int j);
+    //array of nodes in heightmap within this chunk's area
+    tNode_t mesh[constants::CHUNK_SIZE][constants::CHUNK_SIZE];
 private:
     int i;
     int j;

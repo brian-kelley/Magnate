@@ -30,6 +30,10 @@ namespace RenderRoutines
     extern void blit(int tex, int x, int y);
     extern void blit(int tex, int x1, int y1, int x2, int y2);
     extern void drawCuboid(Cuboid& c);
+    extern void drawCuboidNorth(Cuboid& c);
+    extern void drawCuboidWest(Cuboid& c);
+    extern void drawCuboidEast(Cuboid& c);
+    extern void drawCuboidSouth(Cuboid& c);
     extern int texNumFromStr(std::string name);
     extern floatRect_t getTexCoords(int index);
     extern float calcTileShade(unsigned char h1, unsigned char h2, unsigned char h3, unsigned char h4);

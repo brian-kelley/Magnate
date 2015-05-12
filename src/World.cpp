@@ -16,8 +16,14 @@ string World::currentSaveName = "";
 
 World::World(std::string saveName, bool willGenerate)
 {
-    cout << willGenerate << endl;
     currentSaveName = saveName;
+    for(int i = 0; i < WORLD_CHUNKS; i++)
+    {
+        for(int j = 0; j < WORLD_CHUNKS; j++)
+        {
+            chunks[i][j] = new Chunk(i, j);
+        }
+    }
     path saveFolder = initial_path() / constants::BIN_TO_ROOT / "saves";
     if(!exists(saveFolder))
     {
@@ -29,7 +35,7 @@ World::World(std::string saveName, bool willGenerate)
     if(willGenerate)
     {
         cout << "Will generate and save new world." << endl;
-        generate();
+        seed = random();
         writeWorld();
     }
     else
@@ -37,22 +43,27 @@ World::World(std::string saveName, bool willGenerate)
         cout << "Will read existing world from disk." << endl;
         readWorld();
     }
-    cout << "Successfully ran World constructor." << endl;
-    Terrain::init(seed);
-    
+    generate();
+    Terrain::init();
 }
 
 World::~World()
 {
-
+    for(int i = 0; i < WORLD_CHUNKS; i++)
+    {
+        for(int j = 0; j < WORLD_CHUNKS; j++)
+        {
+            delete chunks[i][j];
+        }
+    }
 }
 
 void World::generate()
 {
     //Set the world's permanent 64-bit seed value
     cout << "Starting world generation." << endl;
-    seed = rand() + (uint64_t(rand()) << 32);
-    Terrain::init(seed);
+    Terrain::init();
+    TerrainGen::generate(*this);
     cout << "Done with world generation." << endl;
 }
 
@@ -81,4 +92,44 @@ void World::readWorld()
     is.open(inPath.string());
     is >> seed;
     is.close();
+}
+
+void World::setGround(GROUND ground, int wi, int wj)
+{
+    int ci = wi / CHUNK_SIZE;
+    int cj = wj / CHUNK_SIZE;
+    int ti = wi - CHUNK_SIZE * ci;
+    int tj = wj - CHUNK_SIZE * cj;
+    chunks[ci][cj]->mesh[ti][tj].g = ground;
+}
+
+void World::setHeight(Height height, int wi, int wj)
+{
+    int ci = wi / CHUNK_SIZE;
+    int cj = wj / CHUNK_SIZE;
+    int ti = wi - CHUNK_SIZE * ci;
+    int tj = wj - CHUNK_SIZE * cj;
+    chunks[ci][cj]->mesh[ti][tj].height = height;
+}
+
+Height World::getHeight(int wi, int wj)
+{
+    if(wi < 0 || wi > WORLD_SIZE || wj < 0 || wj > WORLD_SIZE)
+        return 0;
+    int ci = wi / CHUNK_SIZE;
+    int cj = wj / CHUNK_SIZE;
+    int ti = wi - CHUNK_SIZE * ci;
+    int tj = wj - CHUNK_SIZE * cj;
+    return chunks[ci][cj]->mesh[ti][tj].height;
+}
+
+GROUND World::getGround(int wi, int wj)
+{
+    if(wi < 0 || wi > WORLD_SIZE || wj < 0 || wj > WORLD_SIZE)
+        return WATER;
+    int ci = wi / CHUNK_SIZE;
+    int cj = wj / CHUNK_SIZE;
+    int ti = wi - CHUNK_SIZE * ci;
+    int tj = wj - CHUNK_SIZE * cj;
+    return chunks[ci][cj]->mesh[ti][tj].g;
 }

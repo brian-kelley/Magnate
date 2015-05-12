@@ -109,55 +109,192 @@ void RenderRoutines::blit(int index, int x1, int y1, int x2, int y2)
 
 void RenderRoutines::drawCuboid(Cuboid& c)
 {
-    int posX = coord::ix(c.getX(), c.getY()) - screenX;
-    int posY = coord::jy(c.getX(), c.getY()) + (int) (constants::HMULT * c.getZ()) - screenY;
-    //Left wall
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glBegin(GL_QUADS);
-    glTexCoord2f(mainAtlas->tileX(c.getLeft()),
-                 mainAtlas->tileY(c.getLeft()));
-    glVertex2i(posX + c.draw.x2, posY + c.draw.y2);
-    glTexCoord2f(mainAtlas->tileX(c.getLeft()) + mainAtlas->tileW(c.getLeft()),
-                 mainAtlas->tileY(c.getLeft()));
-    glVertex2i(posX + c.draw.x3, posY + c.draw.y3);
-    glTexCoord2f(mainAtlas->tileX(c.getLeft()) + mainAtlas->tileW(c.getLeft()),
-                 mainAtlas->tileY(c.getLeft()) + mainAtlas->tileH(c.getLeft()));
-    glVertex2i(posX + c.draw.x4, posY + c.draw.y4);
-    glTexCoord2f(mainAtlas->tileX(c.getLeft()) + mainAtlas->tileW(c.getLeft()),
-                 mainAtlas->tileY(c.getLeft()) + mainAtlas->tileH(c.getLeft()));
-    glVertex2i(posX, posY);
-    glEnd();
-    //Roof
-    glBegin(GL_QUADS);
-    glTexCoord2f(mainAtlas->tileX(c.getRoof()),
-                 mainAtlas->tileY(c.getRoof()));
-    glVertex2i(posX + c.draw.x2, posY + c.draw.y2);
-    glTexCoord2f(mainAtlas->tileX(c.getRoof()) + mainAtlas->tileW(c.getRoof()),
-                 mainAtlas->tileY(c.getRoof()));
-    glVertex2i(posX + c.draw.x5, posY + c.draw.y5);
-    glTexCoord2f(mainAtlas->tileX(c.getRoof()) + mainAtlas->tileW(c.getRoof()),
-                 mainAtlas->tileY(c.getRoof()) + mainAtlas->tileH(c.getRoof()));
-    glVertex2i(posX + c.draw.x6, posY + c.draw.y6);
-    glTexCoord2f(mainAtlas->tileX(c.getRoof()),
-                 mainAtlas->tileY(c.getRoof()) + mainAtlas->tileH(c.getRoof()));
-    glVertex2i(posX + c.draw.x3, posY + c.draw.y3);
-    glEnd();
-    //Right wall
-    glColor3f(constants::SHADE, constants::SHADE, constants::SHADE);
-    glBegin(GL_QUADS);
-    glTexCoord2f(mainAtlas->tileX(c.getRight()),
-                 mainAtlas->tileY(c.getRight()));
-    glVertex2i(posX + c.draw.x3, posY + c.draw.y3);
-    glTexCoord2f(mainAtlas->tileX(c.getRight()) + mainAtlas->tileW(c.getRight()),
-                 mainAtlas->tileY(c.getRight()));
-    glVertex2i(posX + c.draw.x6, posY + c.draw.y6);
-    glTexCoord2f(mainAtlas->tileX(c.getRight()) + mainAtlas->tileW(c.getRight()),
-                 mainAtlas->tileY(c.getRight()) + mainAtlas->tileH(c.getRight()));
-    glVertex2i(posX + c.draw.x7, posY + c.draw.y7);
-    glTexCoord2f(mainAtlas->tileX(c.getRight()),
-                 mainAtlas->tileY(c.getRight()) + mainAtlas->tileH(c.getRight()));
-    glVertex2i(posX + c.draw.x4, posY + c.draw.y4);
-    glEnd();
+    //Note: Assume roof texture "this side up" would point NW in the world
+    switch(viewDirection)
+    {
+        case NORTH:
+            drawCuboidNorth(c);
+            break;
+        case EAST:
+            drawCuboidEast(c);
+            break;
+        case WEST:
+            drawCuboidWest(c);
+            break;
+        case SOUTH:
+            drawCuboidSouth(c);
+            break;
+    }
+}
+
+void RenderRoutines::drawCuboidNorth(Cuboid &c)
+{
+    color3f(1, 1, 1);   //No shading
+    int swWall = c.getSEWall(); //Texture ID for southwest wall
+    int seWall = c.getSWWall(); //Tex id for SE
+    int roof = c.getRoof();
+    int pxHeight = c.getHeight() * coord::ISO_HEIGHT;   //screen "height" of box
+    Point westCorner = coord::project3DPoint(c.getX(), c.getY(), c.getZ());
+    Point southCorner = coord::project3DPoint(c.getX() + c.getLength(), c.getY(), c.getZ());
+    Point eastCorner = coord::project3DPoint(c.getX() + c.getLength(), c.getY() + c.getWidth(), c.getZ());
+    //Draw SW wall
+    texCoord2f(mainAtlas->tileX(swWall), mainAtlas->tileY(swWall) + mainAtlas->tileH(swWall));
+    vertex2i(westCorner.x, westCorner.y);
+    texCoord2f(mainAtlas->tileX(swWall), mainAtlas->tileY(swWall));
+    vertex2i(westCorner.x, westCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(swWall) + mainAtlas->tileW(swWall), mainAtlas->tileY(swWall));
+    vertex2i(southCorner.x, southCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(swWall) + mainAtlas->tileW(swWall), mainAtlas->tileY(swWall) + mainAtlas->tileH(swWall));
+    vertex2i(southCorner.x, southCorner.y);
+    //Shade the SE wall
+    color3f(SHADE, SHADE, SHADE);
+    //Draw SE wall
+    texCoord2f(mainAtlas->tileX(seWall), mainAtlas->tileY(seWall) + mainAtlas->tileH(seWall));
+    vertex2i(southCorner.x, southCorner.y);
+    texCoord2f(mainAtlas->tileX(seWall), mainAtlas->tileY(seWall));
+    vertex2i(southCorner.x, southCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(seWall) + mainAtlas->tileW(seWall), mainAtlas->tileY(seWall));
+    vertex2i(eastCorner.x, eastCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(seWall) + mainAtlas->tileW(seWall), mainAtlas->tileY(seWall) + mainAtlas->tileH(seWall));
+    vertex2i(eastCorner.x, eastCorner.y);
+    //Draw roof
+    color3f(1, 1, 1);
+    texCoord2f(mainAtlas->tileX(roof), mainAtlas->tileY(roof));
+    vertex2i(westCorner.x, westCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(roof) + mainAtlas->tileW(roof), mainAtlas->tileY(roof));
+    vertex2i(westCorner.x + (eastCorner.x - southCorner.x), eastCorner.y - (southCorner.y - westCorner.y) - pxHeight); //north point is a bit tricky but doesn't need project3dpoint
+    texCoord2f(mainAtlas->tileX(roof) + mainAtlas->tileW(roof), mainAtlas->tileY(roof) + mainAtlas->tileH(roof));
+    vertex2i(eastCorner.x, eastCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(roof), mainAtlas->tileY(roof) + mainAtlas->tileH(roof));
+    vertex2i(southCorner.x, southCorner.y - pxHeight);
+}
+
+void RenderRoutines::drawCuboidWest(Cuboid &c)
+{
+    //Facing west means that left = SE and right = NE
+    color3f(SHADE, SHADE, SHADE);   //Both walls are in shadow
+    int seWall = c.getSEWall();
+    int neWall = c.getNEWall();
+    int roof = c.getRoof();
+    int pxHeight = c.getHeight() * coord::ISO_HEIGHT;   //screen "height" of box
+    Point southCorner = coord::project3DPoint(c.getX() + c.getLength(), c.getY(), c.getZ());
+    Point eastCorner = coord::project3DPoint(c.getX() + c.getLength(), c.getY() + c.getWidth(), c.getZ());
+    Point northCorner = coord::project3DPoint(c.getX(), c.getY() + c.getWidth(), c.getZ());
+    //Draw SE wall
+    texCoord2f(mainAtlas->tileX(seWall), mainAtlas->tileY(seWall) + mainAtlas->tileH(seWall));
+    vertex2i(southCorner.x, southCorner.y);
+    texCoord2f(mainAtlas->tileX(seWall), mainAtlas->tileY(seWall));
+    vertex2i(southCorner.x, southCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(seWall) + mainAtlas->tileW(seWall), mainAtlas->tileY(seWall));
+    vertex2i(eastCorner.x, eastCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(seWall) + mainAtlas->tileW(seWall), mainAtlas->tileY(seWall) + mainAtlas->tileH(seWall));
+    vertex2i(eastCorner.x, eastCorner.y);
+    //Maintain the dark shading
+    //Draw NE wall
+    texCoord2f(mainAtlas->tileX(neWall), mainAtlas->tileY(neWall) + mainAtlas->tileH(neWall));
+    vertex2i(eastCorner.x, eastCorner.y);
+    texCoord2f(mainAtlas->tileX(neWall), mainAtlas->tileY(neWall));
+    vertex2i(eastCorner.x, eastCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(neWall) + mainAtlas->tileW(neWall), mainAtlas->tileY(neWall));
+    vertex2i(northCorner.x, northCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(neWall) + mainAtlas->tileW(neWall), mainAtlas->tileY(neWall) + mainAtlas->tileH(neWall));
+    vertex2i(northCorner.x, northCorner.y);
+    //Draw roof - upright image points to upper-right on the screen
+    color3f(1, 1, 1);
+    texCoord2f(mainAtlas->tileX(roof), mainAtlas->tileY(roof));
+    vertex2i(southCorner.x + (northCorner.x - eastCorner.x), southCorner.y - (eastCorner.y - northCorner.y) - pxHeight);
+    texCoord2f(mainAtlas->tileX(roof) + mainAtlas->tileW(roof), mainAtlas->tileY(roof));
+    vertex2i(northCorner.x, northCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(roof) + mainAtlas->tileW(roof), mainAtlas->tileY(roof) + mainAtlas->tileH(roof));
+    vertex2i(eastCorner.x, eastCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(roof), mainAtlas->tileY(roof) + mainAtlas->tileH(roof));
+    vertex2i(southCorner.x, southCorner.y - pxHeight);
+}
+
+void RenderRoutines::drawCuboidEast(Cuboid &c)
+{
+    color3f(1, 1, 1);   //No shading
+    int swWall = c.getSEWall(); //Texture ID for southwest wall
+    int seWall = c.getSWWall(); //Tex id for SE
+    int roof = c.getRoof();
+    int pxHeight = c.getHeight() * coord::ISO_HEIGHT;   //screen "height" of box
+    Point westCorner = coord::project3DPoint(c.getX(), c.getY(), c.getZ());
+    Point southCorner = coord::project3DPoint(c.getX() + c.getLength(), c.getY(), c.getZ());
+    Point eastCorner = coord::project3DPoint(c.getX() + c.getLength(), c.getY() + c.getWidth(), c.getZ());
+    //Draw SW wall
+    texCoord2f(mainAtlas->tileX(swWall), mainAtlas->tileY(swWall) + mainAtlas->tileH(swWall));
+    vertex2i(westCorner.x, westCorner.y);
+    texCoord2f(mainAtlas->tileX(swWall), mainAtlas->tileY(swWall));
+    vertex2i(westCorner.x, westCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(swWall) + mainAtlas->tileW(swWall), mainAtlas->tileY(swWall));
+    vertex2i(southCorner.x, southCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(swWall) + mainAtlas->tileW(swWall), mainAtlas->tileY(swWall) + mainAtlas->tileH(swWall));
+    vertex2i(southCorner.x, southCorner.y);
+    //Shade the SE wall
+    color3f(SHADE, SHADE, SHADE);
+    //Draw SE wall
+    texCoord2f(mainAtlas->tileX(seWall), mainAtlas->tileY(seWall) + mainAtlas->tileH(seWall));
+    vertex2i(southCorner.x, southCorner.y);
+    texCoord2f(mainAtlas->tileX(seWall), mainAtlas->tileY(seWall));
+    vertex2i(southCorner.x, southCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(seWall) + mainAtlas->tileW(seWall), mainAtlas->tileY(seWall));
+    vertex2i(eastCorner.x, eastCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(seWall) + mainAtlas->tileW(seWall), mainAtlas->tileY(seWall) + mainAtlas->tileH(seWall));
+    vertex2i(eastCorner.x, eastCorner.y);
+    //Draw roof
+    color3f(1, 1, 1);
+    texCoord2f(mainAtlas->tileX(roof), mainAtlas->tileY(roof));
+    vertex2i(westCorner.x, westCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(roof) + mainAtlas->tileW(roof), mainAtlas->tileY(roof));
+    vertex2i(westCorner.x + (eastCorner.x - southCorner.x), eastCorner.y - (southCorner.y - westCorner.y) - pxHeight); //north point is a bit tricky but doesn't need project3dpoint
+    texCoord2f(mainAtlas->tileX(roof) + mainAtlas->tileW(roof), mainAtlas->tileY(roof) + mainAtlas->tileH(roof));
+    vertex2i(eastCorner.x, eastCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(roof), mainAtlas->tileY(roof) + mainAtlas->tileH(roof));
+    vertex2i(southCorner.x, southCorner.y - pxHeight);
+
+}
+
+void RenderRoutines::drawCuboidSouth(Cuboid &c)
+{
+    color3f(1, 1, 1);   //No shading
+    int swWall = c.getSEWall(); //Texture ID for southwest wall
+    int seWall = c.getSWWall(); //Tex id for SE
+    int roof = c.getRoof();
+    int pxHeight = c.getHeight() * coord::ISO_HEIGHT;   //screen "height" of box
+    Point westCorner = coord::project3DPoint(c.getX(), c.getY(), c.getZ());
+    Point southCorner = coord::project3DPoint(c.getX() + c.getLength(), c.getY(), c.getZ());
+    Point eastCorner = coord::project3DPoint(c.getX() + c.getLength(), c.getY() + c.getWidth(), c.getZ());
+    //Draw SW wall
+    texCoord2f(mainAtlas->tileX(swWall), mainAtlas->tileY(swWall) + mainAtlas->tileH(swWall));
+    vertex2i(westCorner.x, westCorner.y);
+    texCoord2f(mainAtlas->tileX(swWall), mainAtlas->tileY(swWall));
+    vertex2i(westCorner.x, westCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(swWall) + mainAtlas->tileW(swWall), mainAtlas->tileY(swWall));
+    vertex2i(southCorner.x, southCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(swWall) + mainAtlas->tileW(swWall), mainAtlas->tileY(swWall) + mainAtlas->tileH(swWall));
+    vertex2i(southCorner.x, southCorner.y);
+    //Shade the SE wall
+    color3f(SHADE, SHADE, SHADE);
+    //Draw SE wall
+    texCoord2f(mainAtlas->tileX(seWall), mainAtlas->tileY(seWall) + mainAtlas->tileH(seWall));
+    vertex2i(southCorner.x, southCorner.y);
+    texCoord2f(mainAtlas->tileX(seWall), mainAtlas->tileY(seWall));
+    vertex2i(southCorner.x, southCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(seWall) + mainAtlas->tileW(seWall), mainAtlas->tileY(seWall));
+    vertex2i(eastCorner.x, eastCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(seWall) + mainAtlas->tileW(seWall), mainAtlas->tileY(seWall) + mainAtlas->tileH(seWall));
+    vertex2i(eastCorner.x, eastCorner.y);
+    //Draw roof
+    color3f(1, 1, 1);
+    texCoord2f(mainAtlas->tileX(roof), mainAtlas->tileY(roof));
+    vertex2i(westCorner.x, westCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(roof) + mainAtlas->tileW(roof), mainAtlas->tileY(roof));
+    vertex2i(westCorner.x + (eastCorner.x - southCorner.x), eastCorner.y - (southCorner.y - westCorner.y) - pxHeight); //north point is a bit tricky but doesn't need project3dpoint
+    texCoord2f(mainAtlas->tileX(roof) + mainAtlas->tileW(roof), mainAtlas->tileY(roof) + mainAtlas->tileH(roof));
+    vertex2i(eastCorner.x, eastCorner.y - pxHeight);
+    texCoord2f(mainAtlas->tileX(roof), mainAtlas->tileY(roof) + mainAtlas->tileH(roof));
+    vertex2i(southCorner.x, southCorner.y - pxHeight);
+
 }
 
 int RenderRoutines::texNumFromStr(std::string name)
