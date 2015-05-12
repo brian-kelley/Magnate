@@ -13,6 +13,7 @@ using namespace constants;
 using namespace Control;
 using namespace Renderer;
 using namespace boost::filesystem;
+using namespace coord;
 
 Scene* Control::currentScene;
 bool Control::terminating;
@@ -172,7 +173,7 @@ void Control::update()
     //Cuboid render test
     int wallID = RenderRoutines::mainAtlas->tileFromName("wall");
     int roofID = RenderRoutines::mainAtlas->tileFromName("roof");
-    Cuboid cube(10, 12, 0, 2.5, 1.5, 1, wallID, wallID, wallID, wallID, roofID);
+    Cuboid cube(10, 12, 0, 1, 1, 1, wallID, wallID, wallID, wallID, roofID);
     RenderRoutines::drawCuboid(cube);
     
     color3f(1, 1, 1);
@@ -232,6 +233,29 @@ void Control::processMouseMotionEvent()
 void Control::processMouseWheelEvent(SDL_Event &e)
 {
     currentScene->processScroll(e.wheel);
+    if(currentScene == scenes[GAME])
+    {
+        if(e.wheel.y > 0)
+        {
+            double savedI = xi(screenX + WINDOW_W / 2, screenY + WINDOW_H / 2);
+            double savedJ = yj(screenX + WINDOW_W / 2, screenY + WINDOW_H / 2);
+            TERRAIN_TILE_SIZE *= 1.1;
+            if(TERRAIN_TILE_SIZE > MAX_TERRAIN_TILE_SIZE)
+                TERRAIN_TILE_SIZE = MAX_TERRAIN_TILE_SIZE;
+            screenX = ix(savedI, savedJ) - WINDOW_W / 2;
+            screenY = jy(savedI, savedJ) - WINDOW_H / 2;
+        }
+        else if(e.wheel.y < 0)
+        {
+            double savedI = xi(screenX + WINDOW_W / 2, screenY + WINDOW_H / 2);
+            double savedJ = yj(screenX + WINDOW_W / 2, screenY + WINDOW_H / 2);
+            TERRAIN_TILE_SIZE *= 0.9;
+            if(TERRAIN_TILE_SIZE < MIN_TERRAIN_TILE_SIZE)
+                TERRAIN_TILE_SIZE = MIN_TERRAIN_TILE_SIZE;
+            screenX = ix(savedI, savedJ) - WINDOW_W / 2;
+            screenY = jy(savedI, savedJ) - WINDOW_H / 2;
+        }
+    }
 }
 
 void Control::processWindowEvent(SDL_Event &e)

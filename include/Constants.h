@@ -113,6 +113,8 @@ namespace constants
 {
     extern int mouseX;
     extern int mouseY;
+    const double MIN_TERRAIN_TILE_SIZE = 0.05;
+    const double MAX_TERRAIN_TILE_SIZE = 1.0;
     extern int FONTW;
     extern int FONTH;
     extern int PAD;
@@ -131,7 +133,7 @@ namespace constants
     extern std::string BIN_TO_ROOT;
     extern long int screenX;
     extern long int screenY;
-    const double TERRAIN_TILE_SIZE = 0.25;
+    extern double TERRAIN_TILE_SIZE;
     const int WORLD_SIZE = 1025;
     const int CHUNK_SIZE = 61;
     const int WORLD_CHUNKS = WORLD_SIZE / CHUNK_SIZE + ((((WORLD_SIZE / CHUNK_SIZE) * CHUNK_SIZE) == WORLD_SIZE) ? 0 : 1);

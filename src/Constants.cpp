@@ -31,6 +31,7 @@ float constants::HMULT = -80.0;
 long int constants::screenX = 10000;
 long int constants::screenY = 0;
 VIEW_DIRECTION constants::viewDirection = NORTH;
+double constants::TERRAIN_TILE_SIZE = 0.25;
 
 #ifdef __APPLE__
 string constants::BIN_TO_ROOT = "../..";

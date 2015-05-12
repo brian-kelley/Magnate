@@ -68,6 +68,7 @@ void WorldRenderer::renderNorth(World &world)
     int minCol = yj(screenX, screenY + WINDOW_H) / TERRAIN_TILE_SIZE - 1;
     int maxRow = xi(screenX, screenY + WINDOW_H) / TERRAIN_TILE_SIZE + 1;
     int maxCol = yj(screenX + WINDOW_W, screenY) / TERRAIN_TILE_SIZE + 1;
+    float heightMult = TERRAIN_TILE_SIZE / 0.25;
     for(int i = minRow; i < maxRow; i++)
     {
         for(int j = maxCol - 1; j >= minCol; j--)
@@ -77,13 +78,13 @@ void WorldRenderer::renderNorth(World &world)
             color3f(shade, shade, shade);
             GROUND tileGround = world.getGround(i, j);
             texCoord2f(terrainUV[tileGround * 8], terrainUV[tileGround * 8 + 1]);
-            vertex2i(basePt.x, basePt.y - world.getHeight(i, j));
+            vertex2i(basePt.x, basePt.y - world.getHeight(i, j) * heightMult);
             texCoord2f(terrainUV[tileGround * 8 + 2], terrainUV[tileGround * 8 + 3]);
-            vertex2i(basePt.x + ISO_LENGTH / 2, basePt.y - ISO_WIDTH / 2 - world.getHeight(i, j + 1));
+            vertex2i(basePt.x + ISO_LENGTH / 2, basePt.y - ISO_WIDTH / 2 - world.getHeight(i, j + 1) * heightMult);
             texCoord2f(terrainUV[tileGround * 8 + 4], terrainUV[tileGround * 8 + 5]);
-            vertex2i(basePt.x + ISO_LENGTH, basePt.y - world.getHeight(i + 1, j + 1));
+            vertex2i(basePt.x + ISO_LENGTH, basePt.y - world.getHeight(i + 1, j + 1) * heightMult);
             texCoord2f(terrainUV[tileGround * 8 + 6], terrainUV[tileGround * 8 + 7]);
-            vertex2i(basePt.x + ISO_LENGTH / 2, basePt.y + ISO_WIDTH / 2 - world.getHeight(i + 1, j));
+            vertex2i(basePt.x + ISO_LENGTH / 2, basePt.y + ISO_WIDTH / 2 - world.getHeight(i + 1, j) * heightMult);
         }
     }
     RenderRoutines::drawString("N", 10, 10);
