@@ -10,6 +10,10 @@
 
 using namespace constants;
 
+double coord::ISO_LENGTH = DEFAULT_ISO_LENGTH;
+double coord::ISO_WIDTH = DEFAULT_ISO_WIDTH;
+double coord::ISO_HEIGHT = DEFAULT_ISO_HEIGHT;
+
 int coord::ix(double i, double j)
 {
     switch(viewDirection)
@@ -86,6 +90,12 @@ Point coord::project3DPoint(double i, double j, double h)
     ret.x = ix(i, j) - constants::screenX;
     ret.y = jy(i, j) - constants::screenY;
     ret.y -= h * ISO_HEIGHT;
-    //printf("(%.2f, %.2f, %.2f) mapped to (%d, %d)\n\n", i, j, h, ret.x, ret.y);
     return ret;
+}
+
+void coord::updateScale()
+{
+    ISO_LENGTH = DEFAULT_ISO_LENGTH * worldScale;
+    ISO_WIDTH = DEFAULT_ISO_WIDTH * worldScale;
+    ISO_HEIGHT = DEFAULT_ISO_HEIGHT * worldScale;
 }

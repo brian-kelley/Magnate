@@ -204,7 +204,7 @@ void Renderer::vertex2i(float x, float y)
 {
     stateVertex.x = x;
     stateVertex.y = y;
-    //Just save vertex here, because color/texcoord will have already been set in stateVertex (emulating how imm. mode works)
+    //Just save vertex here, because color/texcoord will have already been set in stateVertex (emulating how OpenGL immediate mode would work)
     saveVertex();
 }
 

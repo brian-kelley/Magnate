@@ -5,20 +5,13 @@ using namespace constants;
 
 void TerrainGen::generate(World& world)
 {
+    //    diamondSquare(world);
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
         {
-            world.setHeight(random() % 20, i, j);
             world.setGround((GROUND) (random() % NUM_TYPES), i, j);
-        }
-    }
-    /*
-    //diamondSquare(world);
-    for(int i = 0; i < WORLD_SIZE; i++)
-    {
-        for(int j = 0; j < WORLD_SIZE; j++)
-        {
+            world.setHeight(random() % 15, i, j);
             if(world.getHeight(i, j) == 0)
             {
                 world.setGround(WATER, i, j);
@@ -29,7 +22,6 @@ void TerrainGen::generate(World& world)
             }
         }
     }
-     */
 }
 
 //Generates height based on average surrounding height, and how fine grid is
@@ -164,4 +156,4 @@ void TerrainGen::fillSquare(World& world, int x, int y, int size)
         return;
     world.setHeight(getHeight(sum / n, size), x, y);
     world.setGround(DESERT, x, y);
-}   
+}

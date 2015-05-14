@@ -21,4 +21,4 @@ namespace TerrainGen
     Height getHeight(int avg, int size);
 }
 
-#endif 
+#endif

@@ -36,3 +36,9 @@ namespace WorldRenderer
 }
 
 #endif /* defined(__Magnate__WorldRenderer__) */
+/*
+ TerrainTileSize = 0.25 (const)
+ When scale = 1.0, 0-255 height values translate to pixels (how it was before zooming)
+ When scale not 1, height 
+
+*/

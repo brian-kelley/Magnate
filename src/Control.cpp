@@ -239,9 +239,10 @@ void Control::processMouseWheelEvent(SDL_Event &e)
         {
             double savedI = xi(screenX + WINDOW_W / 2, screenY + WINDOW_H / 2);
             double savedJ = yj(screenX + WINDOW_W / 2, screenY + WINDOW_H / 2);
-            TERRAIN_TILE_SIZE *= 1.1;
-            if(TERRAIN_TILE_SIZE > MAX_TERRAIN_TILE_SIZE)
-                TERRAIN_TILE_SIZE = MAX_TERRAIN_TILE_SIZE;
+            worldScale *= 1.1;
+            if(worldScale > maxScale)
+                worldScale = maxScale;
+            updateScale();
             screenX = ix(savedI, savedJ) - WINDOW_W / 2;
             screenY = jy(savedI, savedJ) - WINDOW_H / 2;
         }
@@ -249,9 +250,10 @@ void Control::processMouseWheelEvent(SDL_Event &e)
         {
             double savedI = xi(screenX + WINDOW_W / 2, screenY + WINDOW_H / 2);
             double savedJ = yj(screenX + WINDOW_W / 2, screenY + WINDOW_H / 2);
-            TERRAIN_TILE_SIZE *= 0.9;
-            if(TERRAIN_TILE_SIZE < MIN_TERRAIN_TILE_SIZE)
-                TERRAIN_TILE_SIZE = MIN_TERRAIN_TILE_SIZE;
+            worldScale *= 0.9;
+            if(worldScale < minScale)
+                worldScale = minScale;
+            updateScale();
             screenX = ix(savedI, savedJ) - WINDOW_W / 2;
             screenY = jy(savedI, savedJ) - WINDOW_H / 2;
         }

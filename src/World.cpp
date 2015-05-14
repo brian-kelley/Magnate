@@ -114,7 +114,7 @@ void World::setHeight(Height height, int wi, int wj)
 
 Height World::getHeight(int wi, int wj)
 {
-    if(wi < 0 || wi > WORLD_SIZE || wj < 0 || wj > WORLD_SIZE)
+    if(wi < 0 || wi >= WORLD_SIZE || wj < 0 || wj >= WORLD_SIZE)
         return 0;
     int ci = wi / CHUNK_SIZE;
     int cj = wj / CHUNK_SIZE;
@@ -125,7 +125,7 @@ Height World::getHeight(int wi, int wj)
 
 GROUND World::getGround(int wi, int wj)
 {
-    if(wi < 0 || wi > WORLD_SIZE || wj < 0 || wj > WORLD_SIZE)
+    if(wi < 0 || wi >= WORLD_SIZE || wj < 0 || wj >= WORLD_SIZE)
         return WATER;
     int ci = wi / CHUNK_SIZE;
     int cj = wj / CHUNK_SIZE;
