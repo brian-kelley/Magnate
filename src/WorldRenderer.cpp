@@ -72,25 +72,25 @@ void WorldRenderer::render(World& world)
         case WEST:
             renderWest(world);
             color3f(1, 1, 1);
-            texCoord2f(texX + texW, texY);
-            vertex2i(roseRect.x, roseRect.y);
-            texCoord2f(texX + texW, texY + texH);
-            vertex2i(roseRect.x + roseRect.w, roseRect.y);
             texCoord2f(texX, texY + texH);
-            vertex2i(roseRect.x + roseRect.w, roseRect.y + roseRect.h);
+            vertex2i(roseRect.x, roseRect.y);
             texCoord2f(texX, texY);
+            vertex2i(roseRect.x + roseRect.w, roseRect.y);
+            texCoord2f(texX + texW, texY);
+            vertex2i(roseRect.x + roseRect.w, roseRect.y + roseRect.h);
+            texCoord2f(texX + texW, texY + texH);
             vertex2i(roseRect.x, roseRect.y + roseRect.h);
             break;
         case EAST:
             renderEast(world);
             color3f(1, 1, 1);
-            texCoord2f(texX, texY + texH);
-            vertex2i(roseRect.x, roseRect.y);
-            texCoord2f(texX, texY);
-            vertex2i(roseRect.x + roseRect.w, roseRect.y);
             texCoord2f(texX + texW, texY);
-            vertex2i(roseRect.x + roseRect.w, roseRect.y + roseRect.h);
+            vertex2i(roseRect.x, roseRect.y);
             texCoord2f(texX + texW, texY + texH);
+            vertex2i(roseRect.x + roseRect.w, roseRect.y);
+            texCoord2f(texX, texY + texH);
+            vertex2i(roseRect.x + roseRect.w, roseRect.y + roseRect.h);
+            texCoord2f(texX, texY);
             vertex2i(roseRect.x, roseRect.y + roseRect.h);
             break;
         case SOUTH:
@@ -233,7 +233,7 @@ void WorldRenderer::renderSouth(World &world)
     RenderRoutines::drawString("S", 10, 10);
 }
 
-void WorldRenderer::rotateLeft()
+void WorldRenderer::rotateRight()
 {
     //save previous tile coord, center x and top 1/3 in y
     double centerI = xi(screenX + WINDOW_W / 2, screenY + WINDOW_H / 3);
@@ -259,7 +259,7 @@ void WorldRenderer::rotateLeft()
     screenY = newScreenY;
 }
 
-void WorldRenderer::rotateRight()
+void WorldRenderer::rotateLeft()
 {
     double centerI = xi(screenX + WINDOW_W / 2, screenY + WINDOW_H / 3);
     double centerJ = yj(screenX + WINDOW_W / 2, screenY + WINDOW_H / 3);
