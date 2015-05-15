@@ -140,6 +140,8 @@ namespace constants
     const int WORLD_CHUNKS = WORLD_SIZE / CHUNK_SIZE + ((((WORLD_SIZE / CHUNK_SIZE) * CHUNK_SIZE) == WORLD_SIZE) ? 0 : 1);
     extern VIEW_DIRECTION viewDirection;
     const int PAN_SPEED = 15;   //pixels per frame
+    const int MINIMAP_SIZE = 256; //pixels in texture and on screen
+    const int BIT_DEPTH = 32;   //RGBA8888, probably won't change
 }
 
 #endif

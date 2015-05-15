@@ -39,7 +39,7 @@
 class Atlas
 {
 public:
-    Atlas(std::string imageName, SDL_Renderer* renderer); //example, pass either "main" or "main.png"
+    Atlas(std::string imageName, SDL_Renderer* renderer); //example, pass either "main"
     ~Atlas();
     int tileFromName(std::string tilename);
     int tileFromChar(char c);
@@ -64,6 +64,10 @@ public:
     {
         return size;
     }
+    GLuint getTextureID()
+    {
+        return textureID;
+    }
 private:
     SDL_Texture* tex;
     int size;
@@ -79,6 +83,7 @@ private:
     void sortForHeight(std::vector<named_tex_t*>& vec);
     void initCharTiles();
     void parseTiles(boost::filesystem::path fpath);
+    GLuint textureID;
 };
 
 #endif

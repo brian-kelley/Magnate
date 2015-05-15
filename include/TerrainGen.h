@@ -2,7 +2,7 @@
 #define __TERRAIN_GEN_INCLUDED__
 
 #include <iostream>
-#define ROUGHNESS 1
+#define ROUGHNESS 10
 #include "Constants.h"
 #include "Chunk.h"
 #include "World.h"

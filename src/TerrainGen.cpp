@@ -5,18 +5,17 @@ using namespace constants;
 
 void TerrainGen::generate(World& world)
 {
-    //    diamondSquare(world);
+    diamondSquare(world);
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
         {
-            world.setGround((GROUND) (random() % NUM_TYPES), i, j);
-            world.setHeight(random() % 15, i, j);
+            world.setGround(FOREST, i, j);
             if(world.getHeight(i, j) == 0)
             {
                 world.setGround(WATER, i, j);
             }
-            else if(world.getHeight(i, j) > 240)
+            else if(world.getHeight(i, j) > 200)
             {
                 world.setGround(MOUNTAINS, i, j);
             }
@@ -42,13 +41,12 @@ Height TerrainGen::getHeight(int avg, int size)
 
 void TerrainGen::diamondSquare(World& world)
 {
-    cout << "Running diamond square on whole world." << endl;
-    world.setHeight(random() & 0xFF, 0, 0);
-    world.setHeight(random() & 0xFF, CHUNK_SIZE - 1, 0);
-    world.setHeight(random() & 0xFF, 0, CHUNK_SIZE - 1);
-    world.setHeight(random() & 0xFF, CHUNK_SIZE - 1, CHUNK_SIZE - 1);
+    world.setHeight(50, 0, 0);
+    world.setHeight(50, WORLD_SIZE - 1, 0);
+    world.setHeight(50, 0, WORLD_SIZE - 1);
+    world.setHeight(50, WORLD_SIZE - 1, WORLD_SIZE - 1);
     //First diamond (puts pt at very center of chunk)
-    world.setHeight(255, CHUNK_SIZE / 2, CHUNK_SIZE / 2);
+    world.setHeight(255, WORLD_SIZE / 2, WORLD_SIZE / 2);
     //repeatedly go over mesh and do these steps, making grid progressively finer
     //(squares first, then diamonds)
     //Note: if squares then diamonds, same size can be used each iteration
@@ -76,12 +74,23 @@ void TerrainGen::diamondSquare(World& world)
         }
         size /= 2;
     }
-    cout << "Done with d-s." << endl;
+    for(int i = 0; i < WORLD_SIZE - 1; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE - 1; j++)
+        {
+            int height = world.getHeight(i, j);
+            int centerDist = abs(WORLD_SIZE / 2 - i) + abs(WORLD_SIZE / 2 - j);
+            height -= centerDist / 8;
+            if(height < 0)
+                height = 0;
+            world.setHeight(height, i, j);
+        }
+    }
 }
 
 bool TerrainGen::inMesh(int x, int y)
 {
-    if(x > 0 && x < CHUNK_SIZE && y > 0 && y < CHUNK_SIZE)
+    if(x > 0 && x < WORLD_SIZE && y > 0 && y < WORLD_SIZE)
     {
         return true;
     }

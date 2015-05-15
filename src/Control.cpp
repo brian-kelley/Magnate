@@ -176,8 +176,19 @@ void Control::update()
     Cuboid cube(10, 12, 0, 1, 1, 1, wallID, wallID, wallID, wallID, roofID);
     RenderRoutines::drawCuboid(cube);
     
+    Minimap::render();
     color3f(1, 1, 1);
     RenderRoutines::blit(RenderRoutines::mainAtlas->tileFromName("cursor"), mouseX, mouseY);
+    
+    disableTexture();
+    texCoord2f(0, 0);
+    vertex2i(0, 0);
+    texCoord2f(1, 0);
+    vertex2i(WINDOW_H, 0);
+    texCoord2f(1, 1);
+    vertex2i(WINDOW_H, WINDOW_H);
+    texCoord2f(0, 1);
+    vertex2i(0, WINDOW_H);
     view::finalizeFrame();
 }
 

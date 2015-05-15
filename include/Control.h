@@ -32,6 +32,7 @@
 #include "SaveManager.h"
 #include "WorldRenderer.h"
 #include "Renderer.h"
+#include "Minimap.h"
 
 namespace Control
 
