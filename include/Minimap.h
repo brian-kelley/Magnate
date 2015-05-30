@@ -6,13 +6,23 @@
 #include "Constants.h"
 #include "World.h"
 #include "Terrain.h"
-#include "OpenGL/GL.h"
 #include "RenderRoutines.h"
+#include "Coord.h"
+
+#ifdef __APPLE__
+#include "OpenGL/GL.h"
+#elif _WIN32
+#include "gl.h"
+#endif
+
+class World;
 
 namespace Minimap
 {
     void buildTexture(World& world);
     void render();
+    bool mmIsMouseOver();
+    void update();  //set screenX/screenY based on mouseX/mouseY
 }
 
 #endif

@@ -137,7 +137,6 @@ void WorldRenderer::renderNorth(World &world)
             vertex2i(basePt.x + TL, basePt.y + TW - heightMult * world.getHeight(i + 1, j));
         }
     }
-    RenderRoutines::drawString("N", 10, 10);
 }
 
 void WorldRenderer::renderWest(World &world)
@@ -168,7 +167,6 @@ void WorldRenderer::renderWest(World &world)
             vertex2i(basePt.x + TL, basePt.y + TW - heightMult * world.getHeight(i + 1, j + 1));
         }
     }
-    RenderRoutines::drawString("W", 10, 10);
 }
 
 void WorldRenderer::renderEast(World &world)
@@ -199,7 +197,6 @@ void WorldRenderer::renderEast(World &world)
             vertex2i(basePt.x + TL, basePt.y + TW - heightMult * world.getHeight(i, j));
         }
     }
-    RenderRoutines::drawString("E", 10, 10);
 }
 
 void WorldRenderer::renderSouth(World &world)
@@ -230,7 +227,6 @@ void WorldRenderer::renderSouth(World &world)
             vertex2i(basePt.x + TL, basePt.y + TW - heightMult * world.getHeight(i, j + 1));
         }
     }
-    RenderRoutines::drawString("S", 10, 10);
 }
 
 void WorldRenderer::rotateRight()

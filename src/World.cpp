@@ -45,6 +45,7 @@ World::World(std::string saveName, bool willGenerate)
     }
     generate();
     Terrain::init();
+    Minimap::buildTexture(*this);
 }
 
 World::~World()

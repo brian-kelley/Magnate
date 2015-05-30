@@ -310,3 +310,25 @@ float RenderRoutines::calcTileShade(unsigned char h1, unsigned char h2, unsigned
 {
     return 1.0 - 0.3 * (abs(h1 - h2) + abs(h2 - h3) + abs(h3 - h4) + abs(h4 - h1)) / coord::ISO_HEIGHT;
 }
+
+//Draw a line using a quad
+void RenderRoutines::drawLine(int x1, int y1, int x2, int y2)
+{
+    disableTexture();
+    if(abs(x2 - x1) < abs(y2 - y1))
+    {
+        // dx/dy small
+        vertex2i(x1, y1);
+        vertex2i(x1 + 1, y1);
+        vertex2i(x2 + 1, y2);
+        vertex2i(x2, y2);
+    }
+    else
+    {
+        // dy/dx <= 1
+        vertex2i(x1, y1);
+        vertex2i(x1, y1 + 1);
+        vertex2i(x2, y2 + 1);
+        vertex2i(x2, y2);
+    }
+}

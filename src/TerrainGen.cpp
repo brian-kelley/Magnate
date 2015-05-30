@@ -21,6 +21,15 @@ void TerrainGen::generate(World& world)
             }
         }
     }
+    int markerX = random() % WORLD_SIZE / 2;
+    int markerY = random() % WORLD_SIZE / 2;
+    for(int i = markerX - 8; i < markerX + 8; i++)
+    {
+        for(int j = markerY - 8; j < markerY + 8; j++)
+        {
+            world.setGround(DESERT, i, j);
+        }
+    }
 }
 
 //Generates height based on average surrounding height, and how fine grid is
@@ -74,16 +83,30 @@ void TerrainGen::diamondSquare(World& world)
         }
         size /= 2;
     }
-    for(int i = 0; i < WORLD_SIZE - 1; i++)
+    for(int i = 0; i < WORLD_SIZE; i++)
     {
-        for(int j = 0; j < WORLD_SIZE - 1; j++)
+        for(int j = 0; j < WORLD_SIZE; j++)
         {
             int height = world.getHeight(i, j);
             int centerDist = abs(WORLD_SIZE / 2 - i) + abs(WORLD_SIZE / 2 - j);
-            height -= centerDist / 8;
+            height -= centerDist / 5;
             if(height < 0)
                 height = 0;
             world.setHeight(height, i, j);
+        }
+    }
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(world.getGround(i, j) != WATER)
+            {
+                if(world.getGround(i + 1, j) == WATER && world.getGround(i, j + 1) == WATER && world.getGround(i - 1, j) == WATER && world.getGround(i, j - 1) == WATER)
+                {
+                    world.setGround(WATER, i, j);
+                    world.setHeight(0, i, j);
+                }
+            }
         }
     }
 }

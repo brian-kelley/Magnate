@@ -13,7 +13,7 @@
 
 typedef struct
 {
-    float x;    //Position on screen (pixels?)
+    float x;    //Position on screen (pixels)
     float y;
     float r;    //Color
     float g;
@@ -31,19 +31,21 @@ namespace Renderer
     void startFrame();
     void endFrame();
     void dispose();
-    void drawQuad(vertex v1, vertex v2, vertex v3, vertex v4);
-    void addVertex(vertex v);
-    //Vertex array is interleaved: xyrgbauvxyrgbauv...
+    void addQuadVertex();
+    void addLineVertex();
+    //Vertex attributes interleaved: xyrgbauvxyrgbauv...
     void color3f(float r, float g, float b);
     void color4f(float r, float g, float b, float a);
-    void vertex2i(float x, float y);
+    void vertex2i(int x, int y);
+    void lineVertex2i(int x, int y);
     void texCoord2f(float u, float v);
-    void saveVertex();          //push stateVertex onto 'vertices'
     void enableTexture();       //use uniform variable to enable/disable
     void disableTexture();      //2d texture blitting (like glEnable(...))
     extern bool textureOn;
-    extern std::vector<vertex> vertices;
-    extern int vertexIter;             //Keep track of # of vertices in current frame
+    extern std::vector<vertex> quadVertices;
+    extern int numQuadVertices;             //Keep track of # of vertices in current frame
+    extern std::vector<vertex> lineVertices;
+    extern int numLineVertices;
     extern GLuint vboID;
     extern GLuint programID;
     extern GLuint vshadeID;

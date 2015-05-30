@@ -26,6 +26,21 @@ SDL_Event* Control::currentEvent;
 map<SNAME, Scene*> Control::scenes;
 const Uint8* Control::keystate = NULL;
 
+void doTestStuff()
+{
+    disableTexture();
+    /*
+    for(int i = 0; i < 1000; i++)
+    {
+        color4f(double(random() % 256) / 255, double(random() % 256) / 255, double(random() % 256) / 255, 1);
+        vertex2i(random() & 0xFF, random() % 0xFF);
+        vertex2i(random() & 0xFF, random() % 0xFF);
+        vertex2i(random() & 0xFF, random() % 0xFF);
+        vertex2i(random() & 0xFF, random() % 0xFF);
+    }
+     */
+}
+
 namespace ui        //place for callbacks etc.
 {
     void mainQuitButton(void* obj)
@@ -74,7 +89,6 @@ void Control::init()
     currentScene = scenes[GAME];
     SaveManager::loadTestWorld();
     SaveManager::transitionToGame(nullptr);
-    
     keystate = SDL_GetKeyboardState(NULL);
     model::init();
     //Trap mouse in window
@@ -170,25 +184,10 @@ void Control::update()
     {
         WorldRenderer::render(*model::currentWorld);
     }
-    //Cuboid render test
-    int wallID = RenderRoutines::mainAtlas->tileFromName("wall");
-    int roofID = RenderRoutines::mainAtlas->tileFromName("roof");
-    Cuboid cube(10, 12, 0, 1, 1, 1, wallID, wallID, wallID, wallID, roofID);
-    RenderRoutines::drawCuboid(cube);
-    
     Minimap::render();
     color3f(1, 1, 1);
     RenderRoutines::blit(RenderRoutines::mainAtlas->tileFromName("cursor"), mouseX, mouseY);
-    
-    disableTexture();
-    texCoord2f(0, 0);
-    vertex2i(0, 0);
-    texCoord2f(1, 0);
-    vertex2i(WINDOW_H, 0);
-    texCoord2f(1, 1);
-    vertex2i(WINDOW_H, WINDOW_H);
-    texCoord2f(0, 1);
-    vertex2i(0, WINDOW_H);
+    doTestStuff();
     view::finalizeFrame();
 }
 
@@ -224,10 +223,22 @@ void Control::processMouseButtonEvent(SDL_Event &e)
 {
     if(e.button.state == SDL_PRESSED && e.button.button == SDL_BUTTON_LEFT)
     {
-        currentScene->processLeftClick();
+        mouseDown = true;
+        if(currentScene == scenes[GAME])
+        {
+            if(Minimap::mmIsMouseOver())
+            {
+                Minimap::update();
+            }
+        }
+        else
+        {
+            currentScene->processLeftClick();
+        }
     }
     else if(e.button.state == SDL_RELEASED && e.button.button == SDL_BUTTON_LEFT)
     {
+        mouseDown = false;
         if(Draggable::activeDrag)
         {
             Draggable::activeDrag->deactivate();
@@ -238,7 +249,15 @@ void Control::processMouseButtonEvent(SDL_Event &e)
 void Control::processMouseMotionEvent()
 {
     SDL_GetMouseState(&mouseX, &mouseY);
-    currentScene->processMouseMotion();
+    if(currentScene == scenes[GAME])
+    {
+        if(Minimap::mmIsMouseOver() && mouseDown)
+            Minimap::update();
+    }
+    else
+    {
+        currentScene->processMouseMotion();
+    }
 }
 
 void Control::processMouseWheelEvent(SDL_Event &e)

@@ -139,8 +139,10 @@ namespace constants
     const int CHUNK_SIZE = 61;
     const int WORLD_CHUNKS = WORLD_SIZE / CHUNK_SIZE + ((((WORLD_SIZE / CHUNK_SIZE) * CHUNK_SIZE) == WORLD_SIZE) ? 0 : 1);
     extern VIEW_DIRECTION viewDirection;
+    extern bool mouseDown;
     const int PAN_SPEED = 15;   //pixels per frame
     const int MINIMAP_SIZE = 256; //pixels in texture and on screen
+    const int MINIMAP_BORDER = 15;
     const int BIT_DEPTH = 32;   //RGBA8888, probably won't change
 }
 

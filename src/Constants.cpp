@@ -18,8 +18,8 @@ int constants::FONTH = -1;
 int constants::PAD = 5;
 int constants::BORDER_WIDTH = 5;
 int constants::BAR_WIDTH = 6;
-int constants::WINDOW_W = 1366;
-int constants::WINDOW_H = 768;
+int constants::WINDOW_W = 1280;
+int constants::WINDOW_H = 720;
 float constants::UI_BG_R = 0.5;
 float constants::UI_BG_G = 0.5;
 float constants::UI_BG_B = 0.5;
@@ -32,6 +32,7 @@ long int constants::screenX = 10000;
 long int constants::screenY = 0;
 VIEW_DIRECTION constants::viewDirection = NORTH;
 double constants::worldScale = 1;
+bool constants::mouseDown = false;
 
 #ifdef __APPLE__
 string constants::BIN_TO_ROOT = "../..";

@@ -12,11 +12,13 @@
 #include <boost/filesystem.hpp>
 #include <vector>
 #include <iostream>
+#include <random>
 #include <fstream>
 #include "Chunk.h"
 #include "Constants.h"
 #include "Terrain.h"
 #include "TerrainGen.h"
+#include "Minimap.h"
 
 class World
 {

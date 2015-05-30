@@ -67,7 +67,7 @@ namespace Control
     extern bool trackingKeyboard;
     void initScenes();
     void clearEnables();
-    extern const Uint8* keystate;
+    extern const Uint8* keystate;   //array of key states for all scancodes
 }
 
 #endif

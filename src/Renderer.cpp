@@ -2,9 +2,11 @@
 
 using namespace std;
 
-vector<vertex> Renderer::vertices;
+vector<vertex> Renderer::quadVertices;
+vector<vertex> Renderer::lineVertices;
 bool Renderer::textureOn = true;
-int Renderer::vertexIter = 0;
+int Renderer::numQuadVertices = 0;
+int Renderer::numLineVertices = 0;
 GLuint Renderer::vboID;
 GLuint Renderer::programID;
 GLuint Renderer::vshadeID;
@@ -24,7 +26,7 @@ void Renderer::initAll()
 
 void Renderer::initVBO()
 {
-    vertices.reserve(preloadSize);
+    quadVertices.reserve(preloadSize);
     glGenBuffers(1, &vboID);
     glBindBuffer(GL_ARRAY_BUFFER, vboID);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertex) * preloadSize, NULL, GL_STREAM_DRAW);
@@ -85,10 +87,6 @@ void Renderer::initShaders()
     "        gl_FragColor.z = texelColor.z * fcolor.z;",
     "        gl_FragColor.w = texelColor.w * fcolor.w;",
     "    }",
-        "    //gl_FragColor.x = 1;",
-        "    //gl_FragColor.y = 0.4;",
-        "    //gl_FragColor.z = 0;",
-        "    //gl_FragColor.w = 1;",
     "}"};
     string fragmentShadeCode = "";
     for(auto line : code)
@@ -129,59 +127,24 @@ void Renderer::initShaders()
     glEnableVertexAttribArray(texcoordAttrib);
 }
 
-void Renderer::addVertex(vertex v)
-{
-    if(vertices.size() > vertexIter)
-    {
-        vertices[vertexIter] = v;
-    }
-    else
-    {
-        vertices.push_back(v);
-    }
-    vertexIter++;
-}
-
 void Renderer::startFrame()
 {
-    vertexIter = 0;
-    /*
-    for(int i = 0; i < 1000; i++)
-    {
-        vertex v;
-        v.r = (rand() % 256) / 256.0f;
-        v.g = (rand() % 256) / 256.0f;
-        v.b = (rand() % 256) / 256.0f;
-        v.a = (rand() % 256) / 256.0f;
-        v.x = rand() % 100;
-        v.y = rand() % 100;
-        v.u = (rand() % 10000) / 10000.0f;
-        v.v = (rand() % 10000) / 10000.0f;
-        addVertex(v);
-    }*/
-}
-
-void Renderer::drawQuad(vertex v1, vertex v2, vertex v3, vertex v4)
-{
-    addVertex(v1);
-    addVertex(v2);
-    addVertex(v3);
-    addVertex(v4);
+    numQuadVertices = 0;
+    numLineVertices = 0;
 }
 
 void Renderer::endFrame()
 {
-    //Only reallocate buffer if needed, otherwise reuses allocated space
-    if(sizeof(vertex) * vertexIter > vboSize)
+    int totalVertices = numQuadVertices + numLineVertices;
+    if(sizeof(vertex) * (totalVertices) > vboSize)
     {
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertex) * vertexIter, &vertices.front(), GL_STREAM_DRAW);
-        vboSize = sizeof(vertex) * vertexIter;
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertex) * totalVertices, NULL, GL_STREAM_DRAW);
+        vboSize = sizeof(vertex) * totalVertices;
     }
-    else
-    {
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex) * vertexIter, &vertices.front());
-    }
-    glDrawArrays(GL_QUADS, 0, vertexIter);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertex) * numQuadVertices, &quadVertices.front());
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertex) * numQuadVertices, sizeof(vertex) * numLineVertices, &lineVertices.front());
+    glDrawArrays(GL_QUADS, 0, numQuadVertices);
+    glDrawArrays(GL_LINES, numQuadVertices, numLineVertices);
 }
 
 void Renderer::color3f(float r, float g, float b)
@@ -200,12 +163,19 @@ void Renderer::color4f(float r, float g, float b, float a)
     stateVertex.a = a;
 }
 
-void Renderer::vertex2i(float x, float y)
+void Renderer::vertex2i(int x, int y)
 {
     stateVertex.x = x;
     stateVertex.y = y;
     //Just save vertex here, because color/texcoord will have already been set in stateVertex (emulating how OpenGL immediate mode would work)
-    saveVertex();
+    addQuadVertex();
+}
+
+void Renderer::lineVertex2i(int x, int y)
+{
+    stateVertex.x = x;
+    stateVertex.y = y;
+    addLineVertex();
 }
 
 void Renderer::texCoord2f(float u, float v)
@@ -215,7 +185,7 @@ void Renderer::texCoord2f(float u, float v)
     textureOn = true;
 }
 
-void Renderer::saveVertex()
+void Renderer::addQuadVertex()
 {
     if(!textureOn)
     {
@@ -224,7 +194,35 @@ void Renderer::saveVertex()
         stateVertex.v = -1.0f;
     }
     //else: texcoord must have already been set by program
-    addVertex(stateVertex);
+    if(quadVertices.size() > numQuadVertices)
+    {
+        quadVertices[numQuadVertices] = stateVertex;
+    }
+    else
+    {
+        quadVertices.push_back(stateVertex);
+    }
+    numQuadVertices++;
+}
+
+void Renderer::addLineVertex()
+{
+    if(!textureOn)
+    {
+        //Shaders will know that these coords mean to not use texture2D for color
+        stateVertex.u = -1.0f;
+        stateVertex.v = -1.0f;
+    }
+    //else: texcoord must have already been set by program
+    if(lineVertices.size() > numLineVertices)
+    {
+        lineVertices[numLineVertices] = stateVertex;
+    }
+    else
+    {
+        lineVertices.push_back(stateVertex);
+    }
+    numLineVertices++;
 }
 
 void Renderer::enableTexture()
