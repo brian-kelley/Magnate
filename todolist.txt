@@ -1,0 +1,2 @@
+-Make sure cuboid/building rendering works, esp. wrt. depth ordering
+-Make a new UI typ that allows for building placement

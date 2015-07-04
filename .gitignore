@@ -11,3 +11,8 @@ macBuild/*
 winBuild/*
 linuxBuild/*
 build/*
+.d
+.o
+.dia
+.LinkFileList
+.mag
