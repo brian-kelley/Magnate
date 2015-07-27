@@ -42,7 +42,6 @@ typedef struct
     unsigned short v;
     unsigned short x;
     unsigned short y;
-    unsigned short z;
 } Vertex2D;
 
 typedef struct

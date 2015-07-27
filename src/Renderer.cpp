@@ -43,7 +43,7 @@ void Renderer::init()
     //For now, model matrix in both dimensions is I
     stateVertex.x = 0;
     stateVertex.y = 0;
-    stateVertex.z = 0;
+    //    stateVertex.z = 0;
     stateVertex.u = 0;
     stateVertex.v = 0;
     stateVertex.r = 255;
@@ -417,5 +417,5 @@ void Renderer::bindGuiVBO()
     glEnableVertexAttribArray(texCoordAttribLoc);
     glVertexAttribPointer(texCoordAttribLoc, 2, GL_UNSIGNED_SHORT, GL_FALSE, stride, (GLvoid*) 4);
     glEnableVertexAttribArray(posAttribLoc);
-    glVertexAttribPointer(posAttribLoc, 3, GL_UNSIGNED_SHORT, GL_FALSE, stride, (GLvoid*) 8);
+    glVertexAttribPointer(posAttribLoc, 2, GL_UNSIGNED_SHORT, GL_FALSE, stride, (GLvoid*) 8);
 }
