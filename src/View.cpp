@@ -27,7 +27,7 @@ void view::init()
     initSDLVideo();
     configGL();
     RenderRoutines::initAtlas(renderer);
-    Renderer::initAll();
+    Renderer::init();
 }
 
 void view::dispose()
@@ -70,18 +70,9 @@ void view::drawWorld(World& currentWorld)   //probably too general of a function
 
 void view::configGL()
 {
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    if(glGetError() != GL_NO_ERROR)
-    {
-        cout << "Couldn't initialize GL_PROJECTION mode!" << endl;
-        exit(3);
-    }
-    glOrtho(0, constants::WINDOW_W, constants::WINDOW_H, 0, 1, -1);
-    glMatrixMode(GL_MODELVIEW);
-    glEnable(GL_TEXTURE_2D);
     glClearColor(1, 1, 1, 1);
     glEnable(GL_BLEND);
+    glEnable(GL_TEXTURE_2D);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
@@ -109,6 +100,7 @@ void view::initSDLVideo()
     context = SDL_GL_CreateContext(window);
     if(context == nullptr)
     {
+        cout << SDL_GetError() << endl;
         cout << "Error creating GL context." << endl;
         exit(5);
     }

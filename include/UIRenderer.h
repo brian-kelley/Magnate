@@ -9,7 +9,7 @@
 #ifndef Magnate_UIRenderer_h
 #define Magnate_UIRenderer_h
 
-#include <gl.h>
+#include "gl.h"
 #include <iostream>
 #include <string>
 #include <vector>

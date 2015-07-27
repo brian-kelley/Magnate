@@ -12,7 +12,21 @@
 #include <string>
 #include <cmath>
 
-//Structs used all over the place
+//Universal debug setting
+
+#define MAGNATE_DEBUG
+
+#ifdef MAGNATE_DEBUG
+//Debug assert (segfault if condition not true)
+#define DBASSERT(cond) if(!(cond)) throw runtime_error(#cond " not true!");
+#define GLERR
+//#define GLERR {auto errcode = glGetError(); if(errcode != GL_NO_ERROR) cout << errcode << endl; throw runtime_error("GL error!");}
+#define PRINT(msg) {cout << "#msg" << endl;}
+#else
+#define DBASSERT
+#define GLERR
+#define PRINT
+#endif
 
 struct floatRect_t
 {
@@ -123,6 +137,7 @@ namespace constants
     extern int BAR_WIDTH;
     extern int WINDOW_W;
     extern int WINDOW_H;
+    extern int ATLAS_SIZE;
     extern float UI_BG_R;
     extern float UI_BG_G;
     extern float UI_BG_B;
@@ -144,6 +159,16 @@ namespace constants
     const int MINIMAP_SIZE = 256; //pixels in texture and on screen
     const int MINIMAP_BORDER = 15;
     const int BIT_DEPTH = 32;   //RGBA8888, probably won't change
+    const double FOV = M_PI / 4; //TODO: make this configurable
+    extern double camX;
+    extern double camY;
+    extern double camZ;
+    extern double camAngle; //direction in xz, radians, east = 0, north = pi / 2
+    const double camPitch = M_PI / 3;     //radians BELOW horizon (|elevation angle|)
+    const int MAX_VBO_CHUNKS = 9; //depends on VRAM and desired max cam altitude - static, NOT adjusted at runtime.
+    const int MAX_BUILDING_QUADS = 50000; //Initial max # of quads for non-terrain in VBO, extended at runtime if needed.
+    const int MAX_GUI_QUADS = 2000;      //Max # of quads for GUI. Automatically extended at runtime if needed.
+    const int MAX_GUI_LINES = 100;
 }
 
 #endif

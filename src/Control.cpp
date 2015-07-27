@@ -28,17 +28,7 @@ const Uint8* Control::keystate = NULL;
 
 void doTestStuff()
 {
-    disableTexture();
-    /*
-    for(int i = 0; i < 1000; i++)
-    {
-        color4f(double(random() % 256) / 255, double(random() % 256) / 255, double(random() % 256) / 255, 1);
-        vertex2i(random() & 0xFF, random() % 0xFF);
-        vertex2i(random() & 0xFF, random() % 0xFF);
-        vertex2i(random() & 0xFF, random() % 0xFF);
-        vertex2i(random() & 0xFF, random() % 0xFF);
-    }
-     */
+    Renderer::disableTexture();
 }
 
 namespace ui        //place for callbacks etc.
@@ -81,14 +71,12 @@ void Control::init()
     trackingMouse = true;
     trackingKeyboard = true;
     currentEvent = new SDL_Event();
-    /* Normal game, go through main & save menus
+    // Normal game, go through main & save menus
     currentScene = scenes[MAIN_MENU];
-     */
     //Debug mode, jump into 'asdf' for quicker testing of actual gameplay
-    
-    currentScene = scenes[GAME];
-    SaveManager::loadTestWorld();
-    SaveManager::transitionToGame(nullptr);
+    //currentScene = scenes[GAME];
+    //SaveManager::loadTestWorld();
+    //SaveManager::transitionToGame(nullptr);
     keystate = SDL_GetKeyboardState(NULL);
     model::init();
     //Trap mouse in window
@@ -183,8 +171,8 @@ void Control::update()
     if(currentScene == scenes[GAME])
     {
         WorldRenderer::render(*model::currentWorld);
+        Minimap::render();
     }
-    Minimap::render();
     color3f(1, 1, 1);
     RenderRoutines::blit(RenderRoutines::mainAtlas->tileFromName("cursor"), mouseX, mouseY);
     doTestStuff();

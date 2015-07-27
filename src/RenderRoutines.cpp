@@ -33,6 +33,7 @@ void RenderRoutines::initAtlas(SDL_Renderer* windowRenderer)
             cout << "Fatal error: Failed to create atlas." << endl;
             exit(42);
         }
+        ATLAS_SIZE = mainAtlas->getSize();
     }
 }
 
@@ -63,28 +64,6 @@ void RenderRoutines::drawString(string text, int x, int y, float scale, float r,
 
 void RenderRoutines::isoBlit(int tex, double i, double j, unsigned char h1, unsigned char h2, unsigned char h3, unsigned char h4)
 {
-    glEnable(GL_TEXTURE_2D);
-    float shading = calcTileShade(h1, h2, h3, h4);
-    glColor3f(shading, shading, shading);
-    floatRect_t srcRect;
-    srcRect.x = mainAtlas->tileX(tex);
-    srcRect.y = mainAtlas->tileY(tex);
-    srcRect.w = mainAtlas->tileW(tex);
-    srcRect.h = mainAtlas->tileH(tex);
-    glBegin(GL_QUADS);
-    glTexCoord2f(srcRect.x, srcRect.y);
-    Point destPt = coord::project3DPoint(i, j, float(h1) / coord::ISO_HEIGHT);
-    glVertex2i(destPt.x, destPt.y);
-    glTexCoord2f(srcRect.x + srcRect.w, srcRect.y);
-    destPt = coord::project3DPoint(i, j + TERRAIN_TILE_SIZE, float(h2) / coord::ISO_HEIGHT);
-    glVertex2i(destPt.x, destPt.y);
-    glTexCoord2f(srcRect.x + srcRect.w, srcRect.y + srcRect.h);
-    destPt = coord::project3DPoint(i + TERRAIN_TILE_SIZE, j + TERRAIN_TILE_SIZE, float(h3) / coord::ISO_HEIGHT);
-    glVertex2i(destPt.x, destPt.y);
-    glTexCoord2f(srcRect.x, srcRect.y + srcRect.h);
-    destPt = coord::project3DPoint(i + TERRAIN_TILE_SIZE, j, float(h4) / coord::ISO_HEIGHT);
-    glVertex2i(destPt.x, destPt.y);
-    glEnd();
 }
 
 void RenderRoutines::blit(int index, int x, int y)

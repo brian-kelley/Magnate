@@ -1,6 +1,10 @@
 #ifndef __RENDERER__INCLUDED__
 #define __RENDERER__INCLUDED__
 
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/rotate_vector.hpp"
 #ifdef __APPLE__
 #include "gl.h"
 #elif _WIN32
@@ -10,53 +14,120 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include "Constants.h"
+
+/*
+ Vertex fields/sizes
+ (SOA) - all positions, all colors, all texcoords in one VBO
+ 2D:
+ -short vec2 pos                (normalized to [-1, 1])
+ -unsigned char vec4 color      (normalized to [0, 1])
+ -short vec2 texcoord  (normalized to [-1, 1])
+ Total: 12 bytes/vertex!
+ 
+ 3D:
+ -float vec3 pos
+ -unsigned char vec4 color
+ -short vec2 texcoord
+ Total: 20 bytes/vertex
+ */
 
 typedef struct
 {
-    float x;    //Position on screen (pixels)
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
+    unsigned char a;
+    unsigned short u;
+    unsigned short v;
+    unsigned short x;
+    unsigned short y;
+    unsigned short z;
+} Vertex2D;
+
+typedef struct
+{
+    float x;
     float y;
-    float r;    //Color
-    float g;
-    float b;
-    float a;
-    float u;    //Texcoord
-    float v;
-} vertex;
+    float z;
+    unsigned char r;
+    unsigned char g;
+    unsigned char b;
+    unsigned char a;
+    unsigned short u;
+    unsigned short v;
+} Vertex3D;
+
+typedef struct
+{
+    short x;
+    short z;
+    
+} ChunkAllocation;
 
 namespace Renderer
 {
-    void initAll();
-    void initVBO();
-    void initShaders();
+    void init();
+    void dispose();
     void startFrame();
     void endFrame();
-    void dispose();
-    void addQuadVertex();
-    void addLineVertex();
-    //Vertex attributes interleaved: xyrgbauvxyrgbauv...
     void color3f(float r, float g, float b);
+    void color3b(unsigned char r, unsigned char g, unsigned char b);
     void color4f(float r, float g, float b, float a);
-    void vertex2i(int x, int y);
+    void color4b(unsigned char r, unsigned char g, unsigned char b, unsigned char a);
+    void vertex2i(unsigned short x, unsigned short y);
     void lineVertex2i(int x, int y);
     void texCoord2f(float u, float v);
-    void enableTexture();       //use uniform variable to enable/disable
-    void disableTexture();      //2d texture blitting (like glEnable(...))
+    void texCoord2i(unsigned short u, unsigned short v);
+    void enableTexture();
+    void disableTexture();
+    void getFrustumCorners(double* arr);
+    void update2DMatrices();                 //only call during init
+    void updatePerspectiveMatrix();          //when FOV or window changes
+    void updateViewMatrix();                 //when camera moves
+    void uploadMatrices(int dims); //before draw call, 2 or 3
+    /* Internal functions/data */
+    void initVBO();
+    void initShaders();
+    void setupWorldVBO();
+    void setupBuildingVBO();
+    void setupGuiVBO();
+    void bindWorldVBO();
+    void bindBuildingVBO();
+    void bindGuiVBO();
+    //data for easy immediate-mode like GUI drawing
+    extern std::vector<Vertex2D> guiQuadVertices;
+    extern std::vector<Vertex2D> guiLineVertices;
     extern bool textureOn;
-    extern std::vector<vertex> quadVertices;
-    extern int numQuadVertices;             //Keep track of # of vertices in current frame
-    extern std::vector<vertex> lineVertices;
-    extern int numLineVertices;
-    extern GLuint vboID;
-    extern GLuint programID;
+    extern int numWorldVertices;
+    extern int numBuildingVertices;
+    extern int numGuiLineVertices;
+    extern int numGuiQuadVertices;
+    extern GLuint worldVBO;
+    extern GLuint buildingVBO;
+    extern GLuint guiVBO;
+    extern int worldVBOSize;
+    extern int buildingVBOSize;
+    extern int guiVBOSize;     //(in vertices, not bytes)
+    extern GLuint programID;  //information about shaders
     extern GLuint vshadeID;
     extern GLuint fshadeID;
-    extern GLuint positionAttrib;
-    extern GLuint colorAttrib;
-    extern GLuint texcoordAttrib;
-    extern int preloadSize;   //Number of vertices to reserve initially
-    extern int vboSize;                //Size of allocated space in VRAM
-    extern vertex stateVertex;         //use to best imitate immediate mode vertices
-
+    extern GLuint posAttribLoc;
+    extern GLuint colorAttribLoc;
+    extern GLuint texCoordAttribLoc;
+    extern glm::mat4 proj2;
+    extern glm::mat4 view2;
+    extern glm::mat4 proj3;
+    extern glm::mat4 view3;
+    extern glm::vec3 camUp;
+    extern glm::vec3 camDir;
+    extern GLuint projLoc;
+    extern GLuint viewLoc;
+    extern GLuint modelLoc;
+    extern Vertex2D stateVertex;
+    const int GUI_QUAD_PRELOAD = 400; //How many vertices to reserve() in
+    const int GUI_LINE_PRELOAD = 10;  //GUI quad and line attrib vectors
+    void addQuadVertex();
+    void addLineVertex();
 }
-
 #endif

@@ -10,7 +10,7 @@
 #include "Coord.h"
 
 #ifdef __APPLE__
-#include "OpenGL/GL.h"
+#include "gl.h"
 #elif _WIN32
 #include "gl.h"
 #endif

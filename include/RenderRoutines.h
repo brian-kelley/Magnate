@@ -9,7 +9,7 @@
 #ifndef Magnate_RenderRoutines_h
 #define Magnate_RenderRoutines_h
 
-#include <gl.h>
+#include "gl.h"
 #include <SDL2/SDL.h>
 #include <iostream>
 #include <string>
