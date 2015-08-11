@@ -28,7 +28,6 @@
 #include "Model.h"
 #include "Atlas.h"
 #include "Building.h"
-#include "Cuboid.h"
 #include "Scene.h"
 #include "Button.h"
 #include "Label.h"
@@ -45,12 +44,11 @@ namespace view
     extern SDL_Window* window;
     extern SDL_Renderer* renderer;
     extern SDL_GLContext context;
-    extern Atlas* mainAtlas;
     //Publicly used functions
     extern void init();
     extern void dispose();
     extern void updateWindowSize();
-    extern void drawWorld(World& currentWorld);
+    extern void drawWorld();
     extern void prepareFrame();
     extern void finalizeFrame();
     //Privately used functions

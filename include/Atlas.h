@@ -36,54 +36,32 @@
 #include <stdexcept>
 #include "Constants.h"
 
-class Atlas
+typedef struct
 {
-public:
-    Atlas(std::string imageName, SDL_Renderer* renderer); //example, pass either "main"
-    ~Atlas();
+    std::string name;
+    unsigned short x;
+    unsigned short y;
+    unsigned short width;
+    unsigned short height;
+} Texture;
+
+namespace Atlas
+{
+    void init(std::string imageName, SDL_Renderer* renderer); //example, pass either "main"
     int tileFromName(std::string tilename);
     int tileFromChar(char c);
-    void bind();
-    inline float tileX(int index)
-    {
-        return this->tiles[index].x;
-    }
-    inline float tileY(int index)
-    {
-        return this->tiles[index].y;
-    }
-    inline float tileW(int index)
-    {
-        return this->tiles[index].width;
-    }
-    inline float tileH(int index)
-    {
-        return this->tiles[index].height;
-    }
-    int getSize()
-    {
-        return size;
-    }
-    GLuint getTextureID()
-    {
-        return textureID;
-    }
-private:
-    SDL_Texture* tex;
-    int size;
-    struct named_tex_t
-    {
-        SDL_Surface* surface;
-        std::string name;
-    };
-    std::map<std::string, int> tileNames;
-    std::map<char, int> charTiles;
-    std::vector<tileData_t> tiles;
+    unsigned short tileX(int index);
+    unsigned short tileY(int index);
+    unsigned short tileW(int index);
+    unsigned short tileH(int index);
     void buildAtlas(std::string imgDir, SDL_Renderer* renderer, int size);
-    void sortForHeight(std::vector<named_tex_t*>& vec);
     void initCharTiles();
     void parseTiles(boost::filesystem::path fpath);
-    GLuint textureID;
+    GLuint getTextureID();
+    extern std::map<std::string, int> tileNames;
+    extern std::map<char, int> charTiles; //glyph textures
+    extern std::vector<Texture> tiles;
+    extern GLuint textureID;
 };
 
 #endif

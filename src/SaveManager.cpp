@@ -25,7 +25,6 @@ Label* SaveManager::deletingName;
 Scene** SaveManager::currentScenePtr;
 vector<string> SaveManager::saves;
 callback_t SaveManager::transitionToGame;
-World* SaveManager::loadedWorld;
 
 void SaveManager::init(Scene** currentSceneArg, callback_t toMain, callback_t toGame)
 {
@@ -72,11 +71,6 @@ void SaveManager::disposeUI()
     delete renaming;
     delete creatingNew;
     delete deleting;
-}
-
-World* SaveManager::getWorld()
-{
-    return loadedWorld;
 }
 
 void SaveManager::refreshSaveList()
@@ -249,16 +243,12 @@ void SaveManager::loadWorldBtn(void *arg)
         {
             cout << "World file does not exist, will be created." << endl;
         }
-        loadedWorld = new World(saveSelect->getSelectionText(), !exists(worldPath));
-        if(!loadedWorld)
-        {
-            cout << "Fatal error when loading or generating world." << endl;
-        }
+        World::init(saveSelect->getSelectionText(), !exists(worldPath));
         transitionToGame(arg);
     }
 }
 
 void SaveManager::loadTestWorld()
 {
-    loadedWorld = new World("asdf", !exists(initial_path() / constants::BIN_TO_ROOT / "saves" / "asdf"));
+    World::init("asdf", true);
 }

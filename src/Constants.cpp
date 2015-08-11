@@ -10,13 +10,13 @@
 
 using namespace std;
 using namespace constants;
+using namespace glm;
 
 int constants::mouseX = 0;
 int constants::mouseY = 0;
 int constants::FONTW = -1;
 int constants::FONTH = -1;
 int constants::PAD = 5;
-int constants::BORDER_WIDTH = 5;
 int constants::BAR_WIDTH = 6;
 int constants::WINDOW_W = 640;
 int constants::WINDOW_H = 480;
@@ -34,9 +34,7 @@ long int constants::screenY = 0;
 VIEW_DIRECTION constants::viewDirection = NORTH;
 double constants::worldScale = 1;
 bool constants::mouseDown = false;
-double constants::camX = 0;
-double constants::camY = 20;
-double constants::camZ = 20;
+vec3 constants::camPos = {0, 20, 0};
 double constants::camAngle = 0;
 
 #ifdef __APPLE__

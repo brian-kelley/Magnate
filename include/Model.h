@@ -12,16 +12,14 @@
 #include <iostream>
 #include <fstream>
 #include "World.h"
+#include "Building.h"
 #include "Chunk.h"
-#include "Cuboid.h"
 #include "Constants.h"
 
 namespace model
 {
     extern void init();
     extern void update();
-    extern World& getCurrentWorld();
-    extern World* currentWorld;
 }
 
 #endif

@@ -15,6 +15,7 @@
 #include <string>
 #include <iostream>
 #include "Constants.h"
+#include "Coord.h"
 
 /*
  Vertex fields/sizes
@@ -34,35 +35,31 @@
 
 typedef struct
 {
+    unsigned short u;
+    unsigned short v;
+} TexCoord;
+
+typedef struct
+{
     unsigned char r;
     unsigned char g;
     unsigned char b;
     unsigned char a;
-    unsigned short u;
-    unsigned short v;
-    unsigned short x;
-    unsigned short y;
-} Vertex2D;
+} Color4;
 
 typedef struct
 {
-    float x;
-    float y;
-    float z;
-    unsigned char r;
-    unsigned char g;
-    unsigned char b;
-    unsigned char a;
-    unsigned short u;
-    unsigned short v;
-} Vertex3D;
+    Color4 color;
+    TexCoord texcoord;
+    Pos2 pos;
+} Vertex2D; //12 bytes total
 
 typedef struct
 {
-    short x;
-    short z;
-    
-} ChunkAllocation;
+    Color4 color;
+    TexCoord texcoord;
+    Pos3 pos;
+} Vertex3D; //20 bytes total
 
 namespace Renderer
 {
@@ -75,12 +72,12 @@ namespace Renderer
     void color4f(float r, float g, float b, float a);
     void color4b(unsigned char r, unsigned char g, unsigned char b, unsigned char a);
     void vertex2i(unsigned short x, unsigned short y);
-    void lineVertex2i(int x, int y);
+    void lineVertex2i(unsigned short x, unsigned short y);
     void texCoord2f(float u, float v);
     void texCoord2i(unsigned short u, unsigned short v);
     void enableTexture();
     void disableTexture();
-    void getFrustumCorners(double* arr);
+    void getFrustumCorners(double* arr); //get world-space intersectioon of four corners of screen with y = 0
     void update2DMatrices();                 //only call during init
     void updatePerspectiveMatrix();          //when FOV or window changes
     void updateViewMatrix();                 //when camera moves

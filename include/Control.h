@@ -35,12 +35,7 @@
 #include "Minimap.h"
 
 namespace Control
-
 {
-    void init();
-    void dispose();
-    void update();
-    bool isTerminating();
     enum SNAME
     {
         MAIN_MENU,
@@ -48,11 +43,10 @@ namespace Control
         GAME,
         PAUSE
     };
-    extern int oldWindowW;
-    extern int oldWindowH;
-    extern std::map<SNAME, Scene*> scenes;
-    extern SDL_Event* currentEvent;
-    extern Scene* currentScene;
+    void init();
+    void dispose();
+    void update();
+    bool isTerminating();
     void processWindowResize();
     void processWindowEvent(SDL_Event& e);
     void processMouseMotionEvent();
@@ -61,12 +55,18 @@ namespace Control
     void processKeyEvent(SDL_Event& e);
     void processKeyTypedEvent(SDL_Event& e);
     void updateUISize();
+    void initScenes();
+    void clearEnables();
+    extern int oldWindowW;
+    extern int oldWindowH;
+    extern std::map<SNAME, Scene*> scenes;
+    extern SDL_Event* currentEvent;
+    extern Scene* currentScene;
     extern bool terminating;
     extern bool updatingView;
     extern bool trackingMouse;
     extern bool trackingKeyboard;
-    void initScenes();
-    void clearEnables();
+    extern bool camUpdated;
     extern const Uint8* keystate;   //array of key states for all scancodes
 }
 

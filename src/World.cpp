@@ -13,8 +13,10 @@ using namespace boost::filesystem;
 using namespace constants;
 
 string World::currentSaveName = "";
+unsigned long long int World::seed;
+Chunk* World::chunks[WORLD_CHUNKS][WORLD_CHUNKS];
 
-World::World(std::string saveName, bool willGenerate)
+void World::init(std::string saveName, bool willGenerate)
 {
     currentSaveName = saveName;
     for(int i = 0; i < WORLD_CHUNKS; i++)
@@ -45,10 +47,10 @@ World::World(std::string saveName, bool willGenerate)
     }
     generate();
     Terrain::init();
-    Minimap::buildTexture(*this);
+    Minimap::buildTexture();
 }
 
-World::~World()
+void World::dispose()
 {
     for(int i = 0; i < WORLD_CHUNKS; i++)
     {
@@ -64,8 +66,7 @@ void World::generate()
     //Set the world's permanent 64-bit seed value
     cout << "Starting world generation." << endl;
     Terrain::init();
-    TerrainGen::generate(*this);
-    cout << "Done with world generation." << endl;
+    TerrainGen::generate();
 }
 
 void World::writeWorld()

@@ -10,71 +10,7 @@
 
 using namespace constants;
 
-double coord::ISO_LENGTH = DEFAULT_ISO_LENGTH;
-double coord::ISO_WIDTH = DEFAULT_ISO_WIDTH;
-double coord::ISO_HEIGHT = DEFAULT_ISO_HEIGHT;
-
-int coord::ix(double i, double j)
-{
-    switch(viewDirection)
-    {
-        case NORTH:
-            return ISO_LENGTH / 2.0 * (i + j);
-        case WEST:
-            return ISO_LENGTH / 2.0 * (-i + j);
-        case EAST:
-            return ISO_LENGTH / 2.0 * (i - j);
-        case SOUTH:
-            return ISO_LENGTH / 2.0 * (-i - j);
-    }
-}
-
-int coord::jy(double i, double j)
-{
-    switch(viewDirection)
-    {
-        case NORTH:
-            return ISO_WIDTH / 2.0 * (i - j);
-        case WEST:
-            return ISO_WIDTH / 2.0 * (i + j);
-        case EAST:
-            return ISO_WIDTH / 2.0 * (-i - j);
-        case SOUTH:
-            return ISO_WIDTH / 2.0 * (-i + j);
-    }
-}
-
-double coord::xi(int x, int y)
-{
-    switch(viewDirection)
-    {
-        case NORTH:
-            return x / double(ISO_LENGTH) + y / double(ISO_WIDTH);
-        case WEST:
-            return -x / double(ISO_LENGTH) + y / double(ISO_WIDTH);
-        case EAST:
-            return x / double(ISO_LENGTH) - y / double(ISO_WIDTH);
-        case SOUTH:
-            return -x / double(ISO_LENGTH) - y / double(ISO_WIDTH);
-    }
-}
-
-double coord::yj(int x, int y)
-{
-    switch(viewDirection)
-    {
-        case NORTH:
-            return x / double(ISO_LENGTH) - y / double(ISO_WIDTH);
-        case WEST:
-            return x / double(ISO_LENGTH) + y / double(ISO_WIDTH);
-        case EAST:
-            return -x / double(ISO_LENGTH) - y / double(ISO_WIDTH);
-        case SOUTH:
-            return -x / double(ISO_LENGTH) + y / double(ISO_WIDTH);
-    }
-}
-
-bool coord::rectInside(intRect_t* small, intRect_t* big)
+bool Coord::rectInside(intRect_t* small, intRect_t* big)
 {
     if(big->x <= small->x && big->x + big->w > small->x + small->w
        && big->y <= small->y && big->y + big->h > small->y + small->h)
@@ -84,18 +20,11 @@ bool coord::rectInside(intRect_t* small, intRect_t* big)
     return false;
 }
 
-Point coord::project3DPoint(double i, double j, double h)
+Pos3 Coord::tileToWorld(int x, unsigned short height, int z)
 {
-    Point ret;
-    ret.x = ix(i, j) - constants::screenX;
-    ret.y = jy(i, j) - constants::screenY;
-    ret.y -= h * ISO_HEIGHT;
-    return ret;
-}
-
-void coord::updateScale()
-{
-    ISO_LENGTH = DEFAULT_ISO_LENGTH * worldScale;
-    ISO_WIDTH = DEFAULT_ISO_WIDTH * worldScale;
-    ISO_HEIGHT = DEFAULT_ISO_HEIGHT * worldScale;
+    Pos3 pos;
+    pos.x = x * TERRAIN_TILE_SIZE;
+    pos.y = height * TERRAIN_Y_SCALE * TERRAIN_TILE_SIZE;
+    pos.z = z * TERRAIN_TILE_SIZE;
+    return pos;
 }

@@ -9,28 +9,42 @@
 #ifndef __Magnate__Building__
 #define __Magnate__Building__
 
-#include "Cuboid.h"
-#include "Coord.h"
 #include <vector>
+#include "Coord.h"
+#include "Atlas.h"
+
+struct Cuboid
+{
+    float x;
+    float y;
+    float z;
+    float xsize;
+    float ysize;
+    float zsize;
+    int wallTex1;
+    int wallTex2;
+    int wallTex3;
+    int wallTex4;
+    int roofTex;
+};
+
+enum BUILDINGS
+{
+    //Put factory/building types here
+};
 
 class Building
 {
 public:
     Building();
-    virtual ~Building();
+    ~Building() {};
     int numCuboids();
     Cuboid& getCuboid(int index);
 protected:
 private:
     std::vector<Cuboid> boxes;
-    void addCuboid(Cuboid* c);
-    bool isFront(Cuboid* c1, Cuboid* c2);
-};
-
-enum BUILDINGS
-{
-    FACTORY,
-    SOLAR_ARRAY
+    void addCuboid(Cuboid c);
+    BUILDINGS bldgType;
 };
 
 #endif

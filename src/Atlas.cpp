@@ -10,13 +10,22 @@
 
 using namespace std;
 using namespace boost::filesystem;
+using namespace constants;
+
+map<std::string, int> Atlas::tileNames;
+map<char, int> Atlas::charTiles;
+vector<Texture> Atlas::tiles;
+GLuint Atlas::textureID;
+
 //Call this to initialize an atlas that already exists as assets/filename
-Atlas::Atlas(string atlasName, SDL_Renderer* renderer)
+void Atlas::init(string atlasName, SDL_Renderer* renderer)
 {
     path imagePath = initial_path() / constants::BIN_TO_ROOT / "assets" / (atlasName + "_atlas.png");
     path tilePath = initial_path() / constants::BIN_TO_ROOT / "data" / (atlasName + "_tiles.txt");
     SDL_Surface* loadedSurface = IMG_Load(imagePath.string().c_str());
-    this->size = loadedSurface->w;
+    if(loadedSurface->w != loadedSurface->h)
+        throw runtime_error("Atlas not square!");
+    ATLAS_SIZE = loadedSurface->w;
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
     #ifdef _WIN32
@@ -29,29 +38,22 @@ Atlas::Atlas(string atlasName, SDL_Renderer* renderer)
     parseTiles(tilePath);
     for(int i = 0; i < (int) tiles.size(); i++)
     {
-        this->tileNames[tiles[i].name] = i;
+        tileNames[tiles[i].name] = i;
     }
     initCharTiles();
     SDL_FreeSurface(loadedSurface);
 }
 
-Atlas::~Atlas()
-{
-    SDL_GL_UnbindTexture(this->tex);
-    SDL_DestroyTexture(this->tex);
-    this->tex = nullptr;
-}
-
 int Atlas::tileFromName(string tilename)
 {
-    return this->tileNames[tilename];
+    return tileNames[tilename];
 }
 
 int Atlas::tileFromChar(char c)
 {
     try
     {
-        return this->charTiles[c];
+        return charTiles[c];
     }
     catch (const std::out_of_range& oor)
     {
@@ -61,69 +63,60 @@ int Atlas::tileFromChar(char c)
     return 0;
 }
 
-void Atlas::bind()
-{
-    if(SDL_GL_BindTexture(this->tex, nullptr, nullptr) != 0)
-    {
-        cout << "Error binding atlas to GL context." << endl;
-        exit(2);
-    }
-}
-
 void Atlas::initCharTiles()
 {
-    constants::FONTW = (int) (tiles[tileFromName("A")].width * float(size) + 0.5);
-    constants::FONTH = (int) (tiles[tileFromName("A")].height * float(size) + 0.5);
+    constants::FONTW = (int) (tiles[tileFromName("A")].width);
+    constants::FONTH = (int) (tiles[tileFromName("A")].height);
     for(char lower = 'a'; lower <= 'z'; lower++)
     {
-        this->charTiles[lower] = tileNames["_" + string({lower})];
+        charTiles[lower] = tileNames["_" + string({lower})];
     }
     for(char cap = 'A'; cap <= 'Z'; cap++)
     {
-        this->charTiles[cap] = tileNames[string({cap})];
+        charTiles[cap] = tileNames[string({cap})];
     }
-    this->charTiles['~'] = tileNames["tilde"];
-    this->charTiles['`'] = tileNames["accent"];
-    this->charTiles['!'] = tileNames["exclamation"];
-    this->charTiles['1'] = tileNames["one"];
-    this->charTiles['@'] = tileNames["at"];
-    this->charTiles['2'] = tileNames["two"];
-    this->charTiles['#'] = tileNames["pound"];
-    this->charTiles['3'] = tileNames["three"];
-    this->charTiles['$'] = tileNames["dollar"];
-    this->charTiles['4'] = tileNames["four"];
-    this->charTiles['%'] = tileNames["percent"];
-    this->charTiles['5'] = tileNames["five"];
-    this->charTiles['^'] = tileNames["caret"];
-    this->charTiles['6'] = tileNames["six"];
-    this->charTiles['&'] = tileNames["ampersand"];
-    this->charTiles['7'] = tileNames["seven"];
-    this->charTiles['*'] = tileNames["asterisk"];
-    this->charTiles['8'] = tileNames["eight"];
-    this->charTiles['('] = tileNames["leftparen"];
-    this->charTiles['9'] = tileNames["nine"];
-    this->charTiles[')'] = tileNames["rightparen"];
-    this->charTiles['0'] = tileNames["zero"];
-    this->charTiles['_'] = tileNames["underscore"];
-    this->charTiles['-'] = tileNames["dash"];
-    this->charTiles['+'] = tileNames["plus"];
-    this->charTiles['='] = tileNames["equals"];
-    this->charTiles['{'] = tileNames["leftbrace"];
-    this->charTiles['['] = tileNames["leftbracket"];
-    this->charTiles['}'] = tileNames["rightbrace"];
-    this->charTiles[']'] = tileNames["rightbracket"];
-    this->charTiles['\\'] = tileNames["backslash"];
-    this->charTiles['|'] = tileNames["bar"];
-    this->charTiles[':'] = tileNames["colon"];
-    this->charTiles[';'] = tileNames["semicolon"];
-    this->charTiles['"'] = tileNames["quotation"];
-    this->charTiles['\''] = tileNames["apostrophe"];
-    this->charTiles[','] = tileNames["comma"];
-    this->charTiles['.'] = tileNames["period"];
-    this->charTiles['<'] = tileNames["less"];
-    this->charTiles['>'] = tileNames["greater"];
-    this->charTiles['?'] = tileNames["question"];
-    this->charTiles['/'] = tileNames["slash"];
+    charTiles['~'] = tileNames["tilde"];
+    charTiles['`'] = tileNames["accent"];
+    charTiles['!'] = tileNames["exclamation"];
+    charTiles['1'] = tileNames["one"];
+    charTiles['@'] = tileNames["at"];
+    charTiles['2'] = tileNames["two"];
+    charTiles['#'] = tileNames["pound"];
+    charTiles['3'] = tileNames["three"];
+    charTiles['$'] = tileNames["dollar"];
+    charTiles['4'] = tileNames["four"];
+    charTiles['%'] = tileNames["percent"];
+    charTiles['5'] = tileNames["five"];
+    charTiles['^'] = tileNames["caret"];
+    charTiles['6'] = tileNames["six"];
+    charTiles['&'] = tileNames["ampersand"];
+    charTiles['7'] = tileNames["seven"];
+    charTiles['*'] = tileNames["asterisk"];
+    charTiles['8'] = tileNames["eight"];
+    charTiles['('] = tileNames["leftparen"];
+    charTiles['9'] = tileNames["nine"];
+    charTiles[')'] = tileNames["rightparen"];
+    charTiles['0'] = tileNames["zero"];
+    charTiles['_'] = tileNames["underscore"];
+    charTiles['-'] = tileNames["dash"];
+    charTiles['+'] = tileNames["plus"];
+    charTiles['='] = tileNames["equals"];
+    charTiles['{'] = tileNames["leftbrace"];
+    charTiles['['] = tileNames["leftbracket"];
+    charTiles['}'] = tileNames["rightbrace"];
+    charTiles[']'] = tileNames["rightbracket"];
+    charTiles['\\'] = tileNames["backslash"];
+    charTiles['|'] = tileNames["bar"];
+    charTiles[':'] = tileNames["colon"];
+    charTiles[';'] = tileNames["semicolon"];
+    charTiles['"'] = tileNames["quotation"];
+    charTiles['\''] = tileNames["apostrophe"];
+    charTiles[','] = tileNames["comma"];
+    charTiles['.'] = tileNames["period"];
+    charTiles['<'] = tileNames["less"];
+    charTiles['>'] = tileNames["greater"];
+    charTiles['?'] = tileNames["question"];
+    charTiles['/'] = tileNames["slash"];
 }
 
 void Atlas::parseTiles(path fpath)
@@ -141,17 +134,17 @@ void Atlas::parseTiles(path fpath)
                 getline(tfile, line);
                 if(line != "" && line[0] != '#')
                 {
-                    tileData_t buffer;
+                    Texture buffer;
                     index = 0;
                     buffer.name = line.substr(0, line.find(' '));
                     index = line.find(' ') + 1;
-                    buffer.x = float(atoi(line.substr(index, line.find(' ', index)).c_str())) / size;
+                    buffer.x = atoi(line.substr(index, line.find(' ', index)).c_str());
                     index = line.find(' ', index) + 1;
-                    buffer.y = float(atoi(line.substr(index, line.find(' ', index)).c_str())) / size;
+                    buffer.y = atoi(line.substr(index, line.find(' ', index)).c_str());
                     index = line.find(' ', index) + 1;
-                    buffer.width = float(atoi(line.substr(index, line.find(' ', index)).c_str())) / size;
+                    buffer.width = atoi(line.substr(index, line.find(' ', index)).c_str());
                     index = line.find(' ', index) + 1;
-                    buffer.height = float(atoi(line.substr(index, line.find(' ', index)).c_str())) / size;
+                    buffer.height = atoi(line.substr(index, line.find(' ', index)).c_str());
                     tiles.push_back(buffer);
                 }
                 else
@@ -168,4 +161,24 @@ void Atlas::parseTiles(path fpath)
         cout << "Error: could not load data/" + fpath.filename().string() << endl;
         cout << "Check if it exists and has file extension." << endl;
     }
+}
+
+unsigned short Atlas::tileX(int index)
+{
+    return tiles[index].x;
+}
+
+unsigned short Atlas::tileY(int index)
+{
+    return tiles[index].y;
+}
+
+unsigned short Atlas::tileW(int index)
+{
+    return tiles[index].width;
+}
+
+unsigned short Atlas::tileH(int index)
+{
+    return tiles[index].height;
 }

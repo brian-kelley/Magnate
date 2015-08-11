@@ -17,7 +17,6 @@ using namespace RenderRoutines;
 SDL_Window* view::window;
 SDL_Renderer* view::renderer;
 SDL_GLContext view::context;
-Atlas* view::mainAtlas;
 
 void view::init()
 {
@@ -32,7 +31,6 @@ void view::init()
 
 void view::dispose()
 {
-    delete mainAtlas;
     Renderer::dispose();
     SDL_DestroyRenderer(renderer);
     renderer = nullptr;
@@ -63,7 +61,7 @@ void view::drawBuilding(Building& b)
     }
 }
 
-void view::drawWorld(World& currentWorld)   //probably too general of a function
+void view::drawWorld()   //probably too general of a function
 {
 
 }
@@ -84,9 +82,7 @@ void view::updateWindowSize()
 void view::initSDLVideo()
 {
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
-    {
         cout << "Failed to SDL video." << endl;
-    }
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
@@ -95,14 +91,14 @@ void view::initSDLVideo()
     if(!window)
     {
         cout << "Failed to create SDL window." << endl;
-        exit(4);
+        exit(-1);
     }
     context = SDL_GL_CreateContext(window);
     if(context == nullptr)
     {
         cout << SDL_GetError() << endl;
         cout << "Error creating GL context." << endl;
-        exit(5);
+        exit(-1);
     }
     SDL_GL_SetSwapInterval(1);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);

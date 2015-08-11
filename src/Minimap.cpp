@@ -4,7 +4,8 @@ using namespace std;
 using namespace constants;
 using namespace Renderer;
 using namespace RenderRoutines;
-using namespace coord;
+using namespace Coord;
+using namespace glm;
 
 typedef struct
 {
@@ -51,9 +52,9 @@ Color colorFromTerrain(GROUND g)
     }
 }
 
-void putMinimapPixel(World& world, int x, int y, Uint32* buf)
+void Minimap::putMinimapPixel(int x, int y, Uint32* buf)
 {
-    const double COMPRESSION = floor(double(WORLD_SIZE) / MINIMAP_SIZE);
+    const double COMPRESSION = floor(double(WORLD_SIZE) / Minimap::MINIMAP_SIZE);
     //array of occurrences of each terrain type
     int occurences[NUM_TYPES];
     for(int i = 0; i < NUM_TYPES; i++)
@@ -65,8 +66,8 @@ void putMinimapPixel(World& world, int x, int y, Uint32* buf)
     {
         for(int j = y * COMPRESSION - COMPRESSION / 2; j < y * COMPRESSION + COMPRESSION / 2; j++)
         {
-            occurences[world.getGround(i, j)]++;
-            sumHeights += world.getHeight(i, j);
+            occurences[World::getGround(i, j)]++;
+            sumHeights += World::getHeight(i, j);
         }
     }
     int avgHeight = sumHeights / COMPRESSION / COMPRESSION;
@@ -98,32 +99,33 @@ void putMinimapPixel(World& world, int x, int y, Uint32* buf)
     if(newB > 255)
         newB = 255;
     pxColor.b = newB;
+    //Flip y (z in world space)
+    y = MINIMAP_SIZE - y - 1;
 #if defined(__APPLE__)
     //BGRA
-    buf[x + y * MINIMAP_SIZE] = 0xFF << 24 | pxColor.r << 16 | pxColor.g << 8 | pxColor.b;
+    buf[x + y * Minimap::MINIMAP_SIZE] = 0xFF << 24 | pxColor.r << 16 | pxColor.g << 8 | pxColor.b;
 #elif defined(_WIN32)
     //RGBA32
-    buf[x + y * MINIMAP_SIZE] = pxColor.r << 24 | pxColor.g << 16 | pxColor.b << 8 | 0xFF;
+    buf[x + y * Minimap::MINIMAP_SIZE] = pxColor.r << 24 | pxColor.g << 16 | pxColor.b << 8 | 0xFF;
 #endif
 }
 
-void Minimap::buildTexture(World& world)
+void Minimap::buildTexture()
 {
     Uint32* pixelData = (Uint32*) malloc(MINIMAP_SIZE * MINIMAP_SIZE * sizeof(Uint32));
     for(int i = 0; i < MINIMAP_SIZE; i++)
     {
         for(int j = 0; j < MINIMAP_SIZE; j++)
         {
-            putMinimapPixel(world, i, j, pixelData);
+            putMinimapPixel(i, j, pixelData); //note: reverse y to match world x-z orientation
         }
     }
-    int minimapTexID = mainAtlas->tileFromName("minimap");
-    int destX = mainAtlas->getSize() * mainAtlas->tileX(minimapTexID);
-    int destY = mainAtlas->getSize() * mainAtlas->tileY(minimapTexID);
-    int destW = mainAtlas->getSize() * mainAtlas->tileW(minimapTexID);
-    int destH = mainAtlas->getSize() * mainAtlas->tileH(minimapTexID);
+    int minimapTexID = Atlas::tileFromName("minimap");
+    int destX = Atlas::tileX(minimapTexID);
+    int destY = Atlas::tileY(minimapTexID);
+    int destW = Atlas::tileW(minimapTexID);
+    int destH = Atlas::tileH(minimapTexID);
     //This client-side buffer is exactly big enough to hold minimap pixels
-    cout << "Building minimap texture." << endl;
 #ifdef __APPLE__
     glTexSubImage2D(GL_TEXTURE_2D, 0, destX, destY, destW, destH, GL_BGRA, GL_UNSIGNED_BYTE, pixelData);
 #elif _WIN32
@@ -134,237 +136,83 @@ void Minimap::buildTexture(World& world)
     //Return to drawing to normal front buffer, visible on screen
 }
 
-//Rotate the point clockwise, given that (x, y) is in local minimap coords (0 -> MINIMAP_SIZE)
-void rotateCW(int& x, int& y)
-{
-    int temp = x;
-    x = MINIMAP_SIZE - y;
-    y = temp;
-}
-//Counterclockwise
-void rotateCCW(int& x, int& y)
-{
-    int temp = x;
-    x = y;
-    y = MINIMAP_SIZE - temp;
-}
-
 void Minimap::render()
 {
-    using namespace coord;
-    int texID = mainAtlas->tileFromName("minimap");
-    color3f(1, 1, 1);
-    enableTexture();
+    using namespace Coord;
+    int texID = Atlas::tileFromName("minimap");
+    //base position of minimap (upper-left corner of minimap image)
+    int x = WINDOW_W - MINIMAP_BORDER - MINIMAP_SIZE - BORDER_WIDTH;
+    int y = BORDER_WIDTH;
     const double COMPRESSION = double(WORLD_SIZE) / MINIMAP_SIZE;
     //Calculate screen coordinates of frame.
-    int x1 = xi(screenX, screenY) / COMPRESSION / TERRAIN_TILE_SIZE;
-    int y1 = MINIMAP_SIZE - yj(screenX, screenY) / COMPRESSION / TERRAIN_TILE_SIZE;
-    int x2 = xi(screenX + WINDOW_W, screenY) / COMPRESSION / TERRAIN_TILE_SIZE;
-    int y2 = MINIMAP_SIZE - yj(screenX + WINDOW_W, screenY) / COMPRESSION / TERRAIN_TILE_SIZE;
-    int x3 = xi(screenX + WINDOW_W, screenY + WINDOW_H) / COMPRESSION / TERRAIN_TILE_SIZE;
-    int y3 = MINIMAP_SIZE - yj(screenX + WINDOW_W, screenY + WINDOW_H) / COMPRESSION / TERRAIN_TILE_SIZE;
-    int x4 = xi(screenX, screenY + WINDOW_H) / COMPRESSION / TERRAIN_TILE_SIZE;
-    int y4 = MINIMAP_SIZE - yj(screenX, screenY + WINDOW_H) / COMPRESSION / TERRAIN_TILE_SIZE;
-    switch(viewDirection)
+    double viewCorners[8];
+    int framePts[8];
+    Renderer::getFrustumCorners(viewCorners);
+    //viewCorners has world coordinates of corners
+    for(int i = 0; i < 8; i++)
     {
-        case NORTH:
-            break;
-        case WEST:
-            rotateCW(x1, y1);
-            rotateCW(x2, y2);
-            rotateCW(x3, y3);
-            rotateCW(x4, y4);
-            break;
-        case EAST:
-            rotateCCW(x1, y1);
-            rotateCCW(x2, y2);
-            rotateCCW(x3, y3);
-            rotateCCW(x4, y4);
-            break;
-        case SOUTH:
-            x1 = MINIMAP_SIZE - x1;
-            y1 = MINIMAP_SIZE - y1;
-            x2 = MINIMAP_SIZE - x2;
-            y2 = MINIMAP_SIZE - y2;
-            x3 = MINIMAP_SIZE - x3;
-            y3 = MINIMAP_SIZE - y3;
-            x4 = MINIMAP_SIZE - x4;
-            y4 = MINIMAP_SIZE - y4;
-            break;
+        viewCorners[i] /= TERRAIN_TILE_SIZE;
+        viewCorners[i] /= COMPRESSION;
+        if(i % 2)
+            //flip y to match orientation of minimap image
+            viewCorners[i] = MINIMAP_SIZE - viewCorners[i];
+        framePts[i] = viewCorners[i];
     }
     bool drawFrame = true;
-    if(x1 < 0 || x2 < 0 || x3 < 0 || x4 < 0 || x1 > MINIMAP_SIZE || x2 > MINIMAP_SIZE || x3 > MINIMAP_SIZE || x4 > MINIMAP_SIZE || y1 < 0 || y2 < 0 || y3 < 0 || y4 < 0 || y1 > MINIMAP_SIZE || y2 > MINIMAP_SIZE || y3 > MINIMAP_SIZE || y4 > MINIMAP_SIZE)
+    for(int i = 0; i < 8; i++)
     {
-        drawFrame = false;
+        if(framePts[i] < 0 || framePts[i] > MINIMAP_SIZE)
+        {
+            drawFrame = false;
+            break;
+        }
     }
     //cout << x1 << "," << y1 << " : " << x2 << "," << y2 << " : " << x3 << "," << y3 << " : " << x4 << "," << y4 << endl;
     disableTexture();
     color3f(UI_FG_R, UI_FG_G, UI_FG_B);
     //top beveled edge
-    vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER - BORDER_WIDTH, MINIMAP_BORDER - BORDER_WIDTH);
-    vertex2i(WINDOW_W - MINIMAP_BORDER + BORDER_WIDTH, MINIMAP_BORDER - BORDER_WIDTH);
-    vertex2i(WINDOW_W - MINIMAP_BORDER, MINIMAP_BORDER);
-    vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER, MINIMAP_BORDER);
+    vertex2i(x - BORDER_WIDTH, y - BORDER_WIDTH);
+    vertex2i(x + MINIMAP_SIZE + BORDER_WIDTH, y - BORDER_WIDTH);
+    vertex2i(x + MINIMAP_SIZE, y);
+    vertex2i(x, y);
     //left
-    vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER - BORDER_WIDTH, MINIMAP_BORDER - BORDER_WIDTH);
-    vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER, MINIMAP_BORDER);
-    vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER, MINIMAP_BORDER + MINIMAP_SIZE);
-    vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER - BORDER_WIDTH, MINIMAP_BORDER + MINIMAP_SIZE + BORDER_WIDTH);
+    vertex2i(x - BORDER_WIDTH, y - BORDER_WIDTH);
+    vertex2i(x, y);
+    vertex2i(x, y + MINIMAP_SIZE);
+    vertex2i(x - BORDER_WIDTH, y + MINIMAP_SIZE + BORDER_WIDTH);
     //right
     color3f(UI_FG_R * SHADE, UI_FG_G * SHADE, UI_FG_B * SHADE);
-    vertex2i(WINDOW_W - MINIMAP_BORDER, MINIMAP_BORDER);
-    vertex2i(WINDOW_W - MINIMAP_BORDER + BORDER_WIDTH, MINIMAP_BORDER - BORDER_WIDTH);
-    vertex2i(WINDOW_W - MINIMAP_BORDER + BORDER_WIDTH, MINIMAP_BORDER + MINIMAP_SIZE + BORDER_WIDTH);
-    vertex2i(WINDOW_W - MINIMAP_BORDER, MINIMAP_BORDER + MINIMAP_SIZE);
+    vertex2i(x + MINIMAP_SIZE, y);
+    vertex2i(x + MINIMAP_SIZE + BORDER_WIDTH, y - BORDER_WIDTH);
+    vertex2i(x + MINIMAP_SIZE + BORDER_WIDTH, y + MINIMAP_SIZE + BORDER_WIDTH);
+    vertex2i(x + MINIMAP_SIZE, y + MINIMAP_SIZE);
     //bottom
-    vertex2i(WINDOW_W - MINIMAP_BORDER - MINIMAP_SIZE, MINIMAP_BORDER + MINIMAP_SIZE);
-    vertex2i(WINDOW_W - MINIMAP_BORDER, MINIMAP_BORDER + MINIMAP_SIZE);
-    vertex2i(WINDOW_W - MINIMAP_BORDER + BORDER_WIDTH, MINIMAP_BORDER + MINIMAP_SIZE + BORDER_WIDTH);
-    vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER - BORDER_WIDTH, MINIMAP_BORDER + MINIMAP_SIZE + BORDER_WIDTH);
+    vertex2i(x, y + MINIMAP_SIZE);
+    vertex2i(x + MINIMAP_SIZE, y + MINIMAP_SIZE);
+    vertex2i(x + MINIMAP_SIZE + BORDER_WIDTH, y + MINIMAP_SIZE + BORDER_WIDTH);
+    vertex2i(x - BORDER_WIDTH, y + MINIMAP_SIZE + BORDER_WIDTH);
     enableTexture();
+    //draw the minimap image
     color3f(1, 1, 1);
-    switch(viewDirection)
-    {
-        case NORTH:
-        {
-            drawString("N", 0, 0);
-            color3f(1, 1, 1);
-            texCoord2f(mainAtlas->tileX(texID), mainAtlas->tileY(texID) + mainAtlas->tileH(texID));
-            vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER, MINIMAP_BORDER);
-            texCoord2f(mainAtlas->tileX(texID) + mainAtlas->tileW(texID), mainAtlas->tileY(texID) + mainAtlas->tileH(texID));
-            vertex2i(WINDOW_W - MINIMAP_BORDER, MINIMAP_BORDER);
-            texCoord2f(mainAtlas->tileX(texID) + mainAtlas->tileW(texID), mainAtlas->tileY(texID));
-            vertex2i(WINDOW_W - MINIMAP_BORDER, MINIMAP_BORDER + MINIMAP_SIZE);
-            texCoord2f(mainAtlas->tileX(texID), mainAtlas->tileY(texID));
-            vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER, MINIMAP_BORDER + MINIMAP_SIZE);
-            //Draw frame representing viewport
-            if(drawFrame)
-            {
-                color3f(1, 1, 1);
-                disableTexture();
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x1, MINIMAP_BORDER + y1, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x2, MINIMAP_BORDER + y2);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x2, MINIMAP_BORDER + y2, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x3, MINIMAP_BORDER + y3);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x3, MINIMAP_BORDER + y3, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x4, MINIMAP_BORDER + y4);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x1, MINIMAP_BORDER + y1, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x4, MINIMAP_BORDER + y4);
-            }
-            break;
-        }
-        case WEST:
-        {
-            drawString("W", 0, 0);
-            color3f(1, 1, 1);
-            texCoord2f(mainAtlas->tileX(texID), mainAtlas->tileY(texID));
-            vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER, MINIMAP_BORDER);
-            texCoord2f(mainAtlas->tileX(texID), mainAtlas->tileY(texID) + mainAtlas->tileH(texID));
-            vertex2i(WINDOW_W - MINIMAP_BORDER, MINIMAP_BORDER);
-            texCoord2f(mainAtlas->tileX(texID) + mainAtlas->tileW(texID), mainAtlas->tileY(texID) + mainAtlas->tileH(texID));
-            vertex2i(WINDOW_W - MINIMAP_BORDER, MINIMAP_BORDER + MINIMAP_SIZE);
-            texCoord2f(mainAtlas->tileX(texID) + mainAtlas->tileW(texID), mainAtlas->tileY(texID));
-            vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER, MINIMAP_BORDER + MINIMAP_SIZE);
-            if(drawFrame)
-            {
-                color3f(1, 1, 1);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x1, MINIMAP_BORDER + y1, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x2, MINIMAP_BORDER + y2);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x2, MINIMAP_BORDER + y2, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x3, MINIMAP_BORDER + y3);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x3, MINIMAP_BORDER + y3, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x4, MINIMAP_BORDER + y4);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x1, MINIMAP_BORDER + y1, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x4, MINIMAP_BORDER + y4);
-            }
-            break;
-        }
-        case EAST:
-        {
-            drawString("E", 0, 0);
-            color3f(1, 1, 1);
-            texCoord2f(mainAtlas->tileX(texID) + mainAtlas->tileW(texID), mainAtlas->tileY(texID) + mainAtlas->tileH(texID));
-            vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER, MINIMAP_BORDER);
-            texCoord2f(mainAtlas->tileX(texID) + mainAtlas->tileW(texID), mainAtlas->tileY(texID));
-            vertex2i(WINDOW_W - MINIMAP_BORDER, MINIMAP_BORDER);
-            texCoord2f(mainAtlas->tileX(texID), mainAtlas->tileY(texID));
-            vertex2i(WINDOW_W - MINIMAP_BORDER, MINIMAP_BORDER + MINIMAP_SIZE);
-            texCoord2f(mainAtlas->tileX(texID), mainAtlas->tileY(texID) + mainAtlas->tileH(texID));
-            vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER, MINIMAP_SIZE + MINIMAP_BORDER);
-            if(drawFrame)
-            {
-                color3f(1, 1, 1);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x1, MINIMAP_BORDER + y1, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x2, MINIMAP_BORDER + y2);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x2, MINIMAP_BORDER + y2, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x3, MINIMAP_BORDER + y3);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x3, MINIMAP_BORDER + y3, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x4, MINIMAP_BORDER + y4);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x1, MINIMAP_BORDER + y1, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x4, MINIMAP_BORDER + y4);
-            }
-            break;
-        }
-        case SOUTH:
-        {
-            drawString("S", 0, 0);
-            color3f(1, 1, 1);
-            texCoord2f(mainAtlas->tileX(texID) + mainAtlas->tileW(texID), mainAtlas->tileY(texID));
-            vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER, MINIMAP_BORDER);
-            texCoord2f(mainAtlas->tileX(texID), mainAtlas->tileY(texID));
-            vertex2i(WINDOW_W - MINIMAP_BORDER, MINIMAP_BORDER);
-            texCoord2f(mainAtlas->tileX(texID), mainAtlas->tileY(texID) + mainAtlas->tileH(texID));
-            vertex2i(WINDOW_W - MINIMAP_BORDER, MINIMAP_BORDER + MINIMAP_SIZE);
-            texCoord2f(mainAtlas->tileX(texID) + mainAtlas->tileW(texID), mainAtlas->tileY(texID) + mainAtlas->tileH(texID));
-            vertex2i(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER, MINIMAP_BORDER + MINIMAP_SIZE);
-            if(drawFrame)
-            {
-                color3f(1, 1, 1);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x1, MINIMAP_BORDER + y1, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x2, MINIMAP_BORDER + y2);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x2, MINIMAP_BORDER + y2, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x3, MINIMAP_BORDER + y3);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x3, MINIMAP_BORDER + y3, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x4, MINIMAP_BORDER + y4);
-                drawLine(WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x1, MINIMAP_BORDER + y1, WINDOW_W - MINIMAP_SIZE - MINIMAP_BORDER + x4, MINIMAP_BORDER + y4);
-            }
-        }
-    }
+    using namespace Atlas;
+    texCoord2i(tileX(texID), tileY(texID));
+    vertex2i(x, y);
+    texCoord2i(tileX(texID) + tileW(texID), tileY(texID));
+    vertex2i(x + MINIMAP_SIZE, y);
+    texCoord2i(tileX(texID) + tileW(texID), tileY(texID) + tileH(texID));
+    vertex2i(x + MINIMAP_SIZE, y + MINIMAP_SIZE);
+    texCoord2i(tileX(texID), tileY(texID) + tileH(texID));
+    vertex2i(x, y + MINIMAP_SIZE);
 }
 
-void Minimap::update()
+void Minimap::update() //this means mouse is over minimap and camera needs to move to corresponding location
 {
-    int minimapI = mouseX - (WINDOW_W - MINIMAP_BORDER - MINIMAP_SIZE);
-    int minimapJ = MINIMAP_SIZE - mouseY + MINIMAP_BORDER;
-    //Factor to multiply minimap pixels by to get equivalent isometric world coords
-    const double TILE_COMPRESSION = double(WORLD_SIZE) * TERRAIN_TILE_SIZE / MINIMAP_SIZE;
-    switch(viewDirection)
-    {
-        case NORTH:
-        {
-            //New location of center of screen
-            int newSX = -WINDOW_W / 2 + ix(minimapI * TILE_COMPRESSION, minimapJ * TILE_COMPRESSION);
-            int newSY = -WINDOW_H / 2 + jy(minimapI * TILE_COMPRESSION, minimapJ * TILE_COMPRESSION);
-            screenX = newSX;
-            screenY = newSY;
-            break;
-        }
-        case WEST:
-        {
-            rotateCW(minimapI, minimapJ);
-            int newSX = -WINDOW_W / 2 + ix(minimapI * TILE_COMPRESSION, minimapJ * TILE_COMPRESSION);
-            int newSY = -WINDOW_H / 2 + jy(minimapI * TILE_COMPRESSION, minimapJ * TILE_COMPRESSION);
-            screenX = newSX;
-            screenY = newSY;
-            break;
-        }
-        case EAST:
-        {
-            rotateCCW(minimapI, minimapJ);
-            //New location of center of screen
-            int newSX = -WINDOW_W / 2 + ix(minimapI * TILE_COMPRESSION, minimapJ * TILE_COMPRESSION);
-            int newSY = -WINDOW_H / 2 + jy(minimapI * TILE_COMPRESSION, minimapJ * TILE_COMPRESSION);
-            screenX = newSX;
-            screenY = newSY;
-            break;
-        }
-        case SOUTH:
-        {
-            minimapI = MINIMAP_SIZE - minimapI;
-            minimapJ = MINIMAP_SIZE - minimapJ;
-            //New location of center of screen
-            int newSX = -WINDOW_W / 2 + ix(minimapI * TILE_COMPRESSION, minimapJ * TILE_COMPRESSION);
-            int newSY = -WINDOW_H / 2 + jy(minimapI * TILE_COMPRESSION, minimapJ * TILE_COMPRESSION);
-            screenX = newSX;
-            screenY = newSY;
-            break;
-        }
-    }
+    const double COMPRESSION = double(WORLD_SIZE) * TERRAIN_TILE_SIZE / MINIMAP_SIZE; //world distance per minimap pixel
+    double centerX = (mouseX - (WINDOW_W - MINIMAP_BORDER - MINIMAP_SIZE)) * COMPRESSION;
+    double centerZ = ((MINIMAP_BORDER + MINIMAP_SIZE) - mouseY) * COMPRESSION;
+    double heightMult = camPos.y / camDir.y;
+    camPos.x = centerX - camDir.x * heightMult;
+    camPos.z = centerZ - camDir.z * heightMult;
 }
 
 bool Minimap::mmIsMouseOver()

@@ -15,13 +15,12 @@
 #include <string>
 #include "Constants.h"
 #include "Coord.h"
+#include "Building.h"
 #include "Atlas.h"
-#include "Cuboid.h"
 #include "Renderer.h"
 
 namespace RenderRoutines
 {
-    extern Atlas* mainAtlas;
     void initAtlas(SDL_Renderer* windowRenderer);
     void drawString(std::string text, int x, int y);
     void drawString(std::string text, int x, int y, float scale);
@@ -30,13 +29,8 @@ namespace RenderRoutines
     void blit(int tex, int x, int y);
     void blit(int tex, int x1, int y1, int x2, int y2);
     void drawCuboid(Cuboid& c);
-    void drawCuboidNorth(Cuboid& c);
-    void drawCuboidWest(Cuboid& c);
-    void drawCuboidEast(Cuboid& c);
-    void drawCuboidSouth(Cuboid& c);
     int texNumFromStr(std::string name);
     floatRect_t getTexCoords(int index);
-    float calcTileShade(unsigned char h1, unsigned char h2, unsigned char h3, unsigned char h4);
     void drawLine(int x1, int y1, int x2, int y2);
 }
 

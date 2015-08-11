@@ -33,35 +33,36 @@ int Renderer::numGuiLineVertices;
 vector<Vertex2D> Renderer::guiQuadVertices;
 vector<Vertex2D> Renderer::guiLineVertices;
 
-//list of chunks currently cached in VBO, mapped to the actual vbo
-static ChunkAllocation chunkAlloc[constants::MAX_VBO_CHUNKS];
-
 void Renderer::init()
 {
     textureOn = false;
     initShaders();
     //For now, model matrix in both dimensions is I
-    stateVertex.x = 0;
-    stateVertex.y = 0;
+    stateVertex.pos = {0, 0};
     //    stateVertex.z = 0;
-    stateVertex.u = 0;
-    stateVertex.v = 0;
-    stateVertex.r = 255;
-    stateVertex.g = 255;
-    stateVertex.b = 255;
-    stateVertex.a = 255;
+    stateVertex.texcoord = {0, 0};
+    stateVertex.color = {255, 255, 255, 255};
     update2DMatrices();
     updatePerspectiveMatrix(); //use current (default) camera coordinates and window dimensions
     updateViewMatrix(); //from Constants.h
     initVBO();
+    numWorldVertices = VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * 4;
 }
 
 void Renderer::initVBO()
 {
     guiQuadVertices.reserve(GUI_QUAD_PRELOAD);
     guiLineVertices.reserve(GUI_LINE_PRELOAD);
-    //setupWorldVBO();
-    //setupBuildingVBO();
+    //Set up vertex attributes for shader, which are the same
+    //for all 3 VBOs
+    posAttribLoc = glGetAttribLocation(programID, "vertex");
+    colorAttribLoc = glGetAttribLocation(programID, "color");
+    texCoordAttribLoc = glGetAttribLocation(programID, "texCoord");
+    glEnableVertexAttribArray(posAttribLoc);
+    glEnableVertexAttribArray(colorAttribLoc);
+    glEnableVertexAttribArray(texCoordAttribLoc);
+    setupWorldVBO();
+    setupBuildingVBO();
     setupGuiVBO();
 }
 
@@ -70,7 +71,7 @@ void Renderer::setupWorldVBO()
     glGenBuffers(1, &worldVBO);
     glBindBuffer(GL_ARRAY_BUFFER, worldVBO);
     GLERR
-    glBufferData(GL_ARRAY_BUFFER, MAX_VBO_CHUNKS * (CHUNK_SIZE + 1) * (CHUNK_SIZE + 1) * sizeof(Vertex3D), NULL, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, VBO_CHUNKS * (CHUNK_SIZE + 1) * (CHUNK_SIZE + 1) * sizeof(Vertex3D), NULL, GL_STATIC_DRAW);
     GLERR
 }
 
@@ -175,10 +176,13 @@ void Renderer::initShaders()
     }
     glAttachShader(programID, vshadeID);
     glAttachShader(programID, fshadeID);
+    GLERR
     glLinkProgram(programID);
+    GLERR
     error[0] = 0;
     GLuint linkSuccess;
     glGetProgramiv(programID, GL_LINK_STATUS, (int*) &linkSuccess);
+    GLERR
     if(!linkSuccess)
     {
         glGetProgramInfoLog(programID, ERR_BUF_LEN, &ERR_BUF_LEN, error);
@@ -186,11 +190,16 @@ void Renderer::initShaders()
         throw runtime_error("Shader linking error.");
     }
     glUseProgram(programID);
+    GLERR
     GLuint samplerLoc = glGetUniformLocation(programID, "sampler");
+    GLERR
     glActiveTexture(GL_TEXTURE0);
+    GLERR
     glUniform1i(samplerLoc, 0);
+    GLERR
     viewLoc = glGetUniformLocation(programID, "view");
     projLoc = glGetUniformLocation(programID, "proj");
+    GLERR
 }
 
 void Renderer::startFrame()
@@ -201,14 +210,13 @@ void Renderer::startFrame()
 
 void Renderer::endFrame()
 {
-    /*
     uploadMatrices(3);
     //draw world VBO
-    glBindVertexArrayAPPLE(worldVAO);
+    bindWorldVBO();
+    glDrawArrays(GL_QUADS, 0, numWorldVertices);
     //draw building VBO
-    glBindVertexArrayAPPLE(buildingVAO);
-    glDrawArrays(GL_QUADS, 0, numBuildingVertices);
-     */
+    //bindBuildingVBO();
+    //glDrawArrays(GL_QUADS, 0, 0);
     //draw GUI VBO
     bindGuiVBO();
     uploadMatrices(2);
@@ -226,61 +234,59 @@ void Renderer::endFrame()
 
 void Renderer::color3f(float r, float g, float b)
 {
-    stateVertex.r = 255 * r;
-    stateVertex.g = 255 * g;
-    stateVertex.b = 255 * b;
-    stateVertex.a = 255;
+    stateVertex.color.r = r * 255;
+    stateVertex.color.g = g * 255;
+    stateVertex.color.b = b * 255;
+    stateVertex.color.a = 255;
 }
 
 void Renderer::color3b(unsigned char r, unsigned char g, unsigned char b)
 {
-    stateVertex.r = r;
-    stateVertex.g = g;
-    stateVertex.b = b;
-    stateVertex.a = 255;
+    stateVertex.color.r = r;
+    stateVertex.color.g = g;
+    stateVertex.color.b = b;
+    stateVertex.color.a = 255;
 }
 
 void Renderer::color4f(float r, float g, float b, float a)
 {
-    stateVertex.r = 255 * r;
-    stateVertex.g = 255 * g;
-    stateVertex.b = 255 * b;
-    stateVertex.a = 255 * a;
+    stateVertex.color.r = r * 255;
+    stateVertex.color.g = g * 255;
+    stateVertex.color.b = b * 255;
+    stateVertex.color.a = a * 255;
 }
 
 void Renderer::color4b(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
-    stateVertex.r = r;
-    stateVertex.g = g;
-    stateVertex.b = b;
-    stateVertex.a = a;
+    stateVertex.color.r = r;
+    stateVertex.color.g = g;
+    stateVertex.color.b = b;
+    stateVertex.color.a = a;
 }
 
 void Renderer::vertex2i(unsigned short x, unsigned short y)
 {
-    stateVertex.x = x;
-    stateVertex.y = y;
+    stateVertex.pos = {x, y};
     addQuadVertex();
 }
 
-void Renderer::lineVertex2i(int x, int y)
+void Renderer::lineVertex2i(unsigned short x, unsigned short y)
 {
-    stateVertex.x = x;
-    stateVertex.y = y;
+    stateVertex.pos = {x, y};
     addLineVertex();
 }
 
 void Renderer::texCoord2i(unsigned short u, unsigned short v)
 {
-    stateVertex.u = u;
-    stateVertex.v = v;
+    stateVertex.texcoord = {u, v};
     textureOn = true;
 }
 
 void Renderer::texCoord2f(float u, float v)
 {
-    stateVertex.u = u * ATLAS_SIZE;
-    stateVertex.v = v * ATLAS_SIZE;
+    unsigned short newU = u * ATLAS_SIZE;
+    unsigned short newV = v * ATLAS_SIZE;
+    stateVertex.texcoord = {newU, newV};
     textureOn = true;
 }
 
@@ -289,8 +295,7 @@ void Renderer::addQuadVertex()
     if(!textureOn)
     {
         //Shaders will know that these coords mean to not use texture2D for color
-        stateVertex.u = 0xFFFF;
-        stateVertex.v = 0xFFFF;
+        stateVertex.texcoord = {0xFFFF, 0xFFFF};
     }
     //else: texcoord must have already been set by program
     if(guiQuadVertices.size() > numGuiQuadVertices)
@@ -308,8 +313,7 @@ void Renderer::addLineVertex()
 {
     //Shaders will know that these coords mean to not use texture2D for color
     //else: texcoord must have already been set by program
-    stateVertex.u = 0xFFFF;
-    stateVertex.v = 0xFFFF;
+    stateVertex.texcoord = {0xFFFF, 0xFFFF};
     if(guiLineVertices.size() > numGuiLineVertices)
     {
         guiLineVertices[numGuiLineVertices] = stateVertex;
@@ -344,29 +348,27 @@ void Renderer::updatePerspectiveMatrix()
 
 void Renderer::updateViewMatrix()
 {
-    vec3 cam(camX, camY, camZ);
-    cam = normalize(cam);
-    vec3 at(camX + 10 * cos(camAngle) * sin(camPitch), camY - 10, camZ - 10 * sin(camAngle) * sin(camPitch));
+    vec3 at(camPos.x + 10 * cos(camAngle) * sin(camPitch), camPos.y - 10, camPos.z - 10 * sin(camAngle) * sin(camPitch));
     vec3 up(cos(camAngle) * cos(camPitch), cos(camPitch), -sin(camAngle) * cos(camPitch));
     camUp = up;
-    camDir = normalize(at - cam);
-    view3 = lookAt(cam, at, up);
+    camDir = normalize(at - camPos);
+    view3 = lookAt(camPos, at, up);
 }
 
 void Renderer::uploadMatrices(int dims)
 {
     if(dims == 2)
     {
-        glUniformMatrix4fv(viewLoc, 1, false, value_ptr(view2));
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, value_ptr(view2));
         GLERR
-        glUniformMatrix4fv(projLoc, 1, false, value_ptr(proj2));
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, value_ptr(proj2));
         GLERR
     }
     else
     {
-        glUniformMatrix4fv(viewLoc, 1, false, value_ptr(view3));
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, value_ptr(view3));
         GLERR
-        glUniformMatrix4fv(projLoc, 1, false, value_ptr(proj3));
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, value_ptr(proj3));
         GLERR
     }
 }
@@ -380,42 +382,44 @@ void Renderer::getFrustumCorners(double *arr)
     vec3 upperLeft = rotate<float>(camDir, fovX, camUp);
     upperLeft = rotate<float>(upperLeft, fovY, camCross);
     //get where x * upperLeft crosses y = 0, get (x, z) and store in arr[0], arr[1]
-    arr[0] = camX + upperLeft.x * (camY / upperLeft.y);
-    arr[1] = camZ + upperLeft.z * (camY / upperLeft.y);
+    arr[0] = camPos.x + upperLeft.x * (camPos.y / upperLeft.y);
+    arr[1] = camPos.z + upperLeft.z * (camPos.y / upperLeft.y);
     vec3 upperRight = rotate<float>(camDir, -fovX, camUp);
     upperRight = rotate<float>(upperRight, fovY, camCross);
-    arr[2] = camX + upperRight.x * (camY / upperRight.y);
-    arr[3] = camZ + upperRight.z * (camY / upperRight.y);
+    arr[2] = camPos.x + upperRight.x * (camPos.y / upperRight.y);
+    arr[3] = camPos.z + upperRight.z * (camPos.z / upperRight.y);
     vec3 camReverseNormal = -camUp;
     vec3 lowerLeft = reflect(upperLeft, camReverseNormal);
     vec3 lowerRight = reflect(upperRight, camReverseNormal);
-    arr[4] = camX + lowerRight.x * (camY / upperRight.y);
-    arr[5] = camZ + lowerRight.z * (camY / upperRight.y);
-    arr[6] = camX + lowerLeft.x * (camY / upperRight.y);
-    arr[7] = camZ + lowerLeft.z * (camY / upperRight.y);
+    arr[4] = camPos.x + lowerRight.x * (camPos.y / upperRight.y);
+    arr[5] = camPos.z + lowerRight.z * (camPos.y / upperRight.y);
+    arr[6] = camPos.x + lowerLeft.x * (camPos.y / upperRight.y);
+    arr[7] = camPos.z + lowerLeft.z * (camPos.y / upperRight.y);
 }
 
 void Renderer::bindWorldVBO()
 {
-    
+    glBindBuffer(GL_ARRAY_BUFFER, worldVBO);
+    glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex3D), (GLvoid*) 0);
+    glVertexAttribPointer(texCoordAttribLoc, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 4);
+    glVertexAttribPointer(posAttribLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 8);
+    GLERR
 }
 
 void Renderer::bindBuildingVBO()
 {
-    
+    glBindBuffer(GL_ARRAY_BUFFER, buildingVBO);
+    glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex3D), (GLvoid*) 0);
+    glVertexAttribPointer(texCoordAttribLoc, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 4);
+    glVertexAttribPointer(posAttribLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 8);
+    GLERR
 }
 
 void Renderer::bindGuiVBO()
 {
-    glBindBuffer(GL_ARRAY_BUFFER, guiVBO);
-    posAttribLoc = glGetAttribLocation(programID, "vertex");
-    colorAttribLoc = glGetAttribLocation(programID, "color");
-    texCoordAttribLoc = glGetAttribLocation(programID, "texCoord");
-    const size_t stride = sizeof(Vertex2D);
-    glEnableVertexAttribArray(colorAttribLoc);
-    glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, stride, (GLvoid*) 0);
-    glEnableVertexAttribArray(texCoordAttribLoc);
-    glVertexAttribPointer(texCoordAttribLoc, 2, GL_UNSIGNED_SHORT, GL_FALSE, stride, (GLvoid*) 4);
-    glEnableVertexAttribArray(posAttribLoc);
-    glVertexAttribPointer(posAttribLoc, 2, GL_UNSIGNED_SHORT, GL_FALSE, stride, (GLvoid*) 8);
+    glBindBuffer(GL_ARRAY_BUFFER, guiVBO);;
+    glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex2D), (GLvoid*) 0);
+    glVertexAttribPointer(texCoordAttribLoc, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(Vertex2D), (GLvoid*) 4);
+    glVertexAttribPointer(posAttribLoc, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(Vertex2D), (GLvoid*) 8);
+    GLERR
 }

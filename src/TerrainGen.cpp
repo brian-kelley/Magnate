@@ -3,21 +3,163 @@
 using namespace std;
 using namespace constants;
 
-void TerrainGen::generate(World& world)
+QTNode* QTNode::treeRoot = NULL;
+
+QTNode::QTNode(float h, float x, float z, float size, QTNode* master)
 {
-    diamondSquare(world);
+    this->h = h;
+    this->x = x;
+    this->z = z;
+    this->size = size;
+    this->master = master;
+}
+
+bool QTNode::isRoot()
+{
+    return master == NULL;
+}
+
+QTNode* QTNode::find(float xo, float zo)
+{
+    if(xo < x + size / 2)
+    {
+        if(zo < z + size / 2)
+        {
+            if(n1)
+                return n1->find(xo, zo);
+            else
+                return this;
+        }
+        else
+        {
+            if(n2)
+                return n2->find(xo, zo);
+            else
+                return this;
+        }
+    }
+    else
+    {
+        if(zo < z + size / 2)
+        {
+            if(n4)
+                return n4->find(xo, zo);
+            else
+                return this;
+        }
+        else
+        {
+            if(n3)
+                return n3->find(xo, zo);
+            else
+                return this;
+        }
+    }
+}
+
+QTNode* QTNode::up()
+{
+    //Figure out where I am in master
+    float targetX = x + size / 2; //center of square above this one
+    float targetZ = z - size / 2;
+    return treeRoot->findWithSize(targetX, targetZ, size);
+}
+
+QTNode* QTNode::left()
+{
+    float targetX = x - size / 2;
+    float targetZ = z + size / 2;
+    return treeRoot->findWithSize(targetX, targetZ, size);
+}
+
+QTNode* QTNode::right()
+{
+    float targetX = x + size * 3 / 2;
+    float targetZ = z + size / 2;
+    return treeRoot->findWithSize(targetX, targetZ, size);
+}
+
+QTNode* QTNode::down()
+{
+    float targetX = x + size / 2;
+    float targetZ = z + size * 3 / 2;
+    return treeRoot->findWithSize(targetX, targetZ, size);
+}
+
+int QTNode::getDepth()
+{
+    int depth = 0;
+    QTNode* iter = this;
+    while(iter)
+    {
+        depth++;
+        iter = iter->master;
+    }
+    return depth;
+}
+
+QTNode* QTNode::findWithSize(float xo, float zo, float searchSize)
+{
+    bool thisMatch = searchSize == size / 2;
+    if(xo < x + size / 2)
+    {
+        //left of center
+        if(zo < z + size / 2)
+        {
+            //up-left
+            if(thisMatch)
+                return n1;
+            else
+                return n1->findWithSize(xo, zo, searchSize);
+        }
+        else
+        {
+            //lower-left
+            if(thisMatch)
+                return n4;
+            else
+                return n4->findWithSize(xo, zo, searchSize);
+        }
+    }
+    else
+    {
+        //right of center
+        if(zo < z + size / 2)
+        {
+            //up-right
+            if(thisMatch)
+                return n2;
+            else
+                return n2->findWithSize(xo, zo, searchSize);
+        }
+        else
+        {
+            //lower-right
+            if(thisMatch)
+                return n3;
+            else
+                return n3->findWithSize(xo, zo, searchSize);
+        }
+    }
+    return NULL;
+}
+
+void TerrainGen::generate()
+{
+    QTNode::treeRoot = new QTNode(0, 0, 0, WORLD_SIZE, NULL);
+    diamondSquare();
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
         {
-            world.setGround(FOREST, i, j);
-            if(world.getHeight(i, j) == 0)
+            World::setGround(FOREST, i, j);
+            if(World::getHeight(i, j) == 0)
             {
-                world.setGround(WATER, i, j);
+                World::setGround(WATER, i, j);
             }
-            else if(world.getHeight(i, j) > 200)
+            else if(World::getHeight(i, j) > 200)
             {
-                world.setGround(MOUNTAINS, i, j);
+                World::setGround(MOUNTAINS, i, j);
             }
         }
     }
@@ -27,7 +169,7 @@ void TerrainGen::generate(World& world)
     {
         for(int j = markerY - 8; j < markerY + 8; j++)
         {
-            world.setGround(DESERT, i, j);
+            World::setGround(DESERT, i, j);
         }
     }
 }
@@ -48,14 +190,14 @@ Height TerrainGen::getHeight(int avg, int size)
     return result;
 }
 
-void TerrainGen::diamondSquare(World& world)
+void TerrainGen::diamondSquare()
 {
-    world.setHeight(50, 0, 0);
-    world.setHeight(50, WORLD_SIZE - 1, 0);
-    world.setHeight(50, 0, WORLD_SIZE - 1);
-    world.setHeight(50, WORLD_SIZE - 1, WORLD_SIZE - 1);
+    World::setHeight(50, 0, 0);
+    World::setHeight(50, WORLD_SIZE - 1, 0);
+    World::setHeight(50, 0, WORLD_SIZE - 1);
+    World::setHeight(50, WORLD_SIZE - 1, WORLD_SIZE - 1);
     //First diamond (puts pt at very center of chunk)
-    world.setHeight(255, WORLD_SIZE / 2, WORLD_SIZE / 2);
+    World::setHeight(255, WORLD_SIZE / 2, WORLD_SIZE / 2);
     //repeatedly go over mesh and do these steps, making grid progressively finer
     //(squares first, then diamonds)
     //Note: if squares then diamonds, same size can be used each iteration
@@ -70,7 +212,7 @@ void TerrainGen::diamondSquare(World& world)
             {
                 if((i + j) % (size * 2) != 0)
                 {
-                    fillDiamond(world, i, j, size * 2);
+                    fillDiamond(i, j, size * 2);
                 }
             }
         }
@@ -78,7 +220,7 @@ void TerrainGen::diamondSquare(World& world)
         {
             for(int j = size / 2; j < WORLD_SIZE; j += size)
             {
-                fillSquare(world, i, j, size);
+                fillSquare(i, j, size);
             }
         }
         size /= 2;
@@ -87,24 +229,24 @@ void TerrainGen::diamondSquare(World& world)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
         {
-            int height = world.getHeight(i, j);
+            int height = World::getHeight(i, j);
             int centerDist = abs(WORLD_SIZE / 2 - i) + abs(WORLD_SIZE / 2 - j);
             height -= centerDist / 5;
             if(height < 0)
                 height = 0;
-            world.setHeight(height, i, j);
+            World::setHeight(height, i, j);
         }
     }
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
         {
-            if(world.getGround(i, j) != WATER)
+            if(World::getGround(i, j) != WATER)
             {
-                if(world.getGround(i + 1, j) == WATER && world.getGround(i, j + 1) == WATER && world.getGround(i - 1, j) == WATER && world.getGround(i, j - 1) == WATER)
+                if(World::getGround(i + 1, j) == WATER && World::getGround(i, j + 1) == WATER && World::getGround(i - 1, j) == WATER && World::getGround(i, j - 1) == WATER)
                 {
-                    world.setGround(WATER, i, j);
-                    world.setHeight(0, i, j);
+                    World::setGround(WATER, i, j);
+                    World::setHeight(0, i, j);
                 }
             }
         }
@@ -123,7 +265,7 @@ bool TerrainGen::inMesh(int x, int y)
     }
 }
 
-void TerrainGen::fillDiamond(World& world, int x, int y, int size)
+void TerrainGen::fillDiamond(int x, int y, int size)
 {
     //place point at center of a diamond (square corner)
     //size = total width/height of the diamond being filled in
@@ -133,30 +275,30 @@ void TerrainGen::fillDiamond(World& world, int x, int y, int size)
     if(inMesh(x - size / 2, y))
     {
         n++;
-        sum += world.getHeight(x - size / 2, y);
+        sum += World::getHeight(x - size / 2, y);
     }
     if(inMesh(x + size / 2, y))
     {
         n++;
-        sum += world.getHeight(x + size / 2, y);
+        sum += World::getHeight(x + size / 2, y);
     }
     if(inMesh(x, y - size / 2))
     {
         n++;
-        sum += world.getHeight(x, y - size / 2);
+        sum += World::getHeight(x, y - size / 2);
     }
     if(inMesh(x, y + size / 2))
     {
         n++;
-        sum += world.getHeight(x, y + size / 2);
+        sum += World::getHeight(x, y + size / 2);
     }
     if(n == 0)
         return;
-    world.setHeight(getHeight(sum / n, size), x, y);
-    world.setGround(DESERT, x, y);
+    World::setHeight(World::getHeight(sum / n, size), x, y);
+    World::setGround(DESERT, x, y);
 }
 
-void TerrainGen::fillSquare(World& world, int x, int y, int size)
+void TerrainGen::fillSquare(int x, int y, int size)
 {
     int sum = 0;
     int n = 0;
@@ -166,26 +308,26 @@ void TerrainGen::fillSquare(World& world, int x, int y, int size)
     if(inMesh(x - size / 2, y - size / 2))
     {
         n++;
-        sum += world.getHeight(x - size / 2, y - size / 2);
+        sum += World::getHeight(x - size / 2, y - size / 2);
     }
     if(inMesh(x - size / 2, y + size / 2))
     {
         n++;
-        sum += world.getHeight(x - size / 2, y + size / 2);
+        sum += World::getHeight(x - size / 2, y + size / 2);
     }
     if(inMesh(x + size / 2, y + size / 2))
     {
         n++;
-        sum += world.getHeight(x + size / 2, y + size / 2);
+        sum += World::getHeight(x + size / 2, y + size / 2);
     }
     if(inMesh(x + size / 2, y - size / 2))
     {
         n++;
-        sum += world.getHeight(x + size / 2, y - size / 2);
+        sum += World::getHeight(x + size / 2, y - size / 2);
     }
     //Put in height for center of square
     if(n == 0)
         return;
-    world.setHeight(getHeight(sum / n, size), x, y);
-    world.setGround(DESERT, x, y);
+    World::setHeight(getHeight(sum / n, size), x, y);
+    World::setGround(DESERT, x, y);
 }

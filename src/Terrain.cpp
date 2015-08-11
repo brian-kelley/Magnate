@@ -13,7 +13,7 @@
 
 using namespace std;
 using namespace constants;
-using namespace coord;
+using namespace Coord;
 using namespace RenderRoutines;
 
 map<GROUND, int> Terrain::terrainTextures;

@@ -10,17 +10,21 @@
 
 using namespace std;
 using namespace constants;
-using namespace coord;
+using namespace Coord;
 using namespace Renderer;
+using namespace glm;
 
 //4 vertices, each with 2 floats (u, v)
-float terrainUV[GROUND::NUM_TYPES * 4 * 2];
+unsigned short terrainUV[GROUND::NUM_TYPES * 4 * 2];
+//list of chunks currently cached in VBO, mapped to the actual vbo
+Pos2 WorldRenderer::chunkAlloc[VBO_CHUNKS];
+Quad* WorldRenderer::vboScratchBuf = NULL;
+Pos2 WorldRenderer::centerChunk;
 
 bool ptInScreen(Point p);
 bool chunkInWorld(int x, int y);
 
-
-void WorldRenderer::preload()
+void WorldRenderer::init()
 {
     //Init fast array of float rect stuff
     //Ideally this will iterate through every ground type (hopefully)
@@ -29,287 +33,218 @@ void WorldRenderer::preload()
     {
         int terrainTexID = Terrain::terrainTextures[g];
         floatRect_t uvrect = RenderRoutines::getTexCoords(terrainTexID);
-        float eps = 1e-4;
-        terrainUV[8 * i + 0] = uvrect.x + eps;
-        terrainUV[8 * i + 1] = uvrect.y + eps;
-        terrainUV[8 * i + 2] = uvrect.x + uvrect.w - eps;
-        terrainUV[8 * i + 3] = uvrect.y + eps;
-        terrainUV[8 * i + 4] = uvrect.x + uvrect.w - eps;
-        terrainUV[8 * i + 5] = uvrect.y + uvrect.h - eps;
-        terrainUV[8 * i + 6] = uvrect.x + eps;
-        terrainUV[8 * i + 7] = uvrect.y + uvrect.h - eps;
+        float* rectVal = (float*) &uvrect;
+        for(int j = 0; j < 4; j++)
+        {
+            *rectVal *= ATLAS_SIZE;
+            rectVal++;
+        }
+        terrainUV[8 * i + 0] = uvrect.x;
+        terrainUV[8 * i + 1] = uvrect.y;
+        terrainUV[8 * i + 2] = uvrect.x + uvrect.w;
+        terrainUV[8 * i + 3] = uvrect.y;
+        terrainUV[8 * i + 4] = uvrect.x + uvrect.w;
+        terrainUV[8 * i + 5] = uvrect.y + uvrect.h;
+        terrainUV[8 * i + 6] = uvrect.x;
+        terrainUV[8 * i + 7] = uvrect.y + uvrect.h;
         i++;
     }
-}
-
-void WorldRenderer::render(World& world)
-{
-    using namespace RenderRoutines;
-    int compassRose = mainAtlas->tileFromName("compass_rose");
-    intRect_t roseRect;
-    roseRect.w = WINDOW_W / 16;
-    roseRect.h = WINDOW_H / 16;
-    roseRect.x = WINDOW_W / 32;
-    roseRect.y = WINDOW_H - (roseRect.h + WINDOW_H / 32);
-    float texX = mainAtlas->tileX(compassRose);
-    float texW = mainAtlas->tileW(compassRose);
-    float texY = mainAtlas->tileY(compassRose);
-    float texH = mainAtlas->tileH(compassRose);
-    switch(viewDirection)
+    vboScratchBuf = (Quad*) malloc(VBO_BYTES_PER_CHUNK);
+    //allocate initial set of chunks
+    //first, find intersection of camDir with y = 0 plane
+    calcCenterChunk();
+    const int allocatedAreaLength = sqrt(VBO_CHUNKS);
+    int minChunkX = centerChunk.x - (allocatedAreaLength - 1) / 2;
+    int maxChunkX = centerChunk.x + (allocatedAreaLength - 1) / 2;
+    int minChunkY = centerChunk.y - (allocatedAreaLength - 1) / 2;
+    int maxChunkY = centerChunk.y + (allocatedAreaLength - 1) / 2;
+    for(int i = minChunkX; i <= maxChunkX; i++)
     {
-        case NORTH:
-            renderNorth(world);
-            color3f(1, 1, 1);
-            texCoord2f(texX, texY);
-            vertex2i(roseRect.x, roseRect.y);
-            texCoord2f(texX + texW, texY);
-            vertex2i(roseRect.x + roseRect.w, roseRect.y);
-            texCoord2f(texX + texW, texY + texH);
-            vertex2i(roseRect.x + roseRect.w, roseRect.y + roseRect.h);
-            texCoord2f(texX, texY + texH);
-            vertex2i(roseRect.x, roseRect.y + roseRect.h);
-            break;
-        case WEST:
-            renderWest(world);
-            color3f(1, 1, 1);
-            texCoord2f(texX, texY + texH);
-            vertex2i(roseRect.x, roseRect.y);
-            texCoord2f(texX, texY);
-            vertex2i(roseRect.x + roseRect.w, roseRect.y);
-            texCoord2f(texX + texW, texY);
-            vertex2i(roseRect.x + roseRect.w, roseRect.y + roseRect.h);
-            texCoord2f(texX + texW, texY + texH);
-            vertex2i(roseRect.x, roseRect.y + roseRect.h);
-            break;
-        case EAST:
-            renderEast(world);
-            color3f(1, 1, 1);
-            texCoord2f(texX + texW, texY);
-            vertex2i(roseRect.x, roseRect.y);
-            texCoord2f(texX + texW, texY + texH);
-            vertex2i(roseRect.x + roseRect.w, roseRect.y);
-            texCoord2f(texX, texY + texH);
-            vertex2i(roseRect.x + roseRect.w, roseRect.y + roseRect.h);
-            texCoord2f(texX, texY);
-            vertex2i(roseRect.x, roseRect.y + roseRect.h);
-            break;
-        case SOUTH:
-            renderSouth(world);
-            color3f(1, 1, 1);
-            texCoord2f(texX + texW, texY + texH);
-            vertex2i(roseRect.x, roseRect.y);
-            texCoord2f(texX, texY + texH);
-            vertex2i(roseRect.x + roseRect.w, roseRect.y);
-            texCoord2f(texX, texY);
-            vertex2i(roseRect.x + roseRect.w, roseRect.y + roseRect.h);
-            texCoord2f(texX + texW, texY);
-            vertex2i(roseRect.x, roseRect.y + roseRect.h);
-            break;
-    }
-}
-
-void WorldRenderer::renderNorth(World &world)
-{
-    // +I then -J
-    int minRow = xi(screenX, screenY) / TERRAIN_TILE_SIZE - 1;
-    int minCol = yj(screenX, screenY + WINDOW_H) / TERRAIN_TILE_SIZE - 1;
-    int maxRow = xi(screenX + WINDOW_W, screenY + WINDOW_H) / TERRAIN_TILE_SIZE + 1;
-    int maxCol = yj(screenX + WINDOW_W, screenY) / TERRAIN_TILE_SIZE + 1;
-    double heightMult = ISO_HEIGHT / DEFAULT_ISO_HEIGHT;
-    //Use ceil here to round up on pixel sizes, avoid ugly stitching
-    const int TL = ceil(TERRAIN_TILE_SIZE * ISO_LENGTH / 2);
-    const int TW = ceil(TERRAIN_TILE_SIZE * ISO_WIDTH / 2);
-    for(int i = minRow; i < maxRow; i++)
-    {
-        for(int j = maxCol - 1; j >= minCol; j--)
+        for(int j = minChunkY; j <= maxChunkY; j++)
         {
-            float shade = RenderRoutines::calcTileShade(world.getHeight(i, j), world.getHeight(i + 1, j), world.getHeight(i + 1, j + 1), world.getHeight(i, j + 1));
-            Point basePt = coord::project3DPoint(i * TERRAIN_TILE_SIZE, j * TERRAIN_TILE_SIZE, 0);
-            color3f(shade, shade, shade);
-            GROUND tileGround = world.getGround(i, j);
-            texCoord2f(terrainUV[tileGround * 8], terrainUV[tileGround * 8 + 1]);
-            vertex2i(basePt.x, basePt.y - heightMult * world.getHeight(i, j));
-            texCoord2f(terrainUV[tileGround * 8 + 2], terrainUV[tileGround * 8 + 3]);
-            vertex2i(basePt.x + TL, basePt.y - TW - heightMult * world.getHeight(i, j + 1));
-            texCoord2f(terrainUV[tileGround * 8 + 4], terrainUV[tileGround * 8 + 5]);
-            vertex2i(basePt.x + TL * 2, basePt.y - heightMult * world.getHeight(i + 1, j + 1));
-            texCoord2f(terrainUV[tileGround * 8 + 6], terrainUV[tileGround * 8 + 7]);
-            vertex2i(basePt.x + TL, basePt.y + TW - heightMult * world.getHeight(i + 1, j));
+            allocChunk(i, j);
         }
     }
 }
 
-void WorldRenderer::renderWest(World &world)
+void WorldRenderer::dispose()
 {
-    // +J then +I
-    int minRow  = xi(screenX + WINDOW_W, screenY) / TERRAIN_TILE_SIZE - 1;
-    int minCol = yj(screenX, screenY) / TERRAIN_TILE_SIZE - 1;
-    int maxRow = xi(screenX, screenY + WINDOW_H) / TERRAIN_TILE_SIZE + 1;
-    int maxCol = yj(screenX + WINDOW_W, screenY + WINDOW_H) / TERRAIN_TILE_SIZE + 1;
-    double heightMult = ISO_HEIGHT / DEFAULT_ISO_HEIGHT;
-    const int TL = ceil(TERRAIN_TILE_SIZE * ISO_LENGTH / 2);
-    const int TW = ceil(TERRAIN_TILE_SIZE * ISO_WIDTH / 2);
-    for(int i = minRow; i < maxRow; i++)
+    delete[] vboScratchBuf;
+}
+
+Pos3 getTileVertexPos(int chunkX, int chunkZ, int tileX, int tileZ)
+{
+    Pos3 pos;
+    pos.x = TERRAIN_TILE_SIZE * (chunkX * CHUNK_SIZE + tileX);
+    pos.y = TERRAIN_Y_SCALE * World::getHeight(chunkX * CHUNK_SIZE + tileX, chunkZ * CHUNK_SIZE + tileZ);
+    pos.z = TERRAIN_TILE_SIZE * (chunkZ * CHUNK_SIZE + tileZ);
+    return pos;
+}
+
+void WorldRenderer::setTexCoords(Quad *q, GROUND ground)
+{
+    //TODO: modify when doing multiple variants of a texture
+    int g = (int) ground;
+    q->p1.texcoord = {terrainUV[g * 8 + 0], terrainUV[g * 8 + 1]};
+    q->p2.texcoord = {terrainUV[g * 8 + 2], terrainUV[g * 8 + 3]};
+    q->p3.texcoord = {terrainUV[g * 8 + 4], terrainUV[g * 8 + 5]};
+    q->p4.texcoord = {terrainUV[g * 8 + 6], terrainUV[g * 8 + 7]};
+}
+
+//set attributes for the 4 vertices of a tile
+void WorldRenderer::getTileQuad(Quad* q, int x, int z)
+{
+    Color4 color = {0xFF, 0xFF, 0xFF, 0xFF};
+    setTexCoords(q, World::getGround(x, z));
+    q->p1.pos = tileToWorld(x, World::getHeight(x, z), z);
+    q->p1.color = color;
+    q->p2.pos = tileToWorld(x, World::getHeight(x, z + 1), z + 1);
+    q->p2.color = color;
+    q->p3.pos = tileToWorld(x + 1, World::getHeight(x + 1, z + 1), z + 1);
+    q->p3.color = color;
+    q->p4.pos = tileToWorld(x + 1, World::getHeight(x + 1, z), z);
+    q->p4.color = color;
+}
+
+bool WorldRenderer::allocChunk(int x, int z)
+{
+    int allocTarget = -1;
+    for(int i = 0; i < VBO_CHUNKS; i++)
     {
-        for(int j = minCol; j < maxCol; j++)
+        if(chunkAlloc[i].x == CHUNK_FREE)
         {
-            float shade = RenderRoutines::calcTileShade(world.getHeight(i, j), world.getHeight(i + 1, j), world.getHeight(i + 1, j + 1), world.getHeight(i, j + 1));
-            Point basePt = coord::project3DPoint(i * TERRAIN_TILE_SIZE, j * TERRAIN_TILE_SIZE, 0);
-            color3f(shade, shade, shade);
-            GROUND tileGround = world.getGround(i, j);
-            texCoord2f(terrainUV[tileGround * 8], terrainUV[tileGround * 8 + 1]);
-            vertex2i(basePt.x, basePt.y - heightMult * world.getHeight(i + 1, j));
-            texCoord2f(terrainUV[tileGround * 8 + 2], terrainUV[tileGround * 8 + 3]);
-            vertex2i(basePt.x + TL, basePt.y - TW - heightMult * world.getHeight(i, j));
-            texCoord2f(terrainUV[tileGround * 8 + 4], terrainUV[tileGround * 8 + 5]);
-            vertex2i(basePt.x + 2 * TL, basePt.y - heightMult * world.getHeight(i, j + 1));
-            texCoord2f(terrainUV[tileGround * 8 + 6], terrainUV[tileGround * 8 + 7]);
-            vertex2i(basePt.x + TL, basePt.y + TW - heightMult * world.getHeight(i + 1, j + 1));
+            allocTarget = i;
+            break;
+        }
+    }
+    if(allocTarget == -1)
+        return false;
+    int chunkXOffset = CHUNK_SIZE * x;
+    int chunkZOffset = CHUNK_SIZE * z;
+    //Populate scratch space with quads for requested chunk
+    for(int i = 0; i < CHUNK_SIZE; i++) //tiles by x
+    {
+        for(int j = 0; j < CHUNK_SIZE; j++) //tiles by z
+        {
+            getTileQuad(&vboScratchBuf[j * CHUNK_SIZE + i], chunkXOffset + i, chunkZOffset + j);
+        }
+    }
+    //mark slot in chunkAlloc as filled
+    chunkAlloc[allocTarget].x = x;
+    chunkAlloc[allocTarget].y = z;
+    //copy quads to terrain VBO
+    //must already be bound!
+    glBufferSubData(GL_ARRAY_BUFFER, allocTarget * VBO_BYTES_PER_CHUNK, VBO_BYTES_PER_CHUNK, (GLvoid*) vboScratchBuf);
+    return true;
+}
+
+bool WorldRenderer::freeChunk(int x, int z)
+{
+    for(int i = 0; i < VBO_CHUNKS; i++)
+    {
+        if(chunkAlloc[i].x == x && chunkAlloc[i].y == z)
+        {
+            chunkAlloc[i] = {CHUNK_FREE, 0};
+            return true;
+        }
+    }
+    return false;
+}
+
+bool WorldRenderer::isChunkAllocated(int x, int z)
+{
+    for(int i = 0; i < VBO_CHUNKS; i++)
+    {
+        if(chunkAlloc[i].x == x && chunkAlloc[i].y == z)
+            return true;
+    }
+    return false;
+}
+
+void WorldRenderer::calcCenterChunk()
+{
+    vec2 camCenter;
+    float camDirMult = camPos.y / camDir.y;
+    camCenter.x = camPos.x + camDir.x * camDirMult;
+    camCenter.y = camPos.z + camDir.z * camDirMult;
+    const float CHUNK_LENGTH = TERRAIN_TILE_SIZE * CHUNK_SIZE;
+    centerChunk.x = camCenter.x / CHUNK_LENGTH;
+    centerChunk.y = camCenter.y / CHUNK_LENGTH;
+}
+
+void WorldRenderer::updateVBOChunks()
+{
+    //save old center chunk - if it didn't actually change, don't do anything
+    Pos2 oldCenter = centerChunk;
+    calcCenterChunk();
+    if(oldCenter.x == centerChunk.x || oldCenter.y == centerChunk.y)
+        return;
+    //go through the currently allocated chunks and free if they are no longer in the visible square
+    int dist = (int(sqrt(VBO_CHUNKS)) - 1) / 2; //maximum distance from centerChunk in x or z
+    for(int i = 0; i < VBO_CHUNKS; i++)
+    {
+        if(abs(chunkAlloc[i].x - centerChunk.x) > dist || abs(chunkAlloc[i].y - centerChunk.y) > dist)
+        {
+            chunkAlloc[i] = {CHUNK_FREE, 0};
+        }
+    }
+    //now go through all chunks that need to be in the vbo and allocate them if not already there
+    for(int i = centerChunk.x - dist; i <= centerChunk.x + dist; i++)
+    {
+        for(int j = centerChunk.y - dist; j <= centerChunk.y + dist; j++)
+        {
+            if(!isChunkAllocated(i, j))
+            {
+                allocChunk(i, j);
+            }
         }
     }
 }
 
-void WorldRenderer::renderEast(World &world)
+void WorldRenderer::camRotateLeft()
 {
-    // -I then -J
-    int minRow = xi(screenX, screenY + WINDOW_H) / TERRAIN_TILE_SIZE - 1;
-    int minCol = yj(screenX + WINDOW_W, screenY + WINDOW_H) / TERRAIN_TILE_SIZE - 1;
-    int maxRow = xi(screenX + WINDOW_W, screenY) / TERRAIN_TILE_SIZE + 1;
-    int maxCol = yj(screenX, screenY) / TERRAIN_TILE_SIZE + 1;
-    double heightMult = ISO_HEIGHT / DEFAULT_ISO_HEIGHT;
-    const int TL = ceil(TERRAIN_TILE_SIZE * ISO_LENGTH / 2);
-    const int TW = ceil(TERRAIN_TILE_SIZE * ISO_WIDTH / 2);
-    for(int i = maxRow - 1; i >= minRow; i--)
-    {
-        for(int j = maxCol - 1; j >= minCol; j--)
-        {
-            float shade = RenderRoutines::calcTileShade(world.getHeight(i, j), world.getHeight(i + 1, j), world.getHeight(i + 1, j + 1), world.getHeight(i, j + 1));
-            Point basePt = coord::project3DPoint(i * TERRAIN_TILE_SIZE, j * TERRAIN_TILE_SIZE, 0);
-            color3f(shade, shade, shade);
-            GROUND tileGround = world.getGround(i, j);
-            texCoord2f(terrainUV[tileGround * 8], terrainUV[tileGround * 8 + 1]);
-            vertex2i(basePt.x, basePt.y - heightMult * world.getHeight(i, j + 1));
-            texCoord2f(terrainUV[tileGround * 8 + 2], terrainUV[tileGround * 8 + 3]);
-            vertex2i(basePt.x + TL, basePt.y - TW - heightMult * world.getHeight(i + 1, j + 1));
-            texCoord2f(terrainUV[tileGround * 8 + 4], terrainUV[tileGround * 8 + 5]);
-            vertex2i(basePt.x + 2 * TL, basePt.y - heightMult * world.getHeight(i + 1, j));
-            texCoord2f(terrainUV[tileGround * 8 + 6], terrainUV[tileGround * 8 + 7]);
-            vertex2i(basePt.x + TL, basePt.y + TW - heightMult * world.getHeight(i, j));
-        }
-    }
+    camDir = rotate(camDir, CAM_ROTATE_SPEED, {0, 1, 0});
 }
 
-void WorldRenderer::renderSouth(World &world)
+void WorldRenderer::camRotateRight()
 {
-    // -I then +J
-    int minRow = xi(screenX + WINDOW_W, screenY + WINDOW_H) / TERRAIN_TILE_SIZE - 1;
-    int maxRow = xi(screenX, screenY) / TERRAIN_TILE_SIZE + 1;
-    int minCol = yj(screenX + WINDOW_W, screenY) / TERRAIN_TILE_SIZE - 1;
-    int maxCol = yj(screenX, screenY + WINDOW_H) / TERRAIN_TILE_SIZE + 1;
-    double heightMult = ISO_HEIGHT / DEFAULT_ISO_HEIGHT;
-    const int TL = ceil(TERRAIN_TILE_SIZE * ISO_LENGTH / 2);
-    const int TW = ceil(TERRAIN_TILE_SIZE * ISO_WIDTH / 2);
-    for(int i = maxRow - 1; i >= minRow; i--)
-    {
-        for(int j = minCol; j < maxCol; j++)
-        {
-            float shade = RenderRoutines::calcTileShade(world.getHeight(i, j), world.getHeight(i + 1, j), world.getHeight(i + 1, j + 1), world.getHeight(i, j + 1));
-            Point basePt = coord::project3DPoint(i * TERRAIN_TILE_SIZE, j * TERRAIN_TILE_SIZE, 0);
-            color3f(shade, shade, shade);
-            GROUND tileGround = world.getGround(i, j);
-            texCoord2f(terrainUV[tileGround * 8], terrainUV[tileGround * 8 + 1]);
-            vertex2i(basePt.x, basePt.y - heightMult * world.getHeight(i + 1, j + 1));
-            texCoord2f(terrainUV[tileGround * 8 + 2], terrainUV[tileGround * 8 + 3]);
-            vertex2i(basePt.x + TL, basePt.y - TW - heightMult * world.getHeight(i + 1, j));
-            texCoord2f(terrainUV[tileGround * 8 + 4], terrainUV[tileGround * 8 + 5]);
-            vertex2i(basePt.x + 2 * TL, basePt.y - heightMult * world.getHeight(i, j));
-            texCoord2f(terrainUV[tileGround * 8 + 6], terrainUV[tileGround * 8 + 7]);
-            vertex2i(basePt.x + TL, basePt.y + TW - heightMult * world.getHeight(i, j + 1));
-        }
-    }
+    camDir = rotate(camDir, -CAM_ROTATE_SPEED, {0, 1, 0});
 }
 
-void WorldRenderer::rotateRight()
+void WorldRenderer::camForward()
 {
-    //save previous tile coord, center x and top 1/3 in y
-    double centerI = xi(screenX + WINDOW_W / 2, screenY + WINDOW_H / 3);
-    double centerJ = yj(screenX + WINDOW_W / 2, screenY + WINDOW_H / 3);
-    switch(viewDirection)
-    {
-        case NORTH:
-            viewDirection = WEST;
-            break;
-        case WEST:
-            viewDirection = SOUTH;
-            break;
-        case SOUTH:
-            viewDirection = EAST;
-            break;
-        case EAST:
-            viewDirection = NORTH;
-            break;
-    }
-    int newScreenX = ix(centerI, centerJ) - WINDOW_W / 2;
-    int newScreenY = jy(centerI, centerJ) - WINDOW_H / 3;
-    screenX = newScreenX;
-    screenY = newScreenY;
+    //get y component out of camDir
+    vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
+    lookDir *= PAN_SPEED;
+    camPos.x += lookDir.x;
+    camPos.z += lookDir.y;
 }
 
-void WorldRenderer::rotateLeft()
+void WorldRenderer::camBackward()
 {
-    double centerI = xi(screenX + WINDOW_W / 2, screenY + WINDOW_H / 3);
-    double centerJ = yj(screenX + WINDOW_W / 2, screenY + WINDOW_H / 3);
-    switch(viewDirection)
-    {
-        case NORTH:
-            viewDirection = EAST;
-            break;
-        case EAST:
-            viewDirection = SOUTH;
-            break;
-        case SOUTH:
-            viewDirection = WEST;
-            break;
-        case WEST:
-            viewDirection = NORTH;
-            break;
-    }
-    int newScreenX = ix(centerI, centerJ) - WINDOW_W / 2;
-    int newScreenY = jy(centerI, centerJ) - WINDOW_H / 3;
-    screenX = newScreenX;
-    screenY = newScreenY;
+    vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
+    lookDir *= -PAN_SPEED;
+    camPos.x += lookDir.x;
+    camPos.z += lookDir.y;
 }
 
-void WorldRenderer::panUp()
+void WorldRenderer::camLeft()
 {
-    //if(xi(screenX, screenY) > 0 && yj(screenX + WINDOW_W, screenY) < TERRAIN_TILE_SIZE * WORLD_SIZE)
-    {
-        screenY -= PAN_SPEED;
-    }
+    vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
+    //rotate pi/2 to the left
+    lookDir = {-lookDir.y, lookDir.x};
+    lookDir *= PAN_SPEED;
+    camPos.x += lookDir.x;
+    camPos.z += lookDir.y;
 }
 
-void WorldRenderer::panLeft()
+void WorldRenderer::camRight()
 {
-    //if(xi(screenX, screenY) > 0 && yj(screenX, screenY + WINDOW_H) > 0)
-    {
-        screenX -= PAN_SPEED;
-    }
-}
-
-void WorldRenderer::panDown()
-{
-    //if(yj(screenX, screenY + WINDOW_H) > 0 && xi(screenX + WINDOW_W, screenY + WINDOW_H) < TERRAIN_TILE_SIZE * WORLD_SIZE)
-    {
-        screenY += PAN_SPEED;
-    }
-}
-
-void WorldRenderer::panRight()
-{
-    //if(xi(screenX + WINDOW_W, screenY + WINDOW_H) < TERRAIN_TILE_SIZE * WORLD_SIZE && yj(screenX + WINDOW_W, screenY) < TERRAIN_TILE_SIZE * WORLD_SIZE)
-    {
-        screenX += PAN_SPEED;
-    }
+    vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
+    lookDir = {lookDir.y, -lookDir.x};
+    lookDir *= PAN_SPEED;
+    camPos.x += lookDir.x;
+    camPos.z += lookDir.y;
 }
 
 bool ptInScreen(Point p)

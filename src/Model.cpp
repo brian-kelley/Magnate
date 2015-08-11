@@ -11,8 +11,6 @@
 using namespace std;
 using namespace model;
 
-World* model::currentWorld;
-
 void model::init()
 {
     
@@ -21,9 +19,4 @@ void model::init()
 void model::update()
 {
     
-}
-
-World& model::getCurrentWorld()
-{
-    return *currentWorld;
 }

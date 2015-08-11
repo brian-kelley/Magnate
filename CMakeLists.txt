@@ -11,7 +11,6 @@ include/ScrollBlock
 include/Component
 include/Control
 include/Coord
-include/Cuboid
 include/Draggable
 include/SaveManager
 include/Field
@@ -24,6 +23,7 @@ include/TerrainGen
 include/View
 include/World
 include/MultiSelect
+include/RandomUtils
 include/RenderRoutines
 include/Renderer
 include/UIRenderer
@@ -38,7 +38,6 @@ src/ScrollBlock
 src/Component
 src/Control
 src/Coord
-src/Cuboid
 src/Draggable
 src/SaveManager
 src/Field
@@ -51,6 +50,7 @@ src/TerrainGen
 src/View
 src/World
 src/MultiSelect
+src/RandomUtils
 src/RenderRoutines
 src/Renderer
 src/UIRenderer

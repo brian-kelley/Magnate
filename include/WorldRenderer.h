@@ -11,6 +11,10 @@
 
 #include <stdio.h>
 #include <set>
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/rotate_vector.hpp"
 #include "Terrain.h"
 #include "World.h"
 #include "Coord.h"
@@ -19,20 +23,36 @@
 #include "Constants.h"
 #include "Renderer.h"
 
+typedef struct
+{
+    Vertex3D p1;
+    Vertex3D p2;
+    Vertex3D p3;
+    Vertex3D p4;
+} Quad;
+
 namespace WorldRenderer
 {
-    void preload();
-    void render(World& world);
-    void renderNorth(World& world);
-    void renderSouth(World& world);
-    void renderWest(World& world);
-    void renderEast(World& world);
-    void panUp();
-    void panDown();
-    void panLeft();
-    void panRight();
-    void rotateLeft(); // N > W > S > E > N
-    void rotateRight(); // N > E > S > W > N
+    void init();
+    void dispose();
+    bool freeChunk(int x, int z); //mark slot in VBO as free
+    bool allocChunk(int x, int z); //true if successful
+    bool isChunkAllocated(int x, int z);
+    void setTexCoords(Quad* q, GROUND g);
+    void getTileQuad(Quad* q, int x, int z);
+    void calcCenterChunk();
+    void updateVBOChunks(); //call once during frame if camera moves or rotates
+    void camRotateLeft();
+    void camRotateRight();
+    void camForward();
+    void camBackward();
+    void camLeft();
+    void camRight();
+    const unsigned short CHUNK_FREE = 0xFFFF; //value for x to mark free chunk
+    const int VBO_BYTES_PER_CHUNK = constants::CHUNK_SIZE * constants::CHUNK_SIZE * sizeof(Vertex3D);
+    extern Quad* vboScratchBuf;
+    extern Pos2 centerChunk; //chunk at center of view
+    extern Pos2 chunkAlloc[constants::VBO_CHUNKS];
 }
 
 #endif /* defined(__Magnate__WorldRenderer__) */

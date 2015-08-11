@@ -12,40 +12,22 @@
 #include "Constants.h"
 #include <SDL2/SDL.h>
 
-namespace coord
+typedef struct
 {
-    extern Point project3DPoint(double i, double j, double h);
-    extern int ix(double i, double j);
-    extern int jy(double i, double j);
-    extern double xi(int x, int y);
-    extern double yj(int x, int y);
-    extern bool rectInside(intRect_t* small, intRect_t* big);
-    //Base tile height (px)
-    const double DEFAULT_ISO_LENGTH = 128;
-    const double DEFAULT_ISO_WIDTH = 64;
-    const double DEFAULT_ISO_HEIGHT = 80;
-    extern double ISO_LENGTH;
-    extern double ISO_WIDTH;
-    extern double ISO_HEIGHT;
-    //Tiles can be 128 long, 64 high, and 1 unit of height in 3D space translates to this height (px) of screen space
-    //Here the height comes out to 80, which looks pretty good
-    void updateScale();
+    unsigned short x;
+    unsigned short y;
+} Pos2;
 
-    /* sideways diagram of flat floor tile:
-      /\      ]-|
-     /  \       |           ^ Left on screen
-    /    \      |- Length   ------> Upwards on screen
-    \    /      |           v Right on screen
-     \  /       |
-      \/      ]-|
-    /      \
-   /        \
-  v          v (+j direction)
- (+i direction)
-   |-----|
-      |
-    Width
+typedef struct
+{
+    float x;
+    float y;
+    float z;
+} Pos3;
 
-    */
+namespace Coord
+{
+    bool rectInside(intRect_t* small, intRect_t* big);
+    Pos3 tileToWorld(int x, unsigned short height, int z);
 };
 #endif

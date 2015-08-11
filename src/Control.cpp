@@ -13,10 +13,11 @@ using namespace constants;
 using namespace Control;
 using namespace Renderer;
 using namespace boost::filesystem;
-using namespace coord;
+using namespace Coord;
 
 Scene* Control::currentScene;
 bool Control::terminating;
+bool Control::camUpdated;
 bool Control::updatingView;
 bool Control::trackingMouse;
 bool Control::trackingKeyboard;
@@ -52,9 +53,8 @@ namespace ui        //place for callbacks etc.
         //If you get here without errors, SaveManager has ptr
         //to the right world object to use for game
         clearEnables();
-        model::currentWorld = SaveManager::getWorld();
         currentScene = scenes[GAME];
-        WorldRenderer::preload();
+        WorldRenderer::init();
     }
 }
 
@@ -71,12 +71,15 @@ void Control::init()
     trackingMouse = true;
     trackingKeyboard = true;
     currentEvent = new SDL_Event();
+#ifndef MAGNATE_DEBUG
     // Normal game, go through main & save menus
     currentScene = scenes[MAIN_MENU];
+#else
     //Debug mode, jump into 'asdf' for quicker testing of actual gameplay
-    //currentScene = scenes[GAME];
-    //SaveManager::loadTestWorld();
-    //SaveManager::transitionToGame(nullptr);
+    currentScene = scenes[GAME];
+    SaveManager::loadTestWorld();
+    SaveManager::transitionToGame(nullptr);
+#endif
     keystate = SDL_GetKeyboardState(NULL);
     model::init();
     //Trap mouse in window
@@ -99,6 +102,7 @@ void Control::update()
 {
     oldWindowW = constants::WINDOW_W;
     oldWindowH = constants::WINDOW_H;
+    camUpdated = false;
     keystate = SDL_GetKeyboardState(NULL);
     SDL_PumpEvents();
     while(SDL_PollEvent(currentEvent))
@@ -158,24 +162,52 @@ void Control::update()
     if(currentScene == scenes[GAME])
     {
         if(mouseX < 2 || keystate[SDL_SCANCODE_A])
-            WorldRenderer::panLeft();
+        {
+            WorldRenderer::camLeft();
+            camUpdated = true;
+        }
         if(mouseX > WINDOW_W - 3 || keystate[SDL_SCANCODE_D])
-            WorldRenderer::panRight();
+        {
+            WorldRenderer::camRight();
+            camUpdated = true;
+        }
         if(mouseY < 2 || keystate[SDL_SCANCODE_W])
-            WorldRenderer::panUp();
+        {
+            WorldRenderer::camForward();
+            camUpdated = true;
+        }
         if(mouseY > WINDOW_H - 3 || keystate[SDL_SCANCODE_S])
-            WorldRenderer::panDown();
+        {
+            WorldRenderer::camBackward();
+            camUpdated = true;
+        }
+        if(keystate[SDL_SCANCODE_Q])
+        {
+            WorldRenderer::camRotateLeft();
+            camUpdated = true;
+        }
+        if(keystate[SDL_SCANCODE_E])
+        {
+            WorldRenderer::camRotateRight();
+            camUpdated = true;
+        }
     }
     view::prepareFrame();
     UIRenderer::drawComponent(*currentScene);
     if(currentScene == scenes[GAME])
     {
-        WorldRenderer::render(*model::currentWorld);
         Minimap::render();
     }
     color3f(1, 1, 1);
-    RenderRoutines::blit(RenderRoutines::mainAtlas->tileFromName("cursor"), mouseX, mouseY);
+    RenderRoutines::blit(Atlas::tileFromName("cursor"), mouseX, mouseY);
+    //!!!for rendering debug!!!
     doTestStuff();
+    ///////////////////////////
+    if(camUpdated)
+    {
+        WorldRenderer::updateVBOChunks(); //this only expensive if cam moved into new chunk
+        Renderer::updateViewMatrix();
+    }
     view::finalizeFrame();
 }
 
@@ -199,10 +231,7 @@ void Control::processKeyEvent(SDL_Event &e)
     {
         if(currentScene == scenes[GAME])
         {
-            if(e.key.keysym.scancode == SDL_SCANCODE_Q)
-                WorldRenderer::rotateLeft();
-            if(e.key.keysym.scancode == SDL_SCANCODE_E)
-                WorldRenderer::rotateRight();
+            
         }
     }
 }
@@ -240,7 +269,10 @@ void Control::processMouseMotionEvent()
     if(currentScene == scenes[GAME])
     {
         if(Minimap::mmIsMouseOver() && mouseDown)
+        {
             Minimap::update();
+            camUpdated = true;
+        }
     }
     else
     {
@@ -255,25 +287,14 @@ void Control::processMouseWheelEvent(SDL_Event &e)
     {
         if(e.wheel.y > 0)
         {
-            double savedI = xi(screenX + WINDOW_W / 2, screenY + WINDOW_H / 2);
-            double savedJ = yj(screenX + WINDOW_W / 2, screenY + WINDOW_H / 2);
-            worldScale *= 1.1;
-            if(worldScale > maxScale)
-                worldScale = maxScale;
-            updateScale();
-            screenX = ix(savedI, savedJ) - WINDOW_W / 2;
-            screenY = jy(savedI, savedJ) - WINDOW_H / 2;
+            camPos.y *= 0.95;
+            //TODO: Prevent user from zooming in too close
         }
         else if(e.wheel.y < 0)
         {
-            double savedI = xi(screenX + WINDOW_W / 2, screenY + WINDOW_H / 2);
-            double savedJ = yj(screenX + WINDOW_W / 2, screenY + WINDOW_H / 2);
-            worldScale *= 0.9;
-            if(worldScale < minScale)
-                worldScale = minScale;
-            updateScale();
-            screenX = ix(savedI, savedJ) - WINDOW_W / 2;
-            screenY = jy(savedI, savedJ) - WINDOW_H / 2;
+            camPos.y *= 1.05;
+            if(camPos.y > MAX_CAM_HEIGHT)
+                camPos.y = MAX_CAM_HEIGHT;
         }
     }
 }
