@@ -28,9 +28,11 @@
 //Debug assert (segfault if condition not true)
 #define DBASSERT(cond) if(!(cond)) throw runtime_error(#cond " not true!");
 #define GLERR {auto errcode = glGetError(); if(errcode != GL_NO_ERROR) {cout << errcode << endl; throw runtime_error("GL error!");}}
+#define PRINT(msg) {cout << msg << endl;}
 #else
 #define DBASSERT
 #define GLERR
+#define PRINT(msg)
 #endif
 
 struct floatRect_t

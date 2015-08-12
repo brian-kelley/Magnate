@@ -35,8 +35,8 @@
 
 typedef struct
 {
-    unsigned short u;
-    unsigned short v;
+    short u;
+    short v;
 } TexCoord;
 
 typedef struct
@@ -71,10 +71,10 @@ namespace Renderer
     void color3b(unsigned char r, unsigned char g, unsigned char b);
     void color4f(float r, float g, float b, float a);
     void color4b(unsigned char r, unsigned char g, unsigned char b, unsigned char a);
-    void vertex2i(unsigned short x, unsigned short y);
-    void lineVertex2i(unsigned short x, unsigned short y);
+    void vertex2i(short x, short y);
+    void lineVertex2i(short x, short y);
     void texCoord2f(float u, float v);
-    void texCoord2i(unsigned short u, unsigned short v);
+    void texCoord2i(short u, short v);
     void enableTexture();
     void disableTexture();
     void getFrustumCorners(double* arr); //get world-space intersectioon of four corners of screen with y = 0

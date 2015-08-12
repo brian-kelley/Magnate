@@ -41,15 +41,15 @@ namespace WorldRenderer
     void setTexCoords(Quad* q, GROUND g);
     void getTileQuad(Quad* q, int x, int z);
     void calcCenterChunk();
-    void updateVBOChunks(); //call once during frame if camera moves or rotates
+    void updateVBOChunks(bool force = false); //call once during frame if camera moves or rotates
     void camRotateLeft();
     void camRotateRight();
     void camForward();
     void camBackward();
     void camLeft();
     void camRight();
-    const unsigned short CHUNK_FREE = 0xFFFF; //value for x to mark free chunk
-    const int VBO_BYTES_PER_CHUNK = constants::CHUNK_SIZE * constants::CHUNK_SIZE * sizeof(Vertex3D);
+    const short CHUNK_FREE = 0x7FFF; //value for x to mark free chunk
+    const int VBO_BYTES_PER_CHUNK = constants::CHUNK_SIZE * constants::CHUNK_SIZE * sizeof(Vertex3D) * 4;
     extern Quad* vboScratchBuf;
     extern Pos2 centerChunk; //chunk at center of view
     extern Pos2 chunkAlloc[constants::VBO_CHUNKS];

@@ -42,6 +42,7 @@ void Atlas::init(string atlasName, SDL_Renderer* renderer)
     }
     initCharTiles();
     SDL_FreeSurface(loadedSurface);
+    GLERR
 }
 
 int Atlas::tileFromName(string tilename)

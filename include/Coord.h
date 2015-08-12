@@ -14,8 +14,8 @@
 
 typedef struct
 {
-    unsigned short x;
-    unsigned short y;
+    short x;
+    short y;
 } Pos2;
 
 typedef struct

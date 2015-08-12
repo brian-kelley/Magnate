@@ -15,7 +15,7 @@ using namespace Renderer;
 using namespace glm;
 
 //4 vertices, each with 2 floats (u, v)
-unsigned short terrainUV[GROUND::NUM_TYPES * 4 * 2];
+short terrainUV[GROUND::NUM_TYPES * 4 * 2];
 //list of chunks currently cached in VBO, mapped to the actual vbo
 Pos2 WorldRenderer::chunkAlloc[VBO_CHUNKS];
 Quad* WorldRenderer::vboScratchBuf = NULL;
@@ -50,20 +50,18 @@ void WorldRenderer::init()
         i++;
     }
     vboScratchBuf = (Quad*) malloc(VBO_BYTES_PER_CHUNK);
-    //allocate initial set of chunks
-    //first, find intersection of camDir with y = 0 plane
-    calcCenterChunk();
-    const int allocatedAreaLength = sqrt(VBO_CHUNKS);
-    int minChunkX = centerChunk.x - (allocatedAreaLength - 1) / 2;
-    int maxChunkX = centerChunk.x + (allocatedAreaLength - 1) / 2;
-    int minChunkY = centerChunk.y - (allocatedAreaLength - 1) / 2;
-    int maxChunkY = centerChunk.y + (allocatedAreaLength - 1) / 2;
-    for(int i = minChunkX; i <= maxChunkX; i++)
+    //mark all vbo chunk slots as free
+    PRINT("Allocations before:")
+    for(int i = 0; i < VBO_CHUNKS; i++)
     {
-        for(int j = minChunkY; j <= maxChunkY; j++)
-        {
-            allocChunk(i, j);
-        }
+        chunkAlloc[i].x = CHUNK_FREE;
+        PRINT(chunkAlloc[i].x << ", " << chunkAlloc[i].y)
+    }
+    updateVBOChunks(true);
+    PRINT("Allocations after:")
+    for(int i = 0; i < VBO_CHUNKS; i++)
+    {
+        PRINT(chunkAlloc[i].x << ", " << chunkAlloc[i].y)
     }
 }
 
@@ -108,6 +106,7 @@ void WorldRenderer::getTileQuad(Quad* q, int x, int z)
 
 bool WorldRenderer::allocChunk(int x, int z)
 {
+    PRINT("Allocating chunk at " << x << ", " << z)
     int allocTarget = -1;
     for(int i = 0; i < VBO_CHUNKS; i++)
     {
@@ -170,21 +169,25 @@ void WorldRenderer::calcCenterChunk()
     const float CHUNK_LENGTH = TERRAIN_TILE_SIZE * CHUNK_SIZE;
     centerChunk.x = camCenter.x / CHUNK_LENGTH;
     centerChunk.y = camCenter.y / CHUNK_LENGTH;
+    //PRINT("Chunk at center of view is " << centerChunk.x << ", " << centerChunk.y)
 }
 
-void WorldRenderer::updateVBOChunks()
+void WorldRenderer::updateVBOChunks(bool force)
 {
+    Renderer::bindWorldVBO();
     //save old center chunk - if it didn't actually change, don't do anything
     Pos2 oldCenter = centerChunk;
     calcCenterChunk();
-    if(oldCenter.x == centerChunk.x || oldCenter.y == centerChunk.y)
+    if(!force && (oldCenter.x == centerChunk.x && oldCenter.y == centerChunk.y))
         return;
     //go through the currently allocated chunks and free if they are no longer in the visible square
     int dist = (int(sqrt(VBO_CHUNKS)) - 1) / 2; //maximum distance from centerChunk in x or z
+    PRINT("Updating vbo chunks with center chunk at " << centerChunk.x << ", " << centerChunk.y)
     for(int i = 0; i < VBO_CHUNKS; i++)
     {
-        if(abs(chunkAlloc[i].x - centerChunk.x) > dist || abs(chunkAlloc[i].y - centerChunk.y) > dist)
+        if(chunkAlloc[i].x != CHUNK_FREE && (abs(chunkAlloc[i].x - centerChunk.x) > dist || abs(chunkAlloc[i].y - centerChunk.y) > dist))
         {
+            PRINT("Chunk at " << chunkAlloc[i].x << ", " << chunkAlloc[i].y << " is too far from center, deallocating.")
             chunkAlloc[i] = {CHUNK_FREE, 0};
         }
     }
@@ -195,7 +198,7 @@ void WorldRenderer::updateVBOChunks()
         {
             if(!isChunkAllocated(i, j))
             {
-                allocChunk(i, j);
+                DBASSERT(allocChunk(i, j));
             }
         }
     }
@@ -204,11 +207,17 @@ void WorldRenderer::updateVBOChunks()
 void WorldRenderer::camRotateLeft()
 {
     camDir = rotate(camDir, CAM_ROTATE_SPEED, {0, 1, 0});
+    camAngle += CAM_ROTATE_SPEED;
+    if(camAngle > M_2_PI)
+        camAngle -= M_2_PI;
 }
 
 void WorldRenderer::camRotateRight()
 {
     camDir = rotate(camDir, -CAM_ROTATE_SPEED, {0, 1, 0});
+    camAngle -= CAM_ROTATE_SPEED;
+    if(camAngle < 0)
+        camAngle += M_2_PI;
 }
 
 void WorldRenderer::camForward()

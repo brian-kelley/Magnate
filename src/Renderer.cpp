@@ -71,7 +71,7 @@ void Renderer::setupWorldVBO()
     glGenBuffers(1, &worldVBO);
     glBindBuffer(GL_ARRAY_BUFFER, worldVBO);
     GLERR
-    glBufferData(GL_ARRAY_BUFFER, VBO_CHUNKS * (CHUNK_SIZE + 1) * (CHUNK_SIZE + 1) * sizeof(Vertex3D), NULL, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * sizeof(Vertex3D) * 4, NULL, GL_STATIC_DRAW);
     GLERR
 }
 
@@ -129,7 +129,7 @@ void Renderer::initShaders()
     "varying vec4 fragBaseColor;",
     "void main()",
     "{",
-    "    if(fragTexCoord.x == 0xFFFF || fragTexCoord.y == 0xFFFF)",
+    "    if(fragTexCoord.x == -1)",
     "    {",
     "        gl_FragColor = fragBaseColor;",
     "    }",
@@ -264,19 +264,19 @@ void Renderer::color4b(unsigned char r, unsigned char g, unsigned char b, unsign
     stateVertex.color.a = a;
 }
 
-void Renderer::vertex2i(unsigned short x, unsigned short y)
+void Renderer::vertex2i(short x, short y)
 {
     stateVertex.pos = {x, y};
     addQuadVertex();
 }
 
-void Renderer::lineVertex2i(unsigned short x, unsigned short y)
+void Renderer::lineVertex2i(short x, short y)
 {
     stateVertex.pos = {x, y};
     addLineVertex();
 }
 
-void Renderer::texCoord2i(unsigned short u, unsigned short v)
+void Renderer::texCoord2i(short u, short v)
 {
     stateVertex.texcoord = {u, v};
     textureOn = true;
@@ -284,8 +284,8 @@ void Renderer::texCoord2i(unsigned short u, unsigned short v)
 
 void Renderer::texCoord2f(float u, float v)
 {
-    unsigned short newU = u * ATLAS_SIZE;
-    unsigned short newV = v * ATLAS_SIZE;
+    short newU = u * ATLAS_SIZE;
+    short newV = v * ATLAS_SIZE;
     stateVertex.texcoord = {newU, newV};
     textureOn = true;
 }
@@ -295,7 +295,7 @@ void Renderer::addQuadVertex()
     if(!textureOn)
     {
         //Shaders will know that these coords mean to not use texture2D for color
-        stateVertex.texcoord = {0xFFFF, 0xFFFF};
+        stateVertex.texcoord.u = -1;
     }
     //else: texcoord must have already been set by program
     if(guiQuadVertices.size() > numGuiQuadVertices)
@@ -313,7 +313,7 @@ void Renderer::addLineVertex()
 {
     //Shaders will know that these coords mean to not use texture2D for color
     //else: texcoord must have already been set by program
-    stateVertex.texcoord = {0xFFFF, 0xFFFF};
+    stateVertex.texcoord.u = -1;
     if(guiLineVertices.size() > numGuiLineVertices)
     {
         guiLineVertices[numGuiLineVertices] = stateVertex;
@@ -401,7 +401,7 @@ void Renderer::bindWorldVBO()
 {
     glBindBuffer(GL_ARRAY_BUFFER, worldVBO);
     glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex3D), (GLvoid*) 0);
-    glVertexAttribPointer(texCoordAttribLoc, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 4);
+    glVertexAttribPointer(texCoordAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 4);
     glVertexAttribPointer(posAttribLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 8);
     GLERR
 }
@@ -410,16 +410,17 @@ void Renderer::bindBuildingVBO()
 {
     glBindBuffer(GL_ARRAY_BUFFER, buildingVBO);
     glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex3D), (GLvoid*) 0);
-    glVertexAttribPointer(texCoordAttribLoc, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 4);
+    glVertexAttribPointer(texCoordAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 4);
     glVertexAttribPointer(posAttribLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 8);
     GLERR
 }
 
 void Renderer::bindGuiVBO()
 {
+    GLERR
     glBindBuffer(GL_ARRAY_BUFFER, guiVBO);;
     glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex2D), (GLvoid*) 0);
-    glVertexAttribPointer(texCoordAttribLoc, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(Vertex2D), (GLvoid*) 4);
-    glVertexAttribPointer(posAttribLoc, 2, GL_UNSIGNED_SHORT, GL_FALSE, sizeof(Vertex2D), (GLvoid*) 8);
+    glVertexAttribPointer(texCoordAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex2D), (GLvoid*) 4);
+    glVertexAttribPointer(posAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex2D), (GLvoid*) 8);
     GLERR
 }

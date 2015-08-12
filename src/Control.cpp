@@ -61,6 +61,7 @@ namespace ui        //place for callbacks etc.
 void Control::init()
 {
     view::init();
+    GLERR
     SaveManager::init(&currentScene, &ui::saveBackButton, &ui::saveGameButton);
     initScenes();
     oldWindowW = constants::WINDOW_W;
@@ -77,13 +78,17 @@ void Control::init()
 #else
     //Debug mode, jump into 'asdf' for quicker testing of actual gameplay
     currentScene = scenes[GAME];
+    GLERR
     SaveManager::loadTestWorld();
+    GLERR
     SaveManager::transitionToGame(nullptr);
+    GLERR
 #endif
     keystate = SDL_GetKeyboardState(NULL);
     model::init();
     //Trap mouse in window
     SDL_SetRelativeMouseMode(SDL_TRUE);
+    GLERR
 }
 
 void Control::dispose()
@@ -100,6 +105,7 @@ void Control::dispose()
 
 void Control::update()
 {
+    GLERR
     oldWindowW = constants::WINDOW_W;
     oldWindowH = constants::WINDOW_H;
     camUpdated = false;
@@ -200,9 +206,11 @@ void Control::update()
     }
     color3f(1, 1, 1);
     RenderRoutines::blit(Atlas::tileFromName("cursor"), mouseX, mouseY);
+    
     //!!!for rendering debug!!!
     doTestStuff();
     ///////////////////////////
+    
     if(camUpdated)
     {
         WorldRenderer::updateVBOChunks(); //this only expensive if cam moved into new chunk

@@ -102,4 +102,5 @@ void view::initSDLVideo()
     }
     SDL_GL_SetSwapInterval(1);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    GLERR
 }

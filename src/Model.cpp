@@ -13,7 +13,7 @@ using namespace model;
 
 void model::init()
 {
-    
+    GLERR
 }
 
 void model::update()
