@@ -18,6 +18,7 @@ bool LinAlg::isOnto(system2 &mat)
 
 bool LinAlg::solveSystem2(system2 &mat)
 {
+    //use Cramer's rule
     double det = mat[0][0] * mat[1][1] - mat[0][1] * mat[1][0];
     if(approxZero(det))
     {

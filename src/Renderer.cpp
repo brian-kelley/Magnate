@@ -345,7 +345,7 @@ void Renderer::update2DMatrices()
 
 void Renderer::updatePerspectiveMatrix()
 {
-    Coord::proj3 = glm::perspective<float>(FOV, float(WINDOW_W) / WINDOW_H, 1000, 0.01);
+    Coord::proj3 = glm::perspective<float>(FOV, float(WINDOW_W) / WINDOW_H, NEAR, FAR);
 }
 
 void Renderer::updateViewMatrix()

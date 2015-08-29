@@ -14,16 +14,6 @@
 #include "GlmHeaders.h"
 #include "LinAlg.h"
 
-enum ClipPlane
-{
-    TOP,
-    LEFT,
-    RIGHT,
-    BOTTOM,
-    NEAR,
-    FAR
-};
-
 typedef struct
 {
     short x;
@@ -42,10 +32,10 @@ typedef struct
 
 typedef struct
 {
-    glm::vec2 upperLeft;
-    glm::vec2 upperRight;
-    glm::vec2 lowerRight;
-    glm::vec2 lowerLeft;
+    glm::vec4 upperLeft;
+    glm::vec4 upperRight;
+    glm::vec4 lowerRight;
+    glm::vec4 lowerLeft;
 } FrustumCorners;
 
 namespace Coord
@@ -55,10 +45,6 @@ namespace Coord
     glm::vec3 tileToWorld(int x, unsigned short height, int z);
     Pos2 worldToTile(glm::vec4 worldPos);
     FrustumCorners getFrustumCorners();
-    Plane getClipPlane(ClipPlane plane, glm::mat4& mat);
-    glm::vec2 getY0Intersect(Plane& p1, Plane& p2);
-    void transformPlane(Plane& p, glm::mat4& mat);
-    void normalizePlane(Plane& p);
     extern glm::mat4 view3;
     extern glm::mat4 proj3;
     extern glm::vec3 camPos;

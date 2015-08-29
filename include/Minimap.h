@@ -29,7 +29,7 @@ namespace Minimap
     glm::vec2 mapToWorld(Pos2 mapPos); //get the xz back
     void putMinimapPixel(int x, int y, Uint32* buf);
     const int MINIMAP_SIZE = 256; //pixels in texture and on screen
-    const int MINIMAP_BORDER = 15;//amount of space between edge of window and edge of minimap
+    const int MINIMAP_BORDER = 20;//amount of space between edge of window and edge of minimap
     extern glm::mat4 tileToMinimap;
     extern glm::mat4 minimapToTile;
 }

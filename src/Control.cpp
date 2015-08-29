@@ -59,8 +59,9 @@ namespace ui        //place for callbacks etc.
 
 void Control::init()
 {
+    Minimap::initMM();
+    Coord::initCoord();
     view::init();
-    GLERR
     SaveManager::init(&currentScene, &ui::saveBackButton, &ui::saveGameButton);
     initScenes();
     oldWindowW = constants::WINDOW_W;

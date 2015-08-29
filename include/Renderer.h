@@ -119,5 +119,7 @@ namespace Renderer
     const int GUI_QUAD_PRELOAD = 400; //How many vertices to reserve() in
     const int GUI_LINE_PRELOAD = 10;  //GUI quad and line attrib vectors
     const float FOV = M_PI_4;
+    const float NEAR = 1000;
+    const float FAR = 0.01;
 }
 #endif

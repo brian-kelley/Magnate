@@ -154,16 +154,29 @@ bool WorldRenderer::isChunkAllocated(int x, int z)
 
 void WorldRenderer::calcCenterChunk()
 {
-    const float CHUNK_LENGTH = TERRAIN_TILE_SIZE * CHUNK_SIZE;
-    vec2 camCenter;
-    /*
-    float camDirMult = fabsf(camPos.y / camDir.y);
-    camCenter.x = camPos.x + camDir.x * camDirMult;
-    camCenter.y = camPos.z + camDir.z * camDirMult;
-    centerChunk.x = camCenter.x / CHUNK_LENGTH;
-    centerChunk.y = camCenter.y / CHUNK_LENGTH;
-     */
-    centerChunk = {0, 0};
+    //trace ray @ center of view, find intersection with y=0 plane
+    vec4 back = {0, 0, FAR, 1};
+    vec4 front = {0, 0, NEAR, 1};
+    //reverse translate points through projection, then view
+    mat4 projInv = inverse(proj3);
+    mat4 viewInv = inverse(view3);
+    back = projInv * back;
+    back /= back.w;
+    front = projInv * front;
+    front /= front.w;
+    back = viewInv * back;
+    front = viewInv * front;
+    //"front" will have a positive y component (above ground)
+    vec4 dir = back - front;
+    float mult = front.y / -dir.y;
+    vec4 inter; //point of intersection (xz)
+    inter.x = front.x + dir.x * mult;
+    inter.y = 0;
+    inter.z = front.z + dir.z * mult;
+    inter.w = 1;
+    centerChunk = Coord::worldToTile(inter);
+    centerChunk.x /= CHUNK_SIZE;
+    centerChunk.y /= CHUNK_SIZE;
 }
 
 void WorldRenderer::updateVBOChunks(bool force)
