@@ -14,7 +14,9 @@ include/Coord
 include/Draggable
 include/SaveManager
 include/Field
+include/GlmHeaders
 include/Label
+include/LinAlg
 include/Minimap
 include/Model
 include/Scene
@@ -42,6 +44,7 @@ src/Draggable
 src/SaveManager
 src/Field
 src/Label
+src/LinAlg
 src/Minimap
 src/Model
 src/Scene

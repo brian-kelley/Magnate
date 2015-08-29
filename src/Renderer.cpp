@@ -3,6 +3,7 @@
 using namespace std;
 using namespace glm;
 using namespace constants;
+using namespace Coord;
 
 bool Renderer::textureOn;
 GLuint Renderer::programID;
@@ -16,11 +17,7 @@ int Renderer::buildingVBOSize;
 int Renderer::guiVBOSize;
 Vertex2D Renderer::stateVertex;
 mat4 Renderer::proj2;
-mat4 Renderer::proj3;
 mat4 Renderer::view2;
-mat4 Renderer::view3;
-vec3 Renderer::camUp;
-vec3 Renderer::camDir;
 GLuint Renderer::projLoc;
 GLuint Renderer::viewLoc;
 GLuint Renderer::worldVBO;
@@ -42,6 +39,9 @@ void Renderer::init()
     //    stateVertex.z = 0;
     stateVertex.texcoord = {0, 0};
     stateVertex.color = {255, 255, 255, 255};
+    //Set initial camera position and direction
+    camPos = {0, 20, 0};
+    camAngle = 0;
     update2DMatrices();
     updatePerspectiveMatrix(); //use current (default) camera coordinates and window dimensions
     updateViewMatrix(); //from Constants.h
@@ -71,6 +71,8 @@ void Renderer::setupWorldVBO()
     glGenBuffers(1, &worldVBO);
     glBindBuffer(GL_ARRAY_BUFFER, worldVBO);
     GLERR
+    int worldVBOSize = VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * sizeof(Vertex3D) * 4;
+    PRINT("Creating world vbo with " << worldVBOSize << " bytes.")
     glBufferData(GL_ARRAY_BUFFER, VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * sizeof(Vertex3D) * 4, NULL, GL_STATIC_DRAW);
     GLERR
 }
@@ -343,16 +345,16 @@ void Renderer::update2DMatrices()
 
 void Renderer::updatePerspectiveMatrix()
 {
-    proj3 = perspectiveFov<float>(FOV, WINDOW_W, WINDOW_H, 0.1, 100);
+    Coord::proj3 = glm::perspective<float>(FOV, float(WINDOW_W) / WINDOW_H, 1000, 0.01);
 }
 
 void Renderer::updateViewMatrix()
 {
-    vec3 at(camPos.x + 10 * cos(camAngle) * sin(camPitch), camPos.y - 10, camPos.z - 10 * sin(camAngle) * sin(camPitch));
-    vec3 up(cos(camAngle) * cos(camPitch), cos(camPitch), -sin(camAngle) * cos(camPitch));
-    camUp = up;
+    vec3 at = {camPos.x + sin(camAngle) * cos(camPitch), camPos.y - 1, camPos.z + cos(camAngle) * cos(camPitch)};
+    vec3 camUp = {sin(camPitch) * sin(camAngle), cos(camPitch), sin(camPitch) * cos(camAngle)};
+    camUp = normalize(camUp);
     camDir = normalize(at - camPos);
-    view3 = lookAt(camPos, at, up);
+    Coord::view3 = lookAt(camPos, at, camUp);
 }
 
 void Renderer::uploadMatrices(int dims)
@@ -366,35 +368,11 @@ void Renderer::uploadMatrices(int dims)
     }
     else
     {
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, value_ptr(view3));
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, value_ptr(Coord::view3));
         GLERR
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, value_ptr(proj3));
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, value_ptr(Coord::proj3));
         GLERR
     }
-}
-
-void Renderer::getFrustumCorners(double *arr)
-{
-    //upper-left of screen - arr[0] = x, arr[1] = y/z
-    double fovX = FOV; //angle between straight ahead and left or right of screen
-    double fovY = 1.0 * fovX * WINDOW_H / WINDOW_W;
-    vec3 camCross = cross(camUp, camDir);
-    vec3 upperLeft = rotate<float>(camDir, fovX, camUp);
-    upperLeft = rotate<float>(upperLeft, fovY, camCross);
-    //get where x * upperLeft crosses y = 0, get (x, z) and store in arr[0], arr[1]
-    arr[0] = camPos.x + upperLeft.x * (camPos.y / upperLeft.y);
-    arr[1] = camPos.z + upperLeft.z * (camPos.y / upperLeft.y);
-    vec3 upperRight = rotate<float>(camDir, -fovX, camUp);
-    upperRight = rotate<float>(upperRight, fovY, camCross);
-    arr[2] = camPos.x + upperRight.x * (camPos.y / upperRight.y);
-    arr[3] = camPos.z + upperRight.z * (camPos.z / upperRight.y);
-    vec3 camReverseNormal = -camUp;
-    vec3 lowerLeft = reflect(upperLeft, camReverseNormal);
-    vec3 lowerRight = reflect(upperRight, camReverseNormal);
-    arr[4] = camPos.x + lowerRight.x * (camPos.y / upperRight.y);
-    arr[5] = camPos.z + lowerRight.z * (camPos.y / upperRight.y);
-    arr[6] = camPos.x + lowerLeft.x * (camPos.y / upperRight.y);
-    arr[7] = camPos.z + lowerLeft.z * (camPos.y / upperRight.y);
 }
 
 void Renderer::bindWorldVBO()
@@ -417,10 +395,15 @@ void Renderer::bindBuildingVBO()
 
 void Renderer::bindGuiVBO()
 {
-    GLERR
-    glBindBuffer(GL_ARRAY_BUFFER, guiVBO);;
+    glBindBuffer(GL_ARRAY_BUFFER, guiVBO);
     glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex2D), (GLvoid*) 0);
     glVertexAttribPointer(texCoordAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex2D), (GLvoid*) 4);
     glVertexAttribPointer(posAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex2D), (GLvoid*) 8);
     GLERR
+}
+
+vec2 Renderer::xzPlaneIntersect(vec3 pos, vec3 dir)
+{
+    float mult = pos.y / dir.y;
+    return {pos.x + dir.x * mult, pos.z + dir.z * mult};
 }

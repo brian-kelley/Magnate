@@ -21,8 +21,6 @@ SDL_GLContext view::context;
 void view::init()
 {
     //Once a world is loaded these may be set again
-    constants::screenX = 0;
-    constants::screenY = 0;
     initSDLVideo();
     configGL();
     RenderRoutines::initAtlas(renderer);

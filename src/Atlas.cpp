@@ -164,22 +164,22 @@ void Atlas::parseTiles(path fpath)
     }
 }
 
-unsigned short Atlas::tileX(int index)
+short Atlas::tileX(int index)
 {
     return tiles[index].x;
 }
 
-unsigned short Atlas::tileY(int index)
+short Atlas::tileY(int index)
 {
     return tiles[index].y;
 }
 
-unsigned short Atlas::tileW(int index)
+short Atlas::tileW(int index)
 {
     return tiles[index].width;
 }
 
-unsigned short Atlas::tileH(int index)
+short Atlas::tileH(int index)
 {
     return tiles[index].height;
 }

@@ -16,6 +16,14 @@
 #include "Terrain.h"
 #include "Constants.h"
 
+typedef unsigned char Height;
+
+typedef struct
+{
+    GROUND g;
+    Height height;
+} tNode_t;
+
 class Chunk
 {
 public:

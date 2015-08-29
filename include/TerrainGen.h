@@ -2,7 +2,7 @@
 #define __TERRAIN_GEN_INCLUDED__
 
 #include <iostream>
-#define ROUGHNESS 10
+#define ROUGHNESS 100
 #include "Constants.h"
 #include "Chunk.h"
 #include "World.h"
@@ -20,6 +20,7 @@ class Chunk;    //have to forward-declare World and Chunk because of mutual incl
  +z
  
  */
+/*
 //Quadtree node. Has pointers to the four squares inside of it.
 class QTNode
 {
@@ -45,6 +46,7 @@ public:
     QTNode* n3;
     QTNode* n4;
 };
+ */
 
 namespace TerrainGen
 {
@@ -55,7 +57,6 @@ namespace TerrainGen
     //Tests whether the mesh
     bool inMesh(int x, int y);
     Height getHeight(int avg, int size);
-    extern const int DETAIL_ITERS;
 }
 
 #endif

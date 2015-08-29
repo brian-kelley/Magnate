@@ -29,7 +29,6 @@ const Uint8* Control::keystate = NULL;
 
 void doTestStuff()
 {
-    Renderer::disableTexture();
 }
 
 namespace ui        //place for callbacks etc.
@@ -295,14 +294,16 @@ void Control::processMouseWheelEvent(SDL_Event &e)
     {
         if(e.wheel.y > 0)
         {
-            camPos.y *= 0.95;
+            camPos.y *= (1 - ZOOM_SPEED);
+            camUpdated = true;
             //TODO: Prevent user from zooming in too close
         }
         else if(e.wheel.y < 0)
         {
-            camPos.y *= 1.05;
-            if(camPos.y > MAX_CAM_HEIGHT)
-                camPos.y = MAX_CAM_HEIGHT;
+            camPos.y *= (1 + ZOOM_SPEED);
+            //if(camPos.y > MAX_CAM_HEIGHT)
+            //camPos.y = MAX_CAM_HEIGHT;
+            camUpdated = true;
         }
     }
 }

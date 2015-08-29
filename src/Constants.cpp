@@ -28,14 +28,7 @@ float constants::UI_FG_R = 0.75;
 float constants::UI_FG_G = 0.75;
 float constants::UI_FG_B = 0.75;
 float constants::SHADE = 0.85;
-float constants::HMULT = -80.0;
-long int constants::screenX = 10000;
-long int constants::screenY = 0;
-VIEW_DIRECTION constants::viewDirection = NORTH;
-double constants::worldScale = 1;
 bool constants::mouseDown = false;
-vec3 constants::camPos = {0, 20, 0};
-double constants::camAngle = 0;
 
 #ifdef __APPLE__
 string constants::BIN_TO_ROOT = "../..";

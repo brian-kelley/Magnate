@@ -9,8 +9,20 @@
 #ifndef __Magnate__Coord__
 #define __Magnate__Coord__
 
+#include <iostream>
 #include "Constants.h"
-#include <SDL2/SDL.h>
+#include "GlmHeaders.h"
+#include "LinAlg.h"
+
+enum ClipPlane
+{
+    TOP,
+    LEFT,
+    RIGHT,
+    BOTTOM,
+    NEAR,
+    FAR
+};
 
 typedef struct
 {
@@ -18,16 +30,47 @@ typedef struct
     short y;
 } Pos2;
 
+typedef glm::vec3 Pos3;
+
 typedef struct
 {
-    float x;
-    float y;
-    float z;
-} Pos3;
+    float a;
+    float b;
+    float c;
+    float d;
+} Plane;
+
+typedef struct
+{
+    glm::vec2 upperLeft;
+    glm::vec2 upperRight;
+    glm::vec2 lowerRight;
+    glm::vec2 lowerLeft;
+} FrustumCorners;
 
 namespace Coord
 {
+    void initCoord();
     bool rectInside(intRect_t* small, intRect_t* big);
-    Pos3 tileToWorld(int x, unsigned short height, int z);
+    glm::vec3 tileToWorld(int x, unsigned short height, int z);
+    Pos2 worldToTile(glm::vec4 worldPos);
+    FrustumCorners getFrustumCorners();
+    Plane getClipPlane(ClipPlane plane, glm::mat4& mat);
+    glm::vec2 getY0Intersect(Plane& p1, Plane& p2);
+    void transformPlane(Plane& p, glm::mat4& mat);
+    void normalizePlane(Plane& p);
+    extern glm::mat4 view3;
+    extern glm::mat4 proj3;
+    extern glm::vec3 camPos;
+    extern glm::vec3 camUp;
+    extern glm::vec3 camDir;
+    extern float camAngle;
+    const float camPitch = M_PI_2 * 0.7; //angle of depression from straight ahead (pi/2 is straight down)
+    //Component vectors for constructing world positions from tile indices and heightmap heights
+    const glm::vec4 tileI = {constants::TERRAIN_TILE_SIZE, 0, 0, 0};
+    const glm::vec4 tileJ = {0, constants::TERRAIN_Y_SCALE, 0, 0};
+    const glm::vec4 tileK = {0, 0, constants::TERRAIN_TILE_SIZE, 0};
+    extern glm::mat4 tileToWorldMat;
+    extern glm::mat4 worldToTileMat;
 };
 #endif

@@ -3,6 +3,8 @@
 using namespace std;
 using namespace constants;
 
+/*
+
 QTNode* QTNode::treeRoot = NULL;
 
 QTNode::QTNode(float h, float x, float z, float size, QTNode* master)
@@ -144,32 +146,20 @@ QTNode* QTNode::findWithSize(float xo, float zo, float searchSize)
     return NULL;
 }
 
+*/
+
 void TerrainGen::generate()
 {
-    QTNode::treeRoot = new QTNode(0, 0, 0, WORLD_SIZE, NULL);
-    diamondSquare();
+    //diamondSquare();
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
         {
-            World::setGround(FOREST, i, j);
-            if(World::getHeight(i, j) == 0)
-            {
-                World::setGround(WATER, i, j);
-            }
-            else if(World::getHeight(i, j) > 200)
-            {
+            World::setHeight(0, i, j);
+            if(i + j < 200)
                 World::setGround(MOUNTAINS, i, j);
-            }
-        }
-    }
-    int markerX = random() % WORLD_SIZE / 2;
-    int markerY = random() % WORLD_SIZE / 2;
-    for(int i = markerX - 8; i < markerX + 8; i++)
-    {
-        for(int j = markerY - 8; j < markerY + 8; j++)
-        {
-            World::setGround(DESERT, i, j);
+            else
+                World::setGround(FOREST, i, j);
         }
     }
 }
@@ -213,6 +203,7 @@ void TerrainGen::diamondSquare()
                 if((i + j) % (size * 2) != 0)
                 {
                     fillDiamond(i, j, size * 2);
+                    //PRINT("Setting height at " << i << ", " << j << " to " << (int) World::getHeight(i, j) << " (diamond)");
                 }
             }
         }
@@ -221,6 +212,7 @@ void TerrainGen::diamondSquare()
             for(int j = size / 2; j < WORLD_SIZE; j += size)
             {
                 fillSquare(i, j, size);
+                //PRINT("Setting height at " << i << ", " << j << " to " << (int) World::getHeight(i, j) << " (square)");
             }
         }
         size /= 2;
@@ -231,7 +223,7 @@ void TerrainGen::diamondSquare()
         {
             int height = World::getHeight(i, j);
             int centerDist = abs(WORLD_SIZE / 2 - i) + abs(WORLD_SIZE / 2 - j);
-            height -= centerDist / 5;
+            height -= centerDist / 10;
             if(height < 0)
                 height = 0;
             World::setHeight(height, i, j);
@@ -295,7 +287,6 @@ void TerrainGen::fillDiamond(int x, int y, int size)
     if(n == 0)
         return;
     World::setHeight(World::getHeight(sum / n, size), x, y);
-    World::setGround(DESERT, x, y);
 }
 
 void TerrainGen::fillSquare(int x, int y, int size)
@@ -329,5 +320,4 @@ void TerrainGen::fillSquare(int x, int y, int size)
     if(n == 0)
         return;
     World::setHeight(getHeight(sum / n, size), x, y);
-    World::setGround(DESERT, x, y);
 }

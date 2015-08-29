@@ -1,10 +1,6 @@
 #ifndef __RENDERER__INCLUDED__
 #define __RENDERER__INCLUDED__
 
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtx/rotate_vector.hpp"
 #ifdef __APPLE__
 #include "gl.h"
 #elif _WIN32
@@ -16,6 +12,7 @@
 #include <iostream>
 #include "Constants.h"
 #include "Coord.h"
+#include "GlmHeaders.h"
 
 /*
  Vertex fields/sizes
@@ -77,7 +74,7 @@ namespace Renderer
     void texCoord2i(short u, short v);
     void enableTexture();
     void disableTexture();
-    void getFrustumCorners(double* arr); //get world-space intersectioon of four corners of screen with y = 0
+    glm::vec2 xzPlaneIntersect(glm::vec3 pos, glm::vec3 dir);
     void update2DMatrices();                 //only call during init
     void updatePerspectiveMatrix();          //when FOV or window changes
     void updateViewMatrix();                 //when camera moves
@@ -91,6 +88,8 @@ namespace Renderer
     void bindWorldVBO();
     void bindBuildingVBO();
     void bindGuiVBO();
+    void addQuadVertex();
+    void addLineVertex();
     //data for easy immediate-mode like GUI drawing
     extern std::vector<Vertex2D> guiQuadVertices;
     extern std::vector<Vertex2D> guiLineVertices;
@@ -113,17 +112,12 @@ namespace Renderer
     extern GLuint texCoordAttribLoc;
     extern glm::mat4 proj2;
     extern glm::mat4 view2;
-    extern glm::mat4 proj3;
-    extern glm::mat4 view3;
-    extern glm::vec3 camUp;
-    extern glm::vec3 camDir;
     extern GLuint projLoc;
     extern GLuint viewLoc;
     extern GLuint modelLoc;
     extern Vertex2D stateVertex;
     const int GUI_QUAD_PRELOAD = 400; //How many vertices to reserve() in
     const int GUI_LINE_PRELOAD = 10;  //GUI quad and line attrib vectors
-    void addQuadVertex();
-    void addLineVertex();
+    const float FOV = M_PI_4;
 }
 #endif

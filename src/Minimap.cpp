@@ -7,12 +7,23 @@ using namespace RenderRoutines;
 using namespace Coord;
 using namespace glm;
 
+mat4 Minimap::tileToMinimap;
+mat4 Minimap::minimapToTile;
+
 typedef struct
 {
     unsigned char r;
     unsigned char g;
     unsigned char b;
 } Color;
+
+void Minimap::initMM()
+{
+    float MM_SCALE = float(MINIMAP_SIZE) / WORLD_SIZE;
+    tileToMinimap = scale(tileToMinimap, {MM_SCALE, 1, MM_SCALE});
+    //todo: apply desired rotations/reflections here to "tileToMinimap"
+    minimapToTile = inverse(tileToMinimap);
+}
 
 Color colorFromTerrain(GROUND g)
 {
@@ -54,7 +65,10 @@ Color colorFromTerrain(GROUND g)
 
 void Minimap::putMinimapPixel(int x, int y, Uint32* buf)
 {
-    const double COMPRESSION = floor(double(WORLD_SIZE) / Minimap::MINIMAP_SIZE);
+    const int COMPRESSION = WORLD_SIZE / Minimap::MINIMAP_SIZE;
+    vec2 worldPos = mapToWorld({short(x), short(y)});
+    Pos2 tilePos = {short(worldPos.x / TERRAIN_TILE_SIZE), short(worldPos.y / TERRAIN_TILE_SIZE)};
+    PRINT("Tile pos: " << tilePos.x << ", " << tilePos.y)
     //array of occurrences of each terrain type
     int occurences[NUM_TYPES];
     for(int i = 0; i < NUM_TYPES; i++)
@@ -62,15 +76,15 @@ void Minimap::putMinimapPixel(int x, int y, Uint32* buf)
         occurences[i] = 0;
     }
     int sumHeights = 0;
-    for(int i = x * COMPRESSION - COMPRESSION / 2; i < x * COMPRESSION + COMPRESSION / 2; i++)
+    for(int i = tilePos.x; i < tilePos.x + COMPRESSION; i++)
     {
-        for(int j = y * COMPRESSION - COMPRESSION / 2; j < y * COMPRESSION + COMPRESSION / 2; j++)
+        for(int j = tilePos.y; j < tilePos.y + COMPRESSION; j++)
         {
             occurences[World::getGround(i, j)]++;
             sumHeights += World::getHeight(i, j);
         }
     }
-    int avgHeight = sumHeights / COMPRESSION / COMPRESSION;
+    int avgHeight = sumHeights / (COMPRESSION * COMPRESSION);
     GROUND commonest = WATER;
     for(int i = 0; i < NUM_TYPES; i++)
     {
@@ -80,7 +94,7 @@ void Minimap::putMinimapPixel(int x, int y, Uint32* buf)
         }
     }
     Color pxColor = colorFromTerrain(commonest);
-    double colorMult = 0.8 + 0.2 * avgHeight / 255;
+    double colorMult = 0.8 + 0.2 * avgHeight / 255.0f;
     int newR = pxColor.r * colorMult;
     if(newR < 0)
         newR = 0;
@@ -142,34 +156,47 @@ void Minimap::render()
     int texID = Atlas::tileFromName("minimap");
     //base position of minimap (upper-left corner of minimap image)
     int x = WINDOW_W - MINIMAP_BORDER - MINIMAP_SIZE - BORDER_WIDTH;
-    int y = BORDER_WIDTH;
+    int y = MINIMAP_BORDER;
     const double COMPRESSION = double(WORLD_SIZE) / MINIMAP_SIZE;
     //Calculate screen coordinates of frame.
-    double viewCorners[8];
     int framePts[8];
-    Renderer::getFrustumCorners(viewCorners);
+    FrustumCorners corners = getFrustumCorners();
+    //PRINT("Corners in world space:")
+    //PRINT("(" << corners.upperLeft.x << "," << corners.upperLeft.y << ")")
+    //PRINT("(" << corners.upperRight.x << "," << corners.upperRight.y << ")")
+    //PRINT("(" << corners.lowerRight.x << "," << corners.lowerRight.y << ")")
+    //PRINT("(" << corners.lowerLeft.x << "," << corners.lowerLeft.y << ")")
     //viewCorners has world coordinates of corners
+    framePts[0] = corners.upperLeft.x;
+    framePts[1] = corners.upperLeft.y;
+    framePts[2] = corners.upperRight.x;
+    framePts[3] = corners.upperRight.y;
+    framePts[4] = corners.lowerRight.x;
+    framePts[5] = corners.lowerRight.y;
+    framePts[6] = corners.lowerLeft.x;
+    framePts[7] = corners.lowerLeft.y;
     for(int i = 0; i < 8; i++)
     {
-        viewCorners[i] /= TERRAIN_TILE_SIZE;
-        viewCorners[i] /= COMPRESSION;
-        if(i % 2)
-            //flip y to match orientation of minimap image
-            viewCorners[i] = MINIMAP_SIZE - viewCorners[i];
-        framePts[i] = viewCorners[i];
+        framePts[i] /= TERRAIN_TILE_SIZE;
+        framePts[i] /= COMPRESSION;
+        if(!(i % 2))
+        {
+            framePts[i] += x;
+            framePts[i + 1] += y;
+        }
     }
     bool drawFrame = true;
     for(int i = 0; i < 8; i++)
     {
         if(framePts[i] < 0 || framePts[i] > MINIMAP_SIZE)
         {
-            drawFrame = false;
+            //drawFrame = false;
             break;
         }
     }
-    //cout << x1 << "," << y1 << " : " << x2 << "," << y2 << " : " << x3 << "," << y3 << " : " << x4 << "," << y4 << endl;
     disableTexture();
     color3f(UI_FG_R, UI_FG_G, UI_FG_B);
+    /*
     //top beveled edge
     vertex2i(x - BORDER_WIDTH, y - BORDER_WIDTH);
     vertex2i(x + MINIMAP_SIZE + BORDER_WIDTH, y - BORDER_WIDTH);
@@ -191,28 +218,44 @@ void Minimap::render()
     vertex2i(x + MINIMAP_SIZE, y + MINIMAP_SIZE);
     vertex2i(x + MINIMAP_SIZE + BORDER_WIDTH, y + MINIMAP_SIZE + BORDER_WIDTH);
     vertex2i(x - BORDER_WIDTH, y + MINIMAP_SIZE + BORDER_WIDTH);
+     */
     enableTexture();
     //draw the minimap image
     color3f(1, 1, 1);
     using namespace Atlas;
     texCoord2i(tileX(texID), tileY(texID));
-    vertex2i(x, y);
-    texCoord2i(tileX(texID) + tileW(texID), tileY(texID));
     vertex2i(x + MINIMAP_SIZE, y);
-    texCoord2i(tileX(texID) + tileW(texID), tileY(texID) + tileH(texID));
+    texCoord2i(tileX(texID) + tileW(texID), tileY(texID));
     vertex2i(x + MINIMAP_SIZE, y + MINIMAP_SIZE);
-    texCoord2i(tileX(texID), tileY(texID) + tileH(texID));
+    texCoord2i(tileX(texID) + tileW(texID), tileY(texID) + tileH(texID));
     vertex2i(x, y + MINIMAP_SIZE);
+    texCoord2i(tileX(texID), tileY(texID) + tileH(texID));
+    vertex2i(x, y);
+    //draw the frame
+    if(drawFrame)
+    {
+        color3f(1, 1, 1);
+        Pos2 temp = getPosOnMap(corners.upperLeft);
+        lineVertex2i(temp.x, temp.y);
+        temp = getPosOnMap(corners.upperRight);
+        lineVertex2i(temp.x, temp.y);
+        lineVertex2i(temp.x, temp.y);
+        temp = getPosOnMap(corners.lowerRight);
+        lineVertex2i(temp.x, temp.y);
+        lineVertex2i(temp.x, temp.y);
+        temp = getPosOnMap(corners.lowerLeft);
+        lineVertex2i(temp.x, temp.y);
+        lineVertex2i(temp.x, temp.y);
+        temp = getPosOnMap(corners.upperLeft);
+        lineVertex2i(temp.x, temp.y);
+    }
 }
 
 void Minimap::update() //this means mouse is over minimap and camera needs to move to corresponding location
 {
-    const double COMPRESSION = double(WORLD_SIZE) * TERRAIN_TILE_SIZE / MINIMAP_SIZE; //world distance per minimap pixel
-    double centerX = (mouseX - (WINDOW_W - MINIMAP_BORDER - MINIMAP_SIZE)) * COMPRESSION;
-    double centerZ = ((MINIMAP_BORDER + MINIMAP_SIZE) - mouseY) * COMPRESSION;
-    double heightMult = camPos.y / camDir.y;
-    camPos.x = centerX - camDir.x * heightMult;
-    camPos.z = centerZ - camDir.z * heightMult;
+    Pos2 mousePos = {short(mouseX), short(mouseY)};
+    vec2 newCenter = mapToWorld(mousePos);
+    camPos = {newCenter.x, camPos.y, newCenter.y};
 }
 
 bool Minimap::mmIsMouseOver()
@@ -220,4 +263,29 @@ bool Minimap::mmIsMouseOver()
     if(mouseX >= WINDOW_W - MINIMAP_BORDER - MINIMAP_SIZE && mouseX < WINDOW_W - MINIMAP_BORDER && mouseY >= MINIMAP_BORDER && mouseY < MINIMAP_BORDER + MINIMAP_SIZE)
         return true;
     return false;
+}
+
+Pos2 Minimap::getPosOnMap(glm::vec2 worldPos)
+{
+    //first apply simple conversion factor to x and y
+    vec4 world = {worldPos.x, 0, worldPos.y, 1};
+    vec4 map = tileToMinimap * (worldToTileMat * world);
+    //now translate tilePos to be in the minimap square onscreen
+    Pos2 tilePos = {short(map.x), short(map.z)};
+    tilePos.x += (WINDOW_W - MINIMAP_BORDER - MINIMAP_SIZE);
+    tilePos.y += MINIMAP_BORDER;
+    return tilePos;
+}
+
+void Minimap::plotPosOnMap(glm::vec2 worldPos)
+{
+    Pos2 pos = getPosOnMap(worldPos);
+    vertex2i(pos.x, pos.y);
+}
+
+vec2 Minimap::mapToWorld(Pos2 mapPos)
+{
+    vec4 mapVec = {mapPos.x, 0, mapPos.y, 1};
+    vec4 world = tileToWorldMat * (minimapToTile * mapVec);
+    return {world.x, world.z};
 }

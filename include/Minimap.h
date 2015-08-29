@@ -2,7 +2,6 @@
 #define MINIMAP_H
 
 #include <iostream>
-
 #include "Constants.h"
 #include "World.h"
 #include "Terrain.h"
@@ -10,10 +9,7 @@
 #include "RenderRoutines.h"
 #include "WorldRenderer.h"
 #include "Coord.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtx/rotate_vector.hpp"
+#include "GlmHeaders.h"
 
 #ifdef __APPLE__
 #include "gl.h"
@@ -26,10 +22,16 @@ namespace Minimap
     void buildTexture();
     void render();
     bool mmIsMouseOver();
+    void initMM(); //set mm <-> world matrices
     void update();  //set screenX/screenY based on mouseX/mouseY
+    Pos2 getPosOnMap(glm::vec2 worldPos);
+    void plotPosOnMap(glm::vec2 worldPos); //also call vertex2i
+    glm::vec2 mapToWorld(Pos2 mapPos); //get the xz back
     void putMinimapPixel(int x, int y, Uint32* buf);
     const int MINIMAP_SIZE = 256; //pixels in texture and on screen
-    const int MINIMAP_BORDER = 15;//width of beveled border around minimap
+    const int MINIMAP_BORDER = 15;//amount of space between edge of window and edge of minimap
+    extern glm::mat4 tileToMinimap;
+    extern glm::mat4 minimapToTile;
 }
 
 #endif

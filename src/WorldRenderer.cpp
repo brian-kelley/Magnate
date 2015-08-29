@@ -26,19 +26,17 @@ bool chunkInWorld(int x, int y);
 
 void WorldRenderer::init()
 {
-    //Init fast array of float rect stuff
-    //Ideally this will iterate through every ground type (hopefully)
+    using namespace Atlas;
+    //Init fast-access array of terrain texcoords
     int i = 0;
     for(GROUND g = (GROUND) 0; g < NUM_TYPES; g = (GROUND) ((int) g + 1))
     {
         int terrainTexID = Terrain::terrainTextures[g];
-        floatRect_t uvrect = RenderRoutines::getTexCoords(terrainTexID);
-        float* rectVal = (float*) &uvrect;
-        for(int j = 0; j < 4; j++)
-        {
-            *rectVal *= ATLAS_SIZE;
-            rectVal++;
-        }
+        intRect_t uvrect;
+        uvrect.x = tileX(terrainTexID);
+        uvrect.y = tileY(terrainTexID);
+        uvrect.w = tileW(terrainTexID);
+        uvrect.h = tileH(terrainTexID);
         terrainUV[8 * i + 0] = uvrect.x;
         terrainUV[8 * i + 1] = uvrect.y;
         terrainUV[8 * i + 2] = uvrect.x + uvrect.w;
@@ -51,18 +49,11 @@ void WorldRenderer::init()
     }
     vboScratchBuf = (Quad*) malloc(VBO_BYTES_PER_CHUNK);
     //mark all vbo chunk slots as free
-    PRINT("Allocations before:")
     for(int i = 0; i < VBO_CHUNKS; i++)
     {
         chunkAlloc[i].x = CHUNK_FREE;
-        PRINT(chunkAlloc[i].x << ", " << chunkAlloc[i].y)
     }
     updateVBOChunks(true);
-    PRINT("Allocations after:")
-    for(int i = 0; i < VBO_CHUNKS; i++)
-    {
-        PRINT(chunkAlloc[i].x << ", " << chunkAlloc[i].y)
-    }
 }
 
 void WorldRenderer::dispose()
@@ -94,19 +85,20 @@ void WorldRenderer::getTileQuad(Quad* q, int x, int z)
 {
     Color4 color = {0xFF, 0xFF, 0xFF, 0xFF};
     setTexCoords(q, World::getGround(x, z));
-    q->p1.pos = tileToWorld(x, World::getHeight(x, z), z);
+    //PRINT("World height at " << x << ", " << z << " after scaling is " << World::getHeight(x, z) * TERRAIN_Y_SCALE)
+    q->p1.pos = tileToWorld(x, TERRAIN_Y_SCALE * World::getHeight(x, z), z);
     q->p1.color = color;
-    q->p2.pos = tileToWorld(x, World::getHeight(x, z + 1), z + 1);
+    q->p2.pos = tileToWorld(x, TERRAIN_Y_SCALE * World::getHeight(x, z + 1), z + 1);
     q->p2.color = color;
-    q->p3.pos = tileToWorld(x + 1, World::getHeight(x + 1, z + 1), z + 1);
+    q->p3.pos = tileToWorld(x + 1, TERRAIN_Y_SCALE * World::getHeight(x + 1, z + 1), z + 1);
     q->p3.color = color;
-    q->p4.pos = tileToWorld(x + 1, World::getHeight(x + 1, z), z);
+    q->p4.pos = tileToWorld(x + 1, TERRAIN_Y_SCALE * World::getHeight(x + 1, z), z);
     q->p4.color = color;
 }
 
 bool WorldRenderer::allocChunk(int x, int z)
 {
-    PRINT("Allocating chunk at " << x << ", " << z)
+    //PRINT("Allocating chunk at " << x << ", " << z)
     int allocTarget = -1;
     for(int i = 0; i < VBO_CHUNKS; i++)
     {
@@ -162,14 +154,16 @@ bool WorldRenderer::isChunkAllocated(int x, int z)
 
 void WorldRenderer::calcCenterChunk()
 {
+    const float CHUNK_LENGTH = TERRAIN_TILE_SIZE * CHUNK_SIZE;
     vec2 camCenter;
-    float camDirMult = camPos.y / camDir.y;
+    /*
+    float camDirMult = fabsf(camPos.y / camDir.y);
     camCenter.x = camPos.x + camDir.x * camDirMult;
     camCenter.y = camPos.z + camDir.z * camDirMult;
-    const float CHUNK_LENGTH = TERRAIN_TILE_SIZE * CHUNK_SIZE;
     centerChunk.x = camCenter.x / CHUNK_LENGTH;
     centerChunk.y = camCenter.y / CHUNK_LENGTH;
-    //PRINT("Chunk at center of view is " << centerChunk.x << ", " << centerChunk.y)
+     */
+    centerChunk = {0, 0};
 }
 
 void WorldRenderer::updateVBOChunks(bool force)
@@ -182,12 +176,12 @@ void WorldRenderer::updateVBOChunks(bool force)
         return;
     //go through the currently allocated chunks and free if they are no longer in the visible square
     int dist = (int(sqrt(VBO_CHUNKS)) - 1) / 2; //maximum distance from centerChunk in x or z
-    PRINT("Updating vbo chunks with center chunk at " << centerChunk.x << ", " << centerChunk.y)
+                                                //PRINT("Updating vbo chunks with center chunk at " << centerChunk.x << ", " << centerChunk.y)
     for(int i = 0; i < VBO_CHUNKS; i++)
     {
         if(chunkAlloc[i].x != CHUNK_FREE && (abs(chunkAlloc[i].x - centerChunk.x) > dist || abs(chunkAlloc[i].y - centerChunk.y) > dist))
         {
-            PRINT("Chunk at " << chunkAlloc[i].x << ", " << chunkAlloc[i].y << " is too far from center, deallocating.")
+            //PRINT("Chunk at " << chunkAlloc[i].x << ", " << chunkAlloc[i].y << " is too far from center, deallocating.")
             chunkAlloc[i] = {CHUNK_FREE, 0};
         }
     }
@@ -197,9 +191,7 @@ void WorldRenderer::updateVBOChunks(bool force)
         for(int j = centerChunk.y - dist; j <= centerChunk.y + dist; j++)
         {
             if(!isChunkAllocated(i, j))
-            {
                 DBASSERT(allocChunk(i, j));
-            }
         }
     }
 }
@@ -208,23 +200,19 @@ void WorldRenderer::camRotateLeft()
 {
     camDir = rotate(camDir, CAM_ROTATE_SPEED, {0, 1, 0});
     camAngle += CAM_ROTATE_SPEED;
-    if(camAngle > M_2_PI)
-        camAngle -= M_2_PI;
 }
 
 void WorldRenderer::camRotateRight()
 {
     camDir = rotate(camDir, -CAM_ROTATE_SPEED, {0, 1, 0});
     camAngle -= CAM_ROTATE_SPEED;
-    if(camAngle < 0)
-        camAngle += M_2_PI;
 }
 
 void WorldRenderer::camForward()
 {
     //get y component out of camDir
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
-    lookDir *= PAN_SPEED;
+    lookDir *= (PAN_SPEED * camPos.y);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
@@ -232,7 +220,7 @@ void WorldRenderer::camForward()
 void WorldRenderer::camBackward()
 {
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
-    lookDir *= -PAN_SPEED;
+    lookDir *= -(PAN_SPEED * camPos.y);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
@@ -241,8 +229,8 @@ void WorldRenderer::camLeft()
 {
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
     //rotate pi/2 to the left
-    lookDir = {-lookDir.y, lookDir.x};
-    lookDir *= PAN_SPEED;
+    lookDir = {lookDir.y, -lookDir.x};
+    lookDir *= (PAN_SPEED * camPos.y);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
@@ -250,8 +238,8 @@ void WorldRenderer::camLeft()
 void WorldRenderer::camRight()
 {
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
-    lookDir = {lookDir.y, -lookDir.x};
-    lookDir *= PAN_SPEED;
+    lookDir = {-lookDir.y, lookDir.x};
+    lookDir *= (PAN_SPEED * camPos.y);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }

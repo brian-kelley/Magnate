@@ -39,10 +39,10 @@
 typedef struct
 {
     std::string name;
-    unsigned short x;
-    unsigned short y;
-    unsigned short width;
-    unsigned short height;
+    short x;
+    short y;
+    short width;
+    short height;
 } Texture;
 
 namespace Atlas
@@ -50,10 +50,10 @@ namespace Atlas
     void init(std::string imageName, SDL_Renderer* renderer); //example, pass either "main"
     int tileFromName(std::string tilename);
     int tileFromChar(char c);
-    unsigned short tileX(int index);
-    unsigned short tileY(int index);
-    unsigned short tileW(int index);
-    unsigned short tileH(int index);
+    short tileX(int index);
+    short tileY(int index);
+    short tileW(int index);
+    short tileH(int index);
     void buildAtlas(std::string imgDir, SDL_Renderer* renderer, int size);
     void initCharTiles();
     void parseTiles(boost::filesystem::path fpath);
