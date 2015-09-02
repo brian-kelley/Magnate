@@ -233,7 +233,7 @@ void Minimap::update() //this means mouse is over minimap and camera needs to mo
     int localY = mouseY - MINIMAP_BORDER - BORDER_WIDTH;
     Pos2 localMouse = {short(localX), short(localY)};
     vec2 newCenter = mapToWorld(localMouse);
-    camPos = {newCenter.x, camPos.y, newCenter.y};
+    Camera::camPos = {newCenter.x, Camera::camPos.y, newCenter.y};
 }
 
 bool Minimap::mmIsMouseOver()

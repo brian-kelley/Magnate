@@ -20,8 +20,6 @@ namespace RandomUtils
     int genRange(int lo, int hi);
     int genMask(int mask);
     extern boost::rand48 generator;
-    int min;
-    int max;
 }
 
 #endif /* defined(__Magnate__RandomUtils__) */

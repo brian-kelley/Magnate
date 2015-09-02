@@ -5,6 +5,7 @@ add_executable (Magnate
 include/Atlas
 include/Building
 include/Button
+include/Camera
 include/Chunk
 include/Constants
 include/ScrollBlock
@@ -34,6 +35,7 @@ src/main
 src/Atlas
 src/Building
 src/Button
+src/Camera
 src/Chunk
 src/Constants
 src/ScrollBlock

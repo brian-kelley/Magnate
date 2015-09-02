@@ -33,6 +33,7 @@
 #include "WorldRenderer.h"
 #include "Renderer.h"
 #include "Minimap.h"
+#include "Camera.h"
 
 namespace Control
 {

@@ -13,6 +13,7 @@
 #include "Constants.h"
 #include "GlmHeaders.h"
 #include "LinAlg.h"
+#include "Camera.h"
 
 typedef struct
 {
@@ -47,11 +48,6 @@ namespace Coord
     FrustumCorners getFrustumCorners();
     extern glm::mat4 view3;
     extern glm::mat4 proj3;
-    extern glm::vec3 camPos;
-    extern glm::vec3 camUp;
-    extern glm::vec3 camDir;
-    extern float camAngle;
-    const float camPitch = M_PI_2 * 0.7; //angle of depression from straight ahead (pi/2 is straight down)
     //Component vectors for constructing world positions from tile indices and heightmap heights
     const glm::vec4 tileI = {constants::TERRAIN_TILE_SIZE, 0, 0, 0};
     const glm::vec4 tileJ = {0, constants::TERRAIN_Y_SCALE, 0, 0};

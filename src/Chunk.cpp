@@ -11,38 +11,6 @@
 using namespace std;
 using namespace constants;
 
-Chunk::Chunk()
-{
-    i = 0;
-    j = 0;
-}
-
-//Constructor is where terrain mesh generation happens i guess (diamond-square)
-Chunk::Chunk(int i, int j)
-{
-    this->i = i;
-    this->j = j;
-}
+Chunk::Chunk() {}
 
 Chunk::~Chunk() {}
-
-//add these offsets to tile coords within the chunk to get absolute coordinates in world
-double Chunk::getIOffset()
-{
-    return TERRAIN_TILE_SIZE * CHUNK_SIZE * i;
-}
-
-double Chunk::getJOffset()
-{
-    return TERRAIN_TILE_SIZE * CHUNK_SIZE * j;
-}
-
-int Chunk::getI()
-{
-    return i;
-}
-
-int Chunk::getJ()
-{
-    return j;
-}

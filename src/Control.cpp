@@ -169,32 +169,32 @@ void Control::update()
     {
         if(mouseX < 2 || keystate[SDL_SCANCODE_A])
         {
-            WorldRenderer::camLeft();
+            Camera::camLeft();
             camUpdated = true;
         }
         if(mouseX > WINDOW_W - 3 || keystate[SDL_SCANCODE_D])
         {
-            WorldRenderer::camRight();
+            Camera::camRight();
             camUpdated = true;
         }
         if(mouseY < 2 || keystate[SDL_SCANCODE_W])
         {
-            WorldRenderer::camForward();
+            Camera::camFwd();
             camUpdated = true;
         }
         if(mouseY > WINDOW_H - 3 || keystate[SDL_SCANCODE_S])
         {
-            WorldRenderer::camBackward();
+            Camera::camBack();
             camUpdated = true;
         }
         if(keystate[SDL_SCANCODE_Q])
         {
-            WorldRenderer::camRotateLeft();
+            Camera::camCCW();
             camUpdated = true;
         }
         if(keystate[SDL_SCANCODE_E])
         {
-            WorldRenderer::camRotateRight();
+            Camera::camCW();
             camUpdated = true;
         }
     }
@@ -295,13 +295,13 @@ void Control::processMouseWheelEvent(SDL_Event &e)
     {
         if(e.wheel.y > 0)
         {
-            camPos.y *= (1 - ZOOM_SPEED);
+            Camera::camPos.y *= (1 - ZOOM_SPEED);
             camUpdated = true;
             //TODO: Prevent user from zooming in too close
         }
         else if(e.wheel.y < 0)
         {
-            camPos.y *= (1 + ZOOM_SPEED);
+            Camera::camPos.y *= (1 + ZOOM_SPEED);
             //if(camPos.y > MAX_CAM_HEIGHT)
             //camPos.y = MAX_CAM_HEIGHT;
             camUpdated = true;

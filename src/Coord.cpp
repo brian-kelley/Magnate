@@ -11,13 +11,10 @@
 using namespace constants;
 using namespace glm;
 using namespace std;
+using namespace Camera;
 
 mat4 Coord::view3;
 mat4 Coord::proj3;
-vec3 Coord::camPos;
-vec3 Coord::camUp;
-vec3 Coord::camDir;
-float Coord::camAngle;
 mat4 Coord::tileToWorldMat;
 mat4 Coord::worldToTileMat;
 

@@ -19,6 +19,7 @@
 #include "Terrain.h"
 #include "TerrainGen.h"
 #include "Minimap.h"
+#include "RandomUtils.h"
 
 namespace World
 {

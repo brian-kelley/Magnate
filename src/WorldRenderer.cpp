@@ -86,13 +86,13 @@ void WorldRenderer::getTileQuad(Quad* q, int x, int z)
     Color4 color = {0xFF, 0xFF, 0xFF, 0xFF};
     setTexCoords(q, World::getGround(x, z));
     //PRINT("World height at " << x << ", " << z << " after scaling is " << World::getHeight(x, z) * TERRAIN_Y_SCALE)
-    q->p1.pos = tileToWorld(x, TERRAIN_Y_SCALE * World::getHeight(x, z), z);
+    q->p1.pos = vec3(tileToWorld(x, World::getHeight(x, z), z));
     q->p1.color = color;
-    q->p2.pos = tileToWorld(x, TERRAIN_Y_SCALE * World::getHeight(x, z + 1), z + 1);
+    q->p2.pos = vec3(tileToWorld(x + 1, World::getHeight(x + 1, z), z));
     q->p2.color = color;
-    q->p3.pos = tileToWorld(x + 1, TERRAIN_Y_SCALE * World::getHeight(x + 1, z + 1), z + 1);
+    q->p3.pos = vec3(tileToWorld(x + 1, World::getHeight(x + 1, z + 1), z + 1));
     q->p3.color = color;
-    q->p4.pos = tileToWorld(x + 1, TERRAIN_Y_SCALE * World::getHeight(x + 1, z), z);
+    q->p4.pos = vec3(tileToWorld(x, World::getHeight(x, z + 1), z + 1));
     q->p4.color = color;
 }
 
@@ -207,54 +207,6 @@ void WorldRenderer::updateVBOChunks(bool force)
                 DBASSERT(allocChunk(i, j));
         }
     }
-}
-
-void WorldRenderer::camRotateLeft()
-{
-    camDir = rotate(camDir, CAM_ROTATE_SPEED, {0, 1, 0});
-    camAngle += CAM_ROTATE_SPEED;
-}
-
-void WorldRenderer::camRotateRight()
-{
-    camDir = rotate(camDir, -CAM_ROTATE_SPEED, {0, 1, 0});
-    camAngle -= CAM_ROTATE_SPEED;
-}
-
-void WorldRenderer::camForward()
-{
-    //get y component out of camDir
-    vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
-    lookDir *= (PAN_SPEED * camPos.y);
-    camPos.x += lookDir.x;
-    camPos.z += lookDir.y;
-}
-
-void WorldRenderer::camBackward()
-{
-    vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
-    lookDir *= -(PAN_SPEED * camPos.y);
-    camPos.x += lookDir.x;
-    camPos.z += lookDir.y;
-}
-
-void WorldRenderer::camLeft()
-{
-    vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
-    //rotate pi/2 to the left
-    lookDir = {lookDir.y, -lookDir.x};
-    lookDir *= (PAN_SPEED * camPos.y);
-    camPos.x += lookDir.x;
-    camPos.z += lookDir.y;
-}
-
-void WorldRenderer::camRight()
-{
-    vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
-    lookDir = {-lookDir.y, lookDir.x};
-    lookDir *= (PAN_SPEED * camPos.y);
-    camPos.x += lookDir.x;
-    camPos.z += lookDir.y;
 }
 
 bool ptInScreen(Point p)

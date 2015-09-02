@@ -3,171 +3,20 @@
 using namespace std;
 using namespace constants;
 
-/*
-
-QTNode* QTNode::treeRoot = NULL;
-
-QTNode::QTNode(float h, float x, float z, float size, QTNode* master)
-{
-    this->h = h;
-    this->x = x;
-    this->z = z;
-    this->size = size;
-    this->master = master;
-}
-
-bool QTNode::isRoot()
-{
-    return master == NULL;
-}
-
-QTNode* QTNode::find(float xo, float zo)
-{
-    if(xo < x + size / 2)
-    {
-        if(zo < z + size / 2)
-        {
-            if(n1)
-                return n1->find(xo, zo);
-            else
-                return this;
-        }
-        else
-        {
-            if(n2)
-                return n2->find(xo, zo);
-            else
-                return this;
-        }
-    }
-    else
-    {
-        if(zo < z + size / 2)
-        {
-            if(n4)
-                return n4->find(xo, zo);
-            else
-                return this;
-        }
-        else
-        {
-            if(n3)
-                return n3->find(xo, zo);
-            else
-                return this;
-        }
-    }
-}
-
-QTNode* QTNode::up()
-{
-    //Figure out where I am in master
-    float targetX = x + size / 2; //center of square above this one
-    float targetZ = z - size / 2;
-    return treeRoot->findWithSize(targetX, targetZ, size);
-}
-
-QTNode* QTNode::left()
-{
-    float targetX = x - size / 2;
-    float targetZ = z + size / 2;
-    return treeRoot->findWithSize(targetX, targetZ, size);
-}
-
-QTNode* QTNode::right()
-{
-    float targetX = x + size * 3 / 2;
-    float targetZ = z + size / 2;
-    return treeRoot->findWithSize(targetX, targetZ, size);
-}
-
-QTNode* QTNode::down()
-{
-    float targetX = x + size / 2;
-    float targetZ = z + size * 3 / 2;
-    return treeRoot->findWithSize(targetX, targetZ, size);
-}
-
-int QTNode::getDepth()
-{
-    int depth = 0;
-    QTNode* iter = this;
-    while(iter)
-    {
-        depth++;
-        iter = iter->master;
-    }
-    return depth;
-}
-
-QTNode* QTNode::findWithSize(float xo, float zo, float searchSize)
-{
-    bool thisMatch = searchSize == size / 2;
-    if(xo < x + size / 2)
-    {
-        //left of center
-        if(zo < z + size / 2)
-        {
-            //up-left
-            if(thisMatch)
-                return n1;
-            else
-                return n1->findWithSize(xo, zo, searchSize);
-        }
-        else
-        {
-            //lower-left
-            if(thisMatch)
-                return n4;
-            else
-                return n4->findWithSize(xo, zo, searchSize);
-        }
-    }
-    else
-    {
-        //right of center
-        if(zo < z + size / 2)
-        {
-            //up-right
-            if(thisMatch)
-                return n2;
-            else
-                return n2->findWithSize(xo, zo, searchSize);
-        }
-        else
-        {
-            //lower-right
-            if(thisMatch)
-                return n3;
-            else
-                return n3->findWithSize(xo, zo, searchSize);
-        }
-    }
-    return NULL;
-}
-
-*/
-
 void TerrainGen::generate()
 {
-    //diamondSquare();
-    for(int i = 0; i < WORLD_SIZE; i++)
-    {
-        for(int j = 0; j < WORLD_SIZE; j++)
-        {
-            World::setHeight(0, i, j);
-            if(i + j < 200)
-                World::setGround(MOUNTAINS, i, j);
-            else
-                World::setGround(FOREST, i, j);
-        }
-    }
+    clearAll();
+    diamondSquare();
+    defuzz();
+    defuzz(); //two passes seems optimal (leaves a handful of tiles, but acceptable)
+    flattenWater();
+    
 }
 
 //Generates height based on average surrounding height, and how fine grid is
 Height TerrainGen::getHeight(int avg, int size)
 {
-    int range = double(size) / (WORLD_SIZE - 1) * 255 * ROUGHNESS;
+    int range = double(size) / (WORLD_SIZE - 1) * 500 * ROUGHNESS;
     if(range == 0)
         return avg;
     range = range > 255 ? 255 : range;
@@ -187,7 +36,7 @@ void TerrainGen::diamondSquare()
     World::setHeight(50, 0, WORLD_SIZE - 1);
     World::setHeight(50, WORLD_SIZE - 1, WORLD_SIZE - 1);
     //First diamond (puts pt at very center of chunk)
-    World::setHeight(255, WORLD_SIZE / 2, WORLD_SIZE / 2);
+    World::setHeight(50000, WORLD_SIZE / 2, WORLD_SIZE / 2);
     //repeatedly go over mesh and do these steps, making grid progressively finer
     //(squares first, then diamonds)
     //Note: if squares then diamonds, same size can be used each iteration
@@ -203,7 +52,6 @@ void TerrainGen::diamondSquare()
                 if((i + j) % (size * 2) != 0)
                 {
                     fillDiamond(i, j, size * 2);
-                    //PRINT("Setting height at " << i << ", " << j << " to " << (int) World::getHeight(i, j) << " (diamond)");
                 }
             }
         }
@@ -212,7 +60,6 @@ void TerrainGen::diamondSquare()
             for(int j = size / 2; j < WORLD_SIZE; j += size)
             {
                 fillSquare(i, j, size);
-                //PRINT("Setting height at " << i << ", " << j << " to " << (int) World::getHeight(i, j) << " (square)");
             }
         }
         size /= 2;
@@ -223,9 +70,7 @@ void TerrainGen::diamondSquare()
         {
             int height = World::getHeight(i, j);
             int centerDist = abs(WORLD_SIZE / 2 - i) + abs(WORLD_SIZE / 2 - j);
-            height -= centerDist / 10;
-            if(height < 0)
-                height = 0;
+            height -= centerDist / 5;
             World::setHeight(height, i, j);
         }
     }
@@ -240,6 +85,17 @@ void TerrainGen::diamondSquare()
                     World::setGround(WATER, i, j);
                     World::setHeight(0, i, j);
                 }
+            }
+        }
+    }
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(World::getHeight(i, j) <= 0)
+            {
+                World::setHeight(0, i, j);
+                World::setGround(WATER, i, j);
             }
         }
     }
@@ -286,7 +142,8 @@ void TerrainGen::fillDiamond(int x, int y, int size)
     }
     if(n == 0)
         return;
-    World::setHeight(World::getHeight(sum / n, size), x, y);
+    World::setHeight(getHeight(sum / n, size), x, y);
+    World::setGround(DESERT, x, y);
 }
 
 void TerrainGen::fillSquare(int x, int y, int size)
@@ -320,4 +177,107 @@ void TerrainGen::fillSquare(int x, int y, int size)
     if(n == 0)
         return;
     World::setHeight(getHeight(sum / n, size), x, y);
+    World::setGround(DESERT, x, y);
+}
+
+void TerrainGen::defuzz()
+{
+    int changes = 0;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(World::getGround(i, j) != WATER)
+            {
+                int waterNeighbors = 0;
+                if(World::getGround(i + 1, j) == WATER)
+                    waterNeighbors++;
+                if(World::getGround(i - 1, j) == WATER)
+                    waterNeighbors++;
+                if(World::getGround(i, j + 1) == WATER)
+                    waterNeighbors++;
+                if(World::getGround(i, j - 1) == WATER)
+                    waterNeighbors++;
+                if(waterNeighbors >= 3)
+                {
+                    changes++;
+                    World::setGround(WATER, i, j);
+                }
+            }
+        }
+    }
+    PRINT(changes << " tiles changed to water by defuzz.")
+}
+
+void TerrainGen::flattenWater()
+{
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(World::getGround(i, j) == WATER)
+            {
+                Height minHeight = World::getHeight(i, j);
+                bool needsUpdate = false;
+                if(World::getHeight(i + 1, j) < minHeight)
+                {
+                    minHeight = World::getHeight(i + 1, j);
+                    needsUpdate = true;
+                }
+                if(World::getHeight(i + 1, j + 1) < minHeight)
+                {
+                    minHeight = World::getHeight(i + 1, j + 1);
+                    needsUpdate = true;
+                }
+                if(World::getHeight(i, j + 1) < minHeight)
+                {
+                    minHeight = World::getHeight(i, j + 1);
+                    needsUpdate = true;
+                }
+                if(needsUpdate)
+                {
+                    World::setHeight(minHeight, i, j);
+                    World::setHeight(minHeight, i + 1, j);
+                    World::setHeight(minHeight, i + 1, j + 1);
+                    World::setHeight(minHeight, i, j + 1);
+                }
+            }
+        }
+    }
+}
+
+void TerrainGen::addVolcano(int x, int y, short height, int radius)
+{
+    DBASSERT(radius > 0);
+    int xmin = x - radius;
+    int xmax = x + radius;
+    int ymin = y - radius;
+    int ymax = y + radius;
+    //cone height is height / (float(dist((i,j) <-> (x,y))) / radius). Or 0 if this would be <0.
+    for(int i = xmin; i <= xmax; i++)
+    {
+        for(int j = ymin; j < ymax; j++)
+        {
+            float dist = sqrt((i - x) * (i - x) + (j - y) * (j - y));
+            float rad = radius;
+            int change = height - (float(height) * (dist / rad));
+            if(change > 0)
+            {
+                World::setHeight(World::getHeight(i, j) + change, i, j);
+                World::setGround(MOUNTAINS, i, j);
+            }
+        }
+    }
+}
+
+void TerrainGen::clearAll()
+{
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            World::setGround(WATER, i, j);
+            World::setHeight(0, i, j);
+        }
+    }
 }

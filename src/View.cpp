@@ -40,7 +40,7 @@ void view::dispose()
 
 void view::prepareFrame()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     Renderer::startFrame();
 }
 
@@ -69,6 +69,7 @@ void view::configGL()
     glClearColor(1, 1, 1, 1);
     glEnable(GL_BLEND);
     glEnable(GL_TEXTURE_2D);
+    glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 

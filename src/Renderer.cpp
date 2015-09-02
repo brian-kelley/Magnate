@@ -40,8 +40,7 @@ void Renderer::init()
     stateVertex.texcoord = {0, 0};
     stateVertex.color = {255, 255, 255, 255};
     //Set initial camera position and direction
-    camPos = {0, 20, 0};
-    camAngle = 0;
+    Camera::camInit();
     update2DMatrices();
     updatePerspectiveMatrix(); //use current (default) camera coordinates and window dimensions
     updateViewMatrix(); //from Constants.h
@@ -215,6 +214,7 @@ void Renderer::endFrame()
     uploadMatrices(3);
     //draw world VBO
     bindWorldVBO();
+    glEnable(GL_DEPTH_TEST);
     glDrawArrays(GL_QUADS, 0, numWorldVertices);
     //draw building VBO
     //bindBuildingVBO();
@@ -230,6 +230,7 @@ void Renderer::endFrame()
     }
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vertex2D) * numGuiQuadVertices, &guiQuadVertices.front());
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(Vertex2D) * numGuiQuadVertices, sizeof(Vertex2D) * numGuiLineVertices, &guiLineVertices.front());
+    glDisable(GL_DEPTH_TEST);
     glDrawArrays(GL_QUADS, 0, numGuiQuadVertices);
     glDrawArrays(GL_LINES, numGuiQuadVertices, numGuiLineVertices);
 }
@@ -350,11 +351,7 @@ void Renderer::updatePerspectiveMatrix()
 
 void Renderer::updateViewMatrix()
 {
-    vec3 at = {camPos.x + sin(camAngle) * cos(camPitch), camPos.y - 1, camPos.z + cos(camAngle) * cos(camPitch)};
-    vec3 camUp = {sin(camPitch) * sin(camAngle), cos(camPitch), sin(camPitch) * cos(camAngle)};
-    camUp = normalize(camUp);
-    camDir = normalize(at - camPos);
-    Coord::view3 = lookAt(camPos, at, camUp);
+    Coord::view3 = Camera::getViewMatrix();
 }
 
 void Renderer::uploadMatrices(int dims)
