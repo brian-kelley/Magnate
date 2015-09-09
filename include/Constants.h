@@ -98,6 +98,8 @@ enum GROUND : unsigned char
     FOREST,
     MOUNTAINS,
     DESERT,
+    RIVER,    //like water but used for erosion and not always flat
+    LAKE,     //like ocean (flat) but with altitude > 0
     NUM_TYPES
 };
 

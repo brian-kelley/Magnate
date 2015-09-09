@@ -234,6 +234,8 @@ void Minimap::update() //this means mouse is over minimap and camera needs to mo
     Pos2 localMouse = {short(localX), short(localY)};
     vec2 newCenter = mapToWorld(localMouse);
     Camera::camPos = {newCenter.x, Camera::camPos.y, newCenter.y};
+    Renderer::update3DMatrices();
+    WorldRenderer::updateVBOChunks();
 }
 
 bool Minimap::mmIsMouseOver()

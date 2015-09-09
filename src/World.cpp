@@ -105,6 +105,11 @@ void World::setGround(GROUND ground, int wi, int wj)
     chunks[ci][cj]->terrain[ti][tj] = ground;
 }
 
+void World::setGround(GROUND ground, Pos2 loc)
+{
+    setGround(ground, loc.x, loc.y);
+}
+
 void World::setHeight(Height height, int wi, int wj)
 {
     int ci = wi / CHUNK_SIZE;
@@ -112,6 +117,11 @@ void World::setHeight(Height height, int wi, int wj)
     int ti = wi - CHUNK_SIZE * ci;
     int tj = wj - CHUNK_SIZE * cj;
     chunks[ci][cj]->mesh[ti][tj] = height;
+}
+
+void World::setHeight(Height height, Pos2 loc)
+{
+    setHeight(height, loc.x, loc.y);
 }
 
 Height World::getHeight(int wi, int wj)
@@ -125,6 +135,12 @@ Height World::getHeight(int wi, int wj)
     return chunks[ci][cj]->mesh[ti][tj];
 }
 
+Height World::getHeight(Pos2 loc)
+{
+    return World::getHeight(loc.x, loc.y);
+}
+
+
 GROUND World::getGround(int wi, int wj)
 {
     if(wi < 0 || wi >= WORLD_SIZE || wj < 0 || wj >= WORLD_SIZE)
@@ -134,4 +150,17 @@ GROUND World::getGround(int wi, int wj)
     int ti = wi - CHUNK_SIZE * ci;
     int tj = wj - CHUNK_SIZE * cj;
     return chunks[ci][cj]->terrain[ti][tj];
+}
+
+GROUND World::getGround(Pos2 loc)
+{
+    return getGround(loc.x, loc.y);
+}
+
+bool World::tileInWorld(int x, int y)
+{
+    if(x >= 0 && x < WORLD_SIZE && y >= 0 && y < WORLD_SIZE)
+        return true;
+    else
+        return false;
 }

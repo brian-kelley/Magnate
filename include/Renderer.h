@@ -76,8 +76,7 @@ namespace Renderer
     void disableTexture();
     glm::vec2 xzPlaneIntersect(glm::vec3 pos, glm::vec3 dir);
     void update2DMatrices();                 //only call during init
-    void updatePerspectiveMatrix();          //when FOV or window changes
-    void updateViewMatrix();                 //when camera moves
+    void update3DMatrices();                 //when FOV or window changes
     void uploadMatrices(int dims); //before draw call, 2 or 3
     /* Internal functions/data */
     void initVBO();

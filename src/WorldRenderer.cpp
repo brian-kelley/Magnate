@@ -83,16 +83,22 @@ void WorldRenderer::setTexCoords(Quad *q, GROUND ground)
 //set attributes for the 4 vertices of a tile
 void WorldRenderer::getTileQuad(Quad* q, int x, int z)
 {
-    Color4 color = {0xFF, 0xFF, 0xFF, 0xFF};
-    setTexCoords(q, World::getGround(x, z));
-    //PRINT("World height at " << x << ", " << z << " after scaling is " << World::getHeight(x, z) * TERRAIN_Y_SCALE)
+    //get positions
     q->p1.pos = vec3(tileToWorld(x, World::getHeight(x, z), z));
-    q->p1.color = color;
     q->p2.pos = vec3(tileToWorld(x + 1, World::getHeight(x + 1, z), z));
-    q->p2.color = color;
     q->p3.pos = vec3(tileToWorld(x + 1, World::getHeight(x + 1, z + 1), z + 1));
-    q->p3.color = color;
     q->p4.pos = vec3(tileToWorld(x, World::getHeight(x, z + 1), z + 1));
+    //get normal to produce color (on CPU)
+    vec3 normal = normalize(cross(q->p2.pos - q->p4.pos, q->p1.pos - q->p3.pos));
+    float diffuse = dot(normal, sunlight);
+    if(diffuse < 0)
+        diffuse = 0;
+    float light = diffuse * diffuseWeight + ambientWeight;
+    Color4 color = {(unsigned char)(light * 255), (unsigned char)(light * 255), (unsigned char)(light * 255), 255};
+    setTexCoords(q, World::getGround(x, z));
+    q->p1.color = color;
+    q->p2.color = color;
+    q->p3.color = color;
     q->p4.color = color;
 }
 

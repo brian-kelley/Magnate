@@ -30,9 +30,14 @@ namespace World
     int getWorldLength();
     //slow, worldwide tile access (use for world generation)
     void setHeight(Height height, int wi, int wj);
+    void setHeight(Height height, Pos2 loc);
     void setGround(GROUND ground, int wi, int wj);
+    void setGround(GROUND ground, Pos2 loc);
     Height getHeight(int wi, int wj);
+    Height getHeight(Pos2 loc);
     GROUND getGround(int wi, int wj);
+    GROUND getGround(Pos2 loc);
+    bool tileInWorld(int x, int y);
     //Length of world in either direction, in chunks
     void readWorld();
     void writeWorld();

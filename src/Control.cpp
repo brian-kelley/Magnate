@@ -214,7 +214,7 @@ void Control::update()
     if(camUpdated)
     {
         WorldRenderer::updateVBOChunks(); //this only expensive if cam moved into new chunk
-        Renderer::updateViewMatrix();
+        Renderer::update3DMatrices();
     }
     view::finalizeFrame();
 }

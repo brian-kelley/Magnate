@@ -104,5 +104,7 @@ water 1744 994 64 64
 chimney 256 213 10 40
 cursor 1715 969 16 23
 forest 1731 969 16 16
+lake 1747 969 16 16
+river 1763 969 16 16
 chimney_top 1731 985 6 6
 metal_chimney_top 1737 985 6 6

@@ -42,8 +42,7 @@ void Renderer::init()
     //Set initial camera position and direction
     Camera::camInit();
     update2DMatrices();
-    updatePerspectiveMatrix(); //use current (default) camera coordinates and window dimensions
-    updateViewMatrix(); //from Constants.h
+    update3DMatrices();
     initVBO();
     numWorldVertices = VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * 4;
 }
@@ -344,13 +343,9 @@ void Renderer::update2DMatrices()
     view2 = glm::mat4(); //ID
 }
 
-void Renderer::updatePerspectiveMatrix()
+void Renderer::update3DMatrices()
 {
     Coord::proj3 = glm::perspective<float>(FOV, float(WINDOW_W) / WINDOW_H, NEAR, FAR);
-}
-
-void Renderer::updateViewMatrix()
-{
     Coord::view3 = Camera::getViewMatrix();
 }
 
