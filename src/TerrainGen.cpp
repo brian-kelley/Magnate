@@ -5,17 +5,51 @@ using namespace constants;
 
 void TerrainGen::generate()
 {
+    clock_t start = clock();
+    defaultGen();
+    cout << "Generation took " << (double(clock()) - start) / CLOCKS_PER_SEC << " seconds." << endl;
+}
+
+void TerrainGen::defaultGen()
+{
     clearAll();
     diamondSquare();
     scatterVolcanos();
     pyramidMask();
-    erode(2);
-    for(int i = 0; i < 2; i++)
-        addRiver();
     clampSeaLevel();
+    for(int i = 0; i < 30; i++)
+    {
+        addRiver();
+    }
+    consolidateLakes();
     defuzz();
-    defuzz(); //two passes seems optimal (leaves a handful of tiles, but acceptable)
+    defuzz();
     flattenWater();
+}
+
+void TerrainGen::tester()
+{
+    clearAll();
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            int height = 2000 - (abs(i - WORLD_SIZE / 2) + abs(j - WORLD_SIZE / 2));
+            if(height > 0)
+            {
+                World::setHeight(height, i, j);
+                World::setGround(DESERT, i, j);
+            }
+        }
+    }
+    for(int i = 0; i < 400; i++)
+    {
+        int volcanoSize = RandomUtils::gen() % 40 + 20;
+        addVolcano(150 + RandomUtils::gen() % (WORLD_SIZE - 150), 150 + RandomUtils::gen() % (WORLD_SIZE - 150), -volcanoSize * 3, volcanoSize);
+    }
+    clampSeaLevel();
+    for(int i = 0; i < 50; i++)
+        addRiver();
 }
 
 //Generates height based on average surrounding height, and how fine grid is
@@ -74,13 +108,9 @@ void TerrainGen::diamondSquare()
 bool TerrainGen::inMesh(int x, int y)
 {
     if(x > 0 && x < WORLD_SIZE && y > 0 && y < WORLD_SIZE)
-    {
         return true;
-    }
     else
-    {
         return false;
-    }
 }
 
 void TerrainGen::fillDiamond(int x, int y, int size)
@@ -152,24 +182,35 @@ void TerrainGen::fillSquare(int x, int y, int size)
 
 void TerrainGen::defuzz()
 {
-    for(int i = 0; i < WORLD_SIZE; i++)
+    for(short i = 0; i < WORLD_SIZE; i++)
     {
-        for(int j = 0; j < WORLD_SIZE; j++)
+        for(short j = 0; j < WORLD_SIZE; j++)
         {
             if(World::getGround(i, j) != WATER)
             {
                 int waterNeighbors = 0;
-                if(World::getGround(i + 1, j) == WATER)
-                    waterNeighbors++;
-                if(World::getGround(i - 1, j) == WATER)
-                    waterNeighbors++;
-                if(World::getGround(i, j + 1) == WATER)
-                    waterNeighbors++;
-                if(World::getGround(i, j - 1) == WATER)
-                    waterNeighbors++;
+                for(int k = UP; k <= RIGHT; k++)
+                {
+                    if(World::getGround(getTileInDir({i, j}, k)) == WATER)
+                        waterNeighbors++;
+                }
                 if(waterNeighbors >= 3)
                 {
                     World::setGround(WATER, i, j);
+                }
+            }
+            else
+            {
+                int waterNeighbors = 0;
+                for(int k = UP; k <= RIGHT; k++)
+                {
+                    if(World::getGround(getTileInDir({i, j}, k)) != WATER)
+                        waterNeighbors++;
+                }
+                if(waterNeighbors >= 3)
+                {
+                    World::setHeight(1, i, j);
+                    World::setGround(DESERT, i, j);
                 }
             }
         }
@@ -227,13 +268,11 @@ void TerrainGen::addVolcano(int x, int y, short height, int radius)
         {
             float dist = sqrt((i - x) * (i - x) + (j - y) * (j - y));
             float rad = radius;
-            int change = height - (float(height) * (dist / rad));
-            if(change > 0)
+            if(dist < rad)
             {
+                int change = height - (float(height) * (dist / rad));
                 if(World::tileInWorld(i, j))
-                {
                     World::setHeight(World::getHeight(i, j) + change, i, j);
-                }
             }
         }
     }
@@ -300,89 +339,15 @@ void TerrainGen::clampSeaLevel()
 
 void TerrainGen::erode(int numTimesteps)
 {
-#define heightInSed(i, j) (sed[(i) * WORLD_SIZE + (j)])
-    Height* sed = new Height[WORLD_SIZE * WORLD_SIZE]; //sed holds net height change at each corner. Distribution of sediment based on x and z components of downhill vector at the corner.
-    for(int step = 0; step < numTimesteps; step++)
-    {
-        for(int i = 0; i < WORLD_SIZE; i++)
-        {
-            for(int j = 0; j < WORLD_SIZE; j++)
-            {
-                //Zero out sed
-                heightInSed(i, j) = 0;
-            }
-        }
-        for(int i = 0; i < WORLD_SIZE; i++)
-        {
-            for(int j = 0; j < WORLD_SIZE; j++)
-            {
-                float downX = World::getHeight(i + 1, j) - World::getHeight(i - 1, j);
-                float downY = World::getHeight(i, j + 1) - World::getHeight(i, j - 1);
-                Height loss = sqrt(downX * downX + downY * downY) * 0.2; //todo: decide scaling factor
-                if(loss == 0)
-                    continue;
-                float angle;
-                if(downX == 0)
-                {
-                    if(downY < 0)
-                        angle = -M_PI_2;
-                    else
-                        angle = M_PI_2;
-                }
-                else
-                    angle = atan(downY / downX);
-                //cout << angle << endl;
-                sed[i * WORLD_SIZE + j] -= loss;
-                //Decide where that sediment will flow
-                int segment = (angle - M_PI / 8) / (M_PI / 4);
-                switch(segment)
-                {
-                    case 0:
-                        heightInSed(i + 1, j + 1) += loss;
-                        break;
-                    case 1:
-                        heightInSed(i, j + 1) += loss;
-                        break;
-                    case 2:
-                        heightInSed(i - 1, j + 1) += loss;
-                        break;
-                    case 3:
-                        heightInSed(i - 1, j) += loss;
-                        break;
-                    case 4:
-                        heightInSed(i - 1, j - 1) += loss;
-                        break;
-                    case 5:
-                        heightInSed(i, j - 1) += loss;
-                        break;
-                    case 6:
-                        heightInSed(i + 1, j - 1) += loss;
-                        break;
-                    case 7:
-                        heightInSed(i + 1, j) += loss;
-                        break;
-                }
-            }
-        }
-        //apply sed changes to world
-        for(int i = 0; i < WORLD_SIZE; i++)
-        {
-            for(int j = 0; j < WORLD_SIZE; j++)
-            {
-                World::setHeight(World::getHeight(i, j) + heightInSed(i, j), i, j);
-            }
-        }
-    }
-    delete[] sed;
-#undef heightInSed
+    
 }
 
 void TerrainGen::addRiver()
 {
-    cout << "Starting river generation." << endl;
     //Let the headwater tile be a random tile above a certain height
-    //ideally pick so only a handful of random samples are typically needed
-    const Height minSpringAlt = 200;
+    //ideally pick so only a handful of random samples are typically needed,
+    //but is still at high enough altitude to make interesting long rivers
+    const Height minSpringAlt = 400;
     Pos2 tilePos;
     do
     {
@@ -390,147 +355,170 @@ void TerrainGen::addRiver()
         tilePos.y = RandomUtils::gen() % WORLD_SIZE;
     }
     while(World::getHeight(tilePos.x, tilePos.y) < minSpringAlt);
-    PRINT("Starting a river at " << tilePos.x << ", " << tilePos.y)
     World::setGround(RIVER, tilePos.x, tilePos.y);
     flowRiverFromPoint(tilePos);
 }
 
+int getDownhill(Pos2 loc)
+{
+    int cand[4];
+    int iter = 0;
+    for(int dir = 0; dir <= RIGHT; dir++)
+    {
+        Pos2 nei = TerrainGen::getTileInDir(loc, dir);
+        if(World::getHeight(nei) < World::getHeight(loc))
+        {
+            if(World::getGround(nei) == LAKE || World::getGround(nei) == RIVER)
+                return dir;
+            cand[iter] = dir;
+            iter++;
+        }
+    }
+    if(iter == 0)
+        return NO_DIRECTION;
+    return cand[RandomUtils::gen() % iter];
+}
+
 void TerrainGen::flowRiverFromPoint(Pos2 loc)
 {
-    //now work downhill, forming river's path
-    int dir;
-    const int xDir = 0;
-    const int yDir = 1;
     while(true)
     {
-        Height tileH = World::getHeight(loc.x, loc.y);
-        Height x1 = World::getHeight(loc.x + 1, loc.y);
-        Height x2 = World::getHeight(loc.x - 1, loc.y);
-        Height y1 = World::getHeight(loc.x, loc.y + 1);
-        Height y2 = World::getHeight(loc.x, loc.y - 1);
-        int xSlope = x1 - tileH;
-        if(abs(xSlope) < (tileH - x2))
-            xSlope = tileH - x2;
-        int ySlope = y1 - tileH;
-        if(abs(ySlope) < (tileH - y2))
-            ySlope = tileH - y2;
-        //Decide if river should end (true if can't go downhill in any direction)
-        if(x1 >= tileH && x2 >= tileH && y1 >= tileH && y2 >= tileH)
+        int dir = getDownhill(loc);
+        if(dir == NO_DIRECTION)
         {
             loc = formLake(loc);
-            //reassign local variables and continue
-            tileH = World::getHeight(loc);
-            x1 = World::getHeight(loc.x + 1, loc.y);
-            x2 = World::getHeight(loc.x - 1, loc.y);
-            y1 = World::getHeight(loc.x, loc.y + 1);
-            y2 = World::getHeight(loc.x, loc.y - 1);
-            xSlope = x1 - tileH;
-            if(abs(xSlope) < (tileH - x2))
-                xSlope = tileH - x2;
-            ySlope = y1 - tileH;
-            if(abs(ySlope) < (tileH - y2))
-                ySlope = tileH - y2;
-        }
-        //Now choose direction of flow
-        if(abs(xSlope) == abs(ySlope))     //there is a tie, pick x or y randomly
-            dir = (RandomUtils::gen() >> 4) & 1;
-        else if(abs(xSlope) < abs(ySlope)) //steeper in y
-            dir = yDir;
-        else
-            dir = xDir;                    //steeper in x
-        if(dir == xDir)
-        {
-            if(xSlope < 0)
-                loc.x++;
-            else
-                loc.x--;
+            if(loc.x == -1 && loc.y == -1)
+                return;
+            World::setGround(RIVER, loc);
         }
         else
         {
-            if(ySlope < 0)
-                loc.y++;
-            else
-                loc.y--;
+            loc = getTileInDir(loc, dir);
+            if(World::getGround(loc) == LAKE || World::getGround(loc) == RIVER)
+                return;
+            World::setGround(RIVER, loc);
         }
-        if(World::getGround(loc) == RIVER) //fed into another river, stop
+        if(World::getHeight(loc) <= 0)
             break;
-        World::setGround(RIVER, loc);
-        if(World::getHeight(loc) == 0)     //flowed to ocean, stop
-            break;
+    }
+}
+
+void fillToHeight(Pos2 pos, Height flood)
+{
+    if(World::getGround(pos) != LAKE)
+    {
+        if(World::getHeight(pos) <= flood)
+        {
+            World::setGround(LAKE, pos);
+            World::setHeight(flood, pos);
+            for(int dir = UP; dir <= RIGHT; dir++)
+            {
+                fillToHeight(pos, flood);
+            }
+        }
+    }
+}
+
+bool findOutlet(Pos2 lastRiver, Pos2& result)
+{
+    Height h = World::getHeight(lastRiver);
+    queue<Pos2> q;
+    q.push(lastRiver);
+    vector<Pos2> outlets;
+    while(q.size() > 0)
+    {
+        Pos2 proc = q.front();
+        q.pop();
+        if(World::getGround(proc) != OUTLET_SEARCHED)
+        {
+            World::setGround(OUTLET_SEARCHED, proc);
+            if(World::getHeight(proc) < h)
+                outlets.push_back(proc);
+            else if(World::getHeight(proc) == h) //only chain new calls if proc is already part of lake
+            {
+                for(int dir = UP; dir <= RIGHT; dir++)
+                {
+                    Pos2 nei = TerrainGen::getTileInDir(proc, dir);
+                    if(World::getGround(nei) != OUTLET_SEARCHED)
+                        q.push(nei);
+                }
+            }
+        }
+    }
+    if(outlets.size() == 0)
+        return false;
+    result = outlets[RandomUtils::gen() % outlets.size()];
+    return true;
+}
+
+Height getFloodHeight(Pos2 lastRiver)
+{
+    Height oldFlood = World::getHeight(lastRiver);
+    Height newFlood = HEIGHT_MAX;
+    queue<Pos2> q;
+    q.push(lastRiver);
+    while(q.size() > 0)
+    {
+        Pos2 proc = q.front();
+        q.pop();
+        if(World::getGround(proc) != FLOODING)
+        {
+            World::setGround(FLOODING, proc); //mark as visited by fill
+            Height procH = World::getHeight(proc);
+            if(procH > oldFlood && procH < newFlood)
+                newFlood = procH;
+            if(procH == oldFlood)
+            {
+                for(int dir = UP; dir <= RIGHT; dir++)
+                {
+                    Pos2 nei = TerrainGen::getTileInDir(proc, dir);
+                    if(World::getGround(nei) != FLOODING)
+                        q.push(nei);
+                }
+            }
+        }
+    }
+    return newFlood;
+}
+
+void floodToHeight(Pos2 lastRiver, Height flood)
+{
+    queue<Pos2> q;
+    q.push(lastRiver);
+    while(q.size() > 0)
+    {
+        Pos2 proc = q.front();
+        q.pop();
+        if(World::getGround(proc) != LAKE)
+        {
+            World::setGround(LAKE, proc); //mark as visited by fill
+            World::setHeight(flood, proc);
+            for(int dir = UP; dir <= RIGHT; dir++)
+            {
+                Pos2 nei = TerrainGen::getTileInDir(proc, dir);
+                if((World::getGround(nei) == FLOODING || World::getGround(nei) == OUTLET_SEARCHED) && World::getHeight(nei) <= flood)
+                    q.push(nei);
+            }
+        }
     }
 }
 
 Pos2 TerrainGen::formLake(Pos2 lastRiver)
 {
-    cout << "Forming lake at " << lastRiver.x << ", " << lastRiver.y << endl;
-    //find min of neighboring heights, and flood tile(s) with that height
-    //this function is called when lastRiver tile is in a pit, and a lake needs to be created there so it spills into the next leg which can flow downhill
-    list<Pos2> boundaryTiles = {lastRiver};
-    World::setGround(LAKE, lastRiver);
-    Pos2 outletTile = {-1, -1};
-    Height nextFillHeight;
-    while(true)
+    Pos2 outlet;
+    Height flood = World::getHeight(lastRiver);
+    floodToHeight(lastRiver, flood);
+    if(findOutlet(lastRiver, outlet))
+        return outlet;
+    for(int iter = 0; true; iter++)
     {
-        cout << "Starting new boundary tile iteration.";
-        cout << "Currently have " << boundaryTiles.size() << endl;
-        nextFillHeight = 32767;
-        for(auto it = boundaryTiles.begin(); it != boundaryTiles.end();)
-        {
-            if(surroundedByLake(*it))
-            {
-                it = boundaryTiles.erase(it);
-                continue;
-            }
-            Pos2& bound = *it;
-            //left, right, up, down
-            if(World::getGround(bound.x - 1, bound.y) != LAKE)
-                nextFillHeight = min(nextFillHeight, World::getHeight(bound.x - 1, bound.y));
-            if(World::getGround(bound.x, bound.y - 1) != LAKE)
-                nextFillHeight = min(nextFillHeight, World::getHeight(bound.x, bound.y - 1));
-            if(World::getGround(bound.x + 1, bound.y) != LAKE)
-                nextFillHeight = min(nextFillHeight, World::getHeight(bound.x + 1, bound.y));
-            if(World::getGround(bound.x, bound.y + 1) != LAKE)
-                nextFillHeight = min(nextFillHeight, World::getHeight(bound.x, bound.y + 1));
-            it++;
-        }
-        cout << "Flooding tiles up to and including " << nextFillHeight << endl;
-        //now have next level to flood to
-        int A = 0;
-        for(auto bound = boundaryTiles.begin(); bound != boundaryTiles.end(); bound++)
-        {
-            cout << "Processing boundary tile " << A << " for next filll height." << endl;
-            cout << "Tile is at " << bound->x << ", " << bound->y << endl;
-            cout << "Size of boundary tile list is " << boundaryTiles.size() << endl << endl;
-            A++;
-            if(processLakeBoundaryTile(boundaryTiles, *bound, {short(bound->x - 1), bound->y}, nextFillHeight))
-                outletTile = {short(bound->x - 1), bound->y};
-            if(processLakeBoundaryTile(boundaryTiles, *bound, {bound->x, short(bound->y - 1)}, nextFillHeight))
-                outletTile = {bound->x, short(bound->y - 1)};
-            if(processLakeBoundaryTile(boundaryTiles, *bound, {short(bound->x + 1), bound->y}, nextFillHeight))
-                outletTile = {short(bound->x + 1), bound->y};
-            if(processLakeBoundaryTile(boundaryTiles, *bound, {bound->x, short(bound->y + 1)}, nextFillHeight))
-                outletTile = {bound->x, short(bound->y + 1)};
-        }
-        if(outletTile.x != -1)
+        flood = getFloodHeight(lastRiver);
+        floodToHeight(lastRiver, flood);
+        if(findOutlet(lastRiver, outlet))
             break;
     }
-    World::setHeight(nextFillHeight, lastRiver);
-    recurseSetLakeHeight(nextFillHeight, lastRiver);
-    return outletTile;
-}
-
-bool TerrainGen::hasNonLakeDownhill(Pos2 loc)
-{
-    Height locH = World::getHeight(loc);
-    if(World::getHeight(loc.x - 1, loc.y) < locH && World::getGround(loc.x - 1, loc.y) != LAKE)
-        return true;
-    if(World::getHeight(loc.x + 1, loc.y) < locH && World::getGround(loc.x + 1, loc.y) != LAKE)
-        return true;
-    if(World::getHeight(loc.x, loc.y - 1) < locH && World::getGround(loc.x, loc.y - 1) != LAKE)
-        return true;
-    if(World::getHeight(loc.x, loc.y + 1) < locH && World::getHeight(loc.x, loc.y + 1) != LAKE)
-        return true;
-    return false;
+    floodToHeight(lastRiver, flood);
+    return outlet;
 }
 
 Height TerrainGen::maxHeightOfTile(Pos2 loc)
@@ -542,57 +530,55 @@ Height TerrainGen::maxHeightOfTile(Pos2 loc)
     return h;
 }
 
-bool TerrainGen::surroundedByLake(Pos2 loc)
+Pos2 TerrainGen::getTileInDir(Pos2 loc, int dir)
 {
-    if(World::getGround(loc.x - 1, loc.y) != LAKE)
-        return false;
-    if(World::getGround(loc.x, loc.y - 1) != LAKE)
-        return false;
-    if(World::getGround(loc.x + 1, loc.y) != LAKE)
-        return false;
-    if(World::getGround(loc.x, loc.y + 1) != LAKE)
-        return false;
-    return true;
+    switch(dir)
+    {
+        case UP:
+            loc.y--;
+            return loc;
+        case DOWN:
+            loc.y++;
+            return loc;
+        case LEFT:
+            loc.x--;
+            return loc;
+        case RIGHT:
+            loc.x++;
+            return loc;
+        default:
+            return {-1, -1};
+    }
 }
 
-bool TerrainGen::processLakeBoundaryTile(list<Pos2>& boundList, Pos2 bound, Pos2 check, Height floodH)
+int TerrainGen::getNonLakeDownhill(Pos2 loc)
 {
-    if(World::getGround(check) == LAKE)
-        return false;
-    if(World::getHeight(check) <= floodH)
+    Height cutoff = World::getHeight(loc);
+    Direction cand[4];
+    int iter = 0;
+    for(int i = UP; i <= RIGHT; i++)
     {
-        World::setGround(LAKE, check);
-        boundList.push_back(check);
-        if(hasNonLakeDownhill(check))
-            return true;
+        Pos2 search = getTileInDir(loc, i);
+        if(World::getGround(search) != FLOODING && World::getGround(search) != LAKE && World::getHeight(search) < cutoff)
+        {
+            cand[iter] = (Direction) i;
+            iter++;
+        }
     }
-    return false;
+    if(iter == 0)
+        return NO_DIRECTION;
+    int result = RandomUtils::gen() % iter;
+    return cand[result];
 }
 
-void TerrainGen::recurseSetLakeHeight(Height h, Pos2 pos)
+void TerrainGen::consolidateLakes()
 {
-    Pos2 left = {short(pos.x - 1), pos.y};
-    Pos2 up = {pos.x, short(pos.y - 1)};
-    Pos2 right = {short(pos.x + 1), pos.y};
-    Pos2 down = {pos.x, short(pos.y + 1)};
-    if(World::getGround(left) == LAKE && World::getHeight(left) != h)
+    for(int i = 0; i < WORLD_SIZE; i++)
     {
-        World::setHeight(h, left);
-        recurseSetLakeHeight(h, left);
-    }
-    if(World::getGround(up) == LAKE && World::getHeight(up) != h)
-    {
-        World::setHeight(h, up);
-        recurseSetLakeHeight(h, up);
-    }
-    if(World::getGround(right) == LAKE && World::getHeight(right) != h)
-    {
-        World::setHeight(h, right);
-        recurseSetLakeHeight(h, right);
-    }
-    if(World::getGround(down) == LAKE && World::getHeight(down) != h)
-    {
-        World::setHeight(h, down);
-        recurseSetLakeHeight(h, down);
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(World::getGround(i, j) == OUTLET_SEARCHED)
+                World::setGround(LAKE, i, j);
+        }
     }
 }

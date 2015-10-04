@@ -164,3 +164,11 @@ bool World::tileInWorld(int x, int y)
     else
         return false;
 }
+
+bool World::tileInWorld(Pos2 pos)
+{
+    if(pos.x >= 0 && pos.x < WORLD_SIZE && pos.y >= 0 && pos.y < WORLD_SIZE)
+        return true;
+    else
+        return false;
+}

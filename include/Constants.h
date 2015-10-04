@@ -100,6 +100,8 @@ enum GROUND : unsigned char
     DESERT,
     RIVER,    //like water but used for erosion and not always flat
     LAKE,     //like ocean (flat) but with altitude > 0
+    FLOODING,
+    OUTLET_SEARCHED, //used to mark tile as visited by lake outlet searching
     NUM_TYPES
 };
 

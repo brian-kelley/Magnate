@@ -8,11 +8,11 @@
 #include "Chunk.h"
 #include "World.h"
 
-static enum Direction
+enum Direction
 {
     UP,    //-y
-    LEFT,  //-x
     DOWN,  //+y
+    LEFT,  //-x
     RIGHT, //+x
     NO_DIRECTION
 };
@@ -36,13 +36,34 @@ namespace TerrainGen
     void clampSeaLevel();
     void addRiver();
     void flowRiverFromPoint(Pos2 loc);
-    Pos2 formLake(Pos2 lastRiver); //create a flat pool at the point, and return the location of where river continues
-    bool hasNonLakeDownhill(Pos2 loc); //test whether there is a downhill route from loc, that doesn't go into a lake
-    Height maxHeightOfTile(Pos2 loc);  //max of height values of four corners of tile
-    void recurseLakeFill(Pos2 loc, Height threshold, std::vector<Pos2>& lakeTiles);
+    /*
+     create a flat pool at the point, and return the location of where river continues
+     */
+    //void floodStep(Pos2 pos);
+    //bool findOutlet(Pos2 pos, Pos2& outlet);
+    Pos2 formLake(Pos2 lastRiver);
+    Pos2 formLakeOld(Pos2 lastRiver);
+    /*
+     test whether there is a downhill route from loc, that doesn't go directly to a lake tile. Return a Direction or NO_DIRECTION
+     */
+    int getNonLakeDownhill(Pos2 loc);
+    /*
+     max of height values of four corners of tile
+     */
+    Height maxHeightOfTile(Pos2 loc);
+    //Does the tile have 4 lake tiles around it?
     bool surroundedByLake(Pos2 loc);
-    bool processLakeBoundaryTile(std::list<Pos2>& boundList, Pos2 bound, Pos2 check, Height floodH); //given bound in lake boundary and check is a neighbor to bound, and floodH is the next flood height, test whether to add check to lake. Return true if next river flows out of check.
-    void recurseSetLakeHeight(Height h, Pos2 pos);
+    /*
+     flood fill all lake tiles connected to loc to height flood
+     */
+    void setLakeTilesFlooding(Pos2 loc);
+    void buildFlatLake(Height flood, Pos2 pos);
+    Pos2 getTileInDir(Pos2 loc, int dir);
+    bool isOutlet(Pos2 pos, Pos2& result);
+    bool isDownhillChain(int num, Pos2 pos, bool flatOK);
+    void tester();
+    void defaultGen();
+    void consolidateLakes();
 }
 
 #endif

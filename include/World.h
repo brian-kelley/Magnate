@@ -38,6 +38,7 @@ namespace World
     GROUND getGround(int wi, int wj);
     GROUND getGround(Pos2 loc);
     bool tileInWorld(int x, int y);
+    bool tileInWorld(Pos2 loc);
     //Length of world in either direction, in chunks
     void readWorld();
     void writeWorld();

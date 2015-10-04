@@ -51,6 +51,8 @@ Color colorFromTerrain(GROUND g)
             rv.b = 0x66;
             return rv;
         case WATER:
+        case RIVER:
+        case LAKE:
             rv.r = 0x00;
             rv.g = 0x6c;
             rv.b = 0xFF;
@@ -63,7 +65,7 @@ Color colorFromTerrain(GROUND g)
     }
 }
 
-void Minimap::putMinimapPixel(int x, int y, Uint32* buf)
+void Minimap::putMinimapPixel(int x, int y, Uint32* buf, int maxHeight)
 {
     const int COMPRESSION = float(WORLD_SIZE) / Minimap::MINIMAP_SIZE;
     vec2 worldXZ = mapToWorld({short(x), short(y)});
@@ -80,8 +82,9 @@ void Minimap::putMinimapPixel(int x, int y, Uint32* buf)
     {
         for(int j = tilePos.y; j < tilePos.y + COMPRESSION; j++)
         {
+            int h = World::getHeight(i, j);
             occurences[World::getGround(i, j)]++;
-            sumHeights += World::getHeight(i, j);
+            sumHeights += h;
         }
     }
     int avgHeight = sumHeights / (COMPRESSION * COMPRESSION);
@@ -93,8 +96,15 @@ void Minimap::putMinimapPixel(int x, int y, Uint32* buf)
             commonest = (GROUND) i;
         }
     }
+    if(occurences[RIVER] > 0)
+        commonest = RIVER;
+    else if(occurences[LAKE] > 0)
+        commonest = LAKE;
     Color pxColor = colorFromTerrain(commonest);
-    double colorMult = 0.8 + 0.2 * avgHeight / 255.0f;
+    double heightComp = avgHeight / double(maxHeight);
+    if(heightComp < 0)
+        heightComp = 0;
+    double colorMult = 0.8 + 0.6 * heightComp;
     int newR = pxColor.r * colorMult;
     if(newR < 0)
         newR = 0;
@@ -125,11 +135,21 @@ void Minimap::putMinimapPixel(int x, int y, Uint32* buf)
 void Minimap::buildTexture()
 {
     Uint32* pixelData = new Uint32[MINIMAP_SIZE * MINIMAP_SIZE];
+    int maxHeight = 0;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            int h = World::getHeight(i, j);
+            if(h > maxHeight)
+                maxHeight = h;
+        }
+    }
     for(int i = 0; i < MINIMAP_SIZE; i++)
     {
         for(int j = 0; j < MINIMAP_SIZE; j++)
         {
-            putMinimapPixel(i, j, pixelData); //note: reverse y to match world x-z orientation
+            putMinimapPixel(i, j, pixelData, maxHeight); //note: reverse y to match world x-z orientation
         }
     }
     int minimapTexID = Atlas::tileFromName("minimap");
