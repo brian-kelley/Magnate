@@ -21,15 +21,12 @@ bool Control::camUpdated;
 bool Control::updatingView;
 bool Control::trackingMouse;
 bool Control::trackingKeyboard;
+bool Control::drawingTopo;
 int Control::oldWindowW;
 int Control::oldWindowH;
 SDL_Event* Control::currentEvent;
 map<SNAME, Scene*> Control::scenes;
 const Uint8* Control::keystate = NULL;
-
-void doTestStuff()
-{
-}
 
 namespace ui        //place for callbacks etc.
 {
@@ -71,6 +68,7 @@ void Control::init()
     updatingView = true;
     trackingMouse = true;
     trackingKeyboard = true;
+    drawingTopo = false;
     currentEvent = new SDL_Event();
 #ifndef MAGNATE_DEBUG
     // Normal game, go through main & save menus
@@ -80,6 +78,7 @@ void Control::init()
     currentScene = scenes[GAME];
     GLERR
     SaveManager::loadTestWorld();
+    Topo::generateTopo();
     GLERR
     SaveManager::transitionToGame(nullptr);
     GLERR
@@ -197,20 +196,21 @@ void Control::update()
             Camera::camCW();
             camUpdated = true;
         }
+        if(keystate[SDL_SCANCODE_T])
+            drawingTopo = true;
+        else
+            drawingTopo = false;
     }
     view::prepareFrame();
     UIRenderer::drawComponent(*currentScene);
     if(currentScene == scenes[GAME])
     {
         Minimap::render();
+        if(drawingTopo)
+            Topo::drawTopo();
     }
     color3f(1, 1, 1);
     RenderRoutines::blit(Atlas::tileFromName("cursor"), mouseX, mouseY);
-    
-    //!!!for rendering debug!!!
-    doTestStuff();
-    ///////////////////////////
-    
     if(camUpdated)
     {
         WorldRenderer::updateVBOChunks(); //this only expensive if cam moved into new chunk
@@ -228,9 +228,7 @@ void Control::processKeyTypedEvent(SDL_Event &e)
 {
     //If there is an active field, pass this event to it
     if(Field::currentField)
-    {
         Field::currentField->processKey(e);
-    }
 }
 
 void Control::processKeyEvent(SDL_Event &e)
@@ -249,25 +247,16 @@ void Control::processMouseButtonEvent(SDL_Event &e)
     if(e.button.state == SDL_PRESSED && e.button.button == SDL_BUTTON_LEFT)
     {
         mouseDown = true;
-        if(currentScene == scenes[GAME])
-        {
-            if(Minimap::mmIsMouseOver())
-            {
-                Minimap::update();
-            }
-        }
+        if(currentScene == scenes[GAME] && Minimap::mmIsMouseOver())
+            Minimap::update();
         else
-        {
             currentScene->processLeftClick();
-        }
     }
     else if(e.button.state == SDL_RELEASED && e.button.button == SDL_BUTTON_LEFT)
     {
         mouseDown = false;
         if(Draggable::activeDrag)
-        {
             Draggable::activeDrag->deactivate();
-        }
     }
 }
 
@@ -283,9 +272,7 @@ void Control::processMouseMotionEvent()
         }
     }
     else
-    {
         currentScene->processMouseMotion();
-    }
 }
 
 void Control::processMouseWheelEvent(SDL_Event &e)

@@ -2,84 +2,76 @@
 
 using namespace std;
 using namespace constants;
+using namespace Coord;
 
 void TerrainGen::generate()
 {
     clock_t start = clock();
+    RandomUtils::seed(time(NULL));
+    clearAll(); //prevent invalid height/ground in world
     defaultGen();
     cout << "Generation took " << (double(clock()) - start) / CLOCKS_PER_SEC << " seconds." << endl;
 }
 
 void TerrainGen::defaultGen()
 {
-    clearAll();
     diamondSquare();
-    scatterVolcanos();
-    pyramidMask();
+    scatterCentralVolcanoes();
+    shelfMask();
     clampSeaLevel();
-    for(int i = 0; i < 30; i++)
+    //stretchToFill();
+    smooth();
+    for(int i = 0; i < 20; i++)
     {
-        addRiver();
+        //addRiver();
     }
-    consolidateLakes();
     defuzz();
-    defuzz();
+    //consolidateLakes();
     flattenWater();
 }
 
 void TerrainGen::tester()
 {
-    clearAll();
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
         {
-            int height = 2000 - (abs(i - WORLD_SIZE / 2) + abs(j - WORLD_SIZE / 2));
-            if(height > 0)
-            {
-                World::setHeight(height, i, j);
-                World::setGround(DESERT, i, j);
-            }
+            World::setHeight(2 * (WORLD_SIZE / 2 - max(abs(i - WORLD_SIZE / 2), abs(j - WORLD_SIZE / 2))), i, j);
+            World::setGround(DESERT, i, j);
         }
     }
-    for(int i = 0; i < 400; i++)
-    {
-        int volcanoSize = RandomUtils::gen() % 40 + 20;
-        addVolcano(150 + RandomUtils::gen() % (WORLD_SIZE - 150), 150 + RandomUtils::gen() % (WORLD_SIZE - 150), -volcanoSize * 3, volcanoSize);
-    }
-    clampSeaLevel();
-    for(int i = 0; i < 50; i++)
-        addRiver();
 }
 
 //Generates height based on average surrounding height, and how fine grid is
 Height TerrainGen::getHeight(int avg, int size)
 {
-    int range = double(size) / (WORLD_SIZE - 1) * 500 * ROUGHNESS;
+    int range = double(size) * ROUGHNESS;
     if(range == 0)
         return avg;
-    range = range > 255 ? 255 : range;
-    int result = (avg + (random() % range) - (range / 2));
-    if(result < 0)
-        result = 0;
-    if(result > 255)
-        result = 255;
-    //cout << "Height is " << result << " for size " << size << " and avg " << avg << " and range " << range << endl;
+    range = range > HEIGHT_MAX ? HEIGHT_MAX : range;
+    int result = (avg + (RandomUtils::gen() % range) - (range / 2));
     return result;
 }
 
 void TerrainGen::diamondSquare()
 {
-    World::setHeight(50, 0, 0);
-    World::setHeight(50, WORLD_SIZE - 1, 0);
-    World::setHeight(50, 0, WORLD_SIZE - 1);
-    World::setHeight(50, WORLD_SIZE - 1, WORLD_SIZE - 1);
-    //First diamond (puts pt at very center of chunk)
-    World::setHeight(50000, WORLD_SIZE / 2, WORLD_SIZE / 2);
+    const Height seedH = 100;
+    //World corners
+    World::setHeight(10, 0, 0);
+    World::setHeight(10, WORLD_SIZE - 1, 0);
+    World::setHeight(10, 0, WORLD_SIZE - 1);
+    World::setHeight(10, WORLD_SIZE - 1, WORLD_SIZE - 1);
+    //World edge midpoints
+    World::setHeight(10, WORLD_SIZE / 2, 0);
+    World::setHeight(10, 0, WORLD_SIZE);
+    World::setHeight(10, WORLD_SIZE / 2, WORLD_SIZE - 1);
+    World::setHeight(10, WORLD_SIZE - 1, WORLD_SIZE / 2);
+    //Center tile
+    World::setHeight(seedH, WORLD_SIZE / 2, WORLD_SIZE / 2);
     //repeatedly go over mesh and do these steps, making grid progressively finer
     //(squares first, then diamonds)
     //Note: if squares then diamonds, same size can be used each iteration
-    int size = WORLD_SIZE;
+    int size = WORLD_SIZE / 2;
     while(size > 0)
     {
         //Fill in the diamonds
@@ -223,7 +215,7 @@ void TerrainGen::flattenWater()
     {
         for(int j = 0; j < WORLD_SIZE; j++)
         {
-            if(World::getGround(i, j) == WATER || World::getGround(i, j) == LAKE)
+            if(World::getGround(i, j) == WATER)
             {
                 Height minHeight = World::getHeight(i, j);
                 bool needsUpdate = false;
@@ -272,7 +264,10 @@ void TerrainGen::addVolcano(int x, int y, short height, int radius)
             {
                 int change = height - (float(height) * (dist / rad));
                 if(World::tileInWorld(i, j))
+                {
                     World::setHeight(World::getHeight(i, j) + change, i, j);
+                    World::setGround(DESERT, i, j);
+                }
             }
         }
     }
@@ -292,7 +287,7 @@ void TerrainGen::clearAll()
 
 void TerrainGen::scatterVolcanos()
 {
-    for(int i = 0; i < 25; i++)
+    for(int i = 0; i < 20; i++)
     {
         int x = RandomUtils::gen() % WORLD_SIZE;
         int y = RandomUtils::gen() % WORLD_SIZE;
@@ -305,19 +300,25 @@ void TerrainGen::scatterVolcanos()
 
 void TerrainGen::pyramidMask()
 {
+    Height reduction = -HEIGHT_MAX;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        if(World::getHeight(i, 0) > reduction)
+            reduction = World::getHeight(i, 0);
+        if(World::getHeight(0, i) > reduction)
+            reduction = World::getHeight(0, i);
+        if(World::getHeight(i, WORLD_SIZE - 1) > reduction)
+            reduction = World::getHeight(i, WORLD_SIZE - 1);
+        if(World::getHeight(WORLD_SIZE - 1, i) > reduction)
+            reduction = World::getHeight(WORLD_SIZE - 1, i);
+    }
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
         {
-            int height = World::getHeight(i, j);
-            int centerDist = abs(WORLD_SIZE / 2 - i) + abs(WORLD_SIZE / 2 - j);
-            height -= centerDist / 5;
-            if(height < 0)
-            {
-                height = 0;
-                World::setGround(WATER, i, j);
-            }
-            World::setHeight(height, i, j);
+            double dist = double(max(abs(i - WORLD_SIZE / 2), abs(j - WORLD_SIZE / 2))) / (WORLD_SIZE / 2);
+            World::setHeight(World::getHeight(i, j) - dist * reduction, i, j);
+            //World::setHeight(World::getHeight(i, j) - reduction, i, j);
         }
     }
 }
@@ -347,7 +348,7 @@ void TerrainGen::addRiver()
     //Let the headwater tile be a random tile above a certain height
     //ideally pick so only a handful of random samples are typically needed,
     //but is still at high enough altitude to make interesting long rivers
-    const Height minSpringAlt = 400;
+    const Height minSpringAlt = 200;
     Pos2 tilePos;
     do
     {
@@ -365,7 +366,7 @@ int getDownhill(Pos2 loc)
     int iter = 0;
     for(int dir = 0; dir <= RIGHT; dir++)
     {
-        Pos2 nei = TerrainGen::getTileInDir(loc, dir);
+        Pos2 nei = getTileInDir(loc, dir);
         if(World::getHeight(nei) < World::getHeight(loc))
         {
             if(World::getGround(nei) == LAKE || World::getGround(nei) == RIVER)
@@ -394,8 +395,10 @@ void TerrainGen::flowRiverFromPoint(Pos2 loc)
         else
         {
             loc = getTileInDir(loc, dir);
+            /*
             if(World::getGround(loc) == LAKE || World::getGround(loc) == RIVER)
                 return;
+             */
             World::setGround(RIVER, loc);
         }
         if(World::getHeight(loc) <= 0)
@@ -438,7 +441,7 @@ bool findOutlet(Pos2 lastRiver, Pos2& result)
             {
                 for(int dir = UP; dir <= RIGHT; dir++)
                 {
-                    Pos2 nei = TerrainGen::getTileInDir(proc, dir);
+                    Pos2 nei = getTileInDir(proc, dir);
                     if(World::getGround(nei) != OUTLET_SEARCHED)
                         q.push(nei);
                 }
@@ -471,7 +474,7 @@ Height getFloodHeight(Pos2 lastRiver)
             {
                 for(int dir = UP; dir <= RIGHT; dir++)
                 {
-                    Pos2 nei = TerrainGen::getTileInDir(proc, dir);
+                    Pos2 nei = getTileInDir(proc, dir);
                     if(World::getGround(nei) != FLOODING)
                         q.push(nei);
                 }
@@ -495,7 +498,7 @@ void floodToHeight(Pos2 lastRiver, Height flood)
             World::setHeight(flood, proc);
             for(int dir = UP; dir <= RIGHT; dir++)
             {
-                Pos2 nei = TerrainGen::getTileInDir(proc, dir);
+                Pos2 nei = getTileInDir(proc, dir);
                 if((World::getGround(nei) == FLOODING || World::getGround(nei) == OUTLET_SEARCHED) && World::getHeight(nei) <= flood)
                     q.push(nei);
             }
@@ -509,7 +512,10 @@ Pos2 TerrainGen::formLake(Pos2 lastRiver)
     Height flood = World::getHeight(lastRiver);
     floodToHeight(lastRiver, flood);
     if(findOutlet(lastRiver, outlet))
+    {
+        floodToHeight(lastRiver, flood);
         return outlet;
+    }
     for(int iter = 0; true; iter++)
     {
         flood = getFloodHeight(lastRiver);
@@ -528,27 +534,6 @@ Height TerrainGen::maxHeightOfTile(Pos2 loc)
     h = max(h, World::getHeight(loc.x + 1, loc.y + 1));
     h = max(h, World::getHeight(loc.x, loc.y + 1));
     return h;
-}
-
-Pos2 TerrainGen::getTileInDir(Pos2 loc, int dir)
-{
-    switch(dir)
-    {
-        case UP:
-            loc.y--;
-            return loc;
-        case DOWN:
-            loc.y++;
-            return loc;
-        case LEFT:
-            loc.x--;
-            return loc;
-        case RIGHT:
-            loc.x++;
-            return loc;
-        default:
-            return {-1, -1};
-    }
 }
 
 int TerrainGen::getNonLakeDownhill(Pos2 loc)
@@ -581,4 +566,221 @@ void TerrainGen::consolidateLakes()
                 World::setGround(LAKE, i, j);
         }
     }
+}
+
+void TerrainGen::fillRiverGaps()
+{
+    Pos2 loc;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        loc.x = i;
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            loc.y = j;
+            GROUND g = World::getGround(loc);
+            if(g != LAKE && g != RIVER)
+            {
+                int lakeNeighbors = 0;
+                int riverNeighbors = 0;
+                for(int dir = UP; dir <= RIGHT; dir++)
+                {
+                    GROUND ng = World::getGround(getTileInDir(loc, dir));
+                    if(ng == RIVER)
+                        riverNeighbors++;
+                    else if(ng == LAKE)
+                        lakeNeighbors++;
+                }
+                if(lakeNeighbors > 0 && riverNeighbors > 0)
+                    World::setGround(RIVER, loc);
+                else if(lakeNeighbors >= 3)
+                    World::setGround(LAKE, loc);
+            }
+        }
+    }
+}
+
+void TerrainGen::shelfMask()
+{
+    Height slopeDrop = World::getHeight(0, 0);
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        if(World::getHeight(0, i) > slopeDrop)
+            slopeDrop = World::getHeight(0, i);
+        if(World::getHeight(i, 0) > slopeDrop)
+            slopeDrop = World::getHeight(i, 0);
+        if(World::getHeight(WORLD_SIZE - 1, i) > slopeDrop)
+            slopeDrop = World::getHeight(WORLD_SIZE - 1, i);
+        if(World::getHeight(i, WORLD_SIZE - 1) > slopeDrop)
+            slopeDrop = World::getHeight(i, WORLD_SIZE - 1);
+    }
+    //slopeDrop += 3;
+    const int slopeLen = 400;
+    const float slope = float(slopeDrop) / slopeLen;
+    for(int i = 0; i < WORLD_SIZE - 1; i++) // i = x for top bevel
+    {
+        for(int j = 0; j < slopeLen; j++) //j = y for top bevel
+        {
+            if(i >= j && i < WORLD_SIZE - j)
+            {
+                //i, j gives point in the upper bevel edge
+                Height drop = (slopeLen - j) * slope;
+                World::chgHeight(-drop, i, j);
+                World::chgHeight(-drop, WORLD_SIZE - j, i);
+                World::chgHeight(-drop, WORLD_SIZE - i, WORLD_SIZE - j);
+                World::chgHeight(-drop, j, WORLD_SIZE - i);
+                if(j == slopeLen - 1)
+                {
+                    World::setGround(MOUNTAINS, i, j);
+                    World::setGround(MOUNTAINS, WORLD_SIZE - j, i);
+                    World::setGround(MOUNTAINS, WORLD_SIZE - i, WORLD_SIZE - j);
+                    World::setGround(MOUNTAINS, j, WORLD_SIZE - i);
+                }
+            }
+        }
+    }
+}
+
+void TerrainGen::smooth(int iters)
+{
+    Height* buf = new Height[WORLD_SIZE * WORLD_SIZE];
+    for(int it = 0; it < iters; it++)
+    {
+        for(int i = 1; i < WORLD_SIZE - 1; i++)
+        {
+            for(int j = 1; j < WORLD_SIZE - 1; j++)
+            {
+                int sum = 0;
+                sum += World::getHeight(i, j);
+                sum += World::getHeight(i + 1, j);
+                sum += World::getHeight(i - 1, j);
+                sum += World::getHeight(i, j + 1);
+                sum += World::getHeight(i, j - 1);
+                buf[i * WORLD_SIZE + j] = sum / 5;
+            }
+        }
+        for(int i = 1; i < WORLD_SIZE - 1; i++)
+        {
+            for(int j = 1; j < WORLD_SIZE - 1; j++)
+            {
+                World::setHeight(buf[i * WORLD_SIZE + j], i, j);
+            }
+        }
+    }
+    delete[] buf;
+}
+
+void TerrainGen::scatterCentralVolcanoes()
+{
+    const int numVolcanoes = 8;
+    const int minEdgeDist = 300;
+    const int minDiam = 300;
+    const int maxDiam = 600;
+    const float minSlope = 0.5;
+    const float maxSlope = 0.8;
+    for(int i = 0; i < numVolcanoes; i++)
+    {
+        int x = RandomUtils::gen() % (WORLD_SIZE - minEdgeDist * 2) + minEdgeDist;
+        int y = RandomUtils::gen() % (WORLD_SIZE - minEdgeDist * 2) + minEdgeDist;
+        int diam = minDiam + RandomUtils::gen() % (maxDiam - minDiam);
+        float slope = minSlope + (RandomUtils::gen() % 1000) * (maxSlope - minSlope) / 1000;
+        addVolcano(x, y, diam * slope / 2, diam / 2);
+        for(int i = -5; i < 5; i++)
+        {
+            for(int j = -5; j < 5; j++)
+            {
+                World::setGround(MOUNTAINS, i + x, j + y);
+            }
+        }
+    }
+}
+
+void TerrainGen::addEntropy()
+{
+    for(int i = 0; i < WORLD_SIZE * WORLD_SIZE / 100; i++)
+    {
+        World::chgHeight(-2, RandomUtils::gen() % WORLD_SIZE, RandomUtils::gen() % WORLD_SIZE);
+    }
+}
+
+void TerrainGen::verticalNormalize()
+{
+    Height reduction = World::getHeight(0, 0);
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        if(World::getHeight(0, i) > reduction)
+            reduction = World::getHeight(0, i);
+        if(World::getHeight(i, 0) > reduction)
+            reduction = World::getHeight(i, 0);
+        if(World::getHeight(WORLD_SIZE - 1, i) > reduction)
+            reduction = World::getHeight(WORLD_SIZE - 1, i);
+        if(World::getHeight(i, WORLD_SIZE - 1) > reduction)
+            reduction = World::getHeight(i, WORLD_SIZE - 1);
+    }
+    reduction += 3;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            World::chgHeight(-reduction, i, j);
+        }
+    }
+}
+
+void TerrainGen::stretchToFill()
+{
+    int minx = WORLD_SIZE / 2;
+    int maxx = minx;
+    int miny = minx;
+    int maxy = minx;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(World::getGround(i, j) != WATER)
+            {
+                if(i < minx)
+                    minx = i;
+                if(i > maxx)
+                    maxx = i;
+                if(j < miny)
+                    miny = j;
+                if(j > maxy)
+                    maxy = j;
+            }
+        }
+    }
+    maxx++; //account for the visible south and east edges of tiles being
+    maxy++; //one greater in x and y than the tile's coords
+    minx -= 10; //give 10 tiles of space on all sides
+    maxx += 10;
+    miny -= 10;
+    maxy += 10;
+    if(minx < 0)
+        minx = 0;
+    if(maxx >= WORLD_SIZE)
+        maxx = WORLD_SIZE - 1;
+    if(miny < 0)
+        miny = 0;
+    if(maxy >= WORLD_SIZE)
+        maxy = WORLD_SIZE - 1;
+    Height* buf = new Height[WORLD_SIZE * WORLD_SIZE];
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            buf[WORLD_SIZE * i + j] = World::getHeight(minx + float(i) / WORLD_SIZE * (maxx - minx), miny + float(j) / WORLD_SIZE * (maxy - miny));
+        }
+    }
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            World::setHeight(buf[WORLD_SIZE * i + j], i, j);
+            if(World::getHeight(i, j) <= 0)
+                World::setGround(WATER, i, j);
+            else
+                World::setGround(DESERT, i, j);
+        }
+    }
+    delete[] buf;
 }

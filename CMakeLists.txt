@@ -23,6 +23,7 @@ include/Model
 include/Scene
 include/Terrain
 include/TerrainGen
+include/Topo
 include/View
 include/World
 include/MultiSelect
@@ -52,6 +53,7 @@ src/Model
 src/Scene
 src/Terrain
 src/TerrainGen
+src/Topo
 src/View
 src/World
 src/MultiSelect

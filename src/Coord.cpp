@@ -107,3 +107,24 @@ FrustumCorners Coord::getFrustumCorners()
     corners.lowerLeft = {camPos.x + ldMult * ldVec.x, 0, camPos.z + ldMult * ldVec.z, 1};
     return corners;
 }
+
+Pos2 Coord::getTileInDir(Pos2 loc, int dir)
+{
+    switch(dir)
+    {
+        case UP:
+            loc.y--;
+            return loc;
+        case DOWN:
+            loc.y++;
+            return loc;
+        case LEFT:
+            loc.x--;
+            return loc;
+        case RIGHT:
+            loc.x++;
+            return loc;
+        default:
+            return {-1, -1};
+    }
+}

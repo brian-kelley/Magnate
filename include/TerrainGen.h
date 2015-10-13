@@ -3,19 +3,11 @@
 
 #include <iostream>
 #include <queue>
-#define ROUGHNESS 10
+#define ROUGHNESS 0.7
 #include "Constants.h"
+#include "Coord.h"
 #include "Chunk.h"
 #include "World.h"
-
-enum Direction
-{
-    UP,    //-y
-    DOWN,  //+y
-    LEFT,  //-x
-    RIGHT, //+x
-    NO_DIRECTION
-};
 
 namespace TerrainGen
 {
@@ -58,12 +50,18 @@ namespace TerrainGen
      */
     void setLakeTilesFlooding(Pos2 loc);
     void buildFlatLake(Height flood, Pos2 pos);
-    Pos2 getTileInDir(Pos2 loc, int dir);
     bool isOutlet(Pos2 pos, Pos2& result);
     bool isDownhillChain(int num, Pos2 pos, bool flatOK);
     void tester();
     void defaultGen();
     void consolidateLakes();
+    void fillRiverGaps();
+    void shelfMask();  //simulate continental shelf by lowering ground near world boundary. Shaped like beveled square.
+    void smooth(int iters = 1);
+    void scatterCentralVolcanoes();
+    void addEntropy();
+    void verticalNormalize();
+    void stretchToFill();
 }
 
 #endif

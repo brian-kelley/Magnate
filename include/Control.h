@@ -34,6 +34,7 @@
 #include "Renderer.h"
 #include "Minimap.h"
 #include "Camera.h"
+#include "Topo.h"
 
 namespace Control
 {
@@ -68,6 +69,7 @@ namespace Control
     extern bool trackingMouse;
     extern bool trackingKeyboard;
     extern bool camUpdated;
+    extern bool drawingTopo;
     extern const Uint8* keystate;   //array of key states for all scancodes
 }
 

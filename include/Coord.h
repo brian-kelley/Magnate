@@ -15,29 +15,44 @@
 #include "LinAlg.h"
 #include "Camera.h"
 
-typedef struct
+struct Pos2
 {
+    Pos2() : x(0), y(0) {}
+    Pos2(short x, short y) : x(x), y(y) {}
     short x;
     short y;
-} Pos2;
+};
 
 typedef glm::vec3 Pos3;
 
-typedef struct
+struct Plane
 {
+    Plane() : a(1), b(0), c(0), d(0) {}
+    Plane(float a, float b, float c, float d) : a(a), b(b), c(c), d(d) {}
     float a;
     float b;
     float c;
     float d;
-} Plane;
+};
 
-typedef struct
+struct FrustumCorners
 {
+    FrustumCorners() {}
+    FrustumCorners(glm::vec4 upperLeft, glm::vec4 upperRight, glm::vec4 lowerRight, glm::vec4 lowerLeft) : upperLeft(upperLeft), upperRight(upperRight), lowerRight(lowerRight), lowerLeft(lowerLeft) {}
     glm::vec4 upperLeft;
     glm::vec4 upperRight;
     glm::vec4 lowerRight;
     glm::vec4 lowerLeft;
-} FrustumCorners;
+};
+
+enum Direction
+{
+    UP,    //-y
+    DOWN,  //+y
+    LEFT,  //-x
+    RIGHT, //+x
+    NO_DIRECTION
+};
 
 namespace Coord
 {
@@ -52,6 +67,7 @@ namespace Coord
     const glm::vec4 tileI = {constants::TERRAIN_TILE_SIZE, 0, 0, 0};
     const glm::vec4 tileJ = {0, constants::TERRAIN_Y_SCALE, 0, 0};
     const glm::vec4 tileK = {0, 0, constants::TERRAIN_TILE_SIZE, 0};
+    Pos2 getTileInDir(Pos2 loc, int dir);
     extern glm::mat4 tileToWorldMat;
     extern glm::mat4 worldToTileMat;
 };

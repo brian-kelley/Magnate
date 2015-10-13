@@ -123,13 +123,7 @@ void Minimap::putMinimapPixel(int x, int y, Uint32* buf, int maxHeight)
     if(newB > 255)
         newB = 255;
     pxColor.b = newB;
-#if defined(__APPLE__)
-    //BGRA
-    buf[x + y * Minimap::MINIMAP_SIZE] = 0xFF << 24 | pxColor.r << 16 | pxColor.g << 8 | pxColor.b;
-#elif defined(_WIN32)
-    //RGBA32
-    buf[x + y * Minimap::MINIMAP_SIZE] = pxColor.r << 24 | pxColor.g << 16 | pxColor.b << 8 | 0xFF;
-#endif
+    buf[x + y * Minimap::MINIMAP_SIZE] = RenderRoutines::getColor32(pxColor.r, pxColor.g, pxColor.b);
 }
 
 void Minimap::buildTexture()
@@ -152,18 +146,7 @@ void Minimap::buildTexture()
             putMinimapPixel(i, j, pixelData, maxHeight); //note: reverse y to match world x-z orientation
         }
     }
-    int minimapTexID = Atlas::tileFromName("minimap");
-    int destX = Atlas::tileX(minimapTexID);
-    int destY = Atlas::tileY(minimapTexID);
-    int destW = Atlas::tileW(minimapTexID);
-    int destH = Atlas::tileH(minimapTexID);
-    //This client-side buffer is exactly big enough to hold minimap pixels
-#ifdef __APPLE__
-    glTexSubImage2D(GL_TEXTURE_2D, 0, destX, destY, destW, destH, GL_BGRA, GL_UNSIGNED_BYTE, pixelData);
-#elif _WIN32
-    glTexSubImage2D(GL_TEXTURE_2D, 0, destX, destY, destW, destH, GL_RGBA, GL_UNSIGNED_BYTE, pixelData);
-#endif
-    //Free pixel buffer
+    RenderRoutines::sendImage(pixelData, "minimap");
     delete[] pixelData;
     //Return to drawing to normal front buffer, visible on screen
 }

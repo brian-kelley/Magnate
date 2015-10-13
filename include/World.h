@@ -31,6 +31,8 @@ namespace World
     //slow, worldwide tile access (use for world generation)
     void setHeight(Height height, int wi, int wj);
     void setHeight(Height height, Pos2 loc);
+    void chgHeight(Height chg, int wi, int wj);
+    void chgHeight(Height chg, Pos2 loc);
     void setGround(GROUND ground, int wi, int wj);
     void setGround(GROUND ground, Pos2 loc);
     Height getHeight(int wi, int wj);

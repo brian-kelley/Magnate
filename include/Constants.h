@@ -90,6 +90,7 @@ struct Point
 //Callback function itself has to know what type the actual object has
 
 typedef void (*callback_t) (void*);
+typedef unsigned char byte;
 
 enum GROUND : unsigned char
 {
@@ -130,7 +131,7 @@ namespace constants
     extern float SHADE;
     extern std::string BIN_TO_ROOT;
     const double TERRAIN_TILE_SIZE = 1;
-    const int WORLD_SIZE = 2049;
+    const int WORLD_SIZE = 1025;
     const int CHUNK_SIZE = 64;
     const int WORLD_CHUNKS = WORLD_SIZE / CHUNK_SIZE + ((((WORLD_SIZE / CHUNK_SIZE) * CHUNK_SIZE) == WORLD_SIZE) ? 0 : 1);
     extern bool mouseDown;

@@ -172,3 +172,13 @@ bool World::tileInWorld(Pos2 pos)
     else
         return false;
 }
+
+void World::chgHeight(Height chg, int wi, int wj)
+{
+    setHeight(getHeight(wi, wj) + chg, wi, wj);
+}
+
+void World::chgHeight(Height chg, Pos2 loc)
+{
+    setHeight(getHeight(loc) + chg, loc);
+}
