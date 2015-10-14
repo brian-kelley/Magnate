@@ -8,7 +8,7 @@ using namespace Coord;
 void Topo::generateTopo()
 {
     auto startTime = clock();
-    const int STEP = 50; // Height units between topo lines
+    const int STEP = 15; // Height units between topo lines
     int texID = texNumFromStr("topo");
     int topoSize = Atlas::tileW(texID);
     Height* buf = new Height[topoSize * topoSize];

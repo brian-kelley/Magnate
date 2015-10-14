@@ -25,8 +25,9 @@ namespace TerrainGen
     void erode(int numTimesteps); //do one timestep's worth of erosion
     void clearAll();  //fill world with water at sea level
     void pyramidMask(); //lower elevation corresponding to distance from world center, so that around the edges is only water
+    void sphereMask();
     void clampSeaLevel();
-    void addRiver();
+    void addRiver(Height minHeadwaterAlt);
     void flowRiverFromPoint(Pos2 loc);
     /*
      create a flat pool at the point, and return the location of where river continues
@@ -62,6 +63,10 @@ namespace TerrainGen
     void addEntropy();
     void verticalNormalize();
     void stretchToFill();
+    Height* getHeightBuffer(); //Return a copy of world's heightmap
+    void combinedGen();
+    void addBuffer(Height* buf); //Add buffer over world's current heightmap
+    Height getAverageHeight();   //Get average height of non-lake tiles
 }
 
 #endif

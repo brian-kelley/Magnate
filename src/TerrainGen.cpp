@@ -9,7 +9,7 @@ void TerrainGen::generate()
     clock_t start = clock();
     RandomUtils::seed(time(NULL));
     clearAll(); //prevent invalid height/ground in world
-    defaultGen();
+    combinedGen();
     cout << "Generation took " << (double(clock()) - start) / CLOCKS_PER_SEC << " seconds." << endl;
 }
 
@@ -17,14 +17,10 @@ void TerrainGen::defaultGen()
 {
     diamondSquare();
     scatterCentralVolcanoes();
-    shelfMask();
+    sphereMask();
     clampSeaLevel();
-    //stretchToFill();
+    stretchToFill();
     smooth();
-    for(int i = 0; i < 20; i++)
-    {
-        //addRiver();
-    }
     defuzz();
     //consolidateLakes();
     flattenWater();
@@ -323,6 +319,33 @@ void TerrainGen::pyramidMask()
     }
 }
 
+void TerrainGen::sphereMask()
+{
+    Height reduction = -HEIGHT_MAX;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        if(World::getHeight(i, 0) > reduction)
+            reduction = World::getHeight(i, 0);
+        if(World::getHeight(0, i) > reduction)
+            reduction = World::getHeight(0, i);
+        if(World::getHeight(i, WORLD_SIZE - 1) > reduction)
+            reduction = World::getHeight(i, WORLD_SIZE - 1);
+        if(World::getHeight(WORLD_SIZE - 1, i) > reduction)
+            reduction = World::getHeight(WORLD_SIZE - 1, i);
+    }
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            float dx = i - WORLD_SIZE / 2;
+            float dy = j - WORLD_SIZE / 2;
+            float dist = sqrt(dx * dx + dy * dy) / (WORLD_SIZE / 2);
+            World::chgHeight(-dist * reduction, i, j);
+        }
+    }
+}
+
+
 void TerrainGen::clampSeaLevel()
 {
     for(int i = 0; i < WORLD_SIZE; i++)
@@ -343,19 +366,25 @@ void TerrainGen::erode(int numTimesteps)
     
 }
 
-void TerrainGen::addRiver()
+void TerrainGen::addRiver(Height minHeadwater)
 {
     //Let the headwater tile be a random tile above a certain height
     //ideally pick so only a handful of random samples are typically needed,
     //but is still at high enough altitude to make interesting long rivers
-    const Height minSpringAlt = 200;
+    int timeout = 0;
     Pos2 tilePos;
     do
     {
         tilePos.x = RandomUtils::gen() % WORLD_SIZE;
         tilePos.y = RandomUtils::gen() % WORLD_SIZE;
+        timeout++;
+        if(timeout > 1000)
+        {
+            cout << "Warning: couldn't find a valid headwater" << endl;
+            return;
+        }
     }
-    while(World::getHeight(tilePos.x, tilePos.y) < minSpringAlt);
+    while(World::getHeight(tilePos.x, tilePos.y) < minHeadwater);
     World::setGround(RIVER, tilePos.x, tilePos.y);
     flowRiverFromPoint(tilePos);
 }
@@ -671,18 +700,25 @@ void TerrainGen::smooth(int iters)
 
 void TerrainGen::scatterCentralVolcanoes()
 {
-    const int numVolcanoes = 8;
+    const int numVolcanoes = 3;
     const int minEdgeDist = 300;
     const int minDiam = 300;
     const int maxDiam = 600;
-    const float minSlope = 0.5;
-    const float maxSlope = 0.8;
+    const float minSlope = 0.1;
+    const float maxSlope = 0.5;
+    int x = 0;
+    int y = 0;
+    int diam;
+    float slope;
     for(int i = 0; i < numVolcanoes; i++)
     {
-        int x = RandomUtils::gen() % (WORLD_SIZE - minEdgeDist * 2) + minEdgeDist;
-        int y = RandomUtils::gen() % (WORLD_SIZE - minEdgeDist * 2) + minEdgeDist;
-        int diam = minDiam + RandomUtils::gen() % (maxDiam - minDiam);
-        float slope = minSlope + (RandomUtils::gen() % 1000) * (maxSlope - minSlope) / 1000;
+        while(World::getHeight(x, y) > 500) //Don't place the volcano center on already high ground
+        {
+            x = RandomUtils::gen() % (WORLD_SIZE - minEdgeDist * 2) + minEdgeDist;
+            y = RandomUtils::gen() % (WORLD_SIZE - minEdgeDist * 2) + minEdgeDist;
+        }
+        diam = minDiam + RandomUtils::gen() % (maxDiam - minDiam);
+        slope = minSlope + (RandomUtils::gen() % 1000) * (maxSlope - minSlope) / 1000;
         addVolcano(x, y, diam * slope / 2, diam / 2);
         for(int i = -5; i < 5; i++)
         {
@@ -783,4 +819,61 @@ void TerrainGen::stretchToFill()
         }
     }
     delete[] buf;
+}
+
+void TerrainGen::combinedGen()
+{
+    defaultGen();
+    Height* firstGen = getHeightBuffer();
+    clearAll();
+    defaultGen();
+    addBuffer(firstGen);
+    Height h = getAverageHeight();
+    for(int i = 0; i < 20; i++)
+        addRiver(h * 0.75);
+    delete[] firstGen;
+}
+
+Height* TerrainGen::getHeightBuffer()
+{
+    Height* buf = new Height[WORLD_SIZE * WORLD_SIZE];
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            buf[i + j * WORLD_SIZE] = World::getHeight(i, j);
+        }
+    }
+    return buf;
+}
+
+void TerrainGen::addBuffer(Height *buf)
+{
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            World::chgHeight(buf[i + j * WORLD_SIZE], i, j);
+            if(World::getHeight(i, j) > 0)
+                World::setGround(DESERT, i, j);
+        }
+    }
+}
+
+Height TerrainGen::getAverageHeight()
+{
+    int sum = 0;
+    int n = 0;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(World::getGround(i, j) != WATER)
+            {
+                sum += World::getHeight(i, j);
+                n++;
+            }
+        }
+    }
+    return double(sum) / n;
 }
