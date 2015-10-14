@@ -67,6 +67,7 @@ namespace TerrainGen
     void combinedGen();
     void addBuffer(Height* buf); //Add buffer over world's current heightmap
     Height getAverageHeight();   //Get average height of non-lake tiles
+    float getLandArea();           //# non-water tiles as proportion
 }
 
 #endif

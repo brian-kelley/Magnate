@@ -19,7 +19,6 @@ void TerrainGen::defaultGen()
     scatterCentralVolcanoes();
     sphereMask();
     clampSeaLevel();
-    stretchToFill();
     smooth();
     defuzz();
     //consolidateLakes();
@@ -823,15 +822,21 @@ void TerrainGen::stretchToFill()
 
 void TerrainGen::combinedGen()
 {
-    defaultGen();
-    Height* firstGen = getHeightBuffer();
-    clearAll();
-    defaultGen();
-    addBuffer(firstGen);
-    Height h = getAverageHeight();
-    for(int i = 0; i < 20; i++)
-        addRiver(h * 0.75);
-    delete[] firstGen;
+    const float minLand = 0.5;
+    while(getLandArea() < minLand)
+    {
+        defaultGen();
+        Height* firstGen = getHeightBuffer();
+        clearAll();
+        defaultGen();
+        addBuffer(firstGen);
+        delete[] firstGen;
+        smooth();
+        stretchToFill();
+    }
+    //Height h = getAverageHeight();
+    //for(int i = 0; i < 20; i++)
+        //addRiver(h * 0.75);
 }
 
 Height* TerrainGen::getHeightBuffer()
@@ -876,4 +881,18 @@ Height TerrainGen::getAverageHeight()
         }
     }
     return double(sum) / n;
+}
+
+float TerrainGen::getLandArea()
+{
+    int c = 0;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(World::getGround(i, j) != WATER)
+                c++;
+        }
+    }
+    return float(c) / (WORLD_SIZE * WORLD_SIZE);
 }
