@@ -48,6 +48,7 @@ void World::init(std::string saveName, bool willGenerate)
     generate();
     Terrain::init();
     Minimap::buildTexture();
+    Topo::generateTopo();
 }
 
 void World::dispose()

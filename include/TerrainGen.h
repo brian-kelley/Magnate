@@ -3,11 +3,12 @@
 
 #include <iostream>
 #include <queue>
-#define ROUGHNESS 0.7
+#define ROUGHNESS 1.2
 #include "Constants.h"
 #include "Coord.h"
 #include "Chunk.h"
 #include "World.h"
+#include "Watershed.h"
 
 namespace TerrainGen
 {
@@ -27,38 +28,15 @@ namespace TerrainGen
     void pyramidMask(); //lower elevation corresponding to distance from world center, so that around the edges is only water
     void sphereMask();
     void clampSeaLevel();
-    void addRiver(Height minHeadwaterAlt);
-    void flowRiverFromPoint(Pos2 loc);
-    /*
-     create a flat pool at the point, and return the location of where river continues
-     */
-    //void floodStep(Pos2 pos);
-    //bool findOutlet(Pos2 pos, Pos2& outlet);
-    Pos2 formLake(Pos2 lastRiver);
-    Pos2 formLakeOld(Pos2 lastRiver);
-    /*
-     test whether there is a downhill route from loc, that doesn't go directly to a lake tile. Return a Direction or NO_DIRECTION
-     */
-    int getNonLakeDownhill(Pos2 loc);
     /*
      max of height values of four corners of tile
      */
     Height maxHeightOfTile(Pos2 loc);
-    //Does the tile have 4 lake tiles around it?
-    bool surroundedByLake(Pos2 loc);
-    /*
-     flood fill all lake tiles connected to loc to height flood
-     */
-    void setLakeTilesFlooding(Pos2 loc);
-    void buildFlatLake(Height flood, Pos2 pos);
-    bool isOutlet(Pos2 pos, Pos2& result);
-    bool isDownhillChain(int num, Pos2 pos, bool flatOK);
     void tester();
     void defaultGen();
-    void consolidateLakes();
-    void fillRiverGaps();
     void shelfMask();  //simulate continental shelf by lowering ground near world boundary. Shaped like beveled square.
     void smooth(int iters = 1);
+    void fancySmooth();
     void scatterCentralVolcanoes();
     void addEntropy();
     void verticalNormalize();
@@ -66,8 +44,16 @@ namespace TerrainGen
     Height* getHeightBuffer(); //Return a copy of world's heightmap
     void combinedGen();
     void addBuffer(Height* buf); //Add buffer over world's current heightmap
-    Height getAverageHeight();   //Get average height of non-lake tiles
+    Height getAverageHeight();   //Get average height of non-ocean tiles
+    Height getMaxHeight();
     float getLandArea();           //# non-water tiles as proportion
+    void addWatershed();
+    void placeRivers(float headAlt, int num);
+    int floodToHeight(Pos2 lastRiver, Height flood, bool markBoundary = false);
+    Height getFloodHeight(Pos2 lastRiver);
+    bool findOutlet(Pos2 lastRiver, Pos2& result);
+    void fillToHeight(Pos2 pos, Height flood);
+    void removeLake(Pos2 pos);
 }
 
 #endif

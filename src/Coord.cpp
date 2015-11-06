@@ -128,3 +128,21 @@ Pos2 Coord::getTileInDir(Pos2 loc, int dir)
             return {-1, -1};
     }
 }
+
+bool operator==(const Pos2& p1, const Pos2& p2)
+{
+    if(p1.x == p2.x && p1.y == p2.y)
+        return true;
+    return false;
+}
+
+bool operator!=(const Pos2& p1, const Pos2& p2)
+{
+    return !(p1 == p2);
+}
+
+ostream& operator<<(ostream& os, const Pos2& loc)
+{
+    os << "(" << loc.x << ", " << loc.y << ")";
+    return os;
+}

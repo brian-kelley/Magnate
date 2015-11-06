@@ -23,8 +23,11 @@ include/Model
 include/Scene
 include/Terrain
 include/TerrainGen
+include/TexGen
+include/TexManager
 include/Topo
 include/View
+include/Watershed
 include/World
 include/MultiSelect
 include/RandomUtils
@@ -53,6 +56,8 @@ src/Model
 src/Scene
 src/Terrain
 src/TerrainGen
+src/TexGen
+src/TexManager
 src/Topo
 src/View
 src/World
@@ -61,6 +66,7 @@ src/RandomUtils
 src/RenderRoutines
 src/Renderer
 src/UIRenderer
+src/Watershed
 src/WorldRenderer
 )
 if(MINGW)

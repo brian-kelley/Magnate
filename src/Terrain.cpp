@@ -29,4 +29,6 @@ void Terrain::init()
     terrainTextures[LAKE] = texNumFromStr("lake");
     terrainTextures[FLOODING] = texNumFromStr("mountains");
     terrainTextures[OUTLET_SEARCHED] = texNumFromStr("forest");
+    terrainTextures[LAKE_BOUNDARY] = texNumFromStr("test1");
+    terrainTextures[VISITED] = texNumFromStr("test1");
 }

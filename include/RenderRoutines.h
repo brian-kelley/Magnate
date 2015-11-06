@@ -33,7 +33,6 @@ namespace RenderRoutines
     floatRect_t getTexCoords(int index);
     void drawLine(int x1, int y1, int x2, int y2);
     Uint32 getColor32(byte r, byte g, byte b, byte a = 0xFF);
-    void sendImage(Uint32* pixels, std::string texName);
 }
 
 #endif

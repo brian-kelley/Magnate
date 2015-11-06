@@ -146,7 +146,7 @@ void Minimap::buildTexture()
             putMinimapPixel(i, j, pixelData, maxHeight); //note: reverse y to match world x-z orientation
         }
     }
-    RenderRoutines::sendImage(pixelData, "minimap");
+    Atlas::sendImage((byte*) pixelData, RenderRoutines::texNumFromStr("minimap"));
     delete[] pixelData;
     //Return to drawing to normal front buffer, visible on screen
 }

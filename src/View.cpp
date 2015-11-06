@@ -22,9 +22,10 @@ void view::init()
 {
     //Once a world is loaded these may be set again
     initSDLVideo();
-    configGL();
     RenderRoutines::initAtlas(renderer);
+    configGL();
     Renderer::init();
+    TexManager::init();
 }
 
 void view::dispose()
@@ -70,6 +71,8 @@ void view::configGL()
     glEnable(GL_BLEND);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 

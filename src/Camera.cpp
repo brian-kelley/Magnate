@@ -24,38 +24,42 @@ glm::mat4 Camera::getViewMatrix()
     return lookAt(camPos, at, camUp);
 }
 
-void Camera::camFwd()
+void Camera::camFwd(short worldH)
 {
     //get y component out of camDir
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
-    lookDir *= (PAN_SPEED * camPos.y);
+    float heightOverGround = camPos.y - worldH * TERRAIN_Y_SCALE;
+    lookDir *= (PAN_SPEED * heightOverGround);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
 
-void Camera::camLeft()
+void Camera::camLeft(short worldH)
 {
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
     //rotate pi/2 to the left
     lookDir = {lookDir.y, -lookDir.x};
-    lookDir *= (PAN_SPEED * camPos.y);
+    float heightOverGround = camPos.y - worldH * TERRAIN_Y_SCALE;
+    lookDir *= (PAN_SPEED * heightOverGround);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
 
-void Camera::camRight()
+void Camera::camRight(short worldH)
 {
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
     lookDir = {-lookDir.y, lookDir.x};
-    lookDir *= (PAN_SPEED * camPos.y);
+    float heightOverGround = camPos.y - worldH * TERRAIN_Y_SCALE;
+    lookDir *= (PAN_SPEED * heightOverGround);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
 
-void Camera::camBack()
+void Camera::camBack(short worldH)
 {
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
-    lookDir *= -(PAN_SPEED * camPos.y);
+    float heightOverGround = camPos.y - worldH * TERRAIN_Y_SCALE;
+    lookDir *= -(PAN_SPEED * heightOverGround);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
@@ -70,4 +74,14 @@ void Camera::camCW() //negative radians
 {
     camDir = rotate(camDir, -CAM_ROTATE_SPEED, {0, 1, 0});
     camAngle -= CAM_ROTATE_SPEED;
+}
+
+void Camera::zoomIn(short worldH)
+{
+    camPos.y -= ZOOM_SPEED * (camPos.y - worldH * TERRAIN_Y_SCALE);
+}
+
+void Camera::zoomOut(short worldH)
+{
+    camPos.y += ZOOM_SPEED * (camPos.y - worldH * TERRAIN_Y_SCALE);
 }

@@ -7,8 +7,7 @@ using namespace Coord;
 
 void Topo::generateTopo()
 {
-    auto startTime = clock();
-    const int STEP = 15; // Height units between topo lines
+    const int STEP = 25; // Height units between topo lines
     int texID = texNumFromStr("topo");
     int topoSize = Atlas::tileW(texID);
     Height* buf = new Height[topoSize * topoSize];
@@ -51,10 +50,9 @@ void Topo::generateTopo()
             }
         }
     }
-    sendImage(pixels, "topo");
+    Atlas::sendImage((byte*) pixels, Atlas::tileFromName("topo"));
     delete[] buf;
     delete[] pixels;
-    cout << "Topo map generation took " << (float(clock()) - startTime) / CLOCKS_PER_SEC << " seconds." << endl;
 }
 
 void Topo::drawTopo()

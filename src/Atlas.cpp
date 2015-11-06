@@ -47,7 +47,16 @@ void Atlas::init(string atlasName, SDL_Renderer* renderer)
 
 int Atlas::tileFromName(string tilename)
 {
-    return tileNames[tilename];
+    try
+    {
+        int val = tileNames[tilename];
+        return val;
+    }
+    catch(...)
+    {
+        cout << "\"" << tilename << "\" is not a valid tex name!" << endl;
+    }
+    return 0;
 }
 
 int Atlas::tileFromChar(char c)
@@ -182,4 +191,18 @@ short Atlas::tileW(int index)
 short Atlas::tileH(int index)
 {
     return tiles[index].height;
+}
+
+void Atlas::sendImage(byte* pixels, int texID)
+{
+    int destX = Atlas::tileX(texID);
+    int destY = Atlas::tileY(texID);
+    int destW = Atlas::tileW(texID);
+    int destH = Atlas::tileH(texID);
+    //This client-side buffer is exactly big enough to hold minimap pixels
+#ifdef __APPLE__
+    glTexSubImage2D(GL_TEXTURE_2D, 0, destX, destY, destW, destH, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+#elif _WIN32
+    glTexSubImage2D(GL_TEXTURE_2D, 0, destX, destY, destW, destH, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+#endif
 }

@@ -13,10 +13,12 @@ namespace Camera
     const float camPitch = M_PI_2 * 0.8;
     void camInit();
     glm::mat4 getViewMatrix();
-    void camFwd();
-    void camBack();
-    void camLeft();
-    void camRight();
+    void camFwd(short worldH = 0);
+    void camBack(short worldH = 0);
+    void camLeft(short worldH = 0);
+    void camRight(short worldH = 0);
+    void zoomIn(short worldH = 0);
+    void zoomOut(short worldH = 0);
     void camCW();
     void camCCW();
 }

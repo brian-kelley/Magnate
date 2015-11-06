@@ -103,6 +103,8 @@ enum GROUND : unsigned char
     LAKE,     //like ocean (flat) but with altitude > 0
     FLOODING,
     OUTLET_SEARCHED, //used to mark tile as visited by lake outlet searching
+    LAKE_BOUNDARY,
+    VISITED,
     NUM_TYPES
 };
 
@@ -136,7 +138,7 @@ namespace constants
     const int WORLD_CHUNKS = WORLD_SIZE / CHUNK_SIZE + ((((WORLD_SIZE / CHUNK_SIZE) * CHUNK_SIZE) == WORLD_SIZE) ? 0 : 1);
     extern bool mouseDown;
     const float PAN_SPEED = 0.02;   //world units/frame
-    const float ZOOM_SPEED = 0.08;
+    const float ZOOM_SPEED = 0.16;
     const float CAM_ROTATE_SPEED = M_PI / 60; //radian/s: full circle in 2s
     const float MAX_CAM_HEIGHT = 100; //depends on VBO_CHUNKS
     const int BIT_DEPTH = 32;   //RGBA8888, probably won't change

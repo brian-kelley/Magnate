@@ -17,6 +17,7 @@ namespace RandomUtils
     void init();
     void seed(int s);
     int gen();
+    float genFloat(); //[0, 1)
     int genRange(int lo, int hi);
     int genMask(int mask);
     extern boost::rand48 generator;

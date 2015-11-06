@@ -28,6 +28,15 @@ SDL_Event* Control::currentEvent;
 map<SNAME, Scene*> Control::scenes;
 const Uint8* Control::keystate = NULL;
 
+void vidtest()
+{
+    disableTexture();
+    color3f(1, 1, 1);
+    int s = 400;
+    RenderRoutines::blit(Atlas::tileFromName("plainsL0"), 0, 0, s, s);
+    RenderRoutines::blit(Atlas::tileFromName("clouds"), 0, 0, s, s);
+}
+
 namespace ui        //place for callbacks etc.
 {
     void mainQuitButton(void* obj)
@@ -46,8 +55,7 @@ namespace ui        //place for callbacks etc.
     }
     void saveGameButton(void* obj)
     {
-        //If you get here without errors, SaveManager has ptr
-        //to the right world object to use for game
+        //SaveManager knows which world to load
         clearEnables();
         currentScene = scenes[GAME];
         WorldRenderer::init();
@@ -78,7 +86,6 @@ void Control::init()
     currentScene = scenes[GAME];
     GLERR
     SaveManager::loadTestWorld();
-    Topo::generateTopo();
     GLERR
     SaveManager::transitionToGame(nullptr);
     GLERR
@@ -168,22 +175,22 @@ void Control::update()
     {
         if(mouseX < 2 || keystate[SDL_SCANCODE_A])
         {
-            Camera::camLeft();
+            Camera::camLeft(World::getHeight(Coord::worldToTile(glm::vec4(Camera::camPos, 1))));
             camUpdated = true;
         }
         if(mouseX > WINDOW_W - 3 || keystate[SDL_SCANCODE_D])
         {
-            Camera::camRight();
+            Camera::camRight(World::getHeight(Coord::worldToTile(glm::vec4(Camera::camPos, 1))));
             camUpdated = true;
         }
         if(mouseY < 2 || keystate[SDL_SCANCODE_W])
         {
-            Camera::camFwd();
+            Camera::camFwd(World::getHeight(Coord::worldToTile(glm::vec4(Camera::camPos, 1))));
             camUpdated = true;
         }
         if(mouseY > WINDOW_H - 3 || keystate[SDL_SCANCODE_S])
         {
-            Camera::camBack();
+            Camera::camBack(World::getHeight(Coord::worldToTile(glm::vec4(Camera::camPos, 1))));
             camUpdated = true;
         }
         if(keystate[SDL_SCANCODE_Q])
@@ -282,13 +289,13 @@ void Control::processMouseWheelEvent(SDL_Event &e)
     {
         if(e.wheel.y > 0)
         {
-            Camera::camPos.y *= (1 - ZOOM_SPEED);
+            Camera::zoomIn(World::getHeight(Coord::worldToTile(glm::vec4(Camera::camPos, 1))));
             camUpdated = true;
             //TODO: Prevent user from zooming in too close
         }
         else if(e.wheel.y < 0)
         {
-            Camera::camPos.y *= (1 + ZOOM_SPEED);
+            Camera::zoomOut(World::getHeight(Coord::worldToTile(glm::vec4(Camera::camPos, 1))));
             //if(camPos.y > MAX_CAM_HEIGHT)
             //camPos.y = MAX_CAM_HEIGHT;
             camUpdated = true;

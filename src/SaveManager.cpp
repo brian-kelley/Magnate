@@ -233,7 +233,6 @@ void SaveManager::loadWorldBtn(void *arg)
 {
     if(saveSelect->getSelection() != -1)
     {
-        cout << "Here comes selectoin text: \"" << saveSelect->getSelectionText() << "\"\n";
         path worldPath = initial_path() / constants::BIN_TO_ROOT / "saves" / string(saveSelect->getSelectionText() + ".mag");
         if(exists(worldPath))
         {

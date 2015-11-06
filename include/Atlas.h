@@ -57,6 +57,7 @@ namespace Atlas
     void buildAtlas(std::string imgDir, SDL_Renderer* renderer, int size);
     void initCharTiles();
     void parseTiles(boost::filesystem::path fpath);
+    void sendImage(byte* pixels, int texID);
     GLuint getTextureID();
     extern std::map<std::string, int> tileNames;
     extern std::map<char, int> charTiles; //glyph textures

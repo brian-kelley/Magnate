@@ -130,18 +130,3 @@ Uint32 RenderRoutines::getColor32(byte r, byte g, byte b, byte a)
     return r << 24 | g << 16 | b << 8 | a;
     #endif
 }
-
-void RenderRoutines::sendImage(Uint32* pixels, string texName)
-{
-    int minimapTexID = Atlas::tileFromName(texName);
-    int destX = Atlas::tileX(minimapTexID);
-    int destY = Atlas::tileY(minimapTexID);
-    int destW = Atlas::tileW(minimapTexID);
-    int destH = Atlas::tileH(minimapTexID);
-    //This client-side buffer is exactly big enough to hold minimap pixels
-#ifdef __APPLE__
-    glTexSubImage2D(GL_TEXTURE_2D, 0, destX, destY, destW, destH, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
-#elif _WIN32
-    glTexSubImage2D(GL_TEXTURE_2D, 0, destX, destY, destW, destH, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-#endif
-}

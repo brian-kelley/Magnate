@@ -37,6 +37,7 @@
 #include "Constants.h"
 #include "Terrain.h"
 #include "Renderer.h"
+#include "TexManager.h"
 
 namespace view
 {

@@ -36,3 +36,9 @@ int RandomUtils::genMask(int mask)
 {
     return generator() & mask;
 }
+
+float RandomUtils::genFloat()
+{
+    const int num = 0x10000000; //# of discrete floats to be returned - todo: improve
+    return float(generator() % num) / num;
+}

@@ -10,6 +10,7 @@
 #include "WorldRenderer.h"
 #include "Coord.h"
 #include "GlmHeaders.h"
+#include "Atlas.h"
 
 #ifdef __APPLE__
 #include "gl.h"
