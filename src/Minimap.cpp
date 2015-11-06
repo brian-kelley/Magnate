@@ -25,7 +25,7 @@ void Minimap::initMM()
     minimapToTile = inverse(tileToMinimap);
 }
 
-Color colorFromTerrain(GROUND g)
+Color colorFromTerrain(Ground g)
 {
     Color rv;
     switch(g)
@@ -88,12 +88,12 @@ void Minimap::putMinimapPixel(int x, int y, Uint32* buf, int maxHeight)
         }
     }
     int avgHeight = sumHeights / (COMPRESSION * COMPRESSION);
-    GROUND commonest = WATER;
+    Ground commonest = WATER;
     for(int i = 0; i < NUM_TYPES; i++)
     {
         if(occurences[i] > occurences[commonest])
         {
-            commonest = (GROUND) i;
+            commonest = (Ground) i;
         }
     }
     if(occurences[RIVER] > 0)

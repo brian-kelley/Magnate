@@ -3,7 +3,7 @@
 
 #include <iostream>
 #include <queue>
-#define ROUGHNESS 1.2
+#define ROUGHNESS 2.0
 #include "Constants.h"
 #include "Coord.h"
 #include "Chunk.h"
@@ -47,13 +47,16 @@ namespace TerrainGen
     Height getAverageHeight();   //Get average height of non-ocean tiles
     Height getMaxHeight();
     float getLandArea();           //# non-water tiles as proportion
-    void addWatershed();
+    void addWatershed(float cutoff, Height maxH, Height avgH);
     void placeRivers(float headAlt, int num);
     int floodToHeight(Pos2 lastRiver, Height flood, bool markBoundary = false);
     Height getFloodHeight(Pos2 lastRiver);
     bool findOutlet(Pos2 lastRiver, Pos2& result);
     void fillToHeight(Pos2 pos, Height flood);
     void removeLake(Pos2 pos);
+    void riverHeightAdjust();
+    void scaleHeight(int target, int maxH);
+    void unsmooth(Height maxH);
 }
 
 #endif

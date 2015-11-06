@@ -34,12 +34,12 @@ namespace World
     void setHeight(Height height, Pos2 loc);
     void chgHeight(Height chg, int wi, int wj);
     void chgHeight(Height chg, Pos2 loc);
-    void setGround(GROUND ground, int wi, int wj);
-    void setGround(GROUND ground, Pos2 loc);
+    void setGround(Ground ground, int wi, int wj);
+    void setGround(Ground ground, Pos2 loc);
     Height getHeight(int wi, int wj);
     Height getHeight(Pos2 loc);
-    GROUND getGround(int wi, int wj);
-    GROUND getGround(Pos2 loc);
+    Ground getGround(int wi, int wj);
+    Ground getGround(Pos2 loc);
     bool tileInWorld(int x, int y);
     bool tileInWorld(Pos2 loc);
     //Length of world in either direction, in chunks

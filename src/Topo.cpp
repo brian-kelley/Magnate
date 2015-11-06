@@ -7,7 +7,7 @@ using namespace Coord;
 
 void Topo::generateTopo()
 {
-    const int STEP = 25; // Height units between topo lines
+    const int STEP = (WORLD_SIZE / 2) / 15; // Height units between topo lines. WS / 2 is max height, so have 15 lines
     int texID = texNumFromStr("topo");
     int topoSize = Atlas::tileW(texID);
     Height* buf = new Height[topoSize * topoSize];

@@ -92,7 +92,7 @@ struct Point
 typedef void (*callback_t) (void*);
 typedef unsigned char byte;
 
-enum GROUND : unsigned char
+enum Ground : unsigned char
 {
     WATER,
     PLAINS,

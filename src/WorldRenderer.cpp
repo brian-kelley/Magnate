@@ -15,7 +15,7 @@ using namespace Renderer;
 using namespace glm;
 
 //4 vertices, each with 2 floats (u, v)
-short terrainUV[GROUND::NUM_TYPES * 4 * 2];
+short terrainUV[Ground::NUM_TYPES * 4 * 2];
 //list of chunks currently cached in VBO, mapped to the actual vbo
 Pos2 WorldRenderer::chunkAlloc[VBO_CHUNKS];
 Quad* WorldRenderer::vboScratchBuf = NULL;
@@ -29,7 +29,7 @@ void WorldRenderer::init()
     using namespace Atlas;
     //Init fast-access array of terrain texcoords
     int i = 0;
-    for(GROUND g = (GROUND) 0; g < NUM_TYPES; g = (GROUND) ((int) g + 1))
+    for(Ground g = (Ground) 0; g < NUM_TYPES; g = (Ground) ((int) g + 1))
     {
         int terrainTexID = Terrain::terrainTextures[g];
         intRect_t uvrect;
@@ -70,7 +70,7 @@ Pos3 getTileVertexPos(int chunkX, int chunkZ, int tileX, int tileZ)
     return pos;
 }
 
-void WorldRenderer::setTexCoords(Quad *q, GROUND ground)
+void WorldRenderer::setTexCoords(Quad *q, Ground ground)
 {
     //TODO: modify when doing multiple variants of a texture
     int g = (int) ground;

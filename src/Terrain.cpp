@@ -16,7 +16,7 @@ using namespace constants;
 using namespace Coord;
 using namespace RenderRoutines;
 
-map<GROUND, int> Terrain::terrainTextures;
+map<Ground, int> Terrain::terrainTextures;
 
 void Terrain::init()
 {

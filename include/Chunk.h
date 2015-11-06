@@ -27,7 +27,7 @@ public:
     Chunk();
     ~Chunk();
     //array of nodes in heightmap within this chunk's area
-    GROUND terrain[constants::CHUNK_SIZE][constants::CHUNK_SIZE];
+    Ground terrain[constants::CHUNK_SIZE][constants::CHUNK_SIZE];
     Height mesh[constants::CHUNK_SIZE][constants::CHUNK_SIZE];
 };
 

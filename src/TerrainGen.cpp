@@ -7,23 +7,11 @@ using namespace Coord;
 void TerrainGen::generate()
 {
     clock_t start = clock();
-    //RandomUtils::seed(time(NULL));
-    RandomUtils::seed(2);
+    RandomUtils::seed(time(NULL));
+    //RandomUtils::seed(2);
     clearAll(); //prevent invalid height/ground in world
     combinedGen();
     cout << "Generation took " << (double(clock()) - start) / CLOCKS_PER_SEC << " seconds." << endl;
-}
-
-void TerrainGen::defaultGen()
-{
-    diamondSquare();
-    scatterCentralVolcanoes();
-    sphereMask();
-    clampSeaLevel();
-    smooth();
-    defuzz();
-    //consolidateLakes();
-    flattenWater();
 }
 
 void TerrainGen::tester()
@@ -265,12 +253,10 @@ void TerrainGen::addVolcano(int x, int y, short height, int radius)
             float rad = radius;
             if(dist < rad)
             {
-                int change = height - (float(height) * (dist / rad));
+                int change = 0.5 + height - (float(height) * (dist / rad));
                 if(World::tileInWorld(i, j))
-                {
                     World::setHeight(World::getHeight(i, j) + change, i, j);
-                    World::setGround(DESERT, i, j);
-                }
+                
             }
         }
     }
@@ -574,21 +560,38 @@ void TerrainGen::stretchToFill()
     delete[] buf;
 }
 
+void TerrainGen::defaultGen()
+{
+    diamondSquare();
+    scatterCentralVolcanoes();
+    sphereMask();
+    clampSeaLevel();
+    smooth();
+    defuzz();
+}
+
 void TerrainGen::combinedGen()
 {
-    const float minLand = 0.5;
-    while(getLandArea() < minLand)
-    {
-        defaultGen();
-        Height* firstGen = getHeightBuffer();
-        clearAll();
-        defaultGen();
-        addBuffer(firstGen);
-        fancySmooth();
-        delete[] firstGen;
-        stretchToFill();
-    }
-    addWatershed();
+    //Generate one buffer
+    defaultGen();
+    stretchToFill();
+    //Save the first buffer
+    Height* firstGen = getHeightBuffer();
+    //Generate another buffer
+    clearAll();
+    defaultGen();
+    stretchToFill();
+    //Combine them
+    addBuffer(firstGen);
+    smooth(6);
+    delete[] firstGen;
+    flattenWater();
+    Height avgH = getAverageHeight();
+    Height maxH = getMaxHeight();
+    unsmooth(maxH);
+    addWatershed(0.6, maxH, avgH);
+    scaleHeight(WORLD_SIZE / 2, getMaxHeight());
+    clampSeaLevel();
 }
 
 Height* TerrainGen::getHeightBuffer()
@@ -673,14 +676,12 @@ void TerrainGen::fancySmooth()
     delete[] buf;
 }
 
-void TerrainGen::addWatershed()
+void TerrainGen::addWatershed(float cutoff, Height maxH, Height avgH)
 {
-    Height maxH = getMaxHeight();
-    Height avgH = getAverageHeight();
     //Add rivers to the world, then erode near rivers realistically
-    for(int i = 0; i < 8; i++)
+    for(int i = 0; i < 150; i++)
     {
-        Watershed::addRiver(avgH + 0.4 * (maxH - avgH));
+        Watershed::addRiver(avgH + cutoff * (maxH - avgH));
     }
 }
 
@@ -692,14 +693,14 @@ void TerrainGen::removeLake(Pos2 pos)
     {
         Pos2 proc = q.front();
         q.pop();
-        GROUND procG = World::getGround(proc);
+        Ground procG = World::getGround(proc);
         if(procG == LAKE || procG == FLOODING)
         {
             World::setGround(DESERT, proc);
             for(int dir = UP; dir <= RIGHT; dir++)
             {
                 Pos2 inDir = getTileInDir(proc, dir);
-                GROUND g = World::getGround(inDir);
+                Ground g = World::getGround(inDir);
                 if(g == LAKE || g == FLOODING)
                     q.push(inDir);
             }
@@ -735,4 +736,59 @@ Height TerrainGen::getMaxHeight()
         }
     }
     return h;
+}
+
+void TerrainGen::riverHeightAdjust()
+{
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            //Create very shallow river valley
+            if(World::getGround(i, j) == RIVER)
+                addVolcano(i, j, -1, 40);
+        }
+    }
+}
+
+void TerrainGen::scaleHeight(int target, int maxH)
+{
+    double factor = (double) target / maxH;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(World::getHeight(i, j) != 0)
+                World::setHeight(World::getHeight(i, j) * factor, i, j);
+            else if (World::getGround(i, j) == DESERT)  //Make sure land tiles are never at 0 height
+                World::chgHeight(1, i, j);
+        }
+    }
+}
+
+void TerrainGen::unsmooth(Height maxH)
+{
+    scaleHeight(5 * maxH, maxH);
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(World::getGround(i, j) != WATER && World::getHeight(i, j) > 0)
+            {
+                Height h, n1, n2, n3, n4;
+                while(true)
+                {
+                    h = World::getHeight(i, j);
+                    n1 = World::getHeight(i + 1, j);
+                    n2 = World::getHeight(i - 1, j);
+                    n3 = World::getHeight(i, j + 1);
+                    n4 = World::getHeight(i, j - 1);
+                    if(h == n1 || h == n2 || h == n3 || h == n4)
+                        World::chgHeight(1, i, j);
+                    else
+                        break;
+                }
+            }
+        }
+    }
 }

@@ -97,7 +97,7 @@ void World::readWorld()
     is.close();
 }
 
-void World::setGround(GROUND ground, int wi, int wj)
+void World::setGround(Ground ground, int wi, int wj)
 {
     int ci = wi / CHUNK_SIZE;
     int cj = wj / CHUNK_SIZE;
@@ -106,13 +106,15 @@ void World::setGround(GROUND ground, int wi, int wj)
     chunks[ci][cj]->terrain[ti][tj] = ground;
 }
 
-void World::setGround(GROUND ground, Pos2 loc)
+void World::setGround(Ground ground, Pos2 loc)
 {
     setGround(ground, loc.x, loc.y);
 }
 
 void World::setHeight(Height height, int wi, int wj)
 {
+    if(wi < 0 || wi >= WORLD_SIZE || wj < 0 || wj >= WORLD_SIZE)
+        return;
     int ci = wi / CHUNK_SIZE;
     int cj = wj / CHUNK_SIZE;
     int ti = wi - CHUNK_SIZE * ci;
@@ -142,7 +144,7 @@ Height World::getHeight(Pos2 loc)
 }
 
 
-GROUND World::getGround(int wi, int wj)
+Ground World::getGround(int wi, int wj)
 {
     if(wi < 0 || wi >= WORLD_SIZE || wj < 0 || wj >= WORLD_SIZE)
         return WATER;
@@ -153,7 +155,7 @@ GROUND World::getGround(int wi, int wj)
     return chunks[ci][cj]->terrain[ti][tj];
 }
 
-GROUND World::getGround(Pos2 loc)
+Ground World::getGround(Pos2 loc)
 {
     return getGround(loc.x, loc.y);
 }
