@@ -18,7 +18,7 @@
 namespace Terrain
 {
     extern void init();
-    extern std::map<Ground, int> terrainTextures;
+    extern int terrainTextures[Ground::NUM_TYPES];
 }
 
 #endif

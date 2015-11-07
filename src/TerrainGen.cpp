@@ -601,10 +601,11 @@ void TerrainGen::combinedGen()
     Height avgH = getAverageHeight();
     Height maxH = getMaxHeight();
     unsmooth(maxH);
-    smooth(2);
     addWatershed(0.6, maxH, avgH);
     scaleHeight(WORLD_SIZE / 2, getMaxHeight());
+    smooth(3);
     clampSeaLevel();
+    assignBiomes();
 }
 
 Height* TerrainGen::getHeightBuffer()
@@ -787,5 +788,157 @@ void TerrainGen::unsmooth(Height maxH)
 
 void TerrainGen::assignBiomes()
 {
-    
+    vector<vector<bool>> rainMap;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        rainMap.push_back(vector<bool>(WORLD_SIZE));
+        for(int j = 0; j < WORLD_SIZE; j++)
+            rainMap[i][j] = false;
+    }
+    //First, add some random rainy regions
+    int coldLat = WORLD_SIZE / 6;               //Combined width of bands of polar climate in north and south
+    int tropicalLat = WORLD_SIZE / 5;
+    int peakAlt = getMaxHeight() * (3.0 / 4);   //Heights at and above this are mountain
+    //addRandomRain(rainMap);
+    addCoastalRain(rainMap);
+    addTropicalRain(WORLD_SIZE / 6, rainMap);
+    addRiverRain(rainMap);
+    //Then add some rainy regions in west coastal areas
+    for(int y = 0; y < WORLD_SIZE; y++)
+    {
+        Latitude lat;
+        if(y < coldLat / 2 || y > (WORLD_SIZE - coldLat / 2))
+            lat = POLAR;
+        else if(y > (WORLD_SIZE - tropicalLat) / 2 && y < (WORLD_SIZE + tropicalLat) / 2)
+            lat = TROPICAL;
+        else
+            lat = MODERATE;
+        for(int x = 0; x < WORLD_SIZE; x++)
+        {
+            if(World::getGround(x, y) != WATER && World::getGround(x, y) != LAKE && World::getGround(x, y) != RIVER)
+            {
+                bool onOcean = false;
+                for(int dir = UP; dir <= RIGHT; dir++)
+                {
+                    if(World::getGround(getTileInDir(Pos2(x, y), dir)) == WATER)
+                    {
+                        onOcean = true;
+                        break;
+                    }
+                }
+                if(onOcean && RandomUtils::gen() % 3)
+                    World::setGround(BEACH, x, y);
+                else
+                    World::setGround(decideGround(rainMap[x][y], World::getHeight(x, y) > peakAlt, lat), x, y);
+            }
+        }
+    }
+}
+
+void TerrainGen::addRainCircle(Pos2 loc, int r, RainMap &rmap)
+{
+    for(int i = loc.x - r; i <= loc.x + r; i++)
+    {
+        for(int j = loc.y - r; j <= loc.y + r; j++)
+        {
+            if(i >= 0 && i < WORLD_SIZE && j >= 0 && j < WORLD_SIZE)
+            {
+                if((i - loc.x) * (i - loc.x) + (j - loc.y) * (j - loc.y) <= r * r)
+                    rmap[i][j] = true;
+            }
+        }
+    }
+}
+
+void TerrainGen::addRandomRain(RainMap& rmap)
+{
+    //Make one rainy spot for every 40x40 tile region in world
+    int numAreas = (WORLD_SIZE / 2 * WORLD_SIZE / 2) / 1600;
+    for(int count = 0; count < numAreas; count++)
+    {
+        int x = 0;
+        int y = 0;
+        while(World::getGround(x, y) == WATER)
+        {
+            x = RandomUtils::gen() % WORLD_SIZE;
+            y = RandomUtils::gen() % WORLD_SIZE;
+        }
+        addRainCircle(Pos2(x, y), 5 + RandomUtils::gen() % 20, rmap);
+    }
+}
+
+void TerrainGen::addCoastalRain(RainMap& rmap)
+{
+    const float chance = 0.01;
+    for(int i = 0; i < WORLD_SIZE / 3; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(isCoastal(Pos2(i, j)) && RandomUtils::genFloat() < chance)
+                addRainCircle(Pos2(i, j), RandomUtils::gen() % 30, rmap);
+        }
+    }
+}
+
+void TerrainGen::addRiverRain(RainMap& rmap)
+{
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(World::getGround(i, j) == RIVER || World::getGround(i, j) == LAKE)
+                addRainCircle(Pos2(i, j), 5, rmap);
+        }
+    }
+}
+
+bool TerrainGen::isCoastal(Pos2 loc)
+{
+    if(World::getGround(loc) == WATER)
+        return false;
+    for(int dir = UP; dir <= RIGHT; dir++)
+    {
+        if(World::getGround(getTileInDir(loc, dir)) == WATER)
+            return true;
+    }
+    return false;
+}
+
+void TerrainGen::addTropicalRain(int lat, RainMap &rmap)
+{
+    //Width of band along equator
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = (WORLD_SIZE - lat) / 2; j <= (WORLD_SIZE + lat) / 2; j++)
+        {
+            rmap[i][j] = true;
+        }
+    }
+}
+
+Ground TerrainGen::decideGround(bool rain, bool high, Latitude lat)
+{
+    //Wet: decid_forest snowcap rainforest taiga
+    //Dry: conifer_forest plains desert stone tundra
+    if(rain)
+    {
+        if(high)
+            return SNOWCAP;
+        if(lat == TROPICAL)
+            return RAINFOREST;
+        if(lat == POLAR)
+            return TAIGA;
+        //Default for wet, moderate elevation, moderate latitude
+        return DECID_FOREST;
+    }
+    else
+    {
+        if(high)
+            return STONE;
+        if(lat == POLAR)
+            return TUNDRA;
+        
+            return PLAINS;
+        return CONIFER_FOREST;
+    }
 }

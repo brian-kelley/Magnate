@@ -16,7 +16,7 @@ using namespace constants;
 using namespace Coord;
 using namespace RenderRoutines;
 
-map<Ground, int> Terrain::terrainTextures;
+int Terrain::terrainTextures[Ground::NUM_TYPES];
 
 void Terrain::init()
 {
@@ -31,8 +31,10 @@ void Terrain::init()
     terrainTextures[TAIGA] = texNumFromStr("taiga");
     terrainTextures[TUNDRA] = texNumFromStr("tundra");
     terrainTextures[DESERT] = texNumFromStr("sand");
-    terrainTextures[RIVER] = texNumFromStr("river");
-    terrainTextures[LAKE] = texNumFromStr("lake");
+    terrainTextures[BEACH] = texNumFromStr("sand");
+    terrainTextures[RIVER] = texNumFromStr("water");
+    terrainTextures[LAKE] = texNumFromStr("water");
+    terrainTextures[RAINFOREST] = texNumFromStr("rainforest");
     terrainTextures[OUTLET_SEARCHED] = texNumFromStr("forest");
     terrainTextures[LAKE_BOUNDARY] = texNumFromStr("test1");
 }

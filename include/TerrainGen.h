@@ -57,7 +57,22 @@ namespace TerrainGen
     void riverHeightAdjust();
     void scaleHeight(int target, int maxH);
     void unsmooth(Height maxH);
+    //Biome-related code
+    typedef std::vector<std::vector<bool>> RainMap;
+    enum Latitude
+    {
+        POLAR,
+        MODERATE,
+        TROPICAL
+    };
     void assignBiomes();
+    void addRainCircle(Pos2 loc, int r, RainMap& rmap);
+    bool isCoastal(Pos2 loc);
+    void addRandomRain(RainMap& rmap);
+    void addCoastalRain(RainMap& rmap);
+    void addRiverRain(RainMap& rmap);
+    void addTropicalRain(int bandWidth, RainMap& rmap);
+    Ground decideGround(bool rain, bool highAlt, Latitude lat);
 }
 
 #endif

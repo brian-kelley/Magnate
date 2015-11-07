@@ -35,6 +35,11 @@ Color colorFromTerrain(Ground g)
             rv.g = 0xDB;
             rv.b = 0x6F;
             return rv;
+        case RAINFOREST:
+            rv.r = 0x00;
+            rv.g = 0x80;
+            rv.b = 0x10;
+            return rv;
         case DECID_FOREST:
         case CONIFER_FOREST:
         case TAIGA:
