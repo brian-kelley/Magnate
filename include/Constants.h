@@ -96,15 +96,21 @@ enum Ground : unsigned char
 {
     WATER,
     PLAINS,
-    FOREST,
+    FLOODPLAINS,
+    CONIFER_FOREST,
+    DECID_FOREST,
     MOUNTAINS,
     DESERT,
     RIVER,    //like water but used for erosion and not always flat
     LAKE,     //like ocean (flat) but with altitude > 0
-    FLOODING,
+    BEACH,
+    RAINFOREST,
+    TUNDRA,
+    TAIGA,
+    STONE,
+    SNOWCAP,
     OUTLET_SEARCHED, //used to mark tile as visited by lake outlet searching
-    LAKE_BOUNDARY,
-    VISITED,
+    LAKE_BOUNDARY,   //used to mark tiles in lakes being constructed
     NUM_TYPES
 };
 

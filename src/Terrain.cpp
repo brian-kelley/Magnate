@@ -22,13 +22,17 @@ void Terrain::init()
 {
     terrainTextures[WATER] = texNumFromStr("water");
     terrainTextures[PLAINS] = texNumFromStr("grass");
-    terrainTextures[FOREST] = texNumFromStr("forest");
+    terrainTextures[FLOODPLAINS] = texNumFromStr("floodplains");
+    terrainTextures[CONIFER_FOREST] = texNumFromStr("forest");
+    terrainTextures[DECID_FOREST] = texNumFromStr("forest");
     terrainTextures[MOUNTAINS] = texNumFromStr("mountains");
+    terrainTextures[STONE] = texNumFromStr("mountains");
+    terrainTextures[SNOWCAP] = texNumFromStr("snow");
+    terrainTextures[TAIGA] = texNumFromStr("taiga");
+    terrainTextures[TUNDRA] = texNumFromStr("tundra");
     terrainTextures[DESERT] = texNumFromStr("sand");
     terrainTextures[RIVER] = texNumFromStr("river");
     terrainTextures[LAKE] = texNumFromStr("lake");
-    terrainTextures[FLOODING] = texNumFromStr("mountains");
     terrainTextures[OUTLET_SEARCHED] = texNumFromStr("forest");
     terrainTextures[LAKE_BOUNDARY] = texNumFromStr("test1");
-    terrainTextures[VISITED] = texNumFromStr("test1");
 }

@@ -57,6 +57,7 @@ namespace TerrainGen
     void riverHeightAdjust();
     void scaleHeight(int target, int maxH);
     void unsmooth(Height maxH);
+    void assignBiomes();
 }
 
 #endif

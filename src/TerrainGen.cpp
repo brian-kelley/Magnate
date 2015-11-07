@@ -503,6 +503,7 @@ void TerrainGen::verticalNormalize()
 
 void TerrainGen::stretchToFill()
 {
+    //Do bilinear interpolation to get new heights
     int minx = WORLD_SIZE / 2;
     int maxx = minx;
     int miny = minx;
@@ -539,11 +540,23 @@ void TerrainGen::stretchToFill()
     if(maxy >= WORLD_SIZE)
         maxy = WORLD_SIZE - 1;
     Height* buf = new Height[WORLD_SIZE * WORLD_SIZE];
-    for(int i = 0; i < WORLD_SIZE; i++)
+    for(int i = 0; i < WORLD_SIZE; i++) //i is new (dest) x
     {
-        for(int j = 0; j < WORLD_SIZE; j++)
+        for(int j = 0; j < WORLD_SIZE; j++) //j is new (dest) y
         {
-            buf[WORLD_SIZE * i + j] = World::getHeight(minx + float(i) / WORLD_SIZE * (maxx - minx), miny + float(j) / WORLD_SIZE * (maxy - miny));
+            float oldX = minx + (float(i) / WORLD_SIZE) * (maxx - minx);
+            float oldY = miny + (float(j) / WORLD_SIZE) * (maxy - miny);
+            //int(oldX) and int(oldX + 1) are the interpolants
+            //cout << oldX << ", " << oldY << endl;
+            float x1 = int(oldX);
+            float x2 = x1 + 1;
+            float y1 = int(oldY);
+            float y2 = y1 + 1;
+            Height q11 = World::getHeight(x1, y1);
+            Height q21 = World::getHeight(x2, y1);
+            Height q12 = World::getHeight(x1, y2);
+            Height q22 = World::getHeight(x2, y2);
+            buf[i * WORLD_SIZE + j] = q11*(x2-oldX)*(y2-oldY) + q21*(oldX-x1)*(y2-oldY) + q12*(x2-oldX)*(oldY-y1) + q22*(oldX-x1)*(oldY-y1);
         }
     }
     for(int i = 0; i < WORLD_SIZE; i++)
@@ -583,12 +596,12 @@ void TerrainGen::combinedGen()
     stretchToFill();
     //Combine them
     addBuffer(firstGen);
-    smooth(6);
     delete[] firstGen;
     flattenWater();
     Height avgH = getAverageHeight();
     Height maxH = getMaxHeight();
     unsmooth(maxH);
+    smooth(2);
     addWatershed(0.6, maxH, avgH);
     scaleHeight(WORLD_SIZE / 2, getMaxHeight());
     clampSeaLevel();
@@ -685,29 +698,6 @@ void TerrainGen::addWatershed(float cutoff, Height maxH, Height avgH)
     }
 }
 
-void TerrainGen::removeLake(Pos2 pos)
-{
-    queue<Pos2> q;
-    q.push(pos);
-    while(q.size() > 0)
-    {
-        Pos2 proc = q.front();
-        q.pop();
-        Ground procG = World::getGround(proc);
-        if(procG == LAKE || procG == FLOODING)
-        {
-            World::setGround(DESERT, proc);
-            for(int dir = UP; dir <= RIGHT; dir++)
-            {
-                Pos2 inDir = getTileInDir(proc, dir);
-                Ground g = World::getGround(inDir);
-                if(g == LAKE || g == FLOODING)
-                    q.push(inDir);
-            }
-        }
-    }
-}
-
 void TerrainGen::placeRivers(float headAlt, int num)
 {
     Height avg = getAverageHeight();
@@ -768,7 +758,9 @@ void TerrainGen::scaleHeight(int target, int maxH)
 
 void TerrainGen::unsmooth(Height maxH)
 {
-    scaleHeight(5 * maxH, maxH);
+    //Scale up as much as possible
+    int mult = (HEIGHT_MAX - 50) / maxH;
+    scaleHeight(mult * maxH, maxH);
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
@@ -791,4 +783,9 @@ void TerrainGen::unsmooth(Height maxH)
             }
         }
     }
+}
+
+void TerrainGen::assignBiomes()
+{
+    
 }

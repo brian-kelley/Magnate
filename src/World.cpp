@@ -66,7 +66,6 @@ void World::generate()
 {
     //Set the world's permanent 64-bit seed value
     cout << "Starting world generation." << endl;
-    Terrain::init();
     TerrainGen::generate();
 }
 
@@ -76,13 +75,9 @@ void World::writeWorld()
     path outPath = initial_path() / BIN_TO_ROOT / "saves" / string(currentSaveName + ".mag");
     os.open(outPath.string(), ofstream::out | ofstream::binary | ofstream::trunc);
     if(os.good())
-    {
         os.write((char*) &seed, sizeof(seed));
-    }
     else
-    {
         cout << "Error writing file." << endl;
-    }
     cout << "Wrote out world file to:" << endl;
     cout << outPath.string() << endl;
     os.close();

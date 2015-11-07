@@ -35,17 +35,21 @@ Color colorFromTerrain(Ground g)
             rv.g = 0xDB;
             rv.b = 0x6F;
             return rv;
-        case FOREST:
+        case DECID_FOREST:
+        case CONIFER_FOREST:
+        case TAIGA:
             rv.r = 0x00;
             rv.g = 0x9A;
             rv.b = 0x2F;
             return rv;
         case MOUNTAINS:
+        case STONE:
             rv.r = 0xA0;
             rv.g = 0xA0;
             rv.b = 0xA0;
             return rv;
         case PLAINS:
+        case FLOODPLAINS:
             rv.r = 0xA8;
             rv.g = 0xDC;
             rv.b = 0x66;
@@ -56,6 +60,12 @@ Color colorFromTerrain(Ground g)
             rv.r = 0x00;
             rv.g = 0x6c;
             rv.b = 0xFF;
+            return rv;
+        case SNOWCAP:
+        case TUNDRA:
+            rv.r = 0xD0;
+            rv.g = 0xD0;
+            rv.b = 0xD0;
             return rv;
         default:
             rv.r = 0xFF;

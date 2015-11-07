@@ -49,7 +49,7 @@ int Atlas::tileFromName(string tilename)
 {
     try
     {
-        int val = tileNames[tilename];
+        int val = tileNames.at(tilename);
         return val;
     }
     catch(...)
