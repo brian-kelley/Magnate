@@ -35,6 +35,7 @@
 #include <map>
 #include <stdexcept>
 #include "Constants.h"
+#include "DebugTools.h"
 
 typedef struct
 {

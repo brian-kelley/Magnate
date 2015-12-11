@@ -17,7 +17,6 @@
 #include "Constants.h"
 
 #define HEIGHT_MAX 32767
-typedef short Height;
 
 class Chunk
 {

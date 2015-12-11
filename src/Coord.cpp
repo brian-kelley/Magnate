@@ -146,3 +146,79 @@ ostream& operator<<(ostream& os, const Pos2& loc)
     os << "(" << loc.x << ", " << loc.y << ")";
     return os;
 }
+
+SmallVec::SmallVec() {}
+
+SmallVec::SmallVec(char x, char y)
+{
+    this->x = x;
+    this->y = y;
+}
+
+SmallVec::SmallVec(int direction, int mag)
+{
+    mag = std::max(mag, CHAR_MIN);
+    mag = std::min(mag, CHAR_MAX);
+    x = 0;
+    y = 0;
+    switch(direction)
+    {
+        case UP:
+            y = -mag;
+            break;
+        case LEFT:
+            x = -mag;
+            break;
+        case DOWN:
+            y = mag;
+            break;
+        case RIGHT:
+            x = mag;
+    }
+}
+
+SmallVec::SmallVec(int d1, int m1, int d2, int m2)
+{
+    //Handle potential overflow from summing m1 and m2 in the same component
+    if(d1 == d2)
+    {
+        m1 += m2;
+        m2 = 0;
+    }
+    int xt = 0;
+    int yt = 0;
+    switch(d1)
+    {
+        case UP:
+            yt -= m1;
+            break;
+        case LEFT:
+            xt -= m1;
+            break;
+        case DOWN:
+            yt += m1;
+            break;
+        case RIGHT:
+            xt += m1;
+    }
+    switch(d2)
+    {
+        case UP:
+            yt -= m2;
+            break;
+        case LEFT:
+            xt -= m2;
+            break;
+        case DOWN:
+            yt += m2;
+            break;
+        case RIGHT:
+            xt += m2;
+    }
+    xt = std::max(CHAR_MIN, xt);
+    xt = std::min(CHAR_MAX, xt);
+    yt = std::max(CHAR_MIN, yt);
+    yt = std::min(CHAR_MAX, yt);
+    x = xt;
+    y = yt;
+}

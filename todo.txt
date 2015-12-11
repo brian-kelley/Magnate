@@ -1,0 +1,5 @@
+-Mountain peaks - minimum spanning tree over hexagonal grid points?
+-some form of erosion to make river valleys
+-finalize biome areas, make equatorial/polar biomes have smoother transition
+-texture generation for each biome
+-Procedural terrain texture tesselation and tiling

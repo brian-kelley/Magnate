@@ -3,12 +3,15 @@
 
 #include <iostream>
 #include <queue>
-#define ROUGHNESS 2.0
+#include <boost/graph/adjacency_list.hpp>
+
+#include "Heightmap.h"
 #include "Constants.h"
 #include "Coord.h"
 #include "Chunk.h"
 #include "World.h"
 #include "Watershed.h"
+#include "Erosion.h"
 
 namespace TerrainGen
 {
@@ -16,11 +19,8 @@ namespace TerrainGen
     void diamondSquare();
     void defuzz();       //remove non-water tiles that are surrounded by water on at least 3 sides (adjacent)
     void flattenWater(); //force water tiles to have constant height at all 4 corners
-    void fillSquare(int x, int y, int size);
-    void fillDiamond(int x, int y, int size);
     //Tests whether the mesh
     bool inMesh(int x, int y);
-    Height getHeight(int avg, int size);
     void scatterVolcanos();
     void addVolcano(int x, int y, short height, int radius); //create a cone-shaped hill (or cone-shaped pit if height < 0)
     void erode(int numTimesteps); //do one timestep's worth of erosion
@@ -34,6 +34,8 @@ namespace TerrainGen
     Height maxHeightOfTile(Pos2 loc);
     void tester();
     void defaultGen();
+    void combinedGen();
+    void erosionGen();
     void shelfMask();  //simulate continental shelf by lowering ground near world boundary. Shaped like beveled square.
     void smooth(int iters = 1);
     void fancySmooth();
@@ -42,12 +44,12 @@ namespace TerrainGen
     void verticalNormalize();
     void stretchToFill();
     Height* getHeightBuffer(); //Return a copy of world's heightmap
-    void combinedGen();
     void addBuffer(Height* buf); //Add buffer over world's current heightmap
     Height getAverageHeight();   //Get average height of non-ocean tiles
     Height getMaxHeight();
     float getLandArea();           //# non-water tiles as proportion
     void addWatershed(float cutoff, Height maxH, Height avgH);
+    void addPeaks();
     void placeRivers(float headAlt, int num);
     int floodToHeight(Pos2 lastRiver, Height flood, bool markBoundary = false);
     Height getFloodHeight(Pos2 lastRiver);
@@ -66,6 +68,7 @@ namespace TerrainGen
         TROPICAL
     };
     void assignBiomes();
+    void biomeSmooth(int iters = 1);
     void addRainCircle(Pos2 loc, int r, RainMap& rmap);
     bool isCoastal(Pos2 loc);
     void addRandomRain(RainMap& rmap);

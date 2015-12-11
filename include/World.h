@@ -27,7 +27,6 @@ namespace World
     //saveName = name of folder in saves,
     void init(std::string saveName, bool generate);
     void dispose(); //free memory
-    void generate();
     int getWorldLength();
     //slow, worldwide tile access (use for world generation)
     void setHeight(Height height, int wi, int wj);

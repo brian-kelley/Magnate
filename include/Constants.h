@@ -14,25 +14,12 @@
 #ifdef __APPLE__
 #include "GlmHeaders.h"
 #elif _WIN32
-
+// ?
 #elif __linux
-
+// ?
 #endif
 //Universal debug setting
 #define MAGNATE_DEBUG
-
-#ifdef MAGNATE_DEBUG
-//Debug assert (segfault if condition not true)
-#define DBASSERT(cond) if(!(cond)) throw runtime_error(#cond " not true!");
-#define GLERR {auto errcode = glGetError(); if(errcode != GL_NO_ERROR) {cout << errcode << endl; throw runtime_error("GL error!");}}
-#define PRINT(msg) {cout << msg << endl;}
-#define APPROX_EQ(ex1, ex2) {DBASSERT(fabs((ex1) - (ex2)) < 1e-3)}
-#else
-#define DBASSERT
-#define GLERR
-#define PRINT(msg)
-#define APRROX_EQ(ex1, ex2)
-#endif
 
 struct floatRect_t
 {
@@ -91,6 +78,7 @@ struct Point
 
 typedef void (*callback_t) (void*);
 typedef unsigned char byte;
+typedef short Height;
 
 enum Ground : unsigned char
 {
@@ -123,7 +111,7 @@ namespace constants
     const double maxScale = 2;
     const double minScale = 0.5;
     extern int FONTW;
-    extern int FONTH;
+    extern int FONTH;      
     extern int PAD;
     const int BORDER_WIDTH = 5;
     extern int BAR_WIDTH;
@@ -139,7 +127,7 @@ namespace constants
     extern float SHADE;
     extern std::string BIN_TO_ROOT;
     const double TERRAIN_TILE_SIZE = 1;
-    const int WORLD_SIZE = 1025;
+    const int WORLD_SIZE = 257;
     const int CHUNK_SIZE = 64;
     const int WORLD_CHUNKS = WORLD_SIZE / CHUNK_SIZE + ((((WORLD_SIZE / CHUNK_SIZE) * CHUNK_SIZE) == WORLD_SIZE) ? 0 : 1);
     extern bool mouseDown;

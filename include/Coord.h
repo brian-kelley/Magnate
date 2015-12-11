@@ -10,6 +10,7 @@
 #define __Magnate__Coord__
 
 #include <iostream>
+#include <algorithm>
 #include "Constants.h"
 #include "GlmHeaders.h"
 #include "LinAlg.h"
@@ -21,6 +22,20 @@ struct Pos2
     Pos2(short x, short y) : x(x), y(y) {}
     short x;
     short y;
+};
+
+struct SmallVec
+{
+    SmallVec();
+    SmallVec(char x, char y);
+    SmallVec(int direction, int mag);
+    SmallVec(int d1, int m1, int d2, int m2);
+    SmallVec operator+(SmallVec& v);
+    void operator+=(SmallVec& v);
+    SmallVec operator*(float scl);
+    void operator*=(float scl);
+    char x;
+    char y;
 };
 
 bool operator==(const Pos2& p1, const Pos2& p2);

@@ -6,6 +6,7 @@
 #include "Coord.h"
 #include "Chunk.h"
 #include "Renderer.h"
+#include "RenderRoutines.h"
 #include "TerrainGen.h"
 #include "World.h"
 #include <vector>

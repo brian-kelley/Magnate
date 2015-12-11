@@ -13,6 +13,7 @@
 #include "Constants.h"
 #include "Coord.h"
 #include "GlmHeaders.h"
+#include "DebugTools.h"
 
 /*
  Vertex fields/sizes

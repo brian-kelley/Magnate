@@ -45,7 +45,7 @@ void World::init(std::string saveName, bool willGenerate)
         cout << "Will read existing world from disk." << endl;
         readWorld();
     }
-    generate();
+    TerrainGen::generate();
     Terrain::init();
     Minimap::buildTexture();
     Topo::generateTopo();
@@ -60,13 +60,6 @@ void World::dispose()
             delete chunks[i][j];
         }
     }
-}
-
-void World::generate()
-{
-    //Set the world's permanent 64-bit seed value
-    cout << "Starting world generation." << endl;
-    TerrainGen::generate();
 }
 
 void World::writeWorld()
@@ -137,7 +130,6 @@ Height World::getHeight(Pos2 loc)
 {
     return World::getHeight(loc.x, loc.y);
 }
-
 
 Ground World::getGround(int wi, int wj)
 {

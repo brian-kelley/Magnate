@@ -8,7 +8,7 @@ void Watershed::addRiver(Height minHeight)
 {
     Pos2 loc(0, 0);
     int tries = 0;
-    while(World::getHeight(loc) < minHeight || World::getGround(loc) == LAKE || World::getGround(loc) == RIVER)
+    while(World::getHeight(loc) < minHeight || World::getGround(loc) == LAKE || World::getGround(loc) == RIVER || World::getGround(loc) == STONE)
     {
         if(tries++ > 1000)
         {

@@ -12,10 +12,13 @@ include/ScrollBlock
 include/Component
 include/Control
 include/Coord
+include/DebugTools
 include/Draggable
+include/Erosion
 include/SaveManager
 include/Field
 include/GlmHeaders
+include/Heightmap
 include/Label
 include/LinAlg
 include/Minimap
@@ -34,6 +37,7 @@ include/RandomUtils
 include/RenderRoutines
 include/Renderer
 include/UIRenderer
+include/VecField
 include/WorldRenderer
 src/main
 src/Atlas
@@ -47,8 +51,10 @@ src/Component
 src/Control
 src/Coord
 src/Draggable
+src/Erosion
 src/SaveManager
 src/Field
+src/Heightmap
 src/Label
 src/LinAlg
 src/Minimap
@@ -66,6 +72,7 @@ src/RandomUtils
 src/RenderRoutines
 src/Renderer
 src/UIRenderer
+src/VecField
 src/Watershed
 src/WorldRenderer
 )

@@ -72,171 +72,6 @@ bool Buffer::validPx(int x, int y)
     return true;
 }
 
-void Buffer::diamondSquare(double roughness, TexGen::Color start)
-{
-    int newsz = 1;
-    while(newsz < len && newsz < wid)
-        newsz *= 2;
-    int size = newsz;
-    newsz++;
-    Buffer newbuf(newsz, newsz);
-    newbuf.set(0, 0, start);
-    newbuf.set(0, newsz - 1, start);
-    newbuf.set(newsz - 1, 0, start);
-    newbuf.set(newsz - 1, newsz - 1, start);
-    while(size > 1)
-    {
-        for(int i = size / 2; i < newsz; i += size)
-        {
-            for(int j = size / 2; j < newsz; j += size)
-            {
-                newbuf.fillSquare(i, j, size, roughness);
-            }
-        }
-        for(int i = 0; i < newsz; i += size / 2)
-        {
-            for(int j = 0; j < newsz; j += size / 2)
-            {
-                if((i + j) % size)
-                {
-                    newbuf.fillDiamond(i, j, size, roughness);
-                }
-            }
-        }
-        size /= 2;
-    }
-    //Now copy newbuf's pixels into thisbuf
-    for(int i = 0; i < len; i++)
-    {
-        for(int j = 0; j < wid; j++)
-        {
-            set(i, j, newbuf.get(i, j));
-        }
-    }
-}
-
-void Buffer::fillSquare(int x, int y, int sz, double rough)
-{
-    int ra = 0;
-    int ga = 0;
-    int ba = 0;
-    int aa = 0;
-    int num = 0;
-    int xi = x - sz / 2;
-    int yi = y - sz / 2;
-    if(validPx(xi, yi))
-    {
-        Color c = get(xi, yi);
-        ra += c.r;
-        ga += c.g;
-        ba += c.b;
-        aa += c.a;
-        num++;
-    }
-    xi = x + sz / 2;
-    yi = y - sz / 2;
-    if(validPx(xi, yi))
-    {
-        Color c = get(xi, yi);
-        ra += c.r;
-        ga += c.g;
-        ba += c.b;
-        aa += c.a;
-        num++;
-    }
-    xi = x + sz / 2;
-    yi = y + sz / 2;
-    if(validPx(xi, yi))
-    {
-        Color c = get(xi, yi);
-        ra += c.r;
-        ga += c.g;
-        ba += c.b;
-        aa += c.a;
-        num++;
-    }
-    xi = x - sz / 2;
-    yi = y + sz / 2;
-    if(validPx(xi, yi))
-    {
-        Color c = get(xi, yi);
-        ra += c.r;
-        ga += c.g;
-        ba += c.b;
-        aa += c.a;
-        num++;
-    }
-    if(num == 0)
-        return;
-    ra /= num;
-    ga /= num;
-    ba /= num;
-    aa /= num;
-    Color c = calcColor(Color(ra, ga, ba, aa), sz, rough);
-    set(x, y, c);
-}
-
-void Buffer::fillDiamond(int x, int y, int sz, double rough)
-{
-    int ra = 0;
-    int ga = 0;
-    int ba = 0;
-    int aa = 0;
-    int num = 0;
-    int xi = x - sz / 2;
-    int yi = y;
-    if(validPx(xi, yi))
-    {
-        Color c = get(xi, yi);
-        ra += c.r;
-        ga += c.g;
-        ba += c.b;
-        aa += c.a;
-        num++;
-    }
-    xi = x;
-    yi = y - sz / 2;
-    if(validPx(xi, yi))
-    {
-        Color c = get(xi, yi);
-        ra += c.r;
-        ga += c.g;
-        ba += c.b;
-        aa += c.a;
-        num++;
-    }
-    xi = x + sz / 2;
-    yi = y;
-    if(validPx(xi, yi))
-    {
-        Color c = get(xi, yi);
-        ra += c.r;
-        ga += c.g;
-        ba += c.b;
-        aa += c.a;
-        num++;
-    }
-    xi = x;
-    yi = y + sz / 2;
-    if(validPx(xi, yi))
-    {
-        Color c = get(xi, yi);
-        ra += c.r;
-        ga += c.g;
-        ba += c.b;
-        aa += c.a;
-        num++;
-    }
-    if(num == 0)
-        return;
-    ra /= num;
-    ga /= num;
-    ba /= num;
-    aa /= num;
-    Color c = calcColor(Color(ra, ga, ba, aa), sz, rough);
-    set(x, y, c);
-}
-
 void Buffer::smooth(int iters)
 {
     for(int i = 0; i < iters; i++)
@@ -377,13 +212,14 @@ Cloud::Cloud(int x, int y) : Generator(x, y) {}
 
 void Cloud::generate()
 {
-    buf.diamondSquare(2, {255, 255, 255, 50});
+    Heightmap h(buf.len, buf.wid);
+    h.diamondSquare(2, 5000, 5000, false);
     for(int i = 0; i < buf.len; i++)
     {
         for(int j = 0; j < buf.wid; j++)
         {
-            if(buf.data[i + j * buf.wid].a > 90)
-                buf.data[i + j * buf.wid].a = 90;
+            int val = h.get(i, j) * 255.0 / SHRT_MAX;
+            buf.set(i, j, Color(255, 255, 255, val));
         }
     }
 }

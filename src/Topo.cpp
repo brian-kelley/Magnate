@@ -11,22 +11,12 @@ void Topo::generateTopo()
     int texID = texNumFromStr("topo");
     int topoSize = Atlas::tileW(texID);
     Height* buf = new Height[topoSize * topoSize];
-    const int sampW = float(WORLD_SIZE) / topoSize; // Width of square sample area (in tiles) that forms each topo pxl
+    const double scl = double(WORLD_SIZE) / topoSize;
     for(int i = 0; i < topoSize; i++)
     {
         for(int j = 0; j < topoSize; j++)
         {
-            int avgHeight = 0;
-            for(int k = i * sampW; k < (i + 1) * sampW; k++)
-            {
-                for(int l = j * sampW; l < (j + 1) * sampW; l++)
-                {
-                    avgHeight += World::getHeight(k, l);
-                }
-            }
-            avgHeight /= (sampW * sampW);
-            //In buf round sample's average height to nearest step and set that to buf (not a color yet)
-            buf[topoSize * j + i] = float(avgHeight + STEP / 2) / STEP;
+            buf[topoSize * j + i] = float(World::getHeight(i * scl, j * scl) + STEP / 2) / STEP;
         }
     }
     Uint32* pixels = new Uint32[topoSize * topoSize];
@@ -61,5 +51,14 @@ void Topo::drawTopo()
     int x = WINDOW_W - Minimap::MINIMAP_BORDER - Minimap::MINIMAP_SIZE - BORDER_WIDTH;
     int y = Minimap::MINIMAP_BORDER + BORDER_WIDTH;
     int w = Minimap::MINIMAP_SIZE;
+    using namespace Renderer;
+    disableTexture();
+    color4b(255, 255, 255, 140);
+    vertex2i(x, y);
+    vertex2i(x + w, y);
+    vertex2i(x + w, y + w);
+    vertex2i(x, y + w);
+    enableTexture();
+    color4b(255, 255, 255, 255);
     blit(texID, x, y, x + w, y + w);
 }

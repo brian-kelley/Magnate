@@ -82,7 +82,9 @@ Color colorFromTerrain(Ground g)
 
 void Minimap::putMinimapPixel(int x, int y, Uint32* buf, int maxHeight)
 {
-    const int COMPRESSION = float(WORLD_SIZE) / Minimap::MINIMAP_SIZE;
+    int compression = float(WORLD_SIZE) / Minimap::MINIMAP_SIZE;
+    if(compression < 1)
+        compression = 1;
     vec2 worldXZ = mapToWorld({short(x), short(y)});
     vec4 worldPos = {worldXZ.x, 0, worldXZ.y, 1};
     Pos2 tilePos = worldToTile(worldPos);
@@ -93,16 +95,16 @@ void Minimap::putMinimapPixel(int x, int y, Uint32* buf, int maxHeight)
         occurences[i] = 0;
     }
     int sumHeights = 0;
-    for(int i = tilePos.x; i < tilePos.x + COMPRESSION; i++)
+    for(int i = tilePos.x; i < tilePos.x + compression; i++)
     {
-        for(int j = tilePos.y; j < tilePos.y + COMPRESSION; j++)
+        for(int j = tilePos.y; j < tilePos.y + compression; j++)
         {
             int h = World::getHeight(i, j);
             occurences[World::getGround(i, j)]++;
             sumHeights += h;
         }
     }
-    int avgHeight = sumHeights / (COMPRESSION * COMPRESSION);
+    int avgHeight = sumHeights / (compression * compression);
     Ground commonest = WATER;
     for(int i = 0; i < NUM_TYPES; i++)
     {

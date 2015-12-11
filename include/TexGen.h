@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "Atlas.h"
+#include "Heightmap.h"
 #include "RandomUtils.h"
 
 namespace TexGen
@@ -33,7 +34,6 @@ namespace TexGen
         Color getAvg(int x, int y);
         //Avg of most common color(s) in 3x3.
         Color getMode(int x, int y);
-        void diamondSquare(double roughness, Color start);
         void smooth(int iters);
         void fill(Color c);
         void fillNoAlpha(Color c);
@@ -44,8 +44,6 @@ namespace TexGen
         //Internal utilities
     private:
         bool validPx(int x, int y);
-        void fillSquare(int x, int y, int size, double rough);
-        void fillDiamond(int x, int y, int size, double rough);
         Color calcColor(Color avg, int size, double rough);
     };
     class Generator
