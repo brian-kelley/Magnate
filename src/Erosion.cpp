@@ -3,315 +3,228 @@
 using namespace std;
 using namespace constants;
 using namespace Coord;
+using namespace RandomUtils;
 
-static const int NUM_TIMESTEPS = 100;
-float Erosion::NORM_TO_H = 0.01; //maps to 0-9 heights
+Heightmap* Erosion::world;
+Heightmap* Erosion::rainfall;
 
-Heightmap getSlope()
+void Erosion::erosion(Heightmap &init, Heightmap &rainmap)
 {
-    Heightmap hm(WORLD_SIZE, WORLD_SIZE);
-    for(int i = 0; i < WORLD_SIZE; i++)
+    world = &init;
+    rainfall = &rainmap;
+    rainfall->diamondSquare(2, 0, 0, true);
+    //TODO: How many runners are needed?
+    //How is that affected by world size?
+    for(int i = 0; i < 1000; i++)
     {
-        for(int j = 0; j < WORLD_SIZE; j++)
-        {
-            hm.set(i + RandomUtils::gen() % 2, i, j);
-        }
-    }
-    return hm;
-}
-
-Heightmap Erosion::erosion()
-{
-    RandomUtils::seed(0);
-    cout << "Starting erosion simulation." << endl;
-    //Heightmap world = getSlope();
-    Heightmap world = getConeWithEntropy();
-    Heightmap rainfall = getRainfall();
-    for(int i = 0; i < NUM_TIMESTEPS; i++)
-    {
-        TIMEIT(timestep(world, rainfall));
-    }
-    cout << "Done with erosion simulation." << endl;
-    return world;
-}
-
-void Erosion::timestep(Heightmap &world, Heightmap &rainfall)
-{
-    Heightmap steepness = getSteepness(world);
-    Heightmap vegetation = getVegetation(rainfall, steepness);
-    Heightmap loss = getHeightLoss(rainfall, vegetation, steepness);
-    Heightmap captureRate = getSoilCaptureRate(vegetation, steepness);
-    getActualSoilCapture(world, loss, captureRate);
-    world -= loss;
-}
-
-Heightmap Erosion::getConeWithEntropy()
-{
-    const int border = WORLD_SIZE * 0.2;          //how much space to leave around the cone
-    const Height peak = WORLD_SIZE;         //max height
-    float rad = WORLD_SIZE / 2 - border;
-    Heightmap hm(WORLD_SIZE, WORLD_SIZE);
-    for(int i = 0; i < WORLD_SIZE; i++)
-    {
-        for(int j = 0; j < WORLD_SIZE; j++)
-        {
-            int dx = i - WORLD_SIZE / 2;
-            int dy = j - WORLD_SIZE / 2;
-            float dist = sqrtf(dx * dx + dy * dy);
-            if(dist > rad)
-                hm.set(0, i, j);                            //sea level if outside radius
-            else
-            {
-                Height coneH = peak * (rad - dist) / rad;
-                coneH += (RandomUtils::gen() % 5) - 2;      //add random component
-                hm.set(coneH, i, j);    //otherwise heights scale linearly wi8th dist, with a small random translation
-            }
-        }
-    }
-    return hm;
-}
-
-Heightmap Erosion::getRainfall()
-{
-    Heightmap hm(WORLD_SIZE, WORLD_SIZE);
-    hm.diamondSquare(0, 0, 0, false);
-    normalize(hm);
-    for(int i = 0; i < WORLD_SIZE; i++)
-    {
-        for(int j = 0; j < WORLD_SIZE; j++)
-        {
-            hm.set(1000, i, j);
-        }
-    }
-    return hm;
-}
-
-Heightmap Erosion::getVegetation(Heightmap &rainfall, Heightmap &steepness)
-{
-    const float rainWeight = 1.2;
-    const float steepWeight = -0.2;         //steep ground has slightly less vegetation
-    Heightmap hm(WORLD_SIZE, WORLD_SIZE);
-    for(int i = 0; i < WORLD_SIZE; i++)
-    {
-        for(int j = 0; j < WORLD_SIZE; j++)
-        {
-            hm.set(rainWeight * rainfall.get(i, j) + steepWeight * steepness.get(i, j), i, j);
-        }
-    }
-    normalize(hm);
-    for(int i = 0; i < WORLD_SIZE; i++)
-    {
-        for(int j = 0; j < WORLD_SIZE; j++)
-        {
-            hm.set(1000, i, j);
-        }
-    }
-    return hm;
-}
-
-Heightmap Erosion::getSteepness(Heightmap &world)
-{
-    Heightmap hm(WORLD_SIZE, WORLD_SIZE);
-    for(int i = 0; i < WORLD_SIZE; i++)
-    {
-        for(int j = 0; j < WORLD_SIZE; j++)
-        {
-            //note: NOT gradient, only a measure of average steepness for 4 edges surrounding point
-            int sx = (abs(world.get(i + 1, j) - world.get(i, j)) + abs(world.get(i, j) - world.get(i - 1, j))) / 2;
-            int sy = (abs(world.get(i, j + 1) - world.get(i, j)) + abs(world.get(i, j) - world.get(i, j - 1))) / 2;
-            hm.set(sx + sy, i, j);
-        }
-    }
-    normalize(hm);
-    return hm;
-}
-
-Heightmap Erosion::getHeightLoss(Heightmap &rainfall, Heightmap &vegetation, Heightmap &steepness)
-{
-    const float rainWeight = 0.7;       //more rain washes away more material
-    const float steepWeight = 0.7;      //steeper ground erodes more
-    const float vegWeight = -0.4;       //vegetation prevents some erosion
-    Heightmap hm(WORLD_SIZE, WORLD_SIZE);
-    for(int i = 0; i < WORLD_SIZE; i++)
-    {
-        for(int j = 0; j < WORLD_SIZE; j++)
-        {
-            hm.set(rainfall.get(i, j) * rainWeight + vegetation.get(i, j) * vegWeight + steepness.get(i, j) * steepWeight * NORM_TO_H, i, j);
-        }
-    }
-    normalize(hm, 3);
-    return hm;
-}
-
-Heightmap Erosion::getSoilCaptureRate(Heightmap &vegetation, Heightmap &steepness)
-{
-    const float vegWeight = 1.4;
-    const float steepWeight = -0.4;
-    Heightmap hm(WORLD_SIZE, WORLD_SIZE);
-    for(int i = 0; i < WORLD_SIZE; i++)
-    {
-        for(int j = 0; j < WORLD_SIZE; j++)
-        {
-            hm.set(vegetation.get(i, j) * vegWeight + steepness.get(i, j) * steepWeight, i, j);
-        }
-    }
-    normalize(hm);
-    return hm;
-}
-
-void Erosion::getActualSoilCapture(Heightmap &world, Heightmap heightLoss, Heightmap &captureRate)
-{
-    auto downhill = getDownhillField(world);
-    flow(heightLoss, downhill);
-    world += heightLoss;
-}
-
-void Erosion::normalize(Heightmap &hm, int range)
-{
-    short minVal = SHRT_MAX;
-    short maxVal = SHRT_MIN;
-    for(int i = 0; i < WORLD_SIZE; i++)
-    {
-        for(int j = 0; j < WORLD_SIZE; j++)
-        {
-            if(hm.get(i, j) < minVal)
-                minVal = hm.get(i, j);
-            if(hm.get(i, j) > maxVal)
-                maxVal = hm.get(i, j);
-        }
-    }
-    cout << "Range for normalization is " << minVal << " to " << maxVal << endl;
-    float scale = double(range) / (maxVal - minVal);
-    for(int i = 0; i < WORLD_SIZE; i++)
-    {
-        for(int j = 0; j < WORLD_SIZE; j++)
-        {
-            hm.set((hm.get(i, j) - minVal) * scale, i, j);
-        }
+        cout << "Did " << i << " runners." << endl;
+        runner(*world);
     }
 }
 
-void Erosion::addChanges(Heightmap &world, Heightmap &loss, Heightmap &capture)
+void Erosion::deposit(Heightmap &world, Pos2& loc, Height& h)
 {
-    for(int i = 0; i < WORLD_SIZE; i++)
+    cout << " Depositing " << h << " height at " << loc << endl;
+    int downhill = getDownhill(world, loc);
+    if(downhill == NO_DIRECTION)
     {
-        for(int j = 0; j < WORLD_SIZE; j++)
+        cout << "  In a pit." << endl;
+        Height locH = world.get(loc);
+        //In a pit
+        //Find the next lowest neighbor
+        while(h > 0)
         {
-            //loss is still [0, 1000) but capture is actually height values
-            world.set(world.get(i, j) - loss.get(i, j) + capture.get(i, j), i, j);
-            if(world.get(i, j) < 0)
-                world.set(0, i, j);
-        }
-    }
-}
-
-VecField Erosion::getDownhillField(Heightmap &world)
-{
-    VecField vf(WORLD_SIZE, WORLD_SIZE);
-    for(int i = 0; i < WORLD_SIZE; i++)
-    {
-        for(int j = 0; j < WORLD_SIZE; j++)
-        {
-            Pos2 here(i, j);
-            int lowestDir;
-            Height lowestH = world.get(i, j);
-            //Get lowest neighbor, compare to this height
+            //cout << "loc height: " << locH << endl;
+            //cout << "neighbor heights: ";
             for(int dir = UP; dir <= RIGHT; dir++)
             {
-                Height neiH = world.get(getTileInDir(here, dir));
-                if(neiH < lowestH)
-                {
-                    lowestH = neiH;
-                    lowestDir = dir;
-                }
+                //cout << world.get(getTileInDir(loc, dir)) << " ";
             }
-            if(lowestH == world.get(here))
+            //cout << endl;
+            int lowH = SHRT_MAX;
+            //Get the lowest neighbor (necessarily higher than loc)
+            for(int dir = UP; dir <= RIGHT; dir++)
             {
-                //No lower neighbor, downhill vector immediately 0 in both directions
-                vf.set(SmallVec(0, 0), i, j);
+                Height thisH = world.get(getTileInDir(loc, dir));
+                if(thisH < lowH)
+                    lowH = thisH;
+            }
+            if(lowH > locH)
+            {
+                //Only add height to loc, raise it up to the height of lowest neighbor.
+                Height chg = lowH - locH;
+                //cout << "locH is " << chg << " units lower than the lowest negihbor." << endl;
+                if(chg > h)
+                {
+                    chg = h;
+                    h = 0;
+                }
+                else
+                    h -= chg;
+                //cout << "Boosting loc by " << chg << endl;
+                world.add(chg, loc);
             }
             else
             {
-                //Otherwise, determine if a (perpendicular) component should gain as well
-                Height nextLowest = world.get(here);
-                int secondaryDir;
+                //numDest is how many tiles will receive sediment.
+                //starts at 1 for loc.
+                //increased for every tile that is equal in height to
+                Height nextLowest = SHRT_MAX;
+                int numDest = 1;
                 for(int dir = UP; dir <= RIGHT; dir++)
                 {
-                    //Don't double-count the original lowest neighbor
-                    if(dir == lowestDir)
-                        continue;
-                    Height neiH = world.get(getTileInDir(here, dir));
-                    if(neiH < nextLowest)
-                    {
-                        nextLowest = neiH;
-                        secondaryDir = dir;
-                    }
+                    Height neiH = world.get(getTileInDir(loc, dir));
+                    if(neiH != locH && neiH < nextLowest)
+                        nextLowest = locH;
+                    Pos2 nei = getTileInDir(loc, dir);
+                    if(world.get(nei) == lowH)
+                        numDest++;
                 }
-                if(nextLowest == world.get(here))
+                Height totalRaise;
+                Height raise;
+                //cout << "Spreading " << h << " among " << numDest << " tiles." << endl;
+                if(numDest == 5)
                 {
-                    //No secondary neighbor, give entire vector to main downhill direction
-                    vf.set(SmallVec(lowestDir, 100), here);
+                    //unusual case, all sediment was distributed in loc and 4 neighbors with some left over.
+                    
+                    h = 0;
+                    break;
+                }
+                //total amount of sediment to be distributed
+                if(numDest == 1)
+                {
+                    cout << "1 destination tile." << endl;
+                    totalRaise = nextLowest - locH;
+                    cout << "Difference between loc and lowest neighbor is " << totalRaise << endl;
+                    DBASSERT(totalRaise >= 0);
+                    DBASSERT(totalRaise != 0);
+                    if(totalRaise > h)
+                        totalRaise = h;
                 }
                 else
                 {
-                    //Has a secondary neighbor with a lesser component
-                    //Have the main component be 100, and the perpendicular component be less
-                    //proportionally to the height difference in world
-                    Pos2 secondary = getTileInDir(here, secondaryDir);
-                    int mainDiff = world.get(here) - lowestH;
-                    int perpDiff = world.get(here) - world.get(secondary);
-                    vf.set(SmallVec(lowestDir, 100, secondaryDir, 100 * float(perpDiff) / mainDiff), secondary);
+                    cout << "Distributing " << h << " among " << numDest << " tiles." << endl;
+                    totalRaise = numDest * (nextLowest - locH);
+                    if(totalRaise > h)
+                        totalRaise = h;
+                }
+                h -= totalRaise;
+                cout << "Total raise is " << totalRaise << endl;
+                //cout << "totalRaise is " << totalRaise << endl;
+                //amount of height distributed to each tile
+                raise = 0.5 + totalRaise / numDest;
+                cout << "Raise is " << raise << endl;
+                //now go back to the neighbors equal in height to loc, and add raise to them
+                for(int dir = UP; dir <= RIGHT; dir++)
+                {
+                    Pos2 nei = getTileInDir(loc, dir);
+                    if(world.get(nei) == locH)
+                        world.add(raise, nei);
                 }
             }
         }
+        DBASSERT(h != 0);
     }
-    return vf;
+    else
+    {
+        cout << "  On a hillside." << endl;
+        //Not in a pit. Add height only to the downhill tile.
+        //Finally, change loc to the downhill tile.
+        Pos2 lowNei = getTileInDir(loc, downhill);
+        Height raise = world.get(loc) - world.get(lowNei);
+        if(raise > h)
+        {
+            raise = h;
+            h = 0;
+        }
+        else
+            h -= raise;
+        world.add(raise, lowNei);
+        //move loc to the new position
+        loc = lowNei;
+    }
+    cout << " Done depositing." << endl;
 }
 
-void Erosion::flow(Heightmap& hm, VecField &vf)
+void Erosion::runner(Heightmap &world)
 {
-    const int w = hm.getW();
-    const int h = hm.getH();
-    //Find the longest vector in vf
-    int bestMag = 0;
-    for(int i = 0; i < w; i++)
+    //Pick a location with height > 0
+    Pos2 loc = {0, 0};
+    while(world.get(loc) < 1)
     {
-        for(int j = 0; j < h; j++)
+        loc.x = gen() % WORLD_SIZE;
+        loc.y = gen() % WORLD_SIZE;
+    }
+    float sedPerSteep = 0.4;         //for each unit of steepness, how much sediment is removed
+    //simply pulls some sediment from the current point if steep (up to saturation limit) or deposits if not steep.
+    //move runner downhill
+    //repeat until sea level reached by runner
+    int cap = rainfall->get(loc) / 100;   //capacity for sediment flow, based on amount of rainfall at starting point
+    Height sed = world.getSteepness(loc) * sedPerSteep;          //amount of sediment in runner
+    //if steepness > 20, must
+    const int cutoff = 20;                //steepness above means sediment removed, below means deposited
+    //cout << "starting runner at " << loc.x << ", " << loc.y << " with " << sed << " sediment." << endl;
+    while(world.get(loc) > 0 && sed != 0)
+    {
+        //cout << "  starting iteration with " << sed << " sediment left." << endl;
+        if(world.getSteepness(loc) > cutoff && getDownhill(world, loc) != NO_DIRECTION)
         {
-            auto vec = vf.get(i, j);
-            int thisMag = int(vec.x) * vec.x + int(vec.y) * vec.y;
-            if(thisMag > bestMag)
-                bestMag = thisMag;
+            //remove sediment: (steepness - cutoff) * lossPerSteepness
+            //but don't exceed capacity (cap)
+            Height loss = world.getSteepness(loc) * sedPerSteep;
+            if(loss + sed > cap)
+            {
+                //max out capacity
+                loss = cap - sed;
+                sed = cap;
+            }
+            else
+                sed += loss;
+            world.add(-loss, loc);
+            int downhill = getDownhill(world, loc);
+            if(downhill == NO_DIRECTION)
+            {
+                //even though ground is steep, all sediment is deposited because runner flowed into a depression
+                //note: deposit will set sed to 0
+                deposit(world, loc, sed);
+            }
+            else
+            {
+                //move runner downhill
+                loc = getTileInDir(loc, downhill);
+            }
+        }
+        else
+        {
+            //deposit sediment: (cutoff - steepness) * lossPerSteepness
+            //but sed can't go below 0
+            Height deposition = world.getSteepness(loc) * sedPerSteep;
+            if(sed < deposition)
+            {
+                deposition = sed;
+                sed = 0;
+            }
+            else
+                sed -= deposition;
+            //note: deposit will move loc to a downhill neighbor
+            deposit(world, loc, deposition);
         }
     }
-    bestMag = sqrt(bestMag);
-    Heightmap dest(w, h);   //Make an empty heightmap, place values here
-    for(int i = 0; i < w; i++)
+}
+
+int Erosion::getDownhill(Heightmap &world, Pos2 loc)
+{
+    Height locH = world.get(loc);
+    Height minH = SHRT_MAX;
+    int minDir = NO_DIRECTION;
+    for(int dir = UP; dir <= RIGHT; dir++)
     {
-        for(int j = 0; j < h; j++)
+        Height neiH = world.get(getTileInDir(loc, dir));
+        if(neiH < locH)
         {
-            short val = hm.get(i, j);
-            auto vec = vf.get(i, j);
-            //Get x and y components of gradient, but reverse so they point downhill
-            int xcomp = -vec.x;
-            int ycomp = -vec.y;
-            //Direction doesn't matter if component is 0, corresponds to no movement in that direction
-            Direction xdir = xcomp <= 0 ? LEFT : RIGHT;
-            Direction ydir = ycomp <= 0 ? UP : DOWN;
-            xcomp = abs(xcomp);
-            ycomp = abs(ycomp);
-            //distribute value proportionally to magnitude of vector components
-            int xdist = val * xcomp / float(xcomp + ycomp);
-            int ydist = val * ycomp / float(xcomp + ycomp);
-            if(xdir == LEFT)
-                dest.add(xdist, i - 1, j);
-            else
-                dest.add(xdist, i + 1, j);
-            if(ydir == UP)
-                dest.add(ydist, i, j - 1);
-            else
-                dest.add(ydist, i, j + 1);
+            minH = neiH;
+            minDir = dir;
         }
     }
-    hm = dest;
+    return minDir;
 }

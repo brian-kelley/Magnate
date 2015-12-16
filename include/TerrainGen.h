@@ -59,6 +59,7 @@ namespace TerrainGen
     void riverHeightAdjust();
     void scaleHeight(int target, int maxH);
     void unsmooth(Height maxH);
+    void roughCone(Heightmap& world);
     //Biome-related code
     typedef std::vector<std::vector<bool>> RainMap;
     enum Latitude

@@ -25,6 +25,9 @@ public:
     void add(short val, int x, int y);
     void add(short val, Pos2 loc);
     bool validPoint(int x, int y) const;
+    int getSteepness(int x, int y); //get a relative measure of steepness
+    int getSteepness(Pos2 loc);
+    void normalize(int val = 1000);
     short* buf;
     void operator+=(Heightmap& hm);
     void operator-=(Heightmap& hm);

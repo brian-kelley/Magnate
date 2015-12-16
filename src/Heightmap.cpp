@@ -327,3 +327,39 @@ int Heightmap::getH() const
 {
     return h;
 }
+
+int Heightmap::getSteepness(int x, int y)
+{
+    int sx = abs(get(x, y) - get(x - 1, y)) + abs(get(x + 1, y) - get(x, y));
+    int sy = abs(get(x, y) - get(x, y - 1)) + abs(get(x, y + 1) - get(x, y));
+    return sqrt(sx * sx + sy * sy);
+}
+
+int Heightmap::getSteepness(Pos2 loc)
+{
+    return getSteepness(loc.x, loc.y);
+}
+
+void Heightmap::normalize(int val)
+{
+    int minh = SHRT_MAX;
+    int maxh = SHRT_MIN;
+    for(int i = 0; i < w; i++)
+    {
+        for(int j = 0; j < h; j++)
+        {
+            if(get(i, j) > maxh)
+                maxh = get(i, j);
+            if(get(i, j) < minh)
+                minh = get(i, j);
+        }
+    }
+    float scl = float(val) / (maxh - minh);
+    for(int i = 0; i < w; i++)
+    {
+        for(int j = 0; j < h; j++)
+        {
+            set((get(i, j) - minh) * scl, i, j);
+        }
+    }
+}

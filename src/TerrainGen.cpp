@@ -19,19 +19,24 @@ void TerrainGen::tester()
 
 void TerrainGen::erosionGen()
 {
-    Heightmap h = Erosion::erosion();
+    Heightmap world(WORLD_SIZE, WORLD_SIZE);
+    roughCone(world);
+    Heightmap rainfall(WORLD_SIZE, WORLD_SIZE);
+    rainfall.diamondSquare(2, 0, 0, false);
+    rainfall.normalize();
+    Erosion::erosion(world, rainfall);
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
         {
-            if(h.get(i, j) <= 0)
+            if(world.get(i, j) <= 0)
             {
                 World::setHeight(0, i, j);
                 World::setGround(WATER, i, j);
             }
             else
             {
-                World::setHeight(h.get(i, j), i, j);
+                World::setHeight(world.get(i, j), i, j);
                 World::setGround(DESERT, i, j);
             }
         }
@@ -984,4 +989,24 @@ void TerrainGen::biomeSmooth(int iters)
         }
     }
     delete[] buf;
+}
+
+void TerrainGen::roughCone(Heightmap& world)
+{
+    const int h = WORLD_SIZE * 2;
+    const int pad = WORLD_SIZE / 10;
+    int r = WORLD_SIZE / 2 - pad;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            int dx = WORLD_SIZE / 2 - i;
+            int dy = WORLD_SIZE / 2 - j;
+            int dist = sqrt(dx * dx + dy * dy);
+            if(dist > r)
+                world.set(0, i, j);
+            else
+                world.set((r - dist) * (float(h) / r) + RandomUtils::gen() % 3, i, j);
+        }
+    }
 }

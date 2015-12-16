@@ -3,6 +3,7 @@
 
 #include "VecField.h"
 #include "Heightmap.h"
+#include "Watershed.h"
 #include "Constants.h"
 #include "DebugTools.h"
 #include "Coord.h"
@@ -25,20 +26,12 @@
 
 namespace Erosion
 {
-    Heightmap erosion();    //run the simulation, return heightmap
-    void timestep(Heightmap& world, Heightmap& rainfall);
-    Heightmap getConeWithEntropy();
-    Heightmap getRainfall();
-    Heightmap getVegetation(Heightmap& rainfall, Heightmap& steepness);
-    Heightmap getSteepness(Heightmap& world);
-    Heightmap getHeightLoss(Heightmap& rainfall, Heightmap& vegetation, Heightmap& steepness);
-    Heightmap getSoilCaptureRate(Heightmap& vegetation, Heightmap& steepness);
-    void getActualSoilCapture(Heightmap& world, Heightmap heightLoss, Heightmap& captureRate);
-    VecField getDownhillField(Heightmap& world);
-    void addChanges(Heightmap& world, Heightmap& loss, Heightmap& capture);
-    void flow(Heightmap& hm, VecField& vf);
-    void normalize(Heightmap& hm, int range = 1000);  //normalize field to [0, 1000)
-    extern float NORM_TO_H;         //how to scale 0-1000 values to heights
+    void erosion(Heightmap& init, Heightmap& rainfall);    //run the simulation, return heightmap
+    void runner(Heightmap& world);
+    void deposit(Heightmap& world, Pos2& loc, Height& h);    //deposit height anywhere. Different behavior if in a pit or on a slope.
+    int getDownhill(Heightmap& world, Pos2 loc);
+    extern Heightmap* world;
+    extern Heightmap* rainfall;
 };
 
 #endif
