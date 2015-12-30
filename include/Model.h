@@ -13,13 +13,15 @@
 #include <fstream>
 #include "World.h"
 #include "Building.h"
-#include "Chunk.h"
 #include "Constants.h"
 
-namespace model
+class Model
 {
-    extern void init();
-    extern void update();
-}
+public:
+    Model();
+    void update();
+private:
+    World world;
+};
 
 #endif

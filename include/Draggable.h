@@ -24,7 +24,7 @@ class Draggable : public Component
 {
 public:
     static Draggable* activeDrag;
-    Draggable(int x, int y, int width, int height, int imageID, Component* parentComp, callback_t whenDropped, DRAG_IMAGE_TYPES imgType);
+    Draggable(int x, int y, int width, int height, u8 stickyFlags, int imageID, Component* parentComp, callback_t whenDropped, DRAG_IMAGE_TYPES imgType);
     void processLeftClick();
     void processMouseMotion();
     Point getDragPos();

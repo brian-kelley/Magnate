@@ -18,7 +18,7 @@
 class MultiSelect : public Component
 {
 public:
-    MultiSelect(int x, int y, int width, int height, int optHeight, Component* parentComp, bool center = true);
+    MultiSelect(int x, int y, int width, int height, u8 stickyFlags, int optHeight, Component* parentComp, bool center = true);
     void addOption(std::string newOption);
     int getNumOptions();
     void removeOption(int which);
@@ -31,10 +31,10 @@ public:
     void clearSelection();
     float getFontScale();
     int findSelection(std::string text);
+    CompType getType();
 private:
     std::vector<std::string> options;
     int optHeight;
-    float fOptHeight;
     int selection;
     float fontScale;
     void matchSizeToOptions();

@@ -13,40 +13,28 @@
 #include <vector>
 #include <iostream>
 #include <random>
-#include <fstream>
-#include "Chunk.h"
+#include <cstdio>
 #include "Constants.h"
 #include "Terrain.h"
 #include "TerrainGen.h"
 #include "Minimap.h"
 #include "Topo.h"
 #include "RandomUtils.h"
+#include "Heightmap.h"
 
-namespace World
+class World
 {
-    //saveName = name of folder in saves,
-    void init(std::string saveName, bool generate);
-    void dispose(); //free memory
-    int getWorldLength();
-    //slow, worldwide tile access (use for world generation)
-    void setHeight(Height height, int wi, int wj);
-    void setHeight(Height height, Pos2 loc);
-    void chgHeight(Height chg, int wi, int wj);
-    void chgHeight(Height chg, Pos2 loc);
-    void setGround(Ground ground, int wi, int wj);
-    void setGround(Ground ground, Pos2 loc);
-    Height getHeight(int wi, int wj);
-    Height getHeight(Pos2 loc);
-    Ground getGround(int wi, int wj);
-    Ground getGround(Pos2 loc);
-    bool tileInWorld(int x, int y);
-    bool tileInWorld(Pos2 loc);
-    //Length of world in either direction, in chunks
-    void readWorld();
-    void writeWorld();
-    extern Chunk* chunks[constants::WORLD_CHUNKS][constants::WORLD_CHUNKS];
-    extern std::string currentSaveName;
-    extern unsigned long long int seed;
-}
+public:
+    World();
+    World(std::string saveName, bool generate);
+    void read();
+    void write();
+    static World* instance;
+private:
+    Heightmap height;
+    Heightmap ground;
+    std::string saveName;
+    unsigned int seed;
+};
 
 #endif

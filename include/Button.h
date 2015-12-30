@@ -25,7 +25,7 @@
 class Button : public Component
 {
 public:
-    Button(int x, int y, int width, int height, std::string text, callback_t callback, Component* parentComp);
+    Button(int x, int y, int width, int height, u8 stickyFlags, std::string text, callback_t callback, Component* parentComp);
     SDL_Point& getTextLoc();
     std::string& getText();
     float getFontScale();
@@ -34,6 +34,7 @@ public:
     void calcTextPlacement();
     void processMouseMotion();
     void processLeftClick();
+    CompType getType();
 private:
     SDL_Point textLoc;
     bool over;

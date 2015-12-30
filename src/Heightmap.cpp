@@ -296,28 +296,6 @@ Heightmap& Heightmap::operator=(Heightmap &hm)
     return *this;
 }
 
-VecField Heightmap::gradient()
-{
-    VecField vf(w, h);
-    for(int i = 0; i < w; i++)
-    {
-        for(int j = 0; j < h; j++)
-        {
-            //get average slope in x and y
-            int ddx = (get(i + 1, j) - get(i - 1, j)) / 2;
-            int ddy = (get(i, j + 1) - get(i, j - 1)) / 2;
-            //clamp to char range (real-world usage should rarely need it)
-            ddx = ddx < CHAR_MIN ? CHAR_MIN : ddx;
-            ddx = ddx > CHAR_MAX ? CHAR_MAX : ddx;
-            ddy = ddy < CHAR_MIN ? CHAR_MIN : ddy;
-            ddy = ddy > CHAR_MAX ? CHAR_MAX : ddy;
-            //put SmallVec in field
-            vf.set(SmallVec(ddx, ddy), i, j);
-        }
-    }
-    return vf;
-}
-
 int Heightmap::getW() const
 {
     return w;
@@ -362,4 +340,24 @@ void Heightmap::normalize(int val)
             set((get(i, j) - minh) * scl, i, j);
         }
     }
+}
+
+glm::vec2 Heightmap::grad(int x, int y)
+{
+    int sx = (get(x + 1, y) - get(x, y) + get(x + 1, y + 1) - get(x, y + 1)) / 2;
+    int sy = (get(x, y + 1) - get(x, y) + get(x + 1, y + 1) - get(x + 1, y)) / 2;
+    if(sx > CHAR_MAX)
+        sx = CHAR_MAX;
+    if(sx < CHAR_MIN)
+        sx = CHAR_MIN;
+    if(sy > CHAR_MAX)
+        sy = CHAR_MAX;
+    if(sy < CHAR_MIN)
+        sy = CHAR_MIN;
+    return glm::vec2(sx, sy);
+}
+
+glm::vec2 Heightmap::grad(Pos2 loc)
+{
+    return grad(loc.x, loc.y);
 }

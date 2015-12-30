@@ -11,20 +11,19 @@
 using namespace std;
 using namespace constants;
 
-MultiSelect::MultiSelect(int x, int y, int width, int height, int optHeight, Component* parentComp, bool center)
-: Component(x, y, width, height, center, parentComp, MULTISELECT)
+MultiSelect::MultiSelect(int x, int y, int width, int height, u8 stickyFlags, int optHeight, Component* parentComp, bool center)
+: Component(x, y, width, height, stickyFlags, center, parentComp)
 {
     selection = -1;
     this->optHeight = optHeight;
-    fOptHeight = float(optHeight) / height;
     fontScale = (float(optHeight) - 2 * PAD) / FONTH;
 }
 
 void MultiSelect::processResize()
 {
-    //Super method does most of the work i think
     Component::processResize();
-    optHeight = fOptHeight * localRect.h;
+    //increase opt height to fill new space
+    optHeight = 0.5 + float(local.h) / options.size();
     fontScale = (float(optHeight) - 2 * PAD) / FONTH;
 }
 
@@ -54,7 +53,7 @@ void MultiSelect::processLeftClick()
 {
     if(isMouseOver())
     {
-        selection = (mouseY - yOffset) / optHeight;
+        selection = (mouseY - screen.y) / optHeight;
         if(selection >= options.size() || selection < 0)
         {
             selection = -1;
@@ -90,25 +89,8 @@ float MultiSelect::getFontScale()
 void MultiSelect::matchSizeToOptions()
 {
     //Set height based on number of options and height of each
-    if(options.size() != 0)
-    {
-        localRect.h = options.size() * optHeight;
-        if(parent)
-        {
-            localFloatRect.h = float(localRect.h) / parent->getDrawRect().h;
-        }
-        else
-        {
-            localFloatRect.h = float(localRect.h) / constants::WINDOW_H;
-        }
-    }
-    calcDrawRect();
-}
-
-void MultiSelect::calcDrawRect()
-{
-    Component::calcDrawRect();
-    drawRect.h = localRect.h;
+    local.h = optHeight * options.size();
+    updateScreenRect();
 }
 
 int MultiSelect::findSelection(std::string text)
@@ -121,4 +103,9 @@ int MultiSelect::findSelection(std::string text)
         }
     }
     return -1;
+}
+
+CompType MultiSelect::getType()
+{
+    return CompType::multiSelect;
 }

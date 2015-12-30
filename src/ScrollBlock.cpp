@@ -11,29 +11,22 @@
 using namespace std;
 using namespace constants;
 
-ScrollBlock::ScrollBlock(int x, int y, int width, int height, Component* parentComp, int canvh, bool center) : Component(x, y, width, height, true, parentComp, CTYPE::SCROLLBLOCK)
+ScrollBlock::ScrollBlock(int x, int y, int width, int height, u8 stickyFlags, Component* parentComp, int canvh, bool center) : Component(x, y, width, height, stickyFlags, true, parentComp)
 {
-    viewport = 0;
-    canvH = canvh;
-    fCanvH = (float) canvH / WINDOW_H;
-    calcOffsets();  //need to call this here because Component constructor doesn't
-    calcDrawRect();
+    canvas.h = canvh;
+    viewport = 0;   //start at top of scrollable area
     calcBarPlacement();
 }
 
-void ScrollBlock::updateCanvasHeight(int newHeight) //call this when need more space for subcomponents
+void ScrollBlock::updateCanvasHeight(int newHeight) //call this to get more space for subcomponents
 {
     //minimum height of canvas is height of top-level rect; least height where no scrolling
-    if(newHeight < localRect.h)
-    {
-        canvH = localRect.h;
-    }
+    if(newHeight < local.h)
+        canvas.h = local.h;
     else
-    {
-        canvH = newHeight;
-    }
-    fCanvH = float(canvH) / WINDOW_H;
+        canvas.h = newHeight;
     calcBarPlacement();
+    updateScreenRect();
 }
 
 void ScrollBlock::processScroll(SDL_MouseWheelEvent& e)
@@ -44,26 +37,22 @@ void ScrollBlock::processScroll(SDL_MouseWheelEvent& e)
         if(delta < 0)	//upward scrolling
         {
             viewport += delta;
+            //clamp top of viewport
             if(viewport < 0)
-            {
                 viewport = 0;
-            }
         }
         else if(delta > 0)
         {
             viewport += delta;
-            if(viewport + drawRect.h > canvH)
-            {
-                viewport = canvH - drawRect.h;
-            }
+            //clamp bottom of viewport
+            if(viewport + screen.h > canvas.h)
+                viewport = canvas.h - screen.h;
         }
-        calcOffsets();
-        calcDrawRect();
+        updateScreenRect();
         calcBarPlacement();
         for(Component* c : children)
         {
-            c->calcOffsets();
-            c->calcDrawRect();
+            c->updateScreenRect();
         }
     }
 }
@@ -77,28 +66,24 @@ bool ScrollBlock::isActive()
 
 void ScrollBlock::calcBarPlacement()
 {
-    if(localRect.h >= canvH)
+    if(local.h >= canvas.h)
     {
         barHeight = -1;     //-1 means don't draw any bar
         barPos = -1;
     }
     else
     {
-        barHeight = float(localRect.h) / canvH * (localRect.h - 2 * PAD);
-        barPos = float(viewport + localRect.h / 2) * (localRect.h - 2 * PAD) / canvH - barHeight / 2;
+        barHeight = float(local.h) / canvas.h * (local.h - 2 * PAD);
+        barPos = float(viewport + local.h / 2) * (local.h - 2 * PAD) / canvas.h - barHeight / 2;
     }
 }
 
 bool ScrollBlock::hasBar()
 {
     if(barHeight == -1)
-    {
         return false;
-    }
     else
-    {
         return true;
-    }
 }
 
 intRect_t ScrollBlock::getBarRect()
@@ -106,8 +91,8 @@ intRect_t ScrollBlock::getBarRect()
     intRect_t out;
     out.w = BAR_WIDTH;
     out.h = barHeight;
-    out.x = drawRect.x + drawRect.w - PAD - BAR_WIDTH;  //use actual screen pos
-    out.y = drawRect.y + PAD + barPos;
+    out.x = screen.x + screen.w - PAD - BAR_WIDTH;  //use actual screen pos
+    out.y = screen.y + PAD + barPos;
     return out;
 }
 
@@ -116,15 +101,9 @@ Field* ScrollBlock::getCurrentField()
     return currentField;
 }
 
-void ScrollBlock::calcOffsets()
-{
-    Component::calcOffsets();   //otherwise, use same xy values from Component
-    yOffset -= viewport;
-}
-
 int ScrollBlock::getCanvasHeight()
 {
-    return canvH;
+    return canvas.h;
 }
 
 void ScrollBlock::matchCanvasToContents()
@@ -140,4 +119,10 @@ void ScrollBlock::matchCanvasToContents()
         }
     }
     updateCanvasHeight(maxY + PAD);
+}
+
+void ScrollBlock::updateScreenRect()
+{
+    Component::updateScreenRect();
+    calcBarPlacement();
 }

@@ -23,40 +23,30 @@
 #endif
 #include <iostream>
 #include <vector>
+#include "GUI.h"
 #include "UIRenderer.h"
 #include "RenderRoutines.h"
 #include "Model.h"
 #include "Atlas.h"
 #include "Building.h"
-#include "Scene.h"
-#include "Button.h"
-#include "Label.h"
-#include "Field.h"
-#include "MultiSelect.h"
 #include "Coord.h"
 #include "Constants.h"
-#include "Terrain.h"
 #include "Renderer.h"
 #include "TexManager.h"
 
-namespace view
+class View
 {
-    //Private data members
-    extern SDL_Window* window;
-    extern SDL_Renderer* renderer;
-    extern SDL_GLContext context;
-    //Publicly used functions
-    extern void init();
-    extern void dispose();
-    extern void updateWindowSize();
-    extern void drawWorld();
-    extern void prepareFrame();
-    extern void finalizeFrame();
-    //Privately used functions
-    extern void frame();
-    extern void configGL();
-    extern void initSDLVideo();
-    extern void drawBuilding(Building& b);
-}
+public:
+    View();
+    ~View();
+    void prepareFrame();
+    void finalizeFrame();
+    void updateWindowSize();
+private:
+    SDL_Window* window;
+    SDL_Renderer* renderer;
+    SDL_GLContext context;
+    Atlas atlas;
+};
 
 #endif

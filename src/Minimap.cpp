@@ -80,7 +80,7 @@ Color colorFromTerrain(Ground g)
     }
 }
 
-void Minimap::putMinimapPixel(int x, int y, Uint32* buf, int maxHeight)
+void Minimap::putMinimapPixel(Heightmap& world, Heightmap& biomes, int x, int y, Uint32* buf, int maxHeight)
 {
     int compression = float(WORLD_SIZE) / Minimap::MINIMAP_SIZE;
     if(compression < 1)
@@ -99,8 +99,8 @@ void Minimap::putMinimapPixel(int x, int y, Uint32* buf, int maxHeight)
     {
         for(int j = tilePos.y; j < tilePos.y + compression; j++)
         {
-            int h = World::getHeight(i, j);
-            occurences[World::getGround(i, j)]++;
+            int h = world.get(i, j);
+            occurences[biomes.get(i, j)]++;
             sumHeights += h;
         }
     }
@@ -143,7 +143,7 @@ void Minimap::putMinimapPixel(int x, int y, Uint32* buf, int maxHeight)
     buf[x + y * Minimap::MINIMAP_SIZE] = RenderRoutines::getColor32(pxColor.r, pxColor.g, pxColor.b);
 }
 
-void Minimap::buildTexture()
+void Minimap::buildTexture(Heightmap& world, Heightmap& biomes)
 {
     Uint32* pixelData = new Uint32[MINIMAP_SIZE * MINIMAP_SIZE];
     int maxHeight = 0;
@@ -151,7 +151,7 @@ void Minimap::buildTexture()
     {
         for(int j = 0; j < WORLD_SIZE; j++)
         {
-            int h = World::getHeight(i, j);
+            int h = world.get(i, j);
             if(h > maxHeight)
                 maxHeight = h;
         }
@@ -160,7 +160,7 @@ void Minimap::buildTexture()
     {
         for(int j = 0; j < MINIMAP_SIZE; j++)
         {
-            putMinimapPixel(i, j, pixelData, maxHeight); //note: reverse y to match world x-z orientation
+            putMinimapPixel(world, biomes, i, j, pixelData, maxHeight); //note: reverse y to match world x-z orientation
         }
     }
     Atlas::sendImage((byte*) pixelData, RenderRoutines::texNumFromStr("minimap"));

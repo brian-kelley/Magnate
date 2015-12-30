@@ -10,79 +10,12 @@
 
 using namespace std;
 using namespace constants;
-using namespace view;
 using namespace boost::filesystem;
 using namespace RenderRoutines;
 
-SDL_Window* view::window;
-SDL_Renderer* view::renderer;
-SDL_GLContext view::context;
-
-void view::init()
+View::View()
 {
-    //Once a world is loaded these may be set again
-    initSDLVideo();
-    RenderRoutines::initAtlas(renderer);
-    configGL();
-    Renderer::init();
-    TexManager::init();
-}
-
-void view::dispose()
-{
-    Renderer::dispose();
-    SDL_DestroyRenderer(renderer);
-    renderer = nullptr;
-    SDL_DestroyWindow(window);
-    window = nullptr;
-    IMG_Quit();
-    SDL_Quit();
-}
-
-void view::prepareFrame()
-{
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    Renderer::startFrame();
-}
-
-void view::finalizeFrame()
-{
-    Renderer::endFrame();
-    SDL_GL_SwapWindow(window);
-}
-
-void view::drawBuilding(Building& b)
-{
-    //b's cuboids are already in correct order for rendering (back to front)
-    for(int i = 0; i < b.numCuboids(); i++)
-    {
-        drawCuboid(b.getCuboid(i));
-    }
-}
-
-void view::drawWorld()   //probably too general of a function
-{
-
-}
-
-void view::configGL()
-{
-    glClearColor(1, 1, 1, 1);
-    glEnable(GL_BLEND);
-    glEnable(GL_TEXTURE_2D);
-    glEnable(GL_DEPTH_TEST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-}
-
-void view::updateWindowSize()
-{
-    SDL_GetWindowSize(window, &constants::WINDOW_W, &constants::WINDOW_H);
-}
-
-void view::initSDLVideo()
-{
+    //Initialize SDL window
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
         cout << "Failed to SDL video." << endl;
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
@@ -104,5 +37,46 @@ void view::initSDLVideo()
     }
     SDL_GL_SetSwapInterval(1);
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    GLERR
+    //Initialize the atlas
+    atlas = Atlas("main", renderer);
+    //Configure OpenGL
+    glClearColor(1, 1, 1, 1);
+    glEnable(GL_BLEND);
+    glEnable(GL_TEXTURE_2D);
+    glEnable(GL_DEPTH_TEST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    Renderer::init();
+    TexManager::init();
+}
+
+View::~View()
+{
+    Renderer::dispose();
+    SDL_DestroyRenderer(renderer);
+    renderer = nullptr;
+    SDL_DestroyWindow(window);
+    window = nullptr;
+    IMG_Quit();
+    SDL_Quit();
+}
+
+void View::prepareFrame()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    Renderer::startFrame();
+}
+
+void View::finalizeFrame()
+{
+    Renderer::endFrame();
+    SDL_GL_SwapWindow(window);
+}
+
+void View::updateWindowSize()
+{
+    int w, h;
+    SDL_GetWindowSize(window, &w, &h);
+    GUI::processResize(w, h);
 }

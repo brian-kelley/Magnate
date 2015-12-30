@@ -1,41 +1,12 @@
-//
-//  Control.cpp
-//  MagIndev
-//
-//  Created by Brian Kelley on 10/21/14294.
-//  Copyright (c) 2014 Brian Kelley. All rights reserved.
-//
-
 #include "Control.h"
 
 using namespace std;
 using namespace constants;
-using namespace Control;
 using namespace Renderer;
 using namespace boost::filesystem;
 using namespace Coord;
 
-Scene* Control::currentScene;
-bool Control::terminating;
-bool Control::camUpdated;
-bool Control::updatingView;
-bool Control::trackingMouse;
-bool Control::trackingKeyboard;
-bool Control::drawingTopo;
-int Control::oldWindowW;
-int Control::oldWindowH;
-SDL_Event* Control::currentEvent;
-map<SNAME, Scene*> Control::scenes;
-const Uint8* Control::keystate = NULL;
-
-void vidtest()
-{
-    disableTexture();
-    color3f(1, 1, 1);
-    int s = 400;
-    RenderRoutines::blit(Atlas::tileFromName("plainsL0"), 0, 0, s, s);
-    RenderRoutines::blit(Atlas::tileFromName("clouds"), 0, 0, s, s);
-}
+const u8* keystate = NULL;
 
 namespace ui        //place for callbacks etc.
 {
@@ -62,11 +33,9 @@ namespace ui        //place for callbacks etc.
     }
 }
 
-void Control::init()
+Control::Control()
 {
-    Minimap::initMM();
     Coord::initCoord();
-    view::init();
     SaveManager::init(&currentScene, &ui::saveBackButton, &ui::saveGameButton);
     initScenes();
     oldWindowW = constants::WINDOW_W;
@@ -91,13 +60,13 @@ void Control::init()
     GLERR
 #endif
     keystate = SDL_GetKeyboardState(NULL);
-    model::init();
+    Model::init();
     //Trap mouse in window
     SDL_SetRelativeMouseMode(SDL_TRUE);
     GLERR
 }
 
-void Control::dispose()
+Control::~Control()
 {
     //main task here is to destroy all scenes and their subcomponents
     for(auto iter : scenes)
@@ -341,7 +310,6 @@ void Control::processWindowEvent(SDL_Event &e)
         	oldWindowW = constants::WINDOW_W;
         	oldWindowH = constants::WINDOW_H;
             view::updateWindowSize();
-            //updateUISize(); //not really a priority, implement this later
             break;
         case SDL_WINDOWEVENT_MINIMIZED: //save a bit of energy by pausing rendering
             updatingView = false;
@@ -372,5 +340,25 @@ void Control::clearEnables()      //clear currentField and button hovers in curr
     for(Component* c : currentScene->getChildren())
     {
         c->deactivate();
+    }
+}
+
+void Control::mainLoop()
+{
+    while(true)
+    {
+        //Get current (high-precision) time
+        auto start = chrono::high_resolution_clock::now();
+        update();
+        if(terminating)
+            break;
+        //Busy wait to get exactly 1/60 seconds for total loop
+        while(true)
+        {
+            auto end = chrono::high_resolution_clock::now();
+            auto duration = end - start;
+            if(duration.count() >= 1.0 / 60.0)
+                break;
+        }
     }
 }

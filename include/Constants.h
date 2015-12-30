@@ -37,24 +37,6 @@ struct intRect_t
     int h;
 };
 
-struct isoPoint_t
-{
-    double i;
-    double j;
-    bool operator<(const isoPoint_t& param) const
-    {
-        if(i < param.i)
-            return false;
-        if(i > param.i)
-            return true;
-        if(j < param.j)
-            return false;
-        if(j > param.j)
-            return true;
-        return false;
-    }
-};
-
 struct Point
 {
     int x;
@@ -127,7 +109,7 @@ namespace constants
     extern float SHADE;
     extern std::string BIN_TO_ROOT;
     const double TERRAIN_TILE_SIZE = 1;
-    const int WORLD_SIZE = 257;
+    const int WORLD_SIZE = 513;
     const int CHUNK_SIZE = 64;
     const int WORLD_CHUNKS = WORLD_SIZE / CHUNK_SIZE + ((((WORLD_SIZE / CHUNK_SIZE) * CHUNK_SIZE) == WORLD_SIZE) ? 0 : 1);
     extern bool mouseDown;

@@ -13,7 +13,7 @@ using namespace constants;
 
 Draggable* Draggable::activeDrag = nullptr;
 
-Draggable::Draggable(int x, int y, int width, int height, int imageID, Component* parentComp, callback_t whenDropped, DRAG_IMAGE_TYPES imgType) : Component(x, y, width, height, true, parentComp, DRAGGABLE)
+Draggable::Draggable(int x, int y, int width, int height, u8 stickyFlags, int imageID, Component* parentComp, callback_t whenDropped, DRAG_IMAGE_TYPES imgType) : Component(x, y, width, height, stickyFlags, true, parentComp)
 {
     img = imageID;
     onDrop = whenDropped;
@@ -26,11 +26,11 @@ void Draggable::processLeftClick()
     Component::activate();
     dragging = true;
     activeDrag = this;
-    clickX = mouseX - drawRect.x;
-    clickY = mouseY - drawRect.y;
+    clickX = mouseX - screen.x;
+    clickY = mouseY - screen.y;
     //Initially set dragX, dragY to match drawRect
-    dragX = drawRect.x;
-    dragY = drawRect.y;
+    dragX = screen.x;
+    dragY = screen.y;
 }
 
 void Draggable::processMouseMotion()

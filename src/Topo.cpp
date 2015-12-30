@@ -5,7 +5,7 @@ using namespace constants;
 using namespace RenderRoutines;
 using namespace Coord;
 
-void Topo::generateTopo()
+void Topo::generateTopo(Heightmap& heights)
 {
     const int STEP = (WORLD_SIZE / 2) / 15; // Height units between topo lines. WS / 2 is max height, so have 15 lines
     int texID = texNumFromStr("topo");
@@ -16,7 +16,7 @@ void Topo::generateTopo()
     {
         for(int j = 0; j < topoSize; j++)
         {
-            buf[topoSize * j + i] = float(World::getHeight(i * scl, j * scl) + STEP / 2) / STEP;
+            buf[topoSize * j + i] = float(heights->get(i * scl, j * scl) + STEP / 2) / STEP;
         }
     }
     Uint32* pixels = new Uint32[topoSize * topoSize];
@@ -32,10 +32,13 @@ void Topo::generateTopo()
             for(int dir = UP; dir <= RIGHT; dir++)
             {
                 Pos2 inDir = getTileInDir(loc, dir);
-                if(buf[i + topoSize * j] < buf[inDir.x + topoSize * inDir.y])
+                if(inDir.x >= 0 && inDir.x < topoSize && inDir.y >= 0 && inDir.y < topoSize)
                 {
-                    pixels[i + j * topoSize] = line;
-                    break;
+                    if(buf[i + topoSize * j] < buf[inDir.x + topoSize * inDir.y])
+                    {
+                        pixels[i + j * topoSize] = line;
+                        break;
+                    }
                 }
             }
         }

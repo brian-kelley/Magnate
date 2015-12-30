@@ -1,13 +1,5 @@
-//
-//  UIRenderer.h
-//  Magnate
-//
-//  Created by Brian Kelley on 3/5/1564.
-//
-//
-
-#ifndef Magnate_UIRenderer_h
-#define Magnate_UIRenderer_h
+#ifndef __UIRENDERER_H__
+#define __UIRENDERER_H__
 
 #include "gl.h"
 #include <iostream>

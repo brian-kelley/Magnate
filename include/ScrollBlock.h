@@ -29,7 +29,7 @@
 class ScrollBlock : public Component
 {
 public:
-    ScrollBlock(int x, int y, int width, int height, Component* parentComp, int canvh, bool center = true);
+    ScrollBlock(int x, int y, int width, int height, u8 stickyFlags, Component* parentComp, int canvh, bool center = true);
     void updateCanvasHeight(int newHeight);
     void processScroll(SDL_MouseWheelEvent& e);
     void processMouseMotionEvent(SDL_MouseMotionEvent& e);
@@ -38,14 +38,12 @@ public:
     void calcBarPlacement();
     intRect_t getBarRect();
     bool hasBar();
-    void calcOffsets(); //override component method since SB can scroll
     int getCanvasHeight();
     void matchCanvasToContents();
+    void updateScreenRect();
+    CompType getType();
 private:
-    int canvH;            //height of the canvas, in pixels
-    float fCanvH;         //height of the canvas relative to window height
-    int viewport;         //how far from top of canvas top of viewable area is
-    bool active;
+    int viewport;         //how far from top of canvas top of viewable area is (pixels)
     int barHeight;        //how many pixels tall is the bar?
     int barPos;
     Field* currentField;

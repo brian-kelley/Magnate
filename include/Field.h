@@ -27,7 +27,7 @@ class Field : public Component
 public:
     //The field object that currently has kbd focus, if any
     static Field* currentField;
-    Field(int x, int y, int width, int height, std::string text, callback_t callback, Component* parentComp);
+    Field(int x, int y, int width, int height, u8 stickyFlags, std::string text, callback_t callback, Component* parentComp);
     void setText(std::string text);
     void setLocation(int x, int y);
     void setSize(int width, int height);
@@ -44,6 +44,7 @@ public:
     void calcTextPlacement();
     void processLeftClick();
     SDL_Point& getTextLoc();
+    CompType getType();
 private:
     std::string text;
     float fontScale;

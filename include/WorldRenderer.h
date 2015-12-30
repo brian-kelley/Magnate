@@ -15,10 +15,10 @@
 #include "World.h"
 #include "Coord.h"
 #include "GlmHeaders.h"
-#include "Chunk.h"
 #include "RenderRoutines.h"
 #include "Constants.h"
 #include "Renderer.h"
+#include "Heightmap.h"
 
 typedef struct
 {
@@ -30,7 +30,7 @@ typedef struct
 
 namespace WorldRenderer
 {
-    void init();
+    void init(Heightmap* worldHeights, Heightmap* worldBiomes);
     void dispose();
     bool freeChunk(int x, int z); //mark slot in VBO as free
     bool allocChunk(int x, int z); //true if successful
@@ -47,12 +47,8 @@ namespace WorldRenderer
     extern Quad* vboScratchBuf;
     extern Pos2 centerChunk; //chunk at center of view
     extern Pos2 chunkAlloc[constants::VBO_CHUNKS];
+    extern Heightmap* heights;
+    extern Heightmap* grounds;
 }
 
 #endif /* defined(__Magnate__WorldRenderer__) */
-/*
- TerrainTileSize = 0.25 (const)
- When scale = 1.0, 0-255 height values translate to pixels (how it was before zooming)
- When scale not 1, height 
-
-*/

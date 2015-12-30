@@ -1,11 +1,3 @@
-//
-//  Control.h
-//  MagIndev
-//
-//  Created by Brian Kelley on 10/21/14294.
-//  Copyright (c) 2014 Brian Kelley. All rights reserved.
-//
-
 #ifndef __MagIndev__Control__
 #define __MagIndev__Control__
 
@@ -17,36 +9,44 @@
 #elif _WIN32
 #include <SDL2/SDL.h>
 #endif
-#include <stdio.h>
 #include <cstdint>
 #include <iostream>
 #include <vector>
+#include <chrono>
 #include "View.h"
-#include "Component.h"
-#include "Button.h"
-#include "Field.h"
-#include "Label.h"
-#include "Scene.h"
-#include "Draggable.h"
+#include "Model.h"
 #include "Constants.h"
-#include "SaveManager.h"
-#include "WorldRenderer.h"
-#include "Renderer.h"
-#include "Minimap.h"
-#include "Camera.h"
-#include "Topo.h"
+#include "GenTypes.h"
+#include "GUI.h"
 
-namespace Control
+enum struct GameState
 {
-    enum SNAME
-    {
-        MAIN_MENU,
-        SAVE_MENU,
-        GAME,
-        PAUSE
-    };
-    void init();
-    void dispose();
+    MainMenu,
+    SaveMenu,
+    Game
+};
+
+class Control
+{
+public:
+    Control();
+    ~Control();
+private:
+    void mainLoop();
+    void update();
+    GameState state;
+    View view;
+    Model model;
+    SDL_Event* currentEvent;
+    bool terminating;        //whether the program will terminate after this frame
+    bool updatingView;       //false if window not visible
+    bool trackingMouse;      //false if window doesn't have mouse focus
+    bool trackingKeyboard;   //false if window doesn't have keyboard focus
+    bool camUpdated;         //whether the game camera was moved this frame
+    u8* keystate;            //states of all keys
+};
+
+/*
     void update();
     bool isTerminating();
     void processWindowResize();
@@ -57,20 +57,7 @@ namespace Control
     void processKeyEvent(SDL_Event& e);
     void processKeyTypedEvent(SDL_Event& e);
     void updateUISize();
-    void initScenes();
-    void clearEnables();
-    extern int oldWindowW;
-    extern int oldWindowH;
-    extern std::map<SNAME, Scene*> scenes;
-    extern SDL_Event* currentEvent;
-    extern Scene* currentScene;
-    extern bool terminating;
-    extern bool updatingView;
-    extern bool trackingMouse;
-    extern bool trackingKeyboard;
-    extern bool camUpdated;
-    extern bool drawingTopo;
     extern const Uint8* keystate;   //array of key states for all scancodes
-}
+ */
 
 #endif

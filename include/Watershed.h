@@ -5,9 +5,8 @@
 #include <vector>
 #include <queue>
 #include "Constants.h"
-#include "Chunk.h"
-#include "World.h"
 #include "Coord.h"
+#include "Heightmap.h"
 
 struct Gradient
 {
@@ -23,15 +22,12 @@ struct Gradient
 
 namespace Watershed
 {
-    void addRiver(Height threshold);
+    void addRiver(Heightmap& world, Heightmap& biomes, Height threshold);
     void beginFlow(Pos2 pos);
     void generalFlow(Pos2 pos);
     void processTile(Pos2 pos, std::queue<Pos2>& q);
     Pos2 getLowestNeighbor(Pos2 pos);
     void riverRandomWalk(Pos2 p1, Pos2 p2);
-    void rainForTime(int sec); //repeatedly drop water for the specified time
-    void dropWater(Pos2 loc);
-    void doErosion();
     Pos2 getLandTile();
     Gradient getTileGradient(Pos2 loc); //loc is upper-left
     void processStuckFlow(Pos2 loc, Gradient* gradBuf);
@@ -45,6 +41,9 @@ namespace Watershed
     bool hasLakeNeighbor(Pos2 loc);
     bool hasOutlet(Pos2 loc);
     bool hasDownhillFlow(Pos2 loc);
+    //keep locations of heights and biomes so they don't have to be passed around
+    extern Heightmap* world;
+    extern Heightmap* biomes;
 }
 
 #endif

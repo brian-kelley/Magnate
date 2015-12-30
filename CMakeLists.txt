@@ -6,7 +6,6 @@ include/Atlas
 include/Building
 include/Button
 include/Camera
-include/Chunk
 include/Constants
 include/ScrollBlock
 include/Component
@@ -17,7 +16,9 @@ include/Draggable
 include/Erosion
 include/SaveManager
 include/Field
+include/GenTypes
 include/GlmHeaders
+include/GUI
 include/Heightmap
 include/Label
 include/LinAlg
@@ -44,7 +45,6 @@ src/Atlas
 src/Building
 src/Button
 src/Camera
-src/Chunk
 src/Constants
 src/ScrollBlock
 src/Component
@@ -54,6 +54,9 @@ src/Draggable
 src/Erosion
 src/SaveManager
 src/Field
+src/GenTypes
+src/GlmHeaders
+src/GUI
 src/Heightmap
 src/Label
 src/LinAlg

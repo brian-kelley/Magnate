@@ -11,38 +11,11 @@
 using namespace std;
 using namespace constants;
 
-Component::Component(int x, int y, int width, int height, bool center, Component* parentComp, CTYPE newType)
+Component::Component(int x, int y, int width, int height, u8 stickyFlags, bool center, Component* parentComp) : local(x, y, width, height), canvas(x, y, width, height)
 {
-    this->type = newType;
-    localRect.x = x;
-    localRect.y = y;
-    if(center)
-    {
-        localRect.x -= (width >> 1);
-        localRect.y -= (height >> 1);
-    }
-    localRect.w = width;
-    localRect.h = height;
-    drawRect.w = width;
-    drawRect.h = height;
-    parent = parentComp;
-    if(parent)
-    {
-        parent->addChild(this);
-        localFloatRect.x = float(localRect.x) / parent->localRect.w;
-        localFloatRect.y = float(localRect.y) / parent->localRect.h;
-        localFloatRect.w = float(localRect.w) / parent->localRect.w;
-        localFloatRect.h = float(localRect.h) / parent->localRect.h;
-    }
-    else
-    {
-        localFloatRect.x = float(localRect.x) / WINDOW_W;
-        localFloatRect.y = float(localRect.y) / WINDOW_H;
-        localFloatRect.w = float(localRect.w) / WINDOW_W;
-        localFloatRect.h = float(localRect.h) / WINDOW_H;
-    }
-    calcOffsets();
-    calcDrawRect();
+    this->parent = parentComp;
+    this->stickyFlags = stickyFlags;
+    updateScreenRect();
 }
 
 Component::~Component()
@@ -54,47 +27,13 @@ Component::~Component()
     children.clear();
 }
 
-void Component::calcDrawRect()
-{
-    if(parent)
-    {
-        drawRect.x = localRect.x + parent->getXOffset();
-        drawRect.y = localRect.y + parent->getYOffset();
-    }
-    else
-    {
-        drawRect.x = localRect.x;
-        drawRect.y = localRect.y;
-    }
-}
-
-void Component::calcOffsets()
-{
-    xOffset = localRect.x;
-    yOffset = localRect.y;
-    if(parent)
-    {
-        xOffset += parent->getXOffset();
-        yOffset += parent->getYOffset();
-    }
-}
-
 bool Component::isMouseOver()
 {
-    if(drawRect.x <= mouseX && drawRect.x + drawRect.w > mouseX
-       && drawRect.y <= mouseY && drawRect.y + drawRect.h > mouseY)
-    {
+    if(screen.x <= mouseX && screen.x + screen.w > mouseX
+       && screen.y <= mouseY && screen.y + screen.h > mouseY)
         return true;
-    }
     else
-    {
         return false;
-    }
-}
-
-intRect_t& Component::getDrawRect()
-{
-    return drawRect;
 }
 
 vector<Component*>& Component::getChildren()
@@ -146,16 +85,6 @@ void Component::addChild(Component* child)
     children.push_back(child);
 }
 
-int Component::getXOffset()
-{
-    return xOffset;
-}
-
-int Component::getYOffset()
-{
-    return yOffset;
-}
-
 Component* Component::getParent()
 {
     return parent;
@@ -163,39 +92,52 @@ Component* Component::getParent()
 
 void Component::processResize()
 {
-    if(parent)
-    {
-        localRect.x = parent->localRect.w * localFloatRect.x;
-        localRect.y = parent->localRect.h * localFloatRect.y;
-        localRect.w = parent->localRect.w * localFloatRect.w;
-        localRect.h = parent->localRect.h * localFloatRect.h;
-        drawRect.w = localRect.w;
-        drawRect.h = localRect.h;
-        calcOffsets();
-    }
-    else
-    {
-        localRect.x = WINDOW_W * localFloatRect.x;
-        localRect.y = WINDOW_H * localFloatRect.y;
-        localRect.w = WINDOW_W * localFloatRect.w;
-        localRect.h = WINDOW_H * localFloatRect.h;
-        drawRect.w = localRect.w;
-        drawRect.h = localRect.h;
-        calcOffsets();
-        for(Component* c : children)
-        {
-            c->processResize();
-        }
-    }
-    calcDrawRect();
+    //Get the change in parent's dimensions
+    float xchg = float(parent->local.w - parentWidth) / parent->local.w;
+    parentWidth = parent->local.w;
+    float ychg = float(parent->local.h - parentHeight) / parent->local.h;
+    parentHeight = parent->local.h;
+    //If sticky (true), distance to parent edge stays constant
+    //If floating, scale edge to edge distance proportionally in that direction
+    int left = local.x;
+    int right = parentWidth - local.x - local.w;
+    int top = local.y;
+    int bottom = parentHeight - local.y - local.h;
+    if(!(stickyFlags & StickyDirs::left))
+        left *= xchg;
+    if(!(stickyFlags & StickyDirs::right))
+        right *= xchg;
+    if(!(stickyFlags & StickyDirs::top))
+        top *= ychg;
+    if(!(stickyFlags & StickyDirs::bottom))
+        bottom *= ychg;
+    //now set new dimensions based on new bounding box
+    local.x = left;
+    local.y = top;
+    local.w = parentWidth - local.x;
+    local.h = parentHeight - local.y;
+    updateScreenRect();                 //refresh drawing rectangle
+    for(auto c : children)              //pass to children
+        c->processResize();
 }
 
-CTYPE Component::getType()
+void Component::updateScreenRect()
 {
-    return type;
+    //w, h are same local
+    screen.w = local.w;
+    screen.h = local.h;
+    //x, y depend on parent screen position
+    //parent needs to have already calculated its own screen position
+    screen.x = local.x + parent ? parent->getScreenRect().x : 0;
+    screen.y = local.y + parent ? parent->getScreenRect().y : 0;
 }
 
-intRect_t& Component::getLocalRect()
+const Rectangle& Component::getLocalRect()
 {
-    return localRect;
+    return local;
+}
+
+const Rectangle& Component::getScreenRect()
+{
+    return screen;
 }

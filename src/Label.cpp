@@ -10,7 +10,7 @@
 
 using namespace std;
 
-Label::Label(int x, int y, int width, int height, string text, Component* parentComp) : Component(x, y, width, height, true, parentComp, CTYPE::LABEL)
+Label::Label(int x, int y, int width, int height, u8 stickyFlags, string text, Component* parentComp) : Component(x, y, width, height, stickyFlags, true, parentComp)
 {
     this->text = text;
     calcTextPlacement();
@@ -24,10 +24,10 @@ void Label::updateText(string newText)
 
 void Label::calcTextPlacement()
 {
-    float fontScaleX = (localRect.w - constants::PAD * 2) / (float) constants::FONTW * text.size();
-    float fontScaleY = (localRect.h - constants::PAD * 2) / (float) constants::FONTH;
+    float fontScaleX = (local.w - constants::PAD * 2) / (float) constants::FONTW * text.size();
+    float fontScaleY = (local.h - constants::PAD * 2) / (float) constants::FONTH;
     fontScale = fontScaleX < fontScaleY ? fontScaleX : fontScaleY;
-    textLoc.x = (localRect.w - (fontScale * constants::FONTW * text.size())) / 2;
+    textLoc.x = (local.w - (fontScale * constants::FONTW * text.size())) / 2;
     textLoc.y = constants::PAD;
 }
 
@@ -44,4 +44,9 @@ SDL_Point& Label::getTextLoc()
 float Label::getFontScale()
 {
     return fontScale;
+}
+
+CompType Label::getType()
+{
+    return CompType::label;
 }

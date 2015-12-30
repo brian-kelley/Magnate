@@ -4,7 +4,6 @@
 #include "Atlas.h"
 #include "Constants.h"
 #include "Coord.h"
-#include "Chunk.h"
 #include "Renderer.h"
 #include "RenderRoutines.h"
 #include "TerrainGen.h"
@@ -14,7 +13,7 @@
 
 namespace Topo
 {
-    void generateTopo();       //build the map and store in texture on GPU
+    void generateTopo(Heightmap& heights);       //build the map and store in texture on GPU
     void drawTopo();           //draw full-screen topo map
 }
 

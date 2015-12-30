@@ -1,13 +1,4 @@
-//
-//  UIRenderer.cpp
-//  Magnate
-//
-//  Created by Brian Kelley on 3/5/1564.
-//
-//
-
 #include "UIRenderer.h"
-#include <stdio.h>
 
 using namespace std;
 using namespace constants;

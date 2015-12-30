@@ -27,9 +27,10 @@
 namespace Erosion
 {
     void erosion(Heightmap& init, Heightmap& rainfall);    //run the simulation, return heightmap
-    void runner(Heightmap& world);
+    void simpleRunner(Heightmap& world);
     void deposit(Heightmap& world, Pos2& loc, Height& h);    //deposit height anywhere. Different behavior if in a pit or on a slope.
     int getDownhill(Heightmap& world, Pos2 loc);
+    void fillPit(Heightmap& world, Pos2 loc, Height sed);
     extern Heightmap* world;
     extern Heightmap* rainfall;
 };

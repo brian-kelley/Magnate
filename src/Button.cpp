@@ -10,7 +10,7 @@
 
 using namespace std;
 
-Button::Button(int x, int y, int width, int height, string text, callback_t callback, Component* parentComp) : Component(x, y, width, height, true, parentComp, CTYPE::BUTTON)
+Button::Button(int x, int y, int width, int height, u8 stickyFlags, string text, callback_t callback, Component* parentComp) : Component(x, y, width, height, stickyFlags, true, parentComp)
 {
     this->callback = callback;
     this->text = text;
@@ -49,19 +49,19 @@ void Button::calcTextPlacement()
 {
     float fontScaleW;
     float fontScaleH;
-    fontScaleW = ((float) localRect.w - constants::BORDER_WIDTH * 2 - constants::PAD * 2) / ((int) text.size() * constants::FONTW);
-    fontScaleH = ((float) localRect.h - constants::BORDER_WIDTH * 2 - constants::PAD * 2) / constants::FONTH;
+    fontScaleW = ((float) local.w - constants::BORDER_WIDTH * 2 - constants::PAD * 2) / ((int) text.size() * constants::FONTW);
+    fontScaleH = ((float) local.h - constants::BORDER_WIDTH * 2 - constants::PAD * 2) / constants::FONTH;
     if(fontScaleW < fontScaleH)
     {
         this->fontScale = fontScaleW;
         this->textLoc.x = constants::BORDER_WIDTH + constants::PAD;
-        this->textLoc.y = (localRect.h - constants::FONTH * fontScale) / 2;
+        this->textLoc.y = (local.h - constants::FONTH * fontScale) / 2;
     }
     else
     {
         this->fontScale = fontScaleH;
         this->textLoc.y = constants::BORDER_WIDTH + constants::PAD;
-        this->textLoc.x = (localRect.w - (int) text.size() * fontScale * constants::FONTW) / 2;
+        this->textLoc.x = (local.w - (int) text.size() * fontScale * constants::FONTW) / 2;
     }
 }
 
@@ -79,4 +79,9 @@ void Button::processLeftClick()
     {
         (*callback) (this);
     }
+}
+
+CompType Button::getType()
+{
+    return CompType::button;
 }

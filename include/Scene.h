@@ -6,22 +6,20 @@
 //  Copyright (c) 2014 Brian Kelley. All rights reserved.
 //
 
-#ifndef __MagIndev__Scene__
-#define __MagIndev__Scene__
+#ifndef __SCENE_H__
+#define __SCENE_H__
 
-#include <stdio.h>
-#include <vector>
-#include <string>
-#include "ScrollBlock.h"
-#include "Button.h"
-#include "Field.h"
-#include "Label.h"
 #include "Constants.h"
+#include "Component.h"
 
 class Scene : public Component
 {
 public:
     Scene();
+    CompType getType();
+    void setWidth(int w);
+    void setHeight(int h);
+    void processResize();
 };
 
-#endif /* defined(__MagIndev__Scene__) */
+#endif

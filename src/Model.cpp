@@ -9,14 +9,13 @@
 #include "Model.h"
 
 using namespace std;
-using namespace model;
 
-void model::init()
+Model::Model()
 {
-    GLERR
+    World::instance = &world;
 }
 
-void model::update()
+void Model::update()
 {
     
 }

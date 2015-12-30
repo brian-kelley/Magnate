@@ -25,7 +25,7 @@
 class Label : public Component
 {
 public:
-    Label(int x, int y, int width, int height, std::string text, Component* parentComp);
+    Label(int x, int y, int width, int height, u8 stickyFlags, std::string text, Component* parentComp);
     void updateText(std::string text);
     void processSizeChange(int oldWindowW, int oldWindowH);
     std::string getText();
@@ -33,6 +33,7 @@ public:
     SDL_Point& getTextLoc();
     void updateSize();
     void calcTextPlacement();
+    CompType getType();
 private:
     std::string text;
     float fontScale;

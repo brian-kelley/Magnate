@@ -6,6 +6,7 @@
 #include "RandomUtils.h"
 #include "Coord.h"
 #include "VecField.h"
+#include "GlmHeaders.h"
 
 class Heightmap
 {
@@ -14,7 +15,6 @@ public:
     Heightmap(int x, int y);
     Heightmap(const Heightmap& toCopy);
     ~Heightmap();
-    VecField gradient();
     void diamondSquare(double roughness, short cornerStart, short centerStart, bool isZeroMin);
     void fillSquare(int x, int y, int sz, double roughness);
     void fillDiamond(int x, int y, int sz, double roughness);
@@ -28,6 +28,8 @@ public:
     int getSteepness(int x, int y); //get a relative measure of steepness
     int getSteepness(Pos2 loc);
     void normalize(int val = 1000);
+    glm::vec2 grad(int x, int y);   //gradient at tile center
+    glm::vec2 grad(Pos2 loc);
     short* buf;
     void operator+=(Heightmap& hm);
     void operator-=(Heightmap& hm);

@@ -12,7 +12,7 @@ using namespace std;
 
 Field* Field::currentField = nullptr;
 
-Field::Field(int x, int y, int width, int height, string text, callback_t callback, Component* parentComp) : Component(x, y, width, height, true, parentComp, CTYPE::FIELD)
+Field::Field(int x, int y, int width, int height, u8 stickyFlags, string text, callback_t callback, Component* parentComp) : Component(x, y, width, height, stickyFlags, true, parentComp)
 {
     this->text = text;
     this->callback = callback;
@@ -63,16 +63,16 @@ void Field::calcTextPlacement()
     float horiScale;
     if(text.size() > 0)
     {
-        horiScale = float(localRect.w - constants::PAD * 2) / (text.size() * constants::FONTW);
+        horiScale = float(local.w - constants::PAD * 2) / (text.size() * constants::FONTW);
     }
     else
     {
         horiScale = 100000;
     }
-    float vertScale = float(localRect.h - constants::PAD * 2) / constants::FONTH;
+    float vertScale = float(local.h - constants::PAD * 2) / constants::FONTH;
     fontScale = horiScale < vertScale ? horiScale : vertScale;
     textLoc.x = constants::PAD;
-    textLoc.y = (localRect.h / 2) - (fontScale * constants::FONTH / 2);
+    textLoc.y = (local.h / 2) - (fontScale * constants::FONTH / 2);
 }
 
 callback_t Field::getCallback()
@@ -127,13 +127,16 @@ void Field::processLeftClick()
     else
     {
         if(active)
-        {
             deactivate();
-        }
     }
 }
 
 SDL_Point& Field::getTextLoc()
 {
     return textLoc;
+}
+
+CompType Field::getType()
+{
+    return CompType::field;
 }

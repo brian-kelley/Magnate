@@ -12,13 +12,9 @@ using namespace std;
 using namespace boost::filesystem;
 using namespace constants;
 
-map<std::string, int> Atlas::tileNames;
-map<char, int> Atlas::charTiles;
-vector<Texture> Atlas::tiles;
-GLuint Atlas::textureID;
-
+Atlas::Atlas() {}
 //Call this to initialize an atlas that already exists as assets/filename
-void Atlas::init(string atlasName, SDL_Renderer* renderer)
+Atlas::Atlas(string atlasName, SDL_Renderer* renderer)
 {
     path imagePath = initial_path() / constants::BIN_TO_ROOT / "assets" / (atlasName + "_atlas.png");
     path tilePath = initial_path() / constants::BIN_TO_ROOT / "data" / (atlasName + "_tiles.txt");
@@ -42,7 +38,6 @@ void Atlas::init(string atlasName, SDL_Renderer* renderer)
     }
     initCharTiles();
     SDL_FreeSurface(loadedSurface);
-    GLERR
 }
 
 int Atlas::tileFromName(string tilename)

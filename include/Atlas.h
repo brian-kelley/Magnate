@@ -25,8 +25,6 @@
 #include <SDL2/SDL_image.h>
 #include <boost/filesystem.hpp>
 #endif
-#include <stdio.h>
-#include <stdlib.h>
 #include <iostream>
 #include <string>
 #include <ios>
@@ -35,6 +33,7 @@
 #include <map>
 #include <stdexcept>
 #include "Constants.h"
+#include "GenTypes.h"
 #include "DebugTools.h"
 
 typedef struct
@@ -46,24 +45,27 @@ typedef struct
     short height;
 } Texture;
 
-namespace Atlas
+class Atlas
 {
-    void init(std::string imageName, SDL_Renderer* renderer); //example, pass either "main"
+public:
+    Atlas();
+    Atlas(std::string imageName, SDL_Renderer* renderer);
     int tileFromName(std::string tilename);
     int tileFromChar(char c);
     short tileX(int index);
     short tileY(int index);
     short tileW(int index);
     short tileH(int index);
-    void buildAtlas(std::string imgDir, SDL_Renderer* renderer, int size);
+    void sendImage(u8* pixels, int texID);
+    const GLuint getTextureID();
+private:
     void initCharTiles();
     void parseTiles(boost::filesystem::path fpath);
-    void sendImage(byte* pixels, int texID);
-    GLuint getTextureID();
-    extern std::map<std::string, int> tileNames;
-    extern std::map<char, int> charTiles; //glyph textures
-    extern std::vector<Texture> tiles;
-    extern GLuint textureID;
+    GLuint textureID;
+    std::vector<Texture> tiles;    //all textures in atlas
+    std::map<char, int> charTiles; //glyph textures
+    std::map<std::string, int> tileNames;
+    
 };
 
 #endif

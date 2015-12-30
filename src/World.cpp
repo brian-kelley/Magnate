@@ -12,20 +12,9 @@ using namespace std;
 using namespace boost::filesystem;
 using namespace constants;
 
-string World::currentSaveName = "";
-unsigned long long int World::seed;
-Chunk* World::chunks[WORLD_CHUNKS][WORLD_CHUNKS];
-
-void World::init(std::string saveName, bool willGenerate)
+World::World(std::string saveName, bool willGenerate)
 {
-    currentSaveName = saveName;
-    for(int i = 0; i < WORLD_CHUNKS; i++)
-    {
-        for(int j = 0; j < WORLD_CHUNKS; j++)
-        {
-            chunks[i][j] = new Chunk();
-        }
-    }
+    this->saveName = saveName;
     path saveFolder = initial_path() / constants::BIN_TO_ROOT / "saves";
     if(!exists(saveFolder))
     {
@@ -37,138 +26,35 @@ void World::init(std::string saveName, bool willGenerate)
     if(willGenerate)
     {
         cout << "Will generate and save new world." << endl;
-        seed = (unsigned long long)(RandomUtils::gen()) << 32 | RandomUtils::gen();
-        writeWorld();
+        seed = RandomUtils::gen();
+        //write out initial data (seed)
+        write();
     }
     else
     {
         cout << "Will read existing world from disk." << endl;
-        readWorld();
+        read();
     }
-    TerrainGen::generate();
+    TerrainGen::generate(height, ground);
     Terrain::init();
-    Minimap::buildTexture();
-    Topo::generateTopo();
+    Minimap::buildTexture(height, ground);
+    Topo::generateTopo(height);
 }
 
-void World::dispose()
+void World::write()
 {
-    for(int i = 0; i < WORLD_CHUNKS; i++)
-    {
-        for(int j = 0; j < WORLD_CHUNKS; j++)
-        {
-            delete chunks[i][j];
-        }
-    }
-}
-
-void World::writeWorld()
-{
-    ofstream os;
-    path outPath = initial_path() / BIN_TO_ROOT / "saves" / string(currentSaveName + ".mag");
-    os.open(outPath.string(), ofstream::out | ofstream::binary | ofstream::trunc);
-    if(os.good())
-        os.write((char*) &seed, sizeof(seed));
-    else
-        cout << "Error writing file." << endl;
+    path outPath = initial_path() / BIN_TO_ROOT / "saves" / string(saveName + ".mag");
+    FILE* os = fopen(outPath.c_str(), "wb");
+    fwrite(&seed, sizeof(seed), 1, os);
+    fclose(os);
     cout << "Wrote out world file to:" << endl;
     cout << outPath.string() << endl;
-    os.close();
 }
 
-void World::readWorld()
+void World::read()
 {
-    path inPath = initial_path() / BIN_TO_ROOT / "saves" / string(currentSaveName + ".mag");
-    ifstream is(inPath.string(), ifstream::in | ifstream::binary);
-    is.open(inPath.string());
-    is.read((char*) &seed, sizeof(seed));
-    is.close();
-}
-
-void World::setGround(Ground ground, int wi, int wj)
-{
-    int ci = wi / CHUNK_SIZE;
-    int cj = wj / CHUNK_SIZE;
-    int ti = wi - CHUNK_SIZE * ci;
-    int tj = wj - CHUNK_SIZE * cj;
-    chunks[ci][cj]->terrain[ti][tj] = ground;
-}
-
-void World::setGround(Ground ground, Pos2 loc)
-{
-    setGround(ground, loc.x, loc.y);
-}
-
-void World::setHeight(Height height, int wi, int wj)
-{
-    if(wi < 0 || wi >= WORLD_SIZE || wj < 0 || wj >= WORLD_SIZE)
-        return;
-    int ci = wi / CHUNK_SIZE;
-    int cj = wj / CHUNK_SIZE;
-    int ti = wi - CHUNK_SIZE * ci;
-    int tj = wj - CHUNK_SIZE * cj;
-    chunks[ci][cj]->mesh[ti][tj] = height;
-}
-
-void World::setHeight(Height height, Pos2 loc)
-{
-    setHeight(height, loc.x, loc.y);
-}
-
-Height World::getHeight(int wi, int wj)
-{
-    if(wi < 0 || wi >= WORLD_SIZE || wj < 0 || wj >= WORLD_SIZE)
-        return 0;
-    int ci = wi / CHUNK_SIZE;
-    int cj = wj / CHUNK_SIZE;
-    int ti = wi - CHUNK_SIZE * ci;
-    int tj = wj - CHUNK_SIZE * cj;
-    return chunks[ci][cj]->mesh[ti][tj];
-}
-
-Height World::getHeight(Pos2 loc)
-{
-    return World::getHeight(loc.x, loc.y);
-}
-
-Ground World::getGround(int wi, int wj)
-{
-    if(wi < 0 || wi >= WORLD_SIZE || wj < 0 || wj >= WORLD_SIZE)
-        return WATER;
-    int ci = wi / CHUNK_SIZE;
-    int cj = wj / CHUNK_SIZE;
-    int ti = wi - CHUNK_SIZE * ci;
-    int tj = wj - CHUNK_SIZE * cj;
-    return chunks[ci][cj]->terrain[ti][tj];
-}
-
-Ground World::getGround(Pos2 loc)
-{
-    return getGround(loc.x, loc.y);
-}
-
-bool World::tileInWorld(int x, int y)
-{
-    if(x >= 0 && x < WORLD_SIZE && y >= 0 && y < WORLD_SIZE)
-        return true;
-    else
-        return false;
-}
-
-bool World::tileInWorld(Pos2 pos)
-{
-    if(pos.x >= 0 && pos.x < WORLD_SIZE && pos.y >= 0 && pos.y < WORLD_SIZE)
-        return true;
-    else
-        return false;
-}
-
-void World::chgHeight(Height chg, int wi, int wj)
-{
-    setHeight(getHeight(wi, wj) + chg, wi, wj);
-}
-
-void World::chgHeight(Height chg, Pos2 loc)
-{
-    setHeight(getHeight(loc) + chg, loc);
+    path inPath = initial_path() / BIN_TO_ROOT / "saves" / (saveName + ".mag");
+    FILE* is = fopen(inPath.c_str(), "rb");
+    fread(&seed, sizeof(seed), 1, is);
+    fclose(is);
 }

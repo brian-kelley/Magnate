@@ -249,8 +249,5 @@ void SaveManager::loadWorldBtn(void *arg)
 
 void SaveManager::loadTestWorld()
 {
-    PRINT("About to load test world.")
     World::init("asdf", true);
-    GLERR
-    PRINT("Done loading test world.")
 }
