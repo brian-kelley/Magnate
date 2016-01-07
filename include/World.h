@@ -29,8 +29,9 @@ public:
     World(std::string saveName, bool generate);
     void read();
     void write();
-    static World* instance;
+    void update();
 private:
+    static World* instance;
     Heightmap height;
     Heightmap ground;
     std::string saveName;

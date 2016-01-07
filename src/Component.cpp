@@ -41,43 +41,42 @@ vector<Component*>& Component::getChildren()
     return children;
 }
 
-void Component::processLeftClick()
-{
-    for(Component* c : children)
-    {
-        c->processLeftClick();
-    }
-}
-
-void Component::processMouseMotion()
-{
-    
-}
-
-void Component::processScroll(SDL_MouseWheelEvent& e)
+void Component::mouseButton(const SDL_MouseButtonEvent &event)
 {
     for(Component* c : children)
     {
         if(c->isMouseOver())
-        {
-            c->processScroll(e);
-        }
+            c->mouseButton(event);
     }
 }
 
-void Component::activate()
+void Component::mouseMotion(const SDL_MouseMotionEvent &event) {}
+
+void Component::mouseWheel(const SDL_MouseWheelEvent &event)
 {
-    active = true;
+    for(Component* c : children)
+    {
+        if(c->isMouseOver())
+            c->mouseWheel(event);
+    }
 }
 
-void Component::deactivate()
+void Component::keyTyped(const SDL_TextInputEvent &event)
 {
-    active = false;
+    for(Component* c : children)
+    {
+        if(c->isMouseOver())
+            c->keyTyped(event);
+    }
 }
 
-bool Component::isActive()
+void Component::keyEvent(const SDL_KeyboardEvent& event)
 {
-    return active;
+    for(Component* c : children)
+    {
+        if(c->isMouseOver())
+            c->keyEvent(event);
+    }
 }
 
 void Component::addChild(Component* child)
@@ -114,8 +113,23 @@ void Component::processResize()
     //now set new dimensions based on new bounding box
     local.x = left;
     local.y = top;
-    local.w = parentWidth - local.x;
-    local.h = parentHeight - local.y;
+    int oldW = local.w;
+    int oldH = local.h;
+    local.w = right - left;
+    local.h = bottom - top;
+    if(stickyFlags & StickyDirs::fixedWidth)
+    {
+        //set width back to original, but translate x to maintain position
+        int wchg = local.w - oldW;
+        local.x += wchg / 2;
+        local.w = oldW;
+    }
+    if(stickyFlags & StickyDirs::fixedHeight)
+    {
+        int hchg = local.h - oldH;
+        local.y += hchg / 2;
+        local.w = oldH;
+    }
     updateScreenRect();                 //refresh drawing rectangle
     for(auto c : children)              //pass to children
         c->processResize();

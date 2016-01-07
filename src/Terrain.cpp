@@ -1,40 +1,38 @@
-//
-//  Terrain.cpp
-//  Magnate
-//
-//  Created by Brian Kelley on 3/2/1561.
-//
-//
-
-
 #include "Terrain.h"
-#include <stdio.h>
-#include <stdlib.h>
 
 using namespace std;
-using namespace constants;
-using namespace Coord;
-using namespace RenderRoutines;
 
-int Terrain::terrainTextures[Ground::NUM_TYPES];
-
-void Terrain::init()
+string Terrain::getTextureName(Ground g)
 {
-    terrainTextures[WATER] = texNumFromStr("water");
-    terrainTextures[PLAINS] = texNumFromStr("grass");
-    terrainTextures[FLOODPLAINS] = texNumFromStr("floodplains");
-    terrainTextures[CONIFER_FOREST] = texNumFromStr("forest");
-    terrainTextures[DECID_FOREST] = texNumFromStr("forest");
-    terrainTextures[MOUNTAINS] = texNumFromStr("mountains");
-    terrainTextures[STONE] = texNumFromStr("mountains");
-    terrainTextures[SNOWCAP] = texNumFromStr("snow");
-    terrainTextures[TAIGA] = texNumFromStr("taiga");
-    terrainTextures[TUNDRA] = texNumFromStr("tundra");
-    terrainTextures[DESERT] = texNumFromStr("sand");
-    terrainTextures[BEACH] = texNumFromStr("sand");
-    terrainTextures[RIVER] = texNumFromStr("water");
-    terrainTextures[LAKE] = texNumFromStr("water");
-    terrainTextures[RAINFOREST] = texNumFromStr("rainforest");
-    terrainTextures[OUTLET_SEARCHED] = texNumFromStr("forest");
-    terrainTextures[LAKE_BOUNDARY] = texNumFromStr("test1");
+    switch(g)
+    {
+        case Ground::WATER:
+        case Ground::RIVER:
+        case Ground::LAKE:
+            return "water";
+        case Ground::FLOODPLAINS:
+            return "floodplains";
+        case Ground::CONIFER_FOREST:
+        case Ground::DECID_FOREST:
+        case Ground::OUTLET_SEARCHED:
+            return "forest";
+        case Ground::PLAINS:
+            return "grass";
+        case Ground::DESERT:
+        case Ground::BEACH:
+            return "sand";
+        case Ground::MOUNTAINS:
+        case Ground::STONE:
+            return "mountains";
+        case Ground::SNOWCAP:
+            return "snow";
+        case Ground::TAIGA:
+            return "taiga";
+        case Ground::RAINFOREST:
+            return "rainforest";
+        case Ground::TUNDRA:
+            return "tundra";
+        default:
+            return "test1";
+    }
 }

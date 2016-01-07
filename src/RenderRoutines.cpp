@@ -12,7 +12,6 @@
 using namespace std;
 using namespace constants;
 using namespace RenderRoutines;
-using namespace Renderer;
 
 void RenderRoutines::initAtlas(SDL_Renderer* windowRenderer)
 {
@@ -96,37 +95,4 @@ floatRect_t RenderRoutines::getTexCoords(int index)
     ret.w = Atlas::tileW(index);
     ret.h = Atlas::tileH(index);
     return ret;
-}
-
-//Draw a line using a quad
-void RenderRoutines::drawLine(int x1, int y1, int x2, int y2)
-{
-    disableTexture();
-    if(abs(x2 - x1) < abs(y2 - y1))
-    {
-        // dx/dy small
-        vertex2i(x1, y1);
-        vertex2i(x1 + 1, y1);
-        vertex2i(x2 + 1, y2);
-        vertex2i(x2, y2);
-    }
-    else
-    {
-        // dy/dx <= 1
-        vertex2i(x1, y1);
-        vertex2i(x1, y1 + 1);
-        vertex2i(x2, y2 + 1);
-        vertex2i(x2, y2);
-    }
-}
-
-Uint32 RenderRoutines::getColor32(byte r, byte g, byte b, byte a)
-{
-    #if defined(__APPLE__)
-    //BGRA
-    return a << 24 | r << 16 | g << 8 | b;
-    #elif defined(_WIN32)
-    //RGBA
-    return r << 24 | g << 16 | b << 8 | a;
-    #endif
 }

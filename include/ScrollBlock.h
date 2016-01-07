@@ -9,14 +9,6 @@
 #ifndef __Magnate__ScrollBlock__
 #define __Magnate__ScrollBlock__
 
-#ifdef __APPLE__
-#include "SDL.h"
-#elif __linux
-#include <SDL2/SDL.h>
-#elif _WIN32
-#include <SDL2/SDL.h>
-#endif
-
 #include <stdio.h>
 #include <vector>
 #include <string>
@@ -25,6 +17,7 @@
 #include "Button.h"
 #include "Label.h"
 #include "Field.h"
+#include "SdlHeaders.h"
 
 class ScrollBlock : public Component
 {

@@ -8,19 +8,14 @@
 
 #ifndef __MagIndev__Field__
 #define __MagIndev__Field__
-#ifdef __APPLE__
-#include "SDL.h"
-#elif __linux
-#include <SDL2/SDL.h>
-#elif _WIN32
-#include <SDL2\SDL.h>
-#endif
+
 #include <stdio.h>
 #include <iostream>
 #include <vector>
 #include <string>
 #include "Component.h"
 #include "Constants.h"
+#include "SdlHeaders.h"
 
 class Field : public Component
 {

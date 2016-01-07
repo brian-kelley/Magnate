@@ -12,7 +12,6 @@ using namespace std;
 using namespace boost::filesystem;
 using namespace constants;
 
-Atlas::Atlas() {}
 //Call this to initialize an atlas that already exists as assets/filename
 Atlas::Atlas(string atlasName, SDL_Renderer* renderer)
 {
@@ -194,10 +193,15 @@ void Atlas::sendImage(byte* pixels, int texID)
     int destY = Atlas::tileY(texID);
     int destW = Atlas::tileW(texID);
     int destH = Atlas::tileH(texID);
-    //This client-side buffer is exactly big enough to hold minimap pixels
+    //OS X and Windows have different color orderings
 #ifdef __APPLE__
     glTexSubImage2D(GL_TEXTURE_2D, 0, destX, destY, destW, destH, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
 #elif _WIN32
     glTexSubImage2D(GL_TEXTURE_2D, 0, destX, destY, destW, destH, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 #endif
+}
+
+const Texture& Atlas::textureFromName(std::string texname)
+{
+    return tiles[tileFromName(texname)];
 }

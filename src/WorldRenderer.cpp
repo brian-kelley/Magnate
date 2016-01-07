@@ -9,49 +9,16 @@
 #include "WorldRenderer.h"
 
 using namespace std;
-using namespace constants;
 using namespace Coord;
-using namespace Renderer;
 using namespace glm;
 
-//4 vertices, each with 2 floats (u, v)
-short terrainUV[Ground::NUM_TYPES * 4 * 2];
-//list of chunks currently cached in VBO, mapped to the actual vbo
-Pos2 WorldRenderer::chunkAlloc[VBO_CHUNKS];
-Quad* WorldRenderer::vboScratchBuf = NULL;
-Pos2 WorldRenderer::centerChunk;
-Heightmap* WorldRenderer::heights;
-Heightmap* WorldRenderer::grounds;
-
-bool ptInScreen(Point p);
-bool chunkInWorld(int x, int y);
-
-void WorldRenderer::init(Heightmap* worldHeights, Heightmap* worldBiomes)
+WorldRenderer::WorldRenderer(Atlas& mainAtlas, const Heightmap* heights, const Heightmap* terrain)
 {
-    using namespace Atlas;
-    heights = worldHeights;
-    grounds = worldBiomes;
-    //Init fast-access array of terrain texcoords
-    int i = 0;
-    for(Ground g = (Ground) 0; g < NUM_TYPES; g = (Ground) ((int) g + 1))
-    {
-        int terrainTexID = Terrain::terrainTextures[g];
-        intRect_t uvrect;
-        uvrect.x = tileX(terrainTexID);
-        uvrect.y = tileY(terrainTexID);
-        uvrect.w = tileW(terrainTexID);
-        uvrect.h = tileH(terrainTexID);
-        terrainUV[8 * i + 0] = uvrect.x;
-        terrainUV[8 * i + 1] = uvrect.y;
-        terrainUV[8 * i + 2] = uvrect.x + uvrect.w;
-        terrainUV[8 * i + 3] = uvrect.y;
-        terrainUV[8 * i + 4] = uvrect.x + uvrect.w;
-        terrainUV[8 * i + 5] = uvrect.y + uvrect.h;
-        terrainUV[8 * i + 6] = uvrect.x;
-        terrainUV[8 * i + 7] = uvrect.y + uvrect.h;
-        i++;
-    }
-    vboScratchBuf = (Quad*) malloc(VBO_BYTES_PER_CHUNK);
+    this->heights = heights;
+    this->terrain = terrain;
+    createUVCache(mainAtlas);
+    //create a statically sized buffer for tiles (copy of VBO)
+    vertexBuf = new Vertex3D[4 * CHUNK_SIZE * CHUNK_SIZE];
     //mark all vbo chunk slots as free
     for(int i = 0; i < VBO_CHUNKS; i++)
     {
@@ -60,55 +27,46 @@ void WorldRenderer::init(Heightmap* worldHeights, Heightmap* worldBiomes)
     updateVBOChunks(true);
 }
 
-void WorldRenderer::dispose()
+WorldRenderer::~WorldRenderer()
 {
-    delete[] vboScratchBuf;
+    delete vertexBuf;
 }
 
-Pos3 getTileVertexPos(int chunkX, int chunkZ, int tileX, int tileZ)
+Pos3 WorldRenderer::getTileVertexPos(int chunkX, int chunkZ, int tileX, int tileZ)
 {
-    Pos3 pos;
-    pos.x = TERRAIN_TILE_SIZE * (chunkX * CHUNK_SIZE + tileX);
-    pos.y = TERRAIN_Y_SCALE * WorldRenderer::heights->get(chunkX * CHUNK_SIZE + tileX, chunkZ * CHUNK_SIZE + tileZ);
-    pos.z = TERRAIN_TILE_SIZE * (chunkZ * CHUNK_SIZE + tileZ);
-    return pos;
-}
-
-void WorldRenderer::setTexCoords(Quad *q, Ground ground)
-{
-    //TODO: modify when doing multiple variants of a texture
-    int g = (int) ground;
-    q->p1.texcoord = {terrainUV[g * 8 + 0], terrainUV[g * 8 + 1]};
-    q->p2.texcoord = {terrainUV[g * 8 + 2], terrainUV[g * 8 + 3]};
-    q->p3.texcoord = {terrainUV[g * 8 + 4], terrainUV[g * 8 + 5]};
-    q->p4.texcoord = {terrainUV[g * 8 + 6], terrainUV[g * 8 + 7]};
+    Pos2 loc(chunkX * CHUNK_SIZE + tileX, chunkZ * CHUNK_SIZE + tileZ);
+    return Coord::tileToWorld(loc.x, heights->get(loc), loc.y);
 }
 
 //set attributes for the 4 vertices of a tile
-void WorldRenderer::getTileQuad(Quad* q, int x, int z)
+void WorldRenderer::getTileQuad(int quadIndex, int x, int z)
 {
-    //get positions
-    q->p1.pos = vec3(tileToWorld(x, heights->get(x, z), z));
-    q->p2.pos = vec3(tileToWorld(x + 1, heights->get(x + 1, z), z));
-    q->p3.pos = vec3(tileToWorld(x + 1, heights->get(x + 1, z + 1), z + 1));
-    q->p4.pos = vec3(tileToWorld(x, heights->get(x, z + 1), z + 1));
+    Vertex3D* quad = &vertexBuf[quadIndex * 4];
+    //Positions
+    quad[0].pos = tileToWorld(x, heights->get(x, z), z);
+    quad[1].pos = tileToWorld(x + 1, heights->get(x + 1, z), z);
+    quad[2].pos = tileToWorld(x + 1, heights->get(x + 1, z + 1), z + 1);
+    quad[3].pos = tileToWorld(x, heights->get(x, z + 1), z + 1);
     //get normal to produce color (on CPU)
-    vec3 normal = normalize(cross(q->p2.pos - q->p4.pos, q->p1.pos - q->p3.pos));
+    vec3 normal = normalize(cross(quad[1].pos - quad[3].pos, quad[0].pos - quad[2].pos));
     float diffuse = dot(normal, sunlight);
     if(diffuse < 0)
         diffuse = 0;
     float light = diffuse * diffuseWeight + ambientWeight;
+    auto ground = terrain->get(x, z);
+    quad[0].texcoord = uvCache[ground * 4 + 0];
+    quad[1].texcoord = uvCache[ground * 4 + 1];
+    quad[2].texcoord = uvCache[ground * 4 + 2];
+    quad[3].texcoord = uvCache[ground * 4 + 3];
     Color4 color = {(unsigned char)(light * 255), (unsigned char)(light * 255), (unsigned char)(light * 255), 255};
-    setTexCoords(q, Ground(grounds->get(x, z)));
-    q->p1.color = color;
-    q->p2.color = color;
-    q->p3.color = color;
-    q->p4.color = color;
+    quad[0].color = color;
+    quad[1].color = color;
+    quad[2].color = color;
+    quad[3].color = color;
 }
 
 bool WorldRenderer::allocChunk(int x, int z)
 {
-    //PRINT("Allocating chunk at " << x << ", " << z)
     int allocTarget = -1;
     for(int i = 0; i < VBO_CHUNKS; i++)
     {
@@ -127,7 +85,7 @@ bool WorldRenderer::allocChunk(int x, int z)
     {
         for(int j = 0; j < CHUNK_SIZE; j++) //tiles by z
         {
-            getTileQuad(&vboScratchBuf[j * CHUNK_SIZE + i], chunkXOffset + i, chunkZOffset + j);
+            getTileQuad(j * CHUNK_SIZE + i, chunkXOffset + i, chunkZOffset + j);
         }
     }
     //mark slot in chunkAlloc as filled
@@ -219,16 +177,11 @@ void WorldRenderer::updateVBOChunks(bool force)
     }
 }
 
-bool ptInScreen(Point p)
+void WorldRenderer::createUVCache(Atlas &atlas)
 {
-    if(p.x >= 0 && p.x < WINDOW_W && p.y >= 0 && p.y < WINDOW_H)
-        return true;
-    return false;
-}
-
-bool chunkInWorld(int x, int y)
-{
-    if(x >= 0 && x < WORLD_CHUNKS && y >= 0 && y < WORLD_CHUNKS)
-        return true;
-    return false;
+    for(Ground g = (Ground) 0; g < Ground::NUM_TYPES, g++)
+    {
+        auto tile = Atlas::textureFromName(Terrain::getTextureName(g));
+        
+    }
 }

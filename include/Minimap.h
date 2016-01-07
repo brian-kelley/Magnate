@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "Constants.h"
+#include "Component.h"
 #include "World.h"
 #include "Terrain.h"
 #include "Renderer.h"
@@ -10,13 +11,8 @@
 #include "WorldRenderer.h"
 #include "Coord.h"
 #include "GlmHeaders.h"
+#include "SdlHeaders.h"
 #include "Atlas.h"
-
-#ifdef __APPLE__
-#include "gl.h"
-#elif _WIN32
-#include "gl.h"
-#endif
 
 namespace Minimap
 {

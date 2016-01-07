@@ -6,37 +6,17 @@
 //  Copyright (c) 2014 Brian Kelley. All rights reserved.
 //
 
-#ifndef __Magnate__Coord__
-#define __Magnate__Coord__
+#ifndef __COORD_H__
+#define __COORD_H__
 
 #include <iostream>
 #include <algorithm>
 #include "Constants.h"
 #include "GlmHeaders.h"
 #include "LinAlg.h"
-#include "Camera.h"
+#include "GenTypes.h"
 
-struct Pos2
-{
-    Pos2() : x(0), y(0) {}
-    Pos2(short x, short y) : x(x), y(y) {}
-    short x;
-    short y;
-};
 
-struct SmallVec
-{
-    SmallVec();
-    SmallVec(char x, char y);
-    SmallVec(int direction, int mag);
-    SmallVec(int d1, int m1, int d2, int m2);
-    SmallVec operator+(SmallVec& v);
-    void operator+=(SmallVec& v);
-    SmallVec operator*(float scl);
-    void operator*=(float scl);
-    char x;
-    char y;
-};
 
 bool operator==(const Pos2& p1, const Pos2& p2);
 bool operator!=(const Pos2& p1, const Pos2& p2);
@@ -54,16 +34,6 @@ struct Plane
     float d;
 };
 
-struct FrustumCorners
-{
-    FrustumCorners() {}
-    FrustumCorners(glm::vec4 upperLeft, glm::vec4 upperRight, glm::vec4 lowerRight, glm::vec4 lowerLeft) : upperLeft(upperLeft), upperRight(upperRight), lowerRight(lowerRight), lowerLeft(lowerLeft) {}
-    glm::vec4 upperLeft;
-    glm::vec4 upperRight;
-    glm::vec4 lowerRight;
-    glm::vec4 lowerLeft;
-};
-
 enum Direction
 {
     UP,    //-y
@@ -79,10 +49,9 @@ namespace Coord
     bool rectInside(intRect_t* small, intRect_t* big);
     glm::vec3 tileToWorld(int x, unsigned short height, int z);
     Pos2 worldToTile(glm::vec4 worldPos);
-    FrustumCorners getFrustumCorners();
     extern glm::mat4 view3;
     extern glm::mat4 proj3;
-    //Component vectors for constructing world positions from tile indices and heightmap heights
+    //Component vectors for constructing worldspace coords from tile indices and heightmap heights
     const glm::vec4 tileI = {constants::TERRAIN_TILE_SIZE, 0, 0, 0};
     const glm::vec4 tileJ = {0, constants::TERRAIN_Y_SCALE, 0, 0};
     const glm::vec4 tileK = {0, 0, constants::TERRAIN_TILE_SIZE, 0};

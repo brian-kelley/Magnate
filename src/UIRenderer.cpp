@@ -3,7 +3,6 @@
 using namespace std;
 using namespace constants;
 using namespace RenderRoutines;
-using namespace Renderer;
 
 void UIRenderer::drawComponent(Component& c)
 {

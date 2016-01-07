@@ -9,22 +9,6 @@
 #ifndef __MagIndev__Atlas__
 #define __MagIndev__Atlas__
 //Platform-specific includes
-#ifdef __APPLE__
-#include "gl.h"
-#include "SDL.h"
-#include "SDL_image.h"
-#include <boost/filesystem.hpp>
-#elif __linux
-#include <GL/gl.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <boost/filesystem.hpp>
-#elif _WIN32
-#include <GL/gl.h>
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <boost/filesystem.hpp>
-#endif
 #include <iostream>
 #include <string>
 #include <ios>
@@ -32,9 +16,11 @@
 #include <vector>
 #include <map>
 #include <stdexcept>
+#include <boost/filesystem.hpp>
 #include "Constants.h"
 #include "GenTypes.h"
 #include "DebugTools.h"
+#include "SdlHeaders.h"
 
 typedef struct
 {
@@ -48,9 +34,9 @@ typedef struct
 class Atlas
 {
 public:
-    Atlas();
     Atlas(std::string imageName, SDL_Renderer* renderer);
     int tileFromName(std::string tilename);
+    const Texture& textureFromName(std::string texname);
     int tileFromChar(char c);
     short tileX(int index);
     short tileY(int index);

@@ -11,13 +11,7 @@
 
 #include <string>
 #include <cmath>
-#ifdef __APPLE__
 #include "GlmHeaders.h"
-#elif _WIN32
-// ?
-#elif __linux
-// ?
-#endif
 //Universal debug setting
 #define MAGNATE_DEBUG
 
@@ -61,28 +55,6 @@ struct Point
 typedef void (*callback_t) (void*);
 typedef unsigned char byte;
 typedef short Height;
-
-enum Ground : unsigned char
-{
-    WATER,
-    PLAINS,
-    FLOODPLAINS,
-    CONIFER_FOREST,
-    DECID_FOREST,
-    MOUNTAINS,
-    DESERT,
-    RIVER,    //like water but used for erosion and not always flat
-    LAKE,     //like ocean (flat) but with altitude > 0
-    BEACH,
-    RAINFOREST,
-    TUNDRA,
-    TAIGA,
-    STONE,
-    SNOWCAP,
-    OUTLET_SEARCHED, //used to mark tile as visited by lake outlet searching
-    LAKE_BOUNDARY,   //used to mark tiles in lakes being constructed
-    NUM_TYPES
-};
 
 //Type for terrain heightmap heights (uint8)
 

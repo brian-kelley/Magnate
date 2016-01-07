@@ -58,3 +58,8 @@ void World::read()
     fread(&seed, sizeof(seed), 1, is);
     fclose(is);
 }
+
+void World::update()
+{
+    
+}

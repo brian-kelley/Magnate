@@ -1,24 +1,33 @@
-//
-//  Terrain.h
-//  Magnate
-//
-//  Created by Brian Kelley on 3/2/1561.
-//
-//
+#ifndef __TERRAIN_H__
+#define __TERRAIN_H__
 
-#ifndef Magnate_Terrain_h
-#define Magnate_Terrain_h
-
-#include <map>
 #include <string>
-#include "Constants.h"
-#include "Coord.h"
-#include "RenderRoutines.h"
+
+enum Ground : unsigned char
+{
+    WATER,
+    PLAINS,
+    FLOODPLAINS,
+    CONIFER_FOREST,
+    DECID_FOREST,
+    MOUNTAINS,
+    DESERT,
+    RIVER,    //like water but used for erosion and not necessarily flat
+    LAKE,     //like ocean (flat) but with altitude > 0
+    BEACH,
+    RAINFOREST,
+    TUNDRA,
+    TAIGA,
+    STONE,
+    SNOWCAP,
+    OUTLET_SEARCHED, //marks tiles visited by lake outlet searching
+    LAKE_BOUNDARY,   //marks tiles of lakes under construction
+    NUM_TYPES
+};
 
 namespace Terrain
 {
-    extern void init();
-    extern int terrainTextures[Ground::NUM_TYPES];
+    std::string getTextureName(Ground g);
 }
 
 #endif

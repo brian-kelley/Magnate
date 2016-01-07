@@ -2,35 +2,16 @@
 
 using namespace std;
 using namespace glm;
-using namespace constants;
 using namespace Coord;
 
-bool Renderer::textureOn;
-GLuint Renderer::programID;
-GLuint Renderer::vshadeID;
-GLuint Renderer::fshadeID;
-GLuint Renderer::posAttribLoc;
-GLuint Renderer::colorAttribLoc;
-GLuint Renderer::texCoordAttribLoc;
-int Renderer::worldVBOSize;
-int Renderer::buildingVBOSize;
-int Renderer::guiVBOSize;
-Vertex2D Renderer::stateVertex;
-mat4 Renderer::proj2;
-mat4 Renderer::view2;
-GLuint Renderer::projLoc;
-GLuint Renderer::viewLoc;
-GLuint Renderer::worldVBO;
-GLuint Renderer::buildingVBO;
-GLuint Renderer::guiVBO;
-int Renderer::numWorldVertices;
-int Renderer::numBuildingVertices;
-int Renderer::numGuiQuadVertices;
-int Renderer::numGuiLineVertices;
-vector<Vertex2D> Renderer::guiQuadVertices;
-vector<Vertex2D> Renderer::guiLineVertices;
-
-void Renderer::init()
+Renderer::Renderer() :
+window(640, 480),
+shaders(),
+mainAtlas("main", window.getRenderer()),
+vboMan(shaders.getProgramID()),
+imm(<#args#>),
+guiRend(<#args#>),
+worldRend(<#args#>)
 {
     textureOn = false;
     initShaders();
@@ -40,169 +21,13 @@ void Renderer::init()
     stateVertex.texcoord = {0, 0};
     stateVertex.color = {255, 255, 255, 255};
     //Set initial camera position and direction
-    Camera::camInit();
     update2DMatrices();
     update3DMatrices();
     initVBO();
     numWorldVertices = VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * 4;
 }
 
-void Renderer::initVBO()
-{
-    guiQuadVertices.reserve(GUI_QUAD_PRELOAD);
-    guiLineVertices.reserve(GUI_LINE_PRELOAD);
-    //Set up vertex attributes for shader, which are the same
-    //for all 3 VBOs
-    posAttribLoc = glGetAttribLocation(programID, "vertex");
-    colorAttribLoc = glGetAttribLocation(programID, "color");
-    texCoordAttribLoc = glGetAttribLocation(programID, "texCoord");
-    glEnableVertexAttribArray(posAttribLoc);
-    glEnableVertexAttribArray(colorAttribLoc);
-    glEnableVertexAttribArray(texCoordAttribLoc);
-    setupWorldVBO();
-    setupBuildingVBO();
-    setupGuiVBO();
-}
-
-void Renderer::setupWorldVBO()
-{
-    glGenBuffers(1, &worldVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, worldVBO);
-    GLERR
-    int worldVBOSize = VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * sizeof(Vertex3D) * 4;
-    PRINT("Creating world vbo with " << worldVBOSize << " bytes.")
-    glBufferData(GL_ARRAY_BUFFER, VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * sizeof(Vertex3D) * 4, NULL, GL_STATIC_DRAW);
-    GLERR
-}
-
-void Renderer::setupBuildingVBO()
-{
-    glGenBuffers(1, &buildingVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, buildingVBO);
-    glBufferData(GL_ARRAY_BUFFER, MAX_BUILDING_QUADS * 4 * sizeof(Vertex3D), nullptr, GL_DYNAMIC_DRAW);
-}
-
-void Renderer::setupGuiVBO()
-{
-    glGenBuffers(1, &guiVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, guiVBO);
-    guiVBOSize = MAX_GUI_QUADS * 4 + MAX_GUI_LINES * 2;
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex2D) * (guiVBOSize), NULL, GL_STREAM_DRAW);
-}
-
-void Renderer::dispose()
-{
-    glDetachShader(programID, vshadeID);
-    glDetachShader(programID, fshadeID);
-    glDeleteShader(vshadeID);
-    glDeleteShader(fshadeID);
-    glDeleteProgram(programID);
-}
-
-void Renderer::initShaders()
-{
-    vector<string> code = {
-    "#version 120",
-    "attribute vec3 vertex;",
-    "attribute vec4 color;",
-    "attribute vec2 texCoord;",
-    "varying vec2 fragTexCoord;",
-    "varying vec4 fragBaseColor;",
-    "uniform mat4 view;",
-    "uniform mat4 proj;",
-    "uniform sampler2D sampler;",
-    "void main()",
-    "{",
-    "    gl_Position = proj * view * vec4(vertex, 1.0);",
-    "    fragTexCoord = texCoord;",
-    "    fragBaseColor = color;",
-    "}"};
-    string vertexShadeCode = "";
-    for(auto line : code)
-    {
-        vertexShadeCode += line + "\n";
-    }
-    code = {
-    "#version 120",
-    "uniform sampler2D sampler;",
-    "varying vec2 fragTexCoord;",
-    "varying vec4 fragBaseColor;",
-    "void main()",
-    "{",
-    "    if(fragTexCoord.x == -1)",
-    "    {",
-    "        gl_FragColor = fragBaseColor;",
-    "    }",
-    "    else",
-    "    {",
-    "        vec2 normalTexCoord = fragTexCoord / 2048.0;",
-    "        vec4 texelColor = texture2D(sampler, normalTexCoord);",
-    "        gl_FragColor.x = texelColor.x * fragBaseColor.x;",
-    "        gl_FragColor.y = texelColor.y * fragBaseColor.y;",
-    "        gl_FragColor.z = texelColor.z * fragBaseColor.z;",
-    "        gl_FragColor.w = texelColor.w * fragBaseColor.w;",
-    "    }",
-    "}"};
-    string fragmentShadeCode = "";
-    for(auto line : code)
-    {
-        fragmentShadeCode += line + "\n";
-    }
-    code.clear();
-    const char* vcstr = vertexShadeCode.c_str();
-    const char* fcstr = fragmentShadeCode.c_str();
-    programID = glCreateProgram();
-    vshadeID = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vshadeID, 1, &vcstr, NULL);
-    glCompileShader(vshadeID);
-    int ERR_BUF_LEN = 500;
-    char error[ERR_BUF_LEN];
-    error[0] = 0;
-    glGetShaderInfoLog(vshadeID, 500, NULL, error);
-    if(error[0])
-    {
-        cout << error << endl;
-        throw runtime_error("Vertex shader compile error.");
-    }
-    fshadeID = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fshadeID, 1, &fcstr, NULL);
-    glCompileShader(fshadeID);
-    error[0] = 0;
-    glGetShaderInfoLog(fshadeID, 500, NULL, error);
-    if(error[0])
-    {
-        cout << error << endl;
-        throw runtime_error("Fragment shader compile error.");
-    }
-    glAttachShader(programID, vshadeID);
-    glAttachShader(programID, fshadeID);
-    GLERR
-    glLinkProgram(programID);
-    GLERR
-    error[0] = 0;
-    GLuint linkSuccess;
-    glGetProgramiv(programID, GL_LINK_STATUS, (int*) &linkSuccess);
-    GLERR
-    if(!linkSuccess)
-    {
-        glGetProgramInfoLog(programID, ERR_BUF_LEN, &ERR_BUF_LEN, error);
-        cout << error << endl;
-        throw runtime_error("Shader linking error.");
-    }
-    glUseProgram(programID);
-    GLERR
-    GLuint samplerLoc = glGetUniformLocation(programID, "sampler");
-    GLERR
-    glActiveTexture(GL_TEXTURE0);
-    GLERR
-    glUniform1i(samplerLoc, 0);
-    GLERR
-    viewLoc = glGetUniformLocation(programID, "view");
-    projLoc = glGetUniformLocation(programID, "proj");
-    GLERR
-}
-
-void Renderer::startFrame()
+void Renderer::prepareFrame()
 {
     numGuiLineVertices = 0;
     numGuiQuadVertices = 0;
@@ -210,15 +35,12 @@ void Renderer::startFrame()
 
 void Renderer::endFrame()
 {
+    
     uploadMatrices(3);
     //draw world VBO
     bindWorldVBO();
     glEnable(GL_DEPTH_TEST);
     glDrawArrays(GL_QUADS, 0, numWorldVertices);
-    //draw building VBO
-    //bindBuildingVBO();
-    //glDrawArrays(GL_QUADS, 0, 0);
-    //draw GUI VBO
     bindGuiVBO();
     uploadMatrices(2);
     int totalVertices = numGuiQuadVertices + numGuiLineVertices;
@@ -398,4 +220,9 @@ vec2 Renderer::xzPlaneIntersect(vec3 pos, vec3 dir)
 {
     float mult = pos.y / dir.y;
     return {pos.x + dir.x * mult, pos.z + dir.z * mult};
+}
+
+void Renderer::update(World& world, Component* guiMaster)
+{
+    
 }

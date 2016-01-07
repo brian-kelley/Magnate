@@ -2,7 +2,6 @@
 
 using namespace std;
 using namespace constants;
-using namespace Renderer;
 using namespace RenderRoutines;
 using namespace Coord;
 using namespace glm;
