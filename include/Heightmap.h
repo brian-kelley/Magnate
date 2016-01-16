@@ -5,8 +5,8 @@
 #include <climits>
 #include "RandomUtils.h"
 #include "Coord.h"
-#include "VecField.h"
 #include "GlmHeaders.h"
+#include "DebugTools.h"
 
 class Heightmap
 {
@@ -22,6 +22,7 @@ public:
     void set(short val, Pos2 loc);
     short get(int x, int y) const;
     short get(Pos2 loc) const;
+    void add(const Heightmap& rval);
     void add(short val, int x, int y);
     void add(short val, Pos2 loc);
     bool validPoint(int x, int y) const;

@@ -42,6 +42,14 @@ Color4::Color4(int r, int g, int b, int a)
     this->a = a;
 }
 
+void Color4::operator=(const Color4 &rval)
+{
+    r = rval.r;
+    g = rval.g;
+    b = rval.b;
+    a = rval.a;
+}
+
 ostream& operator<<(ostream& os, Rectangle& r)
 {
     os << "(" << r.x << "," << r.y << "), " << r.w << "x" << r.h;

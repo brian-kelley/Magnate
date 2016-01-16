@@ -1,13 +1,5 @@
-//
-//  Building.h
-//  Magnate
-//
-//  Created by Brian Kelley on 10/15/14288.
-//  Copyright (c) 2014 Brian Kelley. All rights reserved.
-//
-
-#ifndef __Magnate__Building__
-#define __Magnate__Building__
+#ifndef __BUILDING_H__
+#define __BUILDING_H__
 
 #include <vector>
 #include "Coord.h"
@@ -28,11 +20,6 @@ struct Cuboid
     int roofTex;
 };
 
-enum BUILDINGS
-{
-    //Put factory/building types here
-};
-
 class Building
 {
 public:
@@ -44,7 +31,6 @@ protected:
 private:
     std::vector<Cuboid> boxes;
     void addCuboid(Cuboid c);
-    BUILDINGS bldgType;
 };
 
 #endif

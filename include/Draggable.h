@@ -1,16 +1,7 @@
-//
-//  Draggable.h
-//  Magnate
-//
-//  Created by Brian Kelley on 4/7/1597.
-//
-//
-
-#ifndef Magnate_Draggable_h
-#define Magnate_Draggable_h
+#ifndef __DRAGGABLE_H__
+#define __DRAGGABLE_H__
 
 #include <iostream>
-#include "Constants.h"
 #include "Component.h"
 #include "Building.h"
 
@@ -24,16 +15,16 @@ class Draggable : public Component
 {
 public:
     static Draggable* activeDrag;
-    Draggable(int x, int y, int width, int height, u8 stickyFlags, int imageID, Component* parentComp, callback_t whenDropped, DRAG_IMAGE_TYPES imgType);
+    Draggable(int x, int y, int width, int height, u8 stickyFlags, int imageID, Component* parentComp, callback whenDropped, DRAG_IMAGE_TYPES imgType);
     void processLeftClick();
     void processMouseMotion();
-    Point getDragPos();
+    Pos2 getDragPos();
     void deactivate();
     DRAG_IMAGE_TYPES getImageType();
     int getImageNum();
 private:
     int img;
-    callback_t onDrop;
+    callback onDrop;
     bool dragging;
     int clickX, clickY;     //position of cursor (rel. to my rect)
     int dragX, dragY;       //position of rect being dragged (screen) (analogous to drawRect position)

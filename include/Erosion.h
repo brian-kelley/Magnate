@@ -1,13 +1,12 @@
 #ifndef __EROSION_H__
 #define __EROSION_H__
 
-#include "VecField.h"
+#include <iostream>
 #include "Heightmap.h"
+#include "GlobalConfig.h"
 #include "Watershed.h"
-#include "Constants.h"
 #include "DebugTools.h"
 #include "Coord.h"
-#include <iostream>
 
 /*
  Erosion simulation
@@ -24,15 +23,16 @@
     -add soil capture map to world
  */
 
-namespace Erosion
+class Erosion
 {
-    void erosion(Heightmap& init, Heightmap& rainfall);    //run the simulation, return heightmap
-    void simpleRunner(Heightmap& world);
-    void deposit(Heightmap& world, Pos2& loc, Height& h);    //deposit height anywhere. Different behavior if in a pit or on a slope.
-    int getDownhill(Heightmap& world, Pos2 loc);
-    void fillPit(Heightmap& world, Pos2 loc, Height sed);
-    extern Heightmap* world;
-    extern Heightmap* rainfall;
+public:
+    Erosion(Heightmap& worldHeights, Heightmap& worldRainfall);
+private:
+    void simpleRunner();
+    int getDownhill(Pos2 loc);
+    void fillPit(Pos2 loc, short sed);
+    Heightmap& world;
+    Heightmap& rainfall;
 };
 
 #endif

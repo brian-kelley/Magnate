@@ -1,14 +1,7 @@
-//
-//  SaveManager.h
-//  Magnate
-//
-//  Created by Brian Kelley on 1/22/1522.
-//  Copyright (c) 2015 Brian Kelley. All rights reserved.
-//
+#ifndef __SAVE_MANAGER_H__
+#define __SAVE_MANAGER_H__
 
-#ifndef __Magnate__SaveManager__
-#define __Magnate__SaveManager__
-
+/*
 #include <stdio.h>
 #include <string>
 #include <vector>
@@ -37,8 +30,8 @@ namespace SaveManager
     extern Scene** currentScenePtr;
     extern std::vector<std::string> saves;
     //Functions
-    extern void init(Scene** currentScenePtr, callback_t toMain, callback_t toGame);
-    extern void initUI(callback_t toMain, callback_t toGame);
+    extern void init(Scene** currentScenePtr, callback toMain, callback toGame);
+    extern void initUI(callback toMain, callback toGame);
     extern void disposeUI();
     extern void refreshSaveList();
     extern std::vector<std::string>& listSaves();
@@ -56,7 +49,9 @@ namespace SaveManager
     extern void enterRename();
     extern void loadWorldBtn(void* arg);
     extern void loadTestWorld();
-    extern callback_t transitionToGame;
+    extern callback transitionToGame;
 };
 
-#endif /* defined(__Magnate__SaveManager__) */
+ */
+
+#endif

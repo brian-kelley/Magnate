@@ -1,12 +1,12 @@
 #include "Game.h"
 
 using namespace std;
-using namespace constants;
-using namespace boost::filesystem;
 using namespace Coord;
 
-Game::Game()
+Game::Game() : renderer()
 {
+    Input::init();
+    //TODO: Find where to put main menu and initialize here
     terminating = false;
 }
 
@@ -16,13 +16,13 @@ void Game::update()
     Input::update();
     //Update world
     World::update();
-    //Render world and GUI
-    Renderer::update(world, GUI::current);
+    renderer.update();
 }
 
+/*
 void Game::initScenes()
 {
-    /* Main menu */
+    //Main menu
     Scene* mainMenu = new Scene();
     new Button(320, 200, 240, 100, "Start Game", ui::mainStartButton, mainMenu);
     new Button(320, 320, 240, 100, "Quit Game", ui::mainQuitButton, mainMenu);
@@ -32,6 +32,7 @@ void Game::initScenes()
     Scene* gameOverlay = new Scene();
     scenes[GAME] = gameOverlay;
 }
+*/
 
 void Game::mainLoop()
 {

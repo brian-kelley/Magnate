@@ -3,25 +3,9 @@
 using namespace std;
 using namespace TexGen;
 
-Color::Color()
-{
-    r = 255;
-    g = 255;
-    b = 255;
-    a = 255;
-}
-
-Color::Color(byte rr, byte gg, byte bb, byte aa)
-{
-    r = rr;
-    g = gg;
-    b = bb;
-    a = aa;
-}
-
 Generator::Generator(int x, int y) : buf(x, y) {}
 
-bool TexGen::operator==(const TexGen::Color& c1, const TexGen::Color& c2)
+bool TexGen::operator==(const Color4& c1, const Color4& c2)
 {
     if(c1.r == c2.r && c1.g == c2.g && c1.b == c2.b && c1.a == c2.a)
         return true;
@@ -32,7 +16,7 @@ Buffer::Buffer(int length, int width)
 {
     len = length;
     wid = width;
-    data = new Color[len * wid];
+    data = new Color4[len * wid];
     fill({0, 0, 0, 255});
 }
 
@@ -40,8 +24,8 @@ Buffer::Buffer(Buffer& buf)
 {
     len = buf.len;
     wid = buf.wid;
-    data = new Color[len * wid];
-    memcpy(data, buf.data, sizeof(Color) * len * wid);
+    data = new Color4[len * wid];
+    memcpy(data, buf.data, sizeof(Color4) * len * wid);
 }
 
 Buffer::~Buffer()
@@ -49,7 +33,7 @@ Buffer::~Buffer()
     delete[] data;
 }
 
-Color Buffer::get(int x, int y)
+Color4 Buffer::get(int x, int y)
 {
     if(validPx(x, y))
     {
@@ -59,7 +43,7 @@ Color Buffer::get(int x, int y)
         return {255, 255, 255, 255};
 }
 
-void Buffer::set(int x, int y, Color c)
+void Buffer::set(int x, int y, Color4 c)
 {
     if(validPx(x, y))
         data[x + y * wid] = {c.r, c.g, c.b, c.a};
@@ -87,7 +71,7 @@ void Buffer::smooth(int iters)
     }
 }
 
-Color Buffer::calcColor(TexGen::Color avg, int size, double rough)
+Color4 Buffer::calcColor(Color4 avg, int size, double rough)
 {
     int range = rough * size;
     if(range == 0)
@@ -105,10 +89,10 @@ Color Buffer::calcColor(TexGen::Color avg, int size, double rough)
     b = min(b, 255);
     a = max(a, 0);
     a = min(a, 255);
-    return Color(r, g, b, a);
+    return Color4(r, g, b, a);
 }
 
-Color Buffer::getAvg(int x, int y)
+Color4 Buffer::getAvg(int x, int y)
 {
     int r = 0;
     int g = 0;
@@ -121,7 +105,7 @@ Color Buffer::getAvg(int x, int y)
         {
             if(validPx(x + i, y + j))
             {
-                Color c = get(x + i, y + j);
+                Color4 c = get(x + i, y + j);
                 r += c.r;
                 g += c.g;
                 b += c.b;
@@ -132,17 +116,17 @@ Color Buffer::getAvg(int x, int y)
     }
     if(num == 0)
         return {0, 0, 0, 255};
-    return Color(r / num, g / num, b / num, a / num);
+    return Color4(r / num, g / num, b / num, a / num);
 }
 
-Color Buffer::getMode(int x, int y)
+Color4 Buffer::getMode(int x, int y)
 {
-    vector<Color> colors;
+    vector<Color4> Color4s;
     for(int i = 0; i < 3; i++)
     {
         for(int j = 0; j < 3; j++)
         {
-            colors.push_back(get(x + i - 1, y + j - 1));
+            Color4s.push_back(get(x + i - 1, y + j - 1));
         }
     }
     int occur[9];
@@ -153,7 +137,7 @@ Color Buffer::getMode(int x, int y)
         {
             if(i == j)
                 continue;
-            if(colors[i] == colors[j])
+            if(Color4s[i] == Color4s[j])
             {
                 occur[i + j * 3]++;
             }
@@ -165,7 +149,7 @@ Color Buffer::getMode(int x, int y)
         if(occur[i] > occur[best])
             best = i;
     }
-    return colors[best];
+    return Color4s[best];
 }
 
 void Buffer::makeOpaque()
@@ -174,7 +158,7 @@ void Buffer::makeOpaque()
     {
         for(int j = 0; j < wid; j++)
         {
-            Color c = get(i, j);
+            Color4 c = get(i, j);
             set(i, j, {c.r, c.g, c.b, 255});
         }
     }
@@ -182,10 +166,10 @@ void Buffer::makeOpaque()
 
 void Generator::copyToAtlas(int texID)
 {
-    Atlas::sendImage((byte*) buf.data, texID);
+    Atlas::sendImage(buf.data, texID);
 }
 
-void Buffer::fill(Color c)
+void Buffer::fill(Color4 c)
 {
     for(int i = 0; i < len; i++)
     {
@@ -196,13 +180,13 @@ void Buffer::fill(Color c)
     }
 }
 
-void Buffer::fillNoAlpha(Color c)
+void Buffer::fillNoAlpha(Color4 c)
 {
     for(int i = 0; i < len; i++)
     {
         for(int j = 0; j < wid; j++)
         {
-            byte alpha = get(i, j).a;
+            auto alpha = get(i, j).a;
             set(i, j, {c.r, c.g, c.b, alpha});
         }
     }
@@ -219,7 +203,7 @@ void Cloud::generate()
         for(int j = 0; j < buf.wid; j++)
         {
             int val = h.get(i, j) * 255.0 / SHRT_MAX;
-            buf.set(i, j, Color(255, 255, 255, val));
+            buf.set(i, j, Color4(255, 255, 255, val));
         }
     }
 }

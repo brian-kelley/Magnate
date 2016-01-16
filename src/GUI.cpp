@@ -1,17 +1,17 @@
 #include "GUI.h"
 
-Scene* GUI::current;
+Scene* GUI::current = nullptr;
 
 void GUI::init(Scene *initial)
 {
     current = initial;
     //register input listeners
-    Input::keyBroadcaster.addListener(processKeyEvent);
-    Input::typingBroadcaster.addListener(processTypingEvent);
-    Input::buttonBroadcaster.addListener(processButton);
-    Input::motionBroadcaster.addListener(processMotion);
-    Input::wheelBroadcaster.addListener(processWheel);
-    Input::windowBroadcaster.addListener(processWindow);
+    Input::keyBroadcaster.addListener(NULL, processKeyEvent);
+    Input::typingBroadcaster.addListener(NULL, processTypingEvent);
+    Input::buttonBroadcaster.addListener(NULL, processButton);
+    Input::motionBroadcaster.addListener(NULL, processMotion);
+    Input::wheelBroadcaster.addListener(NULL, processWheel);
+    Input::windowBroadcaster.addListener(NULL, processWindow);
 }
 
 void GUI::transition(Scene *next)
@@ -19,32 +19,32 @@ void GUI::transition(Scene *next)
     current = next;
 }
 
-void GUI::processKeyEvent(const SDL_KeyboardEvent &event)
+void GUI::processKeyEvent(void*, const SDL_KeyboardEvent &event)
 {
     current->keyEvent(event);
 }
 
-void GUI::processTypingEvent(const SDL_TextInputEvent &event)
+void GUI::processTypingEvent(void*, const SDL_TextInputEvent &event)
 {
     current->keyTyped(event);
 }
 
-void GUI::processButton(const SDL_MouseButtonEvent &event)
+void GUI::processButton(void*, const SDL_MouseButtonEvent &event)
 {
     current->mouseButton(event);
 }
 
-void GUI::processMotion(const SDL_MouseMotionEvent &event)
+void GUI::processMotion(void*, const SDL_MouseMotionEvent &event)
 {
     current->mouseMotion(event);
 }
 
-void GUI::processWheel(const SDL_MouseWheelEvent &event)
+void GUI::processWheel(void*, const SDL_MouseWheelEvent &event)
 {
     current->mouseWheel(event);
 }
 
-void GUI::processWindow(const SDL_WindowEvent &event)
+void GUI::processWindow(void*, const SDL_WindowEvent &event)
 {
     auto previousRect = current->getLocalRect();
     switch (event.type)

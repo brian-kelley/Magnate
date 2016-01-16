@@ -10,7 +10,9 @@ namespace Input
 {
     void init();
     void update();
-    extern const u8* keystate;
+    extern const u8* keystate;  //bool buffer of all keys (access with SDL_SCANCODE_*)
+    extern int mouseX;
+    extern int mouseY;
     extern Broadcaster<SDL_KeyboardEvent> keyBroadcaster;
     extern Broadcaster<SDL_TextInputEvent> typingBroadcaster;
     extern Broadcaster<SDL_MouseButtonEvent> buttonBroadcaster;

@@ -1,13 +1,6 @@
-//
-//  SaveManager.cpp
-//  Magnate
-//
-//  Created by Brian Kelley on 1/22/1522.
-//  Copyright (c) 2015 Brian Kelley. All rights reserved.
-//
-
 #include "SaveManager.h"
 
+/*
 using namespace std;
 using namespace boost::filesystem;
 using namespace SaveManager;
@@ -251,3 +244,5 @@ void SaveManager::loadTestWorld()
 {
     World::init("asdf", true);
 }
+
+*/

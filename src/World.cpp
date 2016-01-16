@@ -1,21 +1,18 @@
-//
-//  World
-//  MagIndev
-//
-//  Created by Brian Kelley on 10/21/14294.
-//  Copyright (c) 2014 Brian Kelley. All rights reserved.
-//
-
 #include "World.h"
 
 using namespace std;
 using namespace boost::filesystem;
-using namespace constants;
 
-World::World(std::string saveName, bool willGenerate)
+bool World::drawing = false;
+Heightmap World::height;
+Heightmap World::biomes;
+string World::saveName;
+unsigned World::seed;
+
+void World::init(std::string saveName, bool willGenerate)
 {
     this->saveName = saveName;
-    path saveFolder = initial_path() / constants::BIN_TO_ROOT / "saves";
+    path saveFolder = initial_path() / FileIO::root / "saves";
     if(!exists(saveFolder))
     {
         cout << "Fatal error: save folder doesn't exist where expected:" << endl;
@@ -35,15 +32,13 @@ World::World(std::string saveName, bool willGenerate)
         cout << "Will read existing world from disk." << endl;
         read();
     }
-    TerrainGen::generate(height, ground);
-    Terrain::init();
-    Minimap::buildTexture(height, ground);
-    Topo::generateTopo(height);
+    TerrainGen tg(height, biomes);
+    drawing = true; //TODO: When to set and unset this depends on where GUI widgets are implemented
 }
 
 void World::write()
 {
-    path outPath = initial_path() / BIN_TO_ROOT / "saves" / string(saveName + ".mag");
+    path outPath = initial_path() / FileIO::root / "saves" / string(saveName + ".mag");
     FILE* os = fopen(outPath.c_str(), "wb");
     fwrite(&seed, sizeof(seed), 1, os);
     fclose(os);
@@ -53,7 +48,7 @@ void World::write()
 
 void World::read()
 {
-    path inPath = initial_path() / BIN_TO_ROOT / "saves" / (saveName + ".mag");
+    path inPath = initial_path() / FileIO::root / "saves" / (saveName + ".mag");
     FILE* is = fopen(inPath.c_str(), "rb");
     fread(&seed, sizeof(seed), 1, is);
     fclose(is);
@@ -61,5 +56,20 @@ void World::read()
 
 void World::update()
 {
-    
+    //Do world simulation for one frame
+}
+
+const Heightmap& World::getHeights()
+{
+    return height;
+}
+
+const Heightmap& World::getBiomes()
+{
+    return biomes;
+}
+
+bool World::isDrawing()
+{
+    return drawing;
 }

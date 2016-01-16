@@ -12,11 +12,10 @@ using namespace std;
 
 Field* Field::currentField = nullptr;
 
-Field::Field(int x, int y, int width, int height, u8 stickyFlags, string text, callback_t callback, Component* parentComp) : Component(x, y, width, height, stickyFlags, true, parentComp)
+Field::Field(int x, int y, int width, int height, u8 stickyFlags, string text, callback cb, Component* parentComp) : Component(x, y, width, height, stickyFlags, true, parentComp)
 {
     this->text = text;
-    this->callback = callback;
-    calcTextPlacement();
+    whenUpdated = cb;
 }
 
 string& Field::getText()
@@ -34,7 +33,6 @@ void Field::processKey(SDL_Event& e)
     if(e.type == SDL_TEXTINPUT)
     {
         text = text.substr(0, text.length() - 1) + string(e.text.text) + "_";
-        calcTextPlacement();
     }
     else if(e.type == SDL_KEYDOWN)
     {
@@ -43,7 +41,6 @@ void Field::processKey(SDL_Event& e)
             if(this->text.size() > 1)
             {
                 this->text = this->text.substr(0, (unsigned long) text.length() - 2) + "_";
-                calcTextPlacement();
             }
         }
         else if(e.key.keysym.scancode == SDL_SCANCODE_RETURN)
@@ -58,26 +55,9 @@ float Field::getFontScale()
     return this->fontScale;
 }
 
-void Field::calcTextPlacement()
+callback Field::getCallback()
 {
-    float horiScale;
-    if(text.size() > 0)
-    {
-        horiScale = float(local.w - constants::PAD * 2) / (text.size() * constants::FONTW);
-    }
-    else
-    {
-        horiScale = 100000;
-    }
-    float vertScale = float(local.h - constants::PAD * 2) / constants::FONTH;
-    fontScale = horiScale < vertScale ? horiScale : vertScale;
-    textLoc.x = constants::PAD;
-    textLoc.y = (local.h / 2) - (fontScale * constants::FONTH / 2);
-}
-
-callback_t Field::getCallback()
-{
-    return callback;
+    return whenUpdated;
 }
 
 bool Field::isActive()
@@ -95,7 +75,6 @@ void Field::activate()
     active = true;
     hasCursor = true;
     currentField = this;
-    this->calcTextPlacement();
 }
 
 void Field::deactivate()
@@ -107,11 +86,8 @@ void Field::deactivate()
         hasCursor = false;
         currentField = nullptr;
     }
-    calcTextPlacement();
-    if(callback)
-    {
-        (*callback) (this);
-    }
+    if(whenUpdated)
+        whenUpdated(this);
 }
 
 void Field::processLeftClick()
@@ -129,11 +105,6 @@ void Field::processLeftClick()
         if(active)
             deactivate();
     }
-}
-
-SDL_Point& Field::getTextLoc()
-{
-    return textLoc;
 }
 
 CompType Field::getType()

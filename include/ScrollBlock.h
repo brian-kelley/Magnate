@@ -1,19 +1,11 @@
-//
-//  ScrollBlock.h
-//  Magnate
-//
-//  Created by Brian Kelley on 12/14/14348.
-//  Copyright (c) 2014 Brian Kelley. All rights reserved.
-//
-
-#ifndef __Magnate__ScrollBlock__
-#define __Magnate__ScrollBlock__
+#ifndef __SCROLLBLOCK_H__
+#define __SCROLLBLOCK_H__
 
 #include <stdio.h>
 #include <vector>
 #include <string>
 #include <iostream>
-#include "Constants.h"
+#include "GenTypes.h"
 #include "Button.h"
 #include "Label.h"
 #include "Field.h"
@@ -26,10 +18,7 @@ public:
     void updateCanvasHeight(int newHeight);
     void processScroll(SDL_MouseWheelEvent& e);
     void processMouseMotionEvent(SDL_MouseMotionEvent& e);
-    Field* getCurrentField();
-    bool isActive();
     void calcBarPlacement();
-    intRect_t getBarRect();
     bool hasBar();
     int getCanvasHeight();
     void matchCanvasToContents();
@@ -37,9 +26,8 @@ public:
     CompType getType();
 private:
     int viewport;         //how far from top of canvas top of viewable area is (pixels)
-    int barHeight;        //how many pixels tall is the bar?
-    int barPos;
-    Field* currentField;
+    float barHeight;      //local rect height / canvas rect height: -1 means no bar
+    float barPos;         //proportion of total canvas above top of viewport: -1 means no bar
 };
 
 #endif

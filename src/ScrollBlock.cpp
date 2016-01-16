@@ -1,15 +1,6 @@
-//
-//  ScrollBlock.cpp
-//  Magnate
-//
-//  Created by Brian Kelley on 12/14/14348.
-//  Copyright (c) 2014 Brian Kelley. All rights reserved.
-//
-
 #include "ScrollBlock.h"
 
 using namespace std;
-using namespace constants;
 
 ScrollBlock::ScrollBlock(int x, int y, int width, int height, u8 stickyFlags, Component* parentComp, int canvh, bool center) : Component(x, y, width, height, stickyFlags, true, parentComp)
 {
@@ -59,11 +50,6 @@ void ScrollBlock::processScroll(SDL_MouseWheelEvent& e)
 
 void ScrollBlock::processMouseMotionEvent(SDL_MouseMotionEvent &e) {}
 
-bool ScrollBlock::isActive()
-{
-    return active;
-}
-
 void ScrollBlock::calcBarPlacement()
 {
     if(local.h >= canvas.h)
@@ -73,8 +59,8 @@ void ScrollBlock::calcBarPlacement()
     }
     else
     {
-        barHeight = float(local.h) / canvas.h * (local.h - 2 * PAD);
-        barPos = float(viewport + local.h / 2) * (local.h - 2 * PAD) / canvas.h - barHeight / 2;
+        barHeight = float(local.h) / canvas.h;
+        barPos = float(viewport + local.h / 2) / canvas.h - barHeight / 2;
     }
 }
 
@@ -84,21 +70,6 @@ bool ScrollBlock::hasBar()
         return false;
     else
         return true;
-}
-
-intRect_t ScrollBlock::getBarRect()
-{
-    intRect_t out;
-    out.w = BAR_WIDTH;
-    out.h = barHeight;
-    out.x = screen.x + screen.w - PAD - BAR_WIDTH;  //use actual screen pos
-    out.y = screen.y + PAD + barPos;
-    return out;
-}
-
-Field* ScrollBlock::getCurrentField()
-{
-    return currentField;
 }
 
 int ScrollBlock::getCanvasHeight()
@@ -118,11 +89,16 @@ void ScrollBlock::matchCanvasToContents()
             maxY = bottom;
         }
     }
-    updateCanvasHeight(maxY + PAD);
+    updateCanvasHeight(maxY);
 }
 
 void ScrollBlock::updateScreenRect()
 {
     Component::updateScreenRect();
     calcBarPlacement();
+}
+
+CompType ScrollBlock::getType()
+{
+    return CompType::scrollBlock;
 }

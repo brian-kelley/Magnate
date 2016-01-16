@@ -1,11 +1,3 @@
-//
-//  Building.cpp
-//  Magnate
-//
-//  Created by Brian Kelley on 10/15/14288.
-//  Copyright (c) 2014 Brian Kelley. All rights reserved.
-//
-
 #include "Building.h"
 
 using namespace std;

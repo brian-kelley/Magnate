@@ -1,59 +1,64 @@
-//
-//  WorldRenderer.cpp
-//  Magnate
-//
-//  Created by Brian Kelley on 3/9/1568.
-//
-//
-
 #include "WorldRenderer.h"
 
 using namespace std;
 using namespace Coord;
 using namespace glm;
 
-WorldRenderer::WorldRenderer(Atlas& mainAtlas, const Heightmap* heights, const Heightmap* terrain)
+WorldRenderer::WorldRenderer() :
+sunlight(0.3, 0.9055, 0.3),
+CHUNK_SIZE(64),
+VBO_CHUNKS(25),
+CHUNK_FREE(0x7FFF),
+ambientWeight(0.3),
+diffuseWeight(0.7),
+vbo(CHUNK_SIZE * CHUNK_SIZE * VBO_CHUNKS * 4, VBO::v3D, GL_DYNAMIC_DRAW)
 {
-    this->heights = heights;
-    this->terrain = terrain;
-    createUVCache(mainAtlas);
+    createUVCache();
     //create a statically sized buffer for tiles (copy of VBO)
     vertexBuf = new Vertex3D[4 * CHUNK_SIZE * CHUNK_SIZE];
-    //mark all vbo chunk slots as free
+    //create list of chunk allocation slots, and mark all as free
+    chunkAlloc = new Pos2[VBO_CHUNKS];
     for(int i = 0; i < VBO_CHUNKS; i++)
-    {
         chunkAlloc[i].x = CHUNK_FREE;
-    }
     updateVBOChunks(true);
 }
 
 WorldRenderer::~WorldRenderer()
 {
     delete vertexBuf;
+    delete chunkAlloc;
+}
+
+void WorldRenderer::draw()
+{
+    glEnable(GL_DEPTH_TEST);
+    vbo.draw(0, CHUNK_SIZE * CHUNK_SIZE * VBO_CHUNKS, GL_QUADS);
 }
 
 Pos3 WorldRenderer::getTileVertexPos(int chunkX, int chunkZ, int tileX, int tileZ)
 {
     Pos2 loc(chunkX * CHUNK_SIZE + tileX, chunkZ * CHUNK_SIZE + tileZ);
-    return Coord::tileToWorld(loc.x, heights->get(loc), loc.y);
+    return Coord::tileToWorld(loc.x, World::getHeights().get(loc), loc.y).xyz();
 }
 
 //set attributes for the 4 vertices of a tile
 void WorldRenderer::getTileQuad(int quadIndex, int x, int z)
 {
+    auto heights = World::getHeights();
+    auto terrain = World::getBiomes();
     Vertex3D* quad = &vertexBuf[quadIndex * 4];
     //Positions
-    quad[0].pos = tileToWorld(x, heights->get(x, z), z);
-    quad[1].pos = tileToWorld(x + 1, heights->get(x + 1, z), z);
-    quad[2].pos = tileToWorld(x + 1, heights->get(x + 1, z + 1), z + 1);
-    quad[3].pos = tileToWorld(x, heights->get(x, z + 1), z + 1);
+    quad[0].pos = tileToWorld(x, heights.get(x, z), z).xyz();
+    quad[1].pos = tileToWorld(x + 1, heights.get(x + 1, z), z).xyz();
+    quad[2].pos = tileToWorld(x + 1, heights.get(x + 1, z + 1), z + 1).xyz();
+    quad[3].pos = tileToWorld(x, heights.get(x, z + 1), z + 1).xyz();
     //get normal to produce color (on CPU)
     vec3 normal = normalize(cross(quad[1].pos - quad[3].pos, quad[0].pos - quad[2].pos));
     float diffuse = dot(normal, sunlight);
     if(diffuse < 0)
         diffuse = 0;
     float light = diffuse * diffuseWeight + ambientWeight;
-    auto ground = terrain->get(x, z);
+    auto ground = terrain.get(x, z);
     quad[0].texcoord = uvCache[ground * 4 + 0];
     quad[1].texcoord = uvCache[ground * 4 + 1];
     quad[2].texcoord = uvCache[ground * 4 + 2];
@@ -93,7 +98,8 @@ bool WorldRenderer::allocChunk(int x, int z)
     chunkAlloc[allocTarget].y = z;
     //copy quads to terrain VBO
     //must already be bound!
-    glBufferSubData(GL_ARRAY_BUFFER, allocTarget * VBO_BYTES_PER_CHUNK, VBO_BYTES_PER_CHUNK, (GLvoid*) vboScratchBuf);
+    int vertexOffset = 4 * CHUNK_SIZE * CHUNK_SIZE * allocTarget;
+    vbo.writeData(vertexOffset, CHUNK_SIZE * CHUNK_SIZE * 4, vertexBuf);
     return true;
 }
 
@@ -120,41 +126,23 @@ bool WorldRenderer::isChunkAllocated(int x, int z)
     return false;
 }
 
-void WorldRenderer::calcCenterChunk()
+void WorldRenderer::processCameraUpdate(void* ins, const glm::mat4 &viewMat)
 {
-    //trace ray @ center of view, find intersection with y=0 plane
-    vec4 back = {0, 0, FAR, 1};
-    vec4 front = {0, 0, NEAR, 1};
-    //reverse translate points through projection, then view
-    mat4 projInv = inverse(proj3);
-    mat4 viewInv = inverse(view3);
-    back = projInv * back;
-    back /= back.w;
-    front = projInv * front;
-    front /= front.w;
-    back = viewInv * back;
-    front = viewInv * front;
-    //"front" will have a positive y component (above ground)
-    vec4 dir = back - front;
-    float mult = front.y / -dir.y;
-    vec4 inter; //point of intersection (xz)
-    inter.x = front.x + dir.x * mult;
-    inter.y = 0;
-    inter.z = front.z + dir.z * mult;
-    inter.w = 1;
-    centerChunk = Coord::worldToTile(inter);
-    centerChunk.x /= CHUNK_SIZE;
-    centerChunk.y /= CHUNK_SIZE;
+    auto wr = (WorldRenderer*) ins;
+    //First, figure out if center chunk has changed and update VBO accordingly
+    auto center = Coord::getViewCenter(viewMat);
+    auto centerTile = Coord::worldToTile(center);
+    Pos2 newCenterChunk(centerTile.x / wr->CHUNK_SIZE, centerTile.y / wr->CHUNK_SIZE);
+    if(wr->centerChunk != newCenterChunk)
+    {
+        //center of view has moved across chunk boundary
+        wr->centerChunk = newCenterChunk;
+        wr->updateVBOChunks();
+    }
 }
 
 void WorldRenderer::updateVBOChunks(bool force)
 {
-    Renderer::bindWorldVBO();
-    //save old center chunk - if it didn't actually change, don't do anything
-    Pos2 oldCenter = centerChunk;
-    calcCenterChunk();
-    if(!force && (oldCenter.x == centerChunk.x && oldCenter.y == centerChunk.y))
-        return;
     //go through the currently allocated chunks and free if they are no longer in the visible square
     int dist = (int(sqrt(VBO_CHUNKS)) - 1) / 2; //maximum distance from centerChunk in x or z
                                                 //PRINT("Updating vbo chunks with center chunk at " << centerChunk.x << ", " << centerChunk.y)
@@ -177,11 +165,14 @@ void WorldRenderer::updateVBOChunks(bool force)
     }
 }
 
-void WorldRenderer::createUVCache(Atlas &atlas)
+void WorldRenderer::createUVCache()
 {
-    for(Ground g = (Ground) 0; g < Ground::NUM_TYPES, g++)
+    for(int g = 0; g < Ground::NUM_TYPES; g++)
     {
-        auto tile = Atlas::textureFromName(Terrain::getTextureName(g));
-        
+        auto tile = Atlas::textureFromName(Terrain::getTextureName((Ground) g));
+        uvCache[g * 4 + 0] = {tile.x, tile.y};
+        uvCache[g * 4 + 1] = {tile.x + tile.width, tile.y};
+        uvCache[g * 4 + 2] = {tile.x + tile.width, tile.y + tile.height};
+        uvCache[g * 4 + 3] = {tile.x, tile.y + tile.height};
     }
 }

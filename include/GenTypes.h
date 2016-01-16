@@ -45,6 +45,7 @@ struct Color4
 {
     Color4();
     Color4(int r, int g, int b, int a);
+    void operator=(const Color4& rval);
     u8 r;
     u8 g;
     u8 b;

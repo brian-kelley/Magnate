@@ -1,17 +1,9 @@
-//
-//  Component.h
-//  Magnate
-//
-//  Created by Brian Kelley on 12/15/14349.
-//  Copyright (c) 2014 Brian Kelley. All rights reserved.
-//
-
 #ifndef __COMPONENT_H__
 #define __COMPONENT_H__
 
 #include <iostream>
 #include <vector>
-#include "Constants.h"
+#include "Input.h"
 #include "GenTypes.h"
 #include "SdlHeaders.h"
 
@@ -26,6 +18,8 @@ enum struct CompType
     minimap,
     draggable
 };
+
+typedef void (*callback) (void*);   //UI callback (different from Broadcaster listener)
 
 //Describes how component will
 namespace StickyDirs
@@ -61,11 +55,10 @@ public:
     virtual void mouseWheel(const SDL_MouseWheelEvent& event);
     virtual void keyTyped(const SDL_TextInputEvent& event);
     virtual void keyEvent(const SDL_KeyboardEvent& event);
-    virtual void activate();
-    virtual void deactivate();
     //(For drawing) Get the CompType
     virtual CompType getType() = 0;
 protected:
+    Pos2 getLocalMouse();
     void addChild(Component* child);    //add a direct subcomponent to my list
     Rectangle local;    //rectangle within parent
     Rectangle canvas;   //space for subcomponents (always 0,0)

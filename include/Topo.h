@@ -2,19 +2,15 @@
 #define __TOPO_H__
 
 #include "Atlas.h"
-#include "Constants.h"
-#include "Coord.h"
-#include "Renderer.h"
-#include "RenderRoutines.h"
-#include "TerrainGen.h"
 #include "World.h"
+#include "Coord.h"
+#include "GlobalConfig.h"
 #include <vector>
 #include <iostream>
 
 namespace Topo
 {
-    void generateTopo(Heightmap& heights);       //build the map and store in texture on GPU
-    void drawTopo();           //draw full-screen topo map
+    void generateTopo();       //build the map and store in texture on GPU
 }
 
 #endif

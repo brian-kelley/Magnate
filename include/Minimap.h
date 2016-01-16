@@ -1,34 +1,36 @@
-#ifndef MINIMAP_H
-#define MINIMAP_H
+#ifndef __MINIMAP_H__
+#define __MINIMAP_H__
 
 #include <iostream>
-#include "Constants.h"
 #include "Component.h"
-#include "World.h"
+#include "Scene.h"
 #include "Terrain.h"
-#include "Renderer.h"
-#include "RenderRoutines.h"
-#include "WorldRenderer.h"
 #include "Coord.h"
 #include "GlmHeaders.h"
-#include "SdlHeaders.h"
 #include "Atlas.h"
+#include "GenTypes.h"
+#include "GlobalConfig.h"
+#include "Heightmap.h"
+#include "Topo.h"
+#include "Camera.h"
+#include "Input.h"
+#include "World.h"
 
-namespace Minimap
+class Minimap : public Component
 {
-    void buildTexture(Heightmap& world, Heightmap& biomes);
-    void render();
-    bool mmIsMouseOver();
-    void initMM(); //set mm <-> world matrices
+public:
+    Minimap(Scene* gameScene);
+    static void buildTexture();
+private:
     void update();  //set screenX/screenY based on mouseX/mouseY
-    Pos2 getPosOnMap(glm::vec2 worldPos);
-    void plotPosOnMap(glm::vec2 worldPos); //also call vertex2i
-    glm::vec2 mapToWorld(Pos2 mapPos); //get the xz back
-    void putMinimapPixel(Heightmap& world, Heightmap& biomes, int x, int y, Uint32* buf, int maxHeight);
-    const int MINIMAP_SIZE = 256; //pixels in texture and on screen
-    const int MINIMAP_BORDER = 20;//amount of space between edge of window and edge of minimap
-    extern glm::mat4 tileToMinimap;
-    extern glm::mat4 minimapToTile;
-}
+    static void plotPosOnMap(glm::vec2 worldPos); //also call vertex2i
+    static void putMinimapPixel(int x, int y, Uint32* buf, int maxHeight);
+    static Color4 colorFromTerrain(Ground g);
+    static int MINIMAP_SIZE; //pixels in texture
+    static int MINIMAP_BORDER;//amount of space between edge of window and edge o
+    static glm::mat4 tileToMinimap;
+    static glm::mat4 minimapToTile;
+    static glm::vec4 mapToWorld(Pos2 mapPos);
+};
 
 #endif

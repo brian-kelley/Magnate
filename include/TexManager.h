@@ -2,7 +2,6 @@
 #define __TEXMANAGER_H__
 
 #include "TexGen.h"
-#include "RenderRoutines.h"
 #include "Atlas.h"
 #include <iostream>
 

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "Atlas.h"
 #include "Component.h"
 #include "Button.h"
 #include "Label.h"
@@ -12,24 +13,38 @@
 #include "MultiSelect.h"
 #include "Field.h"
 #include "Scene.h"
-#include "Building.h"
+#include "Minimap.h"
 #include "ImmediateDraw.h"
+#include "GlmHeaders.h"
+#include "VBO.h"
+#include "Coord.h"
 
 class UIRenderer
 {
 public:
-    void drawComponent(Component& c);
-    void drawScene(Scene& s);
-    void drawButton(Button& b);
-    void drawLabel(Label& l);
-    void drawField(Field& f);
-    void drawScrollBlock(ScrollBlock& sb);
-    void drawMultiSelect(MultiSelect& ms);
-    void drawDraggable(Draggable& d);
-    static const int GUI_QUAD_PRELOAD = 400; //How many vertices to reserve() in
-    static const int GUI_LINE_PRELOAD = 10;  //GUI quad and line attrib vectors
-    static const int MAX_GUI_LINES = 30;
-    static const int MAX_GUI_QUADS = 200;
+    UIRenderer();
+    void drawComponent(Component* c);
+    void draw();         //do GL draw call for all visible components
+    //static void processCameraMotion(void* instance, const glm::mat4& view);
+private:
+    void drawScene(Scene* s);
+    void drawButton(Button* b);
+    void drawLabel(Label* l);
+    void drawField(Field* f);
+    void drawScrollBlock(ScrollBlock* sb);
+    void drawMultiSelect(MultiSelect* ms);
+    void drawDraggable(Draggable* d);
+    void drawMinimap(Minimap* mm);
+    const int QUAD_INIT;
+    const int LINE_INIT;
+    ImmediateDraw imm;      //handles VBO for easy drawing
+    //Aesthetic constants
+    const Color4 fg;
+    const Color4 bg;
+    const int BORDER_WIDTH;
+    const int PAD;
+    const int BAR_WIDTH;
+    const float SHADE;
 };
 
 #endif

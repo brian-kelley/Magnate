@@ -1,22 +1,22 @@
 #include "Topo.h"
 
 using namespace std;
-using namespace constants;
-using namespace RenderRoutines;
 using namespace Coord;
+using namespace GlobalConfig;
 
-void Topo::generateTopo(Heightmap& heights)
+void Topo::generateTopo()
 {
+    auto heights = World::getHeights();
     const int STEP = (WORLD_SIZE / 2) / 15; // Height units between topo lines. WS / 2 is max height, so have 15 lines
-    int texID = texNumFromStr("topo");
-    int topoSize = Atlas::tileW(texID);
-    Height* buf = new Height[topoSize * topoSize];
+    auto tex = Atlas::textureFromName("topo");
+    int topoSize = tex.width;
+    short* buf = new short[topoSize * topoSize];
     const double scl = double(WORLD_SIZE) / topoSize;
     for(int i = 0; i < topoSize; i++)
     {
         for(int j = 0; j < topoSize; j++)
         {
-            buf[topoSize * j + i] = float(heights->get(i * scl, j * scl) + STEP / 2) / STEP;
+            buf[topoSize * j + i] = float(heights.get(i * scl, j * scl) + STEP / 2) / STEP;
         }
     }
     Uint32* pixels = new Uint32[topoSize * topoSize];
@@ -43,25 +43,7 @@ void Topo::generateTopo(Heightmap& heights)
             }
         }
     }
-    Atlas::sendImage((byte*) pixels, Atlas::tileFromName("topo"));
+    Atlas::sendImage(pixels, Atlas::tileFromName("topo"));
     delete[] buf;
     delete[] pixels;
-}
-
-void Topo::drawTopo()
-{
-    int texID = texNumFromStr("topo");
-    int x = WINDOW_W - Minimap::MINIMAP_BORDER - Minimap::MINIMAP_SIZE - BORDER_WIDTH;
-    int y = Minimap::MINIMAP_BORDER + BORDER_WIDTH;
-    int w = Minimap::MINIMAP_SIZE;
-    using namespace Renderer;
-    disableTexture();
-    color4b(255, 255, 255, 140);
-    vertex2i(x, y);
-    vertex2i(x + w, y);
-    vertex2i(x + w, y + w);
-    vertex2i(x, y + w);
-    enableTexture();
-    color4b(255, 255, 255, 255);
-    blit(texID, x, y, x + w, y + w);
 }

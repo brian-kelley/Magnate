@@ -1,23 +1,13 @@
-//
-//  World.h
-//  MagIndev
-//
-//  Created by Brian Kelley on 10/21/14294.
-//  Copyright (c) 2014 Brian Kelley. All rights reserved.
-//
+#ifndef __WORLD_H__
+#define __WORLD_H__
 
-#ifndef __MagIndev__World__
-#define __MagIndev__World__
-
-#include <boost/filesystem.hpp>
 #include <vector>
 #include <iostream>
 #include <random>
 #include <cstdio>
-#include "Constants.h"
 #include "Terrain.h"
 #include "TerrainGen.h"
-#include "Minimap.h"
+#include "FileIO.h"
 #include "Topo.h"
 #include "RandomUtils.h"
 #include "Heightmap.h"
@@ -25,17 +15,19 @@
 class World
 {
 public:
-    World();
-    World(std::string saveName, bool generate);
-    void read();
-    void write();
-    void update();
+    void init(std::string saveName, bool generate);
+    static void read();
+    static void write();
+    static void update();
+    static const Heightmap& getHeights();
+    static const Heightmap& getBiomes();
+    static bool isDrawing();
 private:
-    static World* instance;
-    Heightmap height;
-    Heightmap ground;
-    std::string saveName;
-    unsigned int seed;
+    static bool drawing;
+    static Heightmap height;
+    static Heightmap biomes;
+    static std::string saveName;
+    static unsigned seed;
 };
 
 #endif

@@ -12,18 +12,20 @@
 #include "SdlHeaders.h"
 #include "Input.h"
 
-namespace GUI
+class GUI
 {
-    void init(Scene* initial);
-    void transition(Scene* next);
-    extern Scene* current;
+public:
+    static void init(Scene* initial);
+    static void transition(Scene* next);
+    static Scene* current;
+private:
     //Event listeners
-    void processKeyEvent(const SDL_KeyboardEvent& event);
-    void processTypingEvent(const SDL_TextInputEvent& event);
-    void processButton(const SDL_MouseButtonEvent& event);
-    void processMotion(const SDL_MouseMotionEvent& event);
-    void processWheel(const SDL_MouseWheelEvent& event);
-    void processWindow(const SDL_WindowEvent& event);
-}
+    static void processKeyEvent(void*, const SDL_KeyboardEvent& event);
+    static void processTypingEvent(void*, const SDL_TextInputEvent& event);
+    static void processButton(void*, const SDL_MouseButtonEvent& event);
+    static void processMotion(void*, const SDL_MouseMotionEvent& event);
+    static void processWheel(void*, const SDL_MouseWheelEvent& event);
+    static void processWindow(void*, const SDL_WindowEvent& event);
+};
 
 #endif

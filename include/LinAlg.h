@@ -4,7 +4,6 @@
 #include <cstdio>
 #include <iostream>
 #include "GlmHeaders.h"
-#include "Constants.h"
 
 namespace LinAlg
 {

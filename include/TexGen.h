@@ -5,21 +5,11 @@
 #include "Atlas.h"
 #include "Heightmap.h"
 #include "RandomUtils.h"
+#include "GenTypes.h"
 
 namespace TexGen
 {
-    struct Color
-    {
-        Color();
-        Color(byte r, byte g, byte b, byte a);
-        byte b;
-        byte g;
-        byte r;
-        byte a;
-        static const int BPP = 4;
-    };
-    
-    bool operator==(const Color& c1, const Color& c2);
+    bool operator==(const Color4& c1, const Color4& c2);
     
     struct Buffer
     {
@@ -28,23 +18,23 @@ namespace TexGen
         Buffer(Buffer& b);
         ~Buffer();
         //Set and get pixels (w/bounds checking)
-        Color get(int x, int y);
-        void set(int x, int y, Color c);
+        Color4 get(int x, int y);
+        void set(int x, int y, Color4 c);
         //Get the average color in 3x3.
-        Color getAvg(int x, int y);
+        Color4 getAvg(int x, int y);
         //Avg of most common color(s) in 3x3.
-        Color getMode(int x, int y);
+        Color4 getMode(int x, int y);
         void smooth(int iters);
-        void fill(Color c);
-        void fillNoAlpha(Color c);
+        void fill(Color4 c);
+        void fillNoAlpha(Color4 c);
         void makeOpaque();
         int len;
         int wid;
-        Color* data;
+        Color4* data;
         //Internal utilities
     private:
         bool validPx(int x, int y);
-        Color calcColor(Color avg, int size, double rough);
+        Color4 calcColor(Color4 avg, int size, double rough);
     };
     class Generator
     {

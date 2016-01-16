@@ -2,8 +2,10 @@
 
 using namespace std;
 
-Window::Window(int w, int h)
+Window::Window(int width, int height)
 {
+    w = width;
+    h = height;
     //Initialize SDL window
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
         cout << "Failed to SDL video." << endl;
@@ -20,6 +22,14 @@ Window::Window(int w, int h)
     configGL();
 }
 
+Window::~Window()
+{
+    SDL_DestroyRenderer(sdlRenderer);
+    SDL_DestroyWindow(sdlWindow);
+    IMG_Quit();
+    SDL_Quit();
+}
+
 SDL_Renderer* Window::getRenderer()
 {
     return sdlRenderer;
@@ -34,4 +44,43 @@ void Window::configGL()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void Window::prepareFrame()
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
+void Window::endFrame()
+{
+    //flip framebuffers to update window contents
+    SDL_GL_SwapWindow(sdlWindow);
+}
+
+Pos2 Window::getSize()
+{
+    return Pos2(w, h);
+}
+
+void Window::resize(int w, int h)
+{
+    
+    SDL_SetWindowSize(sdlWindow, w, h);
+}
+
+void Window::toggleFullscreen(WindowMode wm)
+{
+    SDL_WindowFlags flags;
+    switch(wm)
+    {
+        case WindowMode::WINDOW:
+            flags = (SDL_WindowFlags) 0;
+            break;
+        case WindowMode::WINDOWED_FULLSCREEN:
+            flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
+            break;
+        case WindowMode::FULLSCREEN:
+            flags = SDL_WINDOW_FULLSCREEN;
+    }
+    SDL_SetWindowFullscreen(sdlWindow, flags);
 }

@@ -1,26 +1,30 @@
-//
-//  Atlas.cpp
-//  MagIndev
-//
-//  Created by Brian Kelley on 10/21/14294.
-//  Copyright (c) 2014 Brian Kelley. All rights reserved.
-//
-
 #include "Atlas.h"
 
 using namespace std;
 using namespace boost::filesystem;
-using namespace constants;
+
+vector<Texture> Atlas::tiles;
+map<char, int> Atlas::charTiles;
+map<string, int> Atlas::tileNames;
+int Atlas::fontW;
+int Atlas::fontH;
+GLuint Atlas::textureID;
 
 //Call this to initialize an atlas that already exists as assets/filename
-Atlas::Atlas(string atlasName, SDL_Renderer* renderer)
+void Atlas::init(string atlasName, SDL_Renderer* renderer)
 {
-    path imagePath = initial_path() / constants::BIN_TO_ROOT / "assets" / (atlasName + "_atlas.png");
-    path tilePath = initial_path() / constants::BIN_TO_ROOT / "data" / (atlasName + "_tiles.txt");
+    int imgFlags = IMG_INIT_PNG;
+    if(!(IMG_Init(IMG_INIT_PNG) & imgFlags))
+    {
+        cout << "Fatal error: View failed to initialize image loading." << endl;
+        cout << "Not going to attempt loading main atlas." << endl;
+        exit(EXIT_FAILURE);
+    }
+    path imagePath = initial_path() / FileIO::root / "assets" / (atlasName + "_atlas.png");
+    path tilePath = initial_path() / FileIO::root / "data" / (atlasName + "_tiles.txt");
     SDL_Surface* loadedSurface = IMG_Load(imagePath.string().c_str());
     if(loadedSurface->w != loadedSurface->h)
         throw runtime_error("Atlas not square!");
-    ATLAS_SIZE = loadedSurface->w;
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
     #ifdef _WIN32
@@ -69,8 +73,8 @@ int Atlas::tileFromChar(char c)
 
 void Atlas::initCharTiles()
 {
-    constants::FONTW = (int) (tiles[tileFromName("A")].width);
-    constants::FONTH = (int) (tiles[tileFromName("A")].height);
+    fontW = (int) (tiles[tileFromName("A")].width);
+    fontH = (int) (tiles[tileFromName("A")].height);
     for(char lower = 'a'; lower <= 'z'; lower++)
     {
         charTiles[lower] = tileNames["_" + string({lower})];
@@ -167,41 +171,33 @@ void Atlas::parseTiles(path fpath)
     }
 }
 
-short Atlas::tileX(int index)
+void Atlas::sendImage(void* pixels, int texID)
 {
-    return tiles[index].x;
-}
-
-short Atlas::tileY(int index)
-{
-    return tiles[index].y;
-}
-
-short Atlas::tileW(int index)
-{
-    return tiles[index].width;
-}
-
-short Atlas::tileH(int index)
-{
-    return tiles[index].height;
-}
-
-void Atlas::sendImage(byte* pixels, int texID)
-{
-    int destX = Atlas::tileX(texID);
-    int destY = Atlas::tileY(texID);
-    int destW = Atlas::tileW(texID);
-    int destH = Atlas::tileH(texID);
+    auto destRect = textureFromID(texID);
     //OS X and Windows have different color orderings
 #ifdef __APPLE__
-    glTexSubImage2D(GL_TEXTURE_2D, 0, destX, destY, destW, destH, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, destRect.x, destRect.y, destRect.width, destRect.height, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
 #elif _WIN32
-    glTexSubImage2D(GL_TEXTURE_2D, 0, destX, destY, destW, destH, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, destRect.x, destRect.y, destRect.width, destRect.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 #endif
 }
 
 const Texture& Atlas::textureFromName(std::string texname)
 {
     return tiles[tileFromName(texname)];
+}
+
+const Texture& Atlas::textureFromID(int id)
+{
+    return tiles[id];
+}
+
+int Atlas::getFontW()
+{
+    return fontW;
+}
+
+int Atlas::getFontH()
+{
+    return fontH;
 }

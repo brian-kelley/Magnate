@@ -1,15 +1,6 @@
-//
-//  Component.cpp
-//  Magnate
-//
-//  Created by Brian Kelley on 12/15/14349.
-//  Copyright (c) 2014 Brian Kelley. All rights reserved.
-//
-
 #include "Component.h"
 
 using namespace std;
-using namespace constants;
 
 Component::Component(int x, int y, int width, int height, u8 stickyFlags, bool center, Component* parentComp) : local(x, y, width, height), canvas(x, y, width, height)
 {
@@ -29,8 +20,8 @@ Component::~Component()
 
 bool Component::isMouseOver()
 {
-    if(screen.x <= mouseX && screen.x + screen.w > mouseX
-       && screen.y <= mouseY && screen.y + screen.h > mouseY)
+    if(screen.x <= Input::mouseX && screen.x + screen.w > Input::mouseX
+       && screen.y <= Input::mouseY && screen.y + screen.h > Input::mouseY)
         return true;
     else
         return false;
@@ -154,4 +145,9 @@ const Rectangle& Component::getLocalRect()
 const Rectangle& Component::getScreenRect()
 {
     return screen;
+}
+
+Pos2 Component::getLocalMouse()
+{
+    return Pos2(Input::mouseX - screen.x, Input::mouseY - screen.y);
 }

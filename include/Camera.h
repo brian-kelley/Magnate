@@ -4,51 +4,47 @@
 #include "Input.h"
 #include "SdlHeaders.h"
 #include "GlmHeaders.h"
-#include "Constants.h"
 #include "Broadcaster.h"
 #include "Coord.h"
 #include "Heightmap.h"
+#include "World.h"
 
-struct FrustumCorners
-{
-    FrustumCorners() {}
-    FrustumCorners(glm::vec4 upperLeft, glm::vec4 upperRight, glm::vec4 lowerRight, glm::vec4 lowerLeft) : upperLeft(upperLeft), upperRight(upperRight), lowerRight(lowerRight), lowerLeft(lowerLeft) {}
-    glm::vec4 upperLeft;
-    glm::vec4 upperRight;
-    glm::vec4 lowerRight;
-    glm::vec4 lowerLeft;
-};
-
+//Keeps track of camera position and orientation in world
+//Moves based on input
 class Camera
 {
 public:
-    Camera(Heightmap* worldHeights);
-    void update();
-    glm::mat4 getViewMatrix();
-    Broadcaster<glm::mat4> cameraMotion;    //broadcasts view matrix after updates
-    FrustumCorners getFrustumCorners;
+    static void init();
+    static void update();
+    static void moveToPos(glm::vec4 pos);          //translate camera to position in world
+    static glm::mat4 getViewMatrix();
+    static glm::mat4 getProjMatrix(int winW, int winH);
+    static glm::vec3 getPosition();
+    static Broadcaster<glm::mat4> cameraMotion;    //broadcasts view matrix after updates
 private:
-    static void processWheel(const SDL_MouseWheelEvent& event); //handles scroll events
-    static Camera* instance;
-    void camFwd(Height worldH);
-    void camLeft(Height worldH);
-    void camBack(Height worldH);
-    void camRight(Height worldH);
-    void camCCW();
-    void camCW();
-    void zoomIn();
-    void zoomOut();
-    glm::vec3 camDir;
-    glm::vec3 camPos;
-    glm::vec3 camUp;
-    glm::mat4 viewMat;
-    glm::mat4 projMat;
-    float camAngle;
-    float camPitch;
-    Heightmap* worldHeights;
-    const float FOV = M_PI_4;
-    const float NEAR = 1000;
-    const float FAR = 0.01;
+    static const Heightmap* heights;
+    static void processWheel(void* ins, const SDL_MouseWheelEvent& event); //handles scroll events
+    static void camFwd(short worldH);
+    static void camLeft(short worldH);
+    static void camBack(short worldH);
+    static void camRight(short worldH);
+    static void camCCW();
+    static void camCW();
+    static void zoomIn();
+    static void zoomOut();
+    static glm::vec3 camDir;
+    static glm::vec3 camPos;
+    static glm::vec3 camUp;
+    static glm::mat4 viewMat;
+    static glm::mat4 projMat;
+    static float camAngle;
+    static float camPitch;
+    static const float ROTATE_SPEED; //full circle in 2 seconds
+    static const float MOVE_SPEED;          //multiplied by current height above ground
+    static const float ZOOM_SPEED;
+    static const float FOV;
+    static const float NEAR;
+    static const float FAR;
 };
 
 #endif

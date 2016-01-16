@@ -1,24 +1,26 @@
 #include "Input.h"
 
 const u8* Input::keystate;
+int Input::mouseX;
+int Input::mouseY;
 Broadcaster<SDL_KeyboardEvent> Input::keyBroadcaster;
 Broadcaster<SDL_TextInputEvent> Input::typingBroadcaster;
 Broadcaster<SDL_MouseButtonEvent> Input::buttonBroadcaster;
 Broadcaster<SDL_MouseMotionEvent> Input::motionBroadcaster;
 Broadcaster<SDL_MouseWheelEvent> Input::wheelBroadcaster;
 Broadcaster<SDL_WindowEvent> Input::windowBroadcaster;
+Broadcaster<SDL_EventType> Input::miscBroadcaster;
 
 void Input::init()
 {
     keystate = SDL_GetKeyboardState(NULL);
     SDL_SetRelativeMouseMode(SDL_TRUE);
-    
 }
 
 void Input::update()
 {
     SDL_PumpEvents();
-    SDL_Event* event;
+    SDL_Event* event = nullptr;
     while(SDL_PollEvent(event))
     {
         switch(event->type)
@@ -39,6 +41,7 @@ void Input::update()
                 break;
             case SDL_MOUSEMOTION:
                 motionBroadcaster.send(event->motion);
+                SDL_GetMouseState(&mouseX, &mouseY);
                 break;
             case SDL_MOUSEWHEEL:
                 wheelBroadcaster.send(event->wheel);

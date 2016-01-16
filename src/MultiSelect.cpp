@@ -1,22 +1,12 @@
-//
-//  MultiSelect.cpp
-//  Magnate
-//
-//  Created by Brian Kelley on 2/22/1553.
-//
-//
-
 #include "MultiSelect.h"
 
 using namespace std;
-using namespace constants;
 
 MultiSelect::MultiSelect(int x, int y, int width, int height, u8 stickyFlags, int optHeight, Component* parentComp, bool center)
 : Component(x, y, width, height, stickyFlags, center, parentComp)
 {
     selection = -1;
     this->optHeight = optHeight;
-    fontScale = (float(optHeight) - 2 * PAD) / FONTH;
 }
 
 void MultiSelect::processResize()
@@ -24,7 +14,6 @@ void MultiSelect::processResize()
     Component::processResize();
     //increase opt height to fill new space
     optHeight = 0.5 + float(local.h) / options.size();
-    fontScale = (float(optHeight) - 2 * PAD) / FONTH;
 }
 
 void MultiSelect::addOption(std::string newOption)
@@ -53,7 +42,7 @@ void MultiSelect::processLeftClick()
 {
     if(isMouseOver())
     {
-        selection = (mouseY - screen.y) / optHeight;
+        selection = (Input::mouseY - screen.y) / optHeight;
         if(selection >= options.size() || selection < 0)
         {
             selection = -1;
@@ -79,11 +68,6 @@ vector<string>& MultiSelect::getOptions()
 void MultiSelect::clearSelection()
 {
     selection = -1;
-}
-
-float MultiSelect::getFontScale()
-{
-    return fontScale;
 }
 
 void MultiSelect::matchSizeToOptions()

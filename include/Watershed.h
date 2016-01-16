@@ -4,46 +4,33 @@
 #include <iostream>
 #include <vector>
 #include <queue>
-#include "Constants.h"
 #include "Coord.h"
 #include "Heightmap.h"
+#include "Terrain.h"
+#include "GlobalConfig.h"
 
-struct Gradient
+class Watershed
 {
-    Gradient() : dx(0), dy(0) {}
-    Gradient(short dx, short dy)
-    {
-        this->dx = dx;
-        this->dy = dy;
-    }
-    short dx;
-    short dy;
-};
-
-namespace Watershed
-{
-    void addRiver(Heightmap& world, Heightmap& biomes, Height threshold);
+public:
+    Watershed(Heightmap& worldMap, Heightmap& biomeMap, short threshold, int numRivers);
+private:
     void beginFlow(Pos2 pos);
     void generalFlow(Pos2 pos);
     void processTile(Pos2 pos, std::queue<Pos2>& q);
     Pos2 getLowestNeighbor(Pos2 pos);
     void riverRandomWalk(Pos2 p1, Pos2 p2);
     Pos2 getLandTile();
-    Gradient getTileGradient(Pos2 loc); //loc is upper-left
-    void processStuckFlow(Pos2 loc, Gradient* gradBuf);
     Pos2 flowDownhill(Pos2 loc);
     Pos2 formLake(Pos2 loc);
-    //Utility functions for lake/river generation
     int getNonLakeDownhillDir(Pos2 loc);
-    int getNonLakeEqualDir(Pos2 loc, Height flood);
+    int getNonLakeEqualDir(Pos2 loc, short flood);
     bool surroundedByLake(Pos2 loc);
-    Height getLowestAdjacent(Pos2 loc); //Height of lowest neighbor
+    short getLowestAdjacent(Pos2 loc); //Height of lowest neighbor
     bool hasLakeNeighbor(Pos2 loc);
     bool hasOutlet(Pos2 loc);
     bool hasDownhillFlow(Pos2 loc);
-    //keep locations of heights and biomes so they don't have to be passed around
-    extern Heightmap* world;
-    extern Heightmap* biomes;
-}
+    Heightmap& world;
+    Heightmap& biomes;
+};
 
 #endif
