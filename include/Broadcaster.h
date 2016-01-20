@@ -6,20 +6,20 @@
 #include <vector>
 #include <algorithm>
 
-//Listener is the type that implements the callback
+//Listener is the type that implements the Callback
 //Msg is the type that the Broadcaster sends out
 template<typename Msg>
 class Broadcaster
 {
 public:
-    typedef void (*callback) (void*, const Msg&);    //signature of callback function
-    void addListener(void* lis, callback func)       //Add a callback function to act on lis
+    typedef void (*MessageCallback) (void*, const Msg&);    //signature of Callback function
+    void addListener(void* lis, MessageCallback func)       //Add a Callback function to act on lis
     {
         LisEntry le(lis, func);
         if(std::find(callbacks.begin(), callbacks.end(), le) == callbacks.end())
             callbacks.push_back(le);
     }
-    void removeListener(void* lis, callback func)
+    void removeListener(void* lis, MessageCallback func)
     {
         LisEntry le(lis, func);
         auto it = find(callbacks.begin(), callbacks.end(), le);
@@ -34,7 +34,7 @@ public:
 private:
     struct LisEntry
     {
-        LisEntry(void* l, callback f)
+        LisEntry(void* l, MessageCallback f)
         {
             lis = l;
             func = f;
@@ -44,7 +44,7 @@ private:
             return lis == r.lis && func == r.func;
         }
         void* lis;
-        callback func;
+        MessageCallback func;
     };
     std::vector<LisEntry> callbacks;
 };

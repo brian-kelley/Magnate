@@ -15,7 +15,7 @@ class Draggable : public Component
 {
 public:
     static Draggable* activeDrag;
-    Draggable(int x, int y, int width, int height, u8 stickyFlags, int imageID, Component* parentComp, callback whenDropped, DRAG_IMAGE_TYPES imgType);
+    Draggable(int x, int y, int width, int height, u8 stickyFlags, int imageID, Component* parentComp, Callback whenDropped, DRAG_IMAGE_TYPES imgType);
     void processLeftClick();
     void processMouseMotion();
     Pos2 getDragPos();
@@ -24,7 +24,7 @@ public:
     int getImageNum();
 private:
     int img;
-    callback onDrop;
+    Callback onDrop;
     bool dragging;
     int clickX, clickY;     //position of cursor (rel. to my rect)
     int dragX, dragY;       //position of rect being dragged (screen) (analogous to drawRect position)

@@ -4,7 +4,7 @@ using namespace std;
 
 Draggable* Draggable::activeDrag = nullptr;
 
-Draggable::Draggable(int x, int y, int width, int height, u8 stickyFlags, int imageID, Component* parentComp, callback whenDropped, DRAG_IMAGE_TYPES imgType) : Component(x, y, width, height, stickyFlags, true, parentComp)
+Draggable::Draggable(int x, int y, int width, int height, u8 stickyFlags, int imageID, Component* parentComp, Callback whenDropped, DRAG_IMAGE_TYPES imgType) : Component(x, y, width, height, stickyFlags, true, parentComp)
 {
     img = imageID;
     onDrop = whenDropped;
@@ -40,7 +40,7 @@ Pos2 Draggable::getDragPos()
 void Draggable::deactivate()
 {
     dragging = false;
-    (*onDrop) (this);
+    onDrop(this);
     activeDrag = nullptr;
 }
 

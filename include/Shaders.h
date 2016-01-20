@@ -5,6 +5,7 @@
 #include <vector>
 #include "SdlHeaders.h"
 #include "DebugTools.h"
+#include "VBO.h"
 
 class Shaders
 {

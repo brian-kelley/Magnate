@@ -65,7 +65,10 @@ void Camera::update()
         updated = true;
     }
     if(updated)
+    {
+        PRINT("Cam updated.");
         cameraMotion.send(getViewMatrix());
+    }
 }
 
 glm::mat4 Camera::getViewMatrix()

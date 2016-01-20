@@ -8,16 +8,21 @@ LINE_INIT(100),
 imm(QUAD_INIT, LINE_INIT),
 fg(190, 190, 190, 255),
 bg(120, 120, 120, 255),
-BORDER_WIDTH(5),
+BORDER_WIDTH(3),
 PAD(5),
 BAR_WIDTH(6),
 SHADE(0.85)
 {
+    GLERR
     imm = ImmediateDraw(QUAD_INIT, LINE_INIT);
+    PRINT("Created UI renderer.");
 }
 
 void UIRenderer::draw()
 {
+    glDisable(GL_DEPTH_TEST);
+    imm.beginFrame();
+    drawScene(GUI::current);
     imm.draw();
 }
 
@@ -60,16 +65,14 @@ void UIRenderer::drawScene(Scene *s)
 
 void UIRenderer::drawMultiSelect(MultiSelect* ms)
 {
+    //only draw if there is more than 1 option
     if(ms->getNumOptions() > 0)
     {
         vector<string>& list = ms->getOptions();
         auto rect = ms->getScreenRect();
-        imm.disableTextures();
-        imm.color3f(bg.r, bg.g, bg.b);
-        imm.vertex2i(rect.x, rect.y);
-        imm.vertex2i(rect.x + rect.w, rect.y);
-        imm.vertex2i(rect.x + rect.w, rect.y + rect.h);
-        imm.vertex2i(rect.x, rect.y + rect.h);
+        //fill whole rectangle with background color
+        imm.drawRect(bg, rect);
+        //if an option is selected, draw foreground rectangle around that
         if(ms->getSelection() != -1)
         {
             imm.color3f(fg.r, fg.g, fg.b);
@@ -90,10 +93,12 @@ void UIRenderer::drawMultiSelect(MultiSelect* ms)
             imm.vertex2i(rect.x + rect.w, optY + ms->getOptHeight() - PAD);
             imm.vertex2i(rect.x + rect.w, optY + ms->getOptHeight());
             imm.vertex2i(rect.x, optY + ms->getOptHeight());
-        }
-        for(int i = 0; i < int(list.size()); i++)
-        {
-            //imm.drawString(list[i], PAD + rect.x, PAD + rect.y + i * ms->getOptHeight(), ms->getFontScale(), fg.r, fg.g, fg.b);
+            for(int i = 0; i < int(list.size()); i++)
+            {
+                Rectangle optRect(rect.x + PAD, rect.y + PAD + i * ms->getOptHeight(), rect.w - PAD * 2, ms->getOptHeight() - PAD * 2);
+                imm.color3b(fg.r, fg.g, fg.b);
+                imm.drawStringAuto(list[i], optRect, Justify::LEFT_JUST);
+            }
         }
     }
 }
@@ -101,89 +106,65 @@ void UIRenderer::drawMultiSelect(MultiSelect* ms)
 void UIRenderer::drawLabel(Label* l)
 {
     auto lrect = l->getScreenRect();
-    //drawString(l.getText(), lrect.x + l.getTextLoc().x, lrect.y + l.getTextLoc().y, l.getFontScale(), UI_FG_R * SHADE * SHADE, UI_FG_G * SHADE * SHADE, UI_FG_B * SHADE * SHADE);
+    imm.color3b(fg.r, fg.g, fg.b);
+    imm.drawStringAuto(l->getText(), lrect, Justify::CENTER_JUST);
 }
 
 void UIRenderer::drawField(Field* f)
 {
-    /*
-    intRect_t& curRect = f.getDrawRect();
-    disableTexture();
-    imm.color3f(UI_FG_R, UI_FG_G, UI_FG_B);
-    imm.vertex2i(curRect.x, curRect.y);
-    imm.vertex2i(curRect.x + curRect.w, curRect.y);
-    imm.vertex2i(curRect.x + curRect.w, curRect.y + curRect.h);
-    imm.vertex2i(curRect.x, curRect.y + curRect.h);
-    imm.color3f(UI_BG_R, UI_BG_G, UI_BG_B);
-    imm.vertex2i(curRect.x + 1, curRect.y + 1);
-    imm.vertex2i(curRect.x + curRect.w - 1, curRect.y + 1);
-    imm.vertex2i(curRect.x + 1, curRect.y + curRect.h - 1);
-    drawString(f.getText(), curRect.x + f.getTextLoc().x, curRect.y + f.getTextLoc().y, f.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
-     */
+    auto rect = f->getScreenRect();
+    //Fill with background
+    imm.drawRect(bg, rect);
+    //draw lines around border
+    imm.drawLineRect(fg, rect);
+    //draw text
+    Rectangle textRect(rect.x + PAD, rect.y + PAD, rect.w - 2 * PAD, rect.h - 2 * PAD);
+    imm.drawStringAuto(f->getText(), textRect, Justify::LEFT_JUST);
 }
 
 void UIRenderer::drawButton(Button* b)
 {
-    /*
-    float colorMult;
-    if(!b.isMouseOver())
+    //Draw the entire button lighter if mouse is over
+    bool lit = b->isMouseOver();
+    Color4 light = fg;
+    Color4 dark = fg;
+    Color4 background = bg;  //color of background field
+    if(lit)
     {
-        colorMult = 1.0f;
+        light = light * (1 / SHADE);
+        background = background * (1 / SHADE);
     }
     else
     {
-        colorMult = 1.0f / SHADE;
+        dark = dark * SHADE;
     }
-    intRect_t rect = b.getDrawRect();         //initalize copy, don't modify
-    disableTexture();
-    imm.color3f(UI_BG_R, UI_BG_G, UI_BG_B);
-    imm.vertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
-    imm.vertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
-    imm.vertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
-    imm.vertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
-    imm.color3f(UI_FG_R * colorMult, UI_FG_G * colorMult, UI_FG_B * colorMult);
-    imm.vertex2i(rect.x, rect.y);
-    imm.vertex2i(rect.x + rect.w, rect.y);
-    imm.vertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
-    imm.vertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
-    imm.vertex2i(rect.x, rect.y);
-    imm.vertex2i(rect.x + BORDER_WIDTH, rect.y + BORDER_WIDTH);
-    imm.vertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
-    imm.vertex2i(rect.x, rect.y + rect.h);
-    imm.color3f(UI_FG_R * colorMult * SHADE, UI_FG_G * colorMult * SHADE, UI_FG_B * colorMult * SHADE);
-    imm.vertex2i(rect.x + rect.w, rect.y);
-    imm.vertex2i(rect.x + rect.w, rect.y + rect.h);
-    imm.vertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
-    imm.vertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + BORDER_WIDTH);
-    imm.vertex2i(rect.x + BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
-    imm.vertex2i(rect.x + rect.w - BORDER_WIDTH, rect.y + rect.h - BORDER_WIDTH);
-    imm.vertex2i(rect.x + rect.w, rect.y + rect.h);
-    imm.vertex2i(rect.x, rect.y + rect.h);
-    drawString(b.getText(), b.getTextLoc().x + rect.x, b.getTextLoc().y + rect.y, b.getFontScale(), UI_FG_R, UI_FG_G, UI_FG_B);
-     */
+    auto rect = b->getScreenRect();
+    //Draw background
+    imm.drawRect(background, rect);
+    //Draw beveled frame
+    imm.drawBevelFrame(light, dark, rect, BORDER_WIDTH);
+    //Draw text
+    Rectangle textRect(rect.x + PAD, rect.y + PAD, rect.w - PAD * 2, rect.h - PAD * 2);
+    imm.drawStringAuto(b->getText(), textRect, light);
 }
 
 void UIRenderer::drawScrollBlock(ScrollBlock* sb)
 {
-    /*
-    imm.color3f(UI_BG_R * SHADE, UI_BG_G * SHADE, UI_BG_B * SHADE);
-    disableTexture();
-    intRect_t& sbrect = sb.getDrawRect();
-    imm.vertex2i(sbrect.x, sbrect.y);
-    imm.vertex2i(sbrect.x + sbrect.w, sbrect.y);
-    imm.vertex2i(sbrect.x + sbrect.w, sbrect.y + sbrect.h);
-    imm.vertex2i(sbrect.x, sbrect.y + sbrect.h);
-    //For some reason glScissor wants (x, y) to be lower-left corner
-    if(sb.hasBar())
-    {
-        intRect_t bar = sb.getBarRect();
-        imm.color3f(UI_FG_R, UI_FG_G, UI_FG_B);
-        imm.vertex2i(bar.x, bar.y);
-        imm.vertex2i(bar.x + bar.w, bar.y);
-        imm.vertex2i(bar.x + bar.w, bar.y + bar.h);
-        imm.vertex2i(bar.x, bar.y + bar.h);
-    }
-     */
+    auto rect = sb->getScreenRect();
+    imm.drawRect(bg * SHADE, rect);
+    Rectangle barRect;
+    auto barH = sb->getBarHeight();
+    auto barY = sb->getBarPos();
+    barRect.x = rect.x + rect.w - PAD - BAR_WIDTH;
+    barRect.y = rect.y + PAD + barY * (rect.h - PAD * 2);
+    barRect.w = BAR_WIDTH;
+    barRect.h = (rect.h - PAD * 2) * barH;
+    imm.drawRect(fg, rect);
+    imm.scissorRect(rect);
+    imm.enableScissorTest();
+    for(auto c : sb->getChildren())
+        drawComponent(c);
+    imm.disableScissorTest();
 }
 
 void UIRenderer::drawDraggable(Draggable* d)
@@ -193,5 +174,11 @@ void UIRenderer::drawDraggable(Draggable* d)
 
 void UIRenderer::drawMinimap(Minimap *mm)
 {
-    
+    imm.drawBevelFrame(fg, fg * SHADE, mm->getScreenRect(), BORDER_WIDTH);
+    auto interior = mm->getScreenRect();
+    interior.x += BORDER_WIDTH;
+    interior.y += BORDER_WIDTH;
+    interior.w -= 2 * BORDER_WIDTH;
+    interior.h -= 2 * BORDER_WIDTH;
+    imm.blit("minimap", interior);
 }

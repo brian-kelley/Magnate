@@ -20,6 +20,22 @@ void ImmediateDraw::beginFrame()
 
 void ImmediateDraw::draw()
 {
+    enableTextures();
+    
+    //test draw atlas over entire screen
+    string text = "!@#$%^&*()_+{}[]";
+    
+    color4b(255, 255, 255, 255);
+    enableTextures();
+    texCoord2i(0, 0);
+    vertex2i(0, 0);
+    texCoord2i(2048, 0);
+    vertex2i(480, 0);
+    texCoord2i(2048, 2048);
+    vertex2i(480, 480);
+    texCoord2i(0, 2048);
+    vertex2i(0, 480);
+    
     //send data to GPU
     int numVertices = quadIndex + lineIndex;
     //make sure VBO is big enough (do not shrink if there is extra space)
@@ -27,8 +43,10 @@ void ImmediateDraw::draw()
         vbo.resize(numVertices);
     vbo.writeData(0, quadIndex, &quadVertices[0]);
     vbo.writeData(quadIndex, lineIndex, &lineVertices[0]);
+    PRINT("Immediate mode drawing quads.");
     vbo.drawWithClip(0, quadIndex, GL_QUADS, clipMarkers);
     //TODO: add another vector of clip markers for lines if line clipping becomes necessary for UI
+    PRINT("Immediate mode drawing lines.");
     vbo.draw(quadIndex, lineIndex, GL_LINES);
 }
 
@@ -61,6 +79,7 @@ void ImmediateDraw::vertex2i(short x, short y)
         quadVertices[quadIndex] = state;
     else
         quadVertices.push_back(state);
+    quadIndex++;
 }
 
 void ImmediateDraw::lineVertex2i(short x, short y)
@@ -71,6 +90,7 @@ void ImmediateDraw::lineVertex2i(short x, short y)
         lineVertices[lineIndex] = state;
     else
         lineVertices.push_back(state);
+    lineIndex++;
 }
 
 void ImmediateDraw::texCoord2f(float u, float v)
@@ -93,7 +113,7 @@ void ImmediateDraw::disableTextures()
     texturesEnabled = false;
 }
 
-void ImmediateDraw::drawString(std::string text, int x, int y, int w, int h)
+void ImmediateDraw::drawString(std::string& text, int x, int y, int w, int h)
 {
     for(int i = 0; i < text.size(); i++)
     {
@@ -101,7 +121,7 @@ void ImmediateDraw::drawString(std::string text, int x, int y, int w, int h)
     }
 }
 
-void ImmediateDraw::drawStringScaled(std::string text, Rectangle dest)
+void ImmediateDraw::drawStringScaled(std::string& text, Rectangle dest)
 {
     int glyphW = 0.5 + double(dest.w) / text.length();
     for(int i = 0; i < text.size(); i++)
@@ -110,10 +130,34 @@ void ImmediateDraw::drawStringScaled(std::string text, Rectangle dest)
     }
 }
 
-void ImmediateDraw::drawStringAuto(std::string text, Rectangle dest, Justify just)
+void ImmediateDraw::drawStringAuto(std::string& text, Rectangle dest, Justify just)
 {
-    //first, find font scale factor
-    
+    //decide which direciton is constraint
+    int fw = Atlas::getFontW();
+    int fh = Atlas::getFontH();
+    float scale;
+    {
+        float heightScale = float(dest.h) / fh;
+        float widthScale = float(dest.w) / (fw * text.length());
+        scale = min(heightScale, widthScale);
+    }
+    int charW = scale * fw;
+    int charH = scale * fh;
+    if(just == Justify::LEFT_JUST)
+    {
+        drawString(text, dest.x, dest.y, charW, charH);
+    }
+    else if(just == Justify::CENTER_JUST)
+    {
+        int leftStart = dest.x + dest.w / 2 - (text.length() * charW) / 2;
+        drawString(text, leftStart, dest.y, charW, charH);
+    }
+}
+
+void ImmediateDraw::drawStringAuto(std::string& text, Rectangle dest, Color4 color, Justify just)
+{
+    setColor(color);
+    drawStringAuto(text, dest, just);
 }
 
 void ImmediateDraw::blit(int texID, int x, int y)
@@ -134,6 +178,16 @@ void ImmediateDraw::blit(int texID, int x1, int y1, int x2, int y2)
     genericTexturedQuad(tex, {x1, y1, x2 - x1, y2 - y1});
 }
 
+void ImmediateDraw::blit(std::string texName, Rectangle rect)
+{
+    blit(Atlas::tileFromName(texName), rect.x, rect.y, rect.x + rect.w, rect.y + rect.h);
+}
+
+void ImmediateDraw::blit(std::string texName, int x1, int y1, int x2, int y2)
+{
+    blit(Atlas::tileFromName(texName), x1, y1, x2, y2);
+}
+
 void ImmediateDraw::genericTexturedQuad(const Texture &tex, Rectangle dest)
 {
     texCoord2i(tex.x, tex.y);
@@ -148,6 +202,96 @@ void ImmediateDraw::genericTexturedQuad(const Texture &tex, Rectangle dest)
 
 void ImmediateDraw::genericBlitChar(char c, Rectangle dest)
 {
-    auto tex = Atlas::textureFromID(Atlas::tileFromChar(c));
-    genericTexturedQuad(tex, dest);
+    if(c != ' ')
+    {
+        auto tex = Atlas::textureFromID(Atlas::tileFromChar(c));
+        genericTexturedQuad(tex, dest);
+    }
+}
+
+void ImmediateDraw::drawRect(Color4 color, Rectangle rect)
+{
+    disableTextures();
+    color4b(color.r, color.g, color.b, color.a);
+    vertex2i(rect.x, rect.y);
+    vertex2i(rect.x + rect.w, rect.y);
+    vertex2i(rect.x + rect.w, rect.y + rect.h);
+    vertex2i(rect.x, rect.y + rect.h);
+}
+
+void ImmediateDraw::drawLineRect(Color4 color, Rectangle rect)
+{
+    disableTextures();
+    color4b(color.r, color.g, color.b, color.a);
+    lineVertex2i(rect.x, rect.y);
+    lineVertex2i(rect.x + rect.w, rect.y);
+    lineVertex2i(rect.x + rect.w, rect.y + rect.h);
+    lineVertex2i(rect.x, rect.y + rect.h);
+}
+
+void ImmediateDraw::drawBevelFrame(Color4 light, Color4 dark, Rectangle rect, int borderWidth)
+{
+    disableTextures();
+    color3b(light.r, light.g, light.b);
+    //top bevel
+    vertex2i(rect.x, rect.y);
+    vertex2i(rect.x + rect.w, rect.y);
+    vertex2i(rect.x + rect.w - borderWidth, rect.y + borderWidth);
+    vertex2i(rect.x + borderWidth, rect.y + borderWidth);
+    //left bevel
+    vertex2i(rect.x, rect.y);
+    vertex2i(rect.x + borderWidth, rect.y + borderWidth);
+    vertex2i(rect.x + borderWidth, rect.y + rect.h - borderWidth);
+    vertex2i(rect.x, rect.y + rect.h);
+    color3b(dark.r, dark.g, dark.b);
+    //right bevel
+    vertex2i(rect.x + rect.w, rect.y);
+    vertex2i(rect.x + rect.w, rect.y + rect.h);
+    vertex2i(rect.x + rect.w - borderWidth, rect.y + rect.h - borderWidth);
+    vertex2i(rect.x + rect.w - borderWidth, rect.y + borderWidth);
+    //bottom bevel
+    vertex2i(rect.x + borderWidth, rect.y + rect.h - borderWidth);
+    vertex2i(rect.x + rect.w - borderWidth, rect.y + rect.h - borderWidth);
+    vertex2i(rect.x + rect.w, rect.y + rect.h);
+    vertex2i(rect.x, rect.y + rect.h);
+}
+
+void ImmediateDraw::setColor(Color4 color)
+{
+    color4b(color.r, color.g, color.b, color.a);
+}
+
+void ImmediateDraw::enableScissorTest()
+{
+    //initialize clip marker at current quad index
+    //note: client code should set clip rectangle before this function
+    //in debug mode, check this
+    DBASSERT(clipState.startVertex != -1);
+    clipState.startVertex = quadIndex;
+}
+
+void ImmediateDraw::disableScissorTest()
+{
+    //terminate clip marker and add to list
+    clipState.numVertices = quadIndex - clipState.startVertex;
+    if(clipState.numVertices > 0)
+    clipMarkers.push_back(clipState);
+    clipState.startVertex = -1;
+}
+
+void ImmediateDraw::scissorRect(Rectangle rect)
+{
+    //Set the clipping rectangle only if it would change
+    if(rect != clipState.bounds)
+    {
+        //If clipping was already enabled, terminate that marker and start a new one
+        if(clipState.startVertex != -1)
+        {
+            clipState.numVertices = quadIndex - clipState.startVertex;
+            clipMarkers.push_back(clipState);
+        }
+        //In all cases, set the start vertex and rectangle
+        clipState.startVertex = quadIndex;
+        clipState.bounds = rect;
+    }
 }

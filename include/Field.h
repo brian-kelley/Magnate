@@ -13,7 +13,7 @@ class Field : public Component
 public:
     //The field object that currently has kbd focus, if any
     static Field* currentField;
-    Field(int x, int y, int width, int height, u8 stickyFlags, std::string text, callback cb, Component* parentComp);
+    Field(int x, int y, int width, int height, u8 stickyFlags, std::string text, Callback cb, Component* parentComp);
     void setText(std::string text);
     void setLocation(int x, int y);
     void setSize(int width, int height);
@@ -21,7 +21,7 @@ public:
     float getFontScale();
     std::string& getText();
     void updateSize();
-    callback getCallback();
+    Callback getCallback();
     bool isActive();
     void activate();
     void deactivate();
@@ -30,7 +30,7 @@ public:
 private:
     std::string text;
     float fontScale;
-    callback whenUpdated;
+    Callback whenUpdated;
     bool active;
     bool hasCursor;
     SDL_Point textLoc;

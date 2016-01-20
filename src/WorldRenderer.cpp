@@ -11,7 +11,7 @@ VBO_CHUNKS(25),
 CHUNK_FREE(0x7FFF),
 ambientWeight(0.3),
 diffuseWeight(0.7),
-vbo(CHUNK_SIZE * CHUNK_SIZE * VBO_CHUNKS * 4, VBO::v3D, GL_DYNAMIC_DRAW)
+vbo(VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * 4, VBO::v3D, GL_DYNAMIC_DRAW)
 {
     createUVCache();
     //create a statically sized buffer for tiles (copy of VBO)
@@ -21,6 +21,7 @@ vbo(CHUNK_SIZE * CHUNK_SIZE * VBO_CHUNKS * 4, VBO::v3D, GL_DYNAMIC_DRAW)
     for(int i = 0; i < VBO_CHUNKS; i++)
         chunkAlloc[i].x = CHUNK_FREE;
     updateVBOChunks(true);
+    PRINT("Created world renderer.");
 }
 
 WorldRenderer::~WorldRenderer()
@@ -143,9 +144,9 @@ void WorldRenderer::processCameraUpdate(void* ins, const glm::mat4 &viewMat)
 
 void WorldRenderer::updateVBOChunks(bool force)
 {
+    cout << "VBO has allocated space for " << vbo.getNumVertices() << " vertices" << endl;
     //go through the currently allocated chunks and free if they are no longer in the visible square
     int dist = (int(sqrt(VBO_CHUNKS)) - 1) / 2; //maximum distance from centerChunk in x or z
-                                                //PRINT("Updating vbo chunks with center chunk at " << centerChunk.x << ", " << centerChunk.y)
     for(int i = 0; i < VBO_CHUNKS; i++)
     {
         if(chunkAlloc[i].x != CHUNK_FREE && (abs(chunkAlloc[i].x - centerChunk.x) > dist || abs(chunkAlloc[i].y - centerChunk.y) > dist))

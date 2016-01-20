@@ -20,34 +20,34 @@ void Input::init()
 void Input::update()
 {
     SDL_PumpEvents();
-    SDL_Event* event = nullptr;
-    while(SDL_PollEvent(event))
+    SDL_Event event;
+    while(SDL_PollEvent(&event))
     {
-        switch(event->type)
+        switch(event.type)
         {
             case SDL_KEYDOWN:
             case SDL_KEYUP:
-                keyBroadcaster.send(event->key);
+                keyBroadcaster.send(event.key);
                 break;
             case SDL_TEXTINPUT:
-                typingBroadcaster.send(event->text);
+                typingBroadcaster.send(event.text);
                 break;
             case SDL_WINDOWEVENT:
-                windowBroadcaster.send(event->window);
+                windowBroadcaster.send(event.window);
                 break;
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
-                buttonBroadcaster.send(event->button);
+                buttonBroadcaster.send(event.button);
                 break;
             case SDL_MOUSEMOTION:
-                motionBroadcaster.send(event->motion);
+                motionBroadcaster.send(event.motion);
                 SDL_GetMouseState(&mouseX, &mouseY);
                 break;
             case SDL_MOUSEWHEEL:
-                wheelBroadcaster.send(event->wheel);
+                wheelBroadcaster.send(event.wheel);
                 break;
             default:
-                miscBroadcaster.send(SDL_EventType(event->type));
+                miscBroadcaster.send(SDL_EventType(event.type));
         }
     }
 }

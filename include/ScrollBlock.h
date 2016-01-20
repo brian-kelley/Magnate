@@ -24,6 +24,8 @@ public:
     void matchCanvasToContents();
     void updateScreenRect();
     CompType getType();
+    float getBarHeight();
+    float getBarPos();
 private:
     int viewport;         //how far from top of canvas top of viewable area is (pixels)
     float barHeight;      //local rect height / canvas rect height: -1 means no bar

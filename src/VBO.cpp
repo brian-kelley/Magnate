@@ -2,9 +2,9 @@
 
 using namespace std;
 
-int VBO::colorAttribLoc = 0;
-int VBO::texCoordAttribLoc = 0;
-int VBO::posAttribLoc = 0;
+int VBO::colorAttribLoc = -1;
+int VBO::texCoordAttribLoc = -1;
+int VBO::posAttribLoc = -1;
 VBO* VBO::currentBound = nullptr;
 
 VBO::VBO(int numVertices, Type type, int updateHint)
@@ -12,9 +12,12 @@ VBO::VBO(int numVertices, Type type, int updateHint)
     this->type = type;
     this->numVertices = numVertices;
     this->updateHint = updateHint;
+    GLERR
     glGenBuffers(1, &vboID);
+    GLERR
     glBindBuffer(GL_ARRAY_BUFFER, vboID);
     DBASSERT(updateHint == GL_STREAM_DRAW || updateHint == GL_DYNAMIC_DRAW || updateHint == GL_STATIC_DRAW);
+    GLERR
     //initialize space for data in GPU
     glBufferData(GL_ARRAY_BUFFER, getByteSize(numVertices), NULL, updateHint);
     GLERR
@@ -34,13 +37,13 @@ void VBO::resize(int numVertices)
     }
 }
 
-void VBO::writeData(int vertexIndex, int numVertices, void *data)
+void VBO::writeData(int vertexIndex, int verticesToCopy, void *data)
 {
     bind();
     glBindBuffer(GL_ARRAY_BUFFER, vboID);
-    DBASSERT(vertexIndex + numVertices < this->numVertices); //do quick bounds checking in debug build
+    DBASSERT(vertexIndex + verticesToCopy <= numVertices); //do quick bounds checking in debug build
     int byteOffset = getByteSize(vertexIndex);
-    int byteSize = getByteSize(numVertices);
+    int byteSize = getByteSize(verticesToCopy);
     glBufferSubData(GL_ARRAY_BUFFER, byteOffset, byteSize, (const GLvoid*) data);
 }
 
@@ -53,6 +56,7 @@ void VBO::draw(int startIndex, int numVertices, int geom)
 
 void VBO::drawWithClip(int startIndex, int verticesToDraw, int geom, const vector<ClipMarker>& clipMarkers)
 {
+    cout << "Drawing with clip: " << clipMarkers.size() << " clip markers." << endl;
     bind();
     DBASSERT(geom == GL_TRIANGLES || geom == GL_QUADS || geom == GL_LINES || geom == GL_TRIANGLE_STRIP)
     auto clipIter = clipMarkers.begin();
@@ -103,6 +107,10 @@ void VBO::loadAttribLocs(int programID)
     texCoordAttribLoc = glGetAttribLocation(programID, "texCoord");
     GLERR;
     posAttribLoc = glGetAttribLocation(programID, "vertex");
+    GLERR;
+    glEnableVertexAttribArray(colorAttribLoc);
+    glEnableVertexAttribArray(texCoordAttribLoc);
+    glEnableVertexAttribArray(posAttribLoc);
 }
 
 int VBO::getByteSize(int vertices)

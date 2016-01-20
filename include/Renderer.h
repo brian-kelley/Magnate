@@ -25,14 +25,11 @@ public:
     void uploadMatrices(int dims); //before draw call, 2 or 3
     void update();
 private:
-    void initShaders();
     Window win;
     Shaders shaders;
     WorldRenderer worldRend;
     UIRenderer uiRend;
     GLuint projLoc;
     GLuint viewLoc;
-    GLuint modelLoc;
-    //configuration variables
 };
 #endif

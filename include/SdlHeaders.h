@@ -21,4 +21,4 @@
 
 #endif //platforms
 
-#endif //guard
+#endif

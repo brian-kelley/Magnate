@@ -30,8 +30,8 @@ namespace SaveManager
     extern Scene** currentScenePtr;
     extern std::vector<std::string> saves;
     //Functions
-    extern void init(Scene** currentScenePtr, callback toMain, callback toGame);
-    extern void initUI(callback toMain, callback toGame);
+    extern void init(Scene** currentScenePtr, Callback toMain, Callback toGame);
+    extern void initUI(Callback toMain, Callback toGame);
     extern void disposeUI();
     extern void refreshSaveList();
     extern std::vector<std::string>& listSaves();
@@ -49,7 +49,7 @@ namespace SaveManager
     extern void enterRename();
     extern void loadWorldBtn(void* arg);
     extern void loadTestWorld();
-    extern callback transitionToGame;
+    extern Callback transitionToGame;
 };
 
  */

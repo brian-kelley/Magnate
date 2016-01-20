@@ -8,6 +8,7 @@
 #include "Coord.h"
 #include "Heightmap.h"
 #include "World.h"
+#include "DebugTools.h"
 
 //Keeps track of camera position and orientation in world
 //Moves based on input

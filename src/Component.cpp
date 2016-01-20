@@ -5,6 +5,8 @@ using namespace std;
 Component::Component(int x, int y, int width, int height, u8 stickyFlags, bool center, Component* parentComp) : local(x, y, width, height), canvas(x, y, width, height)
 {
     this->parent = parentComp;
+    if(parent)
+        parent->addChild(this);
     this->stickyFlags = stickyFlags;
     updateScreenRect();
 }
@@ -135,6 +137,8 @@ void Component::updateScreenRect()
     //parent needs to have already calculated its own screen position
     screen.x = local.x + parent ? parent->getScreenRect().x : 0;
     screen.y = local.y + parent ? parent->getScreenRect().y : 0;
+    for(auto c : children)
+        c->updateScreenRect();
 }
 
 const Rectangle& Component::getLocalRect()

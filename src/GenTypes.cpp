@@ -2,6 +2,24 @@
 
 using namespace std;
 
+Callback::Callback()
+{
+    func = nullptr;
+    lisInst = nullptr;
+}
+
+Callback::Callback(CallbackFunc cbFunc, void* listener)
+{
+    func = cbFunc;
+    lisInst = listener;
+}
+
+void Callback::operator()(void *widget)
+{
+    if(func)
+        func(lisInst, widget);
+}
+
 Pos2::Pos2() : x(0), y(0) {}
 Pos2::Pos2(short xx, short yy) : x(xx), y(yy) {}
 
@@ -12,6 +30,11 @@ Rectangle::Rectangle(int x, int y, int w, int h)
     this->y = y;
     this->w = w;
     this->h = h;
+}
+
+bool Rectangle::operator!=(const Rectangle &rval)
+{
+    return x != rval.x || y != rval.y || w != rval.w || h != rval.h;
 }
 
 TexCoord::TexCoord()
@@ -36,6 +59,14 @@ Color4::Color4()
 
 Color4::Color4(int r, int g, int b, int a)
 {
+    r = min(r, 255);
+    g = min(g, 255);
+    b = min(b, 255);
+    a = min(a, 255);
+    r = max(r, 0);
+    g = max(g, 0);
+    b = max(b, 0);
+    a = max(a, 0);
     this->r = r;
     this->g = g;
     this->b = b;
@@ -48,6 +79,11 @@ void Color4::operator=(const Color4 &rval)
     g = rval.g;
     b = rval.b;
     a = rval.a;
+}
+
+Color4 Color4::operator*(const float rval) const
+{
+    return Color4(r * rval, g * rval, b * rval, a);
 }
 
 ostream& operator<<(ostream& os, Rectangle& r)

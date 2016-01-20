@@ -6,7 +6,7 @@ using namespace GlobalConfig;
 
 TerrainGen::TerrainGen(Heightmap& worldHeights, Heightmap& worldBiomes) : world(worldHeights), biomes(worldBiomes)
 {
-    generate();
+    combinedGen();
 }
 
 void getSlope(Heightmap& world)
@@ -30,18 +30,6 @@ void getCanal(Heightmap& world)
             world.add(abs(WORLD_SIZE / 2 - j) * 2, i, j);
         }
     }
-}
-
-void TerrainGen::generate()
-{
-    RandomUtils::seed(time(NULL));
-    Heightmap rainfall(WORLD_SIZE, WORLD_SIZE);
-    rainfall.diamondSquare(2, 0, 0, false);
-    rainfall.normalize();
-    defaultGen();
-    Erosion erosion(world, rainfall);
-    assignBiomes(rainfall);
-    addWatershed(40, 0.5);
 }
 
 void TerrainGen::defaultGen()
@@ -343,25 +331,24 @@ void TerrainGen::stretchToFill()
 
 void TerrainGen::combinedGen()
 {
-    PRINT("Beginning world generation.");
-    //Generate one buffer
-    TIMEIT(defaultGen());
-    TIMEIT(stretchToFill());
+    defaultGen();
+    stretchToFill();
     //Save a copy of the first buffer
     Heightmap first = world;
     //Generate another buffer
-    TIMEIT(clearAll());
-    TIMEIT(defaultGen());
-    TIMEIT(stretchToFill());
+    clearAll();
+    defaultGen();
+    stretchToFill();
     //Combine them
-    TIMEIT(world.add(first));
-    TIMEIT(clampSeaLevel());
+    world.add(first);
+    clampSeaLevel();
+    /*
     Heightmap rainfall(world.getW(), world.getH());
     rainfall.diamondSquare(2.0, 0, 0, false);
-    TIMEIT(assignBiomes(rainfall));
-    TIMEIT(addWatershed(50, 0.6));
+    assignBiomes(rainfall);
+    addWatershed(50, 0.6);
     TIMEIT(flattenWater());
-    PRINT("Done with world generation.");
+     */
 }
 
 short TerrainGen::getAverageHeight()
@@ -436,6 +423,11 @@ void TerrainGen::scaleHeight(int target, int maxH)
 
 void TerrainGen::unsmooth(short maxH)
 {
+    if(maxH == 0)
+    {
+        cout << "Warning: Can't unsmooth terrain because height is 0." << endl;
+        return;
+    }
     //Scale up linearly so highest point is near SHRT_MAX
     int mult = (SHRT_MAX - 50) / maxH;
     scaleHeight(mult * maxH, maxH);

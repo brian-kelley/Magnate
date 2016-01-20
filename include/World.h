@@ -15,7 +15,8 @@
 class World
 {
 public:
-    void init(std::string saveName, bool generate);
+    static void initDebug();    //quickly jump into game with fresh world
+    static void init(std::string saveName, bool generate);
     static void read();
     static void write();
     static void update();

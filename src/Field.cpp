@@ -12,7 +12,7 @@ using namespace std;
 
 Field* Field::currentField = nullptr;
 
-Field::Field(int x, int y, int width, int height, u8 stickyFlags, string text, callback cb, Component* parentComp) : Component(x, y, width, height, stickyFlags, true, parentComp)
+Field::Field(int x, int y, int width, int height, u8 stickyFlags, string text, Callback cb, Component* parentComp) : Component(x, y, width, height, stickyFlags, true, parentComp)
 {
     this->text = text;
     whenUpdated = cb;
@@ -55,7 +55,7 @@ float Field::getFontScale()
     return this->fontScale;
 }
 
-callback Field::getCallback()
+Callback Field::getCallback()
 {
     return whenUpdated;
 }
@@ -86,7 +86,7 @@ void Field::deactivate()
         hasCursor = false;
         currentField = nullptr;
     }
-    if(whenUpdated)
+    if(whenUpdated.func)
         whenUpdated(this);
 }
 

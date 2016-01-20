@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include "Atlas.h"
+#include "GUI.h"
 #include "Component.h"
 #include "Button.h"
 #include "Label.h"
@@ -25,7 +26,6 @@ public:
     UIRenderer();
     void drawComponent(Component* c);
     void draw();         //do GL draw call for all visible components
-    //static void processCameraMotion(void* instance, const glm::mat4& view);
 private:
     void drawScene(Scene* s);
     void drawButton(Button* b);

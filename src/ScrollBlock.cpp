@@ -102,3 +102,13 @@ CompType ScrollBlock::getType()
 {
     return CompType::scrollBlock;
 }
+
+float ScrollBlock::getBarHeight()
+{
+    return barHeight;
+}
+
+float ScrollBlock::getBarPos()
+{
+    return barPos;
+}

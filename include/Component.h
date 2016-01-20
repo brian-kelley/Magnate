@@ -19,13 +19,12 @@ enum struct CompType
     draggable
 };
 
-typedef void (*callback) (void*);   //UI callback (different from Broadcaster listener)
-
 //Describes how component will
 namespace StickyDirs
 {
     enum : u8
     {
+        none = 0,
         top = 1 << 0,
         right = 1 << 1,
         bottom = 1 << 2,

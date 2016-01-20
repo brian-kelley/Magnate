@@ -15,7 +15,6 @@ class TerrainGen
 {
 public:
     TerrainGen(Heightmap& worldHeights, Heightmap& worldBiomes);
-    void generate();
 private:
     void oldGeneration();
     void diamondSquare();

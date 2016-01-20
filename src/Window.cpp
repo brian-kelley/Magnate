@@ -20,6 +20,10 @@ Window::Window(int width, int height)
     SDL_GL_SetSwapInterval(1);
     sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, SDL_RENDERER_ACCELERATED);
     configGL();
+    //Initialize atlas, which only depends on SDL being initialized
+    PRINT("Created window.");
+    Atlas::init("main", sdlRenderer);
+    PRINT("Created atlas.");
 }
 
 Window::~Window()
@@ -37,7 +41,7 @@ SDL_Renderer* Window::getRenderer()
 
 void Window::configGL()
 {
-    glClearColor(1, 1, 1, 1);
+    glClearColor(1, 0, 0, 1);
     glEnable(GL_BLEND);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
@@ -64,7 +68,6 @@ Pos2 Window::getSize()
 
 void Window::resize(int w, int h)
 {
-    
     SDL_SetWindowSize(sdlWindow, w, h);
 }
 

@@ -41,20 +41,13 @@ void Atlas::init(string atlasName, SDL_Renderer* renderer)
     }
     initCharTiles();
     SDL_FreeSurface(loadedSurface);
+    GLERR
 }
 
 int Atlas::tileFromName(string tilename)
 {
-    try
-    {
-        int val = tileNames.at(tilename);
-        return val;
-    }
-    catch(...)
-    {
-        cout << "\"" << tilename << "\" is not a valid tex name!" << endl;
-    }
-    return 0;
+    DBASSERT(tileNames.find(tilename) != tileNames.end());
+    return tileNames[tilename];
 }
 
 int Atlas::tileFromChar(char c)
@@ -173,6 +166,7 @@ void Atlas::parseTiles(path fpath)
 
 void Atlas::sendImage(void* pixels, int texID)
 {
+    PRINT("Adding a texture: " << texID);
     auto destRect = textureFromID(texID);
     //OS X and Windows have different color orderings
 #ifdef __APPLE__

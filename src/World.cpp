@@ -9,9 +9,19 @@ Heightmap World::biomes;
 string World::saveName;
 unsigned World::seed;
 
+void World::initDebug()
+{
+    init("asdf", true);
+    PRINT("Done loading test world.");
+}
+
 void World::init(std::string saveName, bool willGenerate)
 {
-    this->saveName = saveName;
+    {
+        Heightmap temp(GlobalConfig::WORLD_SIZE, GlobalConfig::WORLD_SIZE);
+        height = temp;
+        biomes = temp;
+    }
     path saveFolder = initial_path() / FileIO::root / "saves";
     if(!exists(saveFolder))
     {

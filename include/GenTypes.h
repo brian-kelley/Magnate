@@ -15,6 +15,17 @@ typedef uint32_t u32;
 typedef uint64_t u64;
 typedef glm::vec3 Pos3;
 
+typedef void(*CallbackFunc)(void*, void*);
+
+struct Callback
+{
+    Callback();
+    Callback(CallbackFunc cbFunc, void* listener);
+    void (*func)(void*, void*);     //the function to call
+    void* lisInst;             //pointer to instance of listener, or NULL
+    void operator()(void* widget);
+};
+
 struct Pos2
 {
     Pos2();
@@ -27,6 +38,7 @@ struct Rectangle
 {
     Rectangle();
     Rectangle(int x, int y, int w, int h);
+    bool operator!=(const Rectangle& rval);
     int x;
     int y;
     int w;
@@ -46,6 +58,7 @@ struct Color4
     Color4();
     Color4(int r, int g, int b, int a);
     void operator=(const Color4& rval);
+    Color4 operator*(const float rval) const;
     u8 r;
     u8 g;
     u8 b;

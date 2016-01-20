@@ -6,6 +6,7 @@
 #include "GenTypes.h"
 #include "DebugTools.h"
 #include "SdlHeaders.h"
+#include "Atlas.h"
 
 enum struct WindowMode
 {
