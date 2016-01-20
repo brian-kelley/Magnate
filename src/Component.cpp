@@ -135,8 +135,13 @@ void Component::updateScreenRect()
     screen.h = local.h;
     //x, y depend on parent screen position
     //parent needs to have already calculated its own screen position
-    screen.x = local.x + parent ? parent->getScreenRect().x : 0;
-    screen.y = local.y + parent ? parent->getScreenRect().y : 0;
+    screen.x = local.x;
+    screen.y = local.y;
+    if(parent)
+    {
+        screen.x += parent->getScreenRect().x;
+        screen.y += parent->getScreenRect().y;
+    }
     for(auto c : children)
         c->updateScreenRect();
 }

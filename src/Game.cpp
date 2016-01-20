@@ -30,9 +30,9 @@ void Game::update()
 void Game::initScenes()
 {
     //Main menu
-    new Button(320, 200, 240, 100, StickyDirs::none, "Start Game", Callback(mainStart, this), &mainMenu);
-    new Button(320, 320, 240, 100, StickyDirs::none, "Quit Game", Callback(mainQuit, this), &mainMenu);
-    new Label(320, 90, 200, 100, StickyDirs::top, "Magnate", &mainMenu);
+    new Button(200, 150, 240, 100, StickyDirs::none, "Start Game", Callback(mainStart, this), &mainMenu);
+    new Button(200, 270, 240, 100, StickyDirs::none, "Quit Game", Callback(mainQuit, this), &mainMenu);
+    new Label(220, 40, 200, 100, StickyDirs::top, "Magnate", &mainMenu);
     //Tell the GUI which scene to start with
     GUI::init(&mainMenu);
 }

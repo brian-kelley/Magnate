@@ -23,6 +23,7 @@ void UIRenderer::draw()
     glDisable(GL_DEPTH_TEST);
     imm.beginFrame();
     drawScene(GUI::current);
+    imm.blit("cursor", Input::mouseX, Input::mouseY);
     imm.draw();
 }
 
@@ -124,6 +125,7 @@ void UIRenderer::drawField(Field* f)
 
 void UIRenderer::drawButton(Button* b)
 {
+    auto rect = b->getScreenRect();
     //Draw the entire button lighter if mouse is over
     bool lit = b->isMouseOver();
     Color4 light = fg;
@@ -138,7 +140,6 @@ void UIRenderer::drawButton(Button* b)
     {
         dark = dark * SHADE;
     }
-    auto rect = b->getScreenRect();
     //Draw background
     imm.drawRect(background, rect);
     //Draw beveled frame
@@ -181,4 +182,6 @@ void UIRenderer::drawMinimap(Minimap *mm)
     interior.w -= 2 * BORDER_WIDTH;
     interior.h -= 2 * BORDER_WIDTH;
     imm.blit("minimap", interior);
+    if(Input::keystate[SDL_SCANCODE_T])
+        imm.blit("topo", interior);
 }

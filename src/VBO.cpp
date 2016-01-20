@@ -56,7 +56,6 @@ void VBO::draw(int startIndex, int numVertices, int geom)
 
 void VBO::drawWithClip(int startIndex, int verticesToDraw, int geom, const vector<ClipMarker>& clipMarkers)
 {
-    cout << "Drawing with clip: " << clipMarkers.size() << " clip markers." << endl;
     bind();
     DBASSERT(geom == GL_TRIANGLES || geom == GL_QUADS || geom == GL_LINES || geom == GL_TRIANGLE_STRIP)
     auto clipIter = clipMarkers.begin();

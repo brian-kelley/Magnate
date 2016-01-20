@@ -45,6 +45,7 @@ public:
     void blit(int texID, int x, int y);   //blit at actual size
     void blit(std::string texName, int x, int y);
     void blit(int texID, int x1, int y1, int x2, int y2); //blit, but specify dest rect
+    void blit(int texID, Rectangle rect);
     void blit(std::string texName, int x1, int y1, int x2, int y2);
     void blit(std::string texName, Rectangle rect);
     void enableTextures();

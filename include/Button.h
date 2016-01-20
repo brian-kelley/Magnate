@@ -14,7 +14,7 @@ public:
     float getFontScale();
     void processResize();
     Callback getCallback();
-    void processLeftClick();
+    void mouseButton(const SDL_MouseButtonEvent& event);
     CompType getType();
 private:
     bool over;

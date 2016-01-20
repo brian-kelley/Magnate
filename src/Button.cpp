@@ -25,7 +25,7 @@ void Button::processResize()
     Component::processResize();
 }
 
-void Button::processLeftClick()
+void Button::mouseButton(const SDL_MouseButtonEvent& event)
 {
     if(whenPressed.func && isMouseOver())
         whenPressed(this);

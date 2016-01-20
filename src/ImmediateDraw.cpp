@@ -20,22 +20,6 @@ void ImmediateDraw::beginFrame()
 
 void ImmediateDraw::draw()
 {
-    enableTextures();
-    
-    //test draw atlas over entire screen
-    string text = "!@#$%^&*()_+{}[]";
-    
-    color4b(255, 255, 255, 255);
-    enableTextures();
-    texCoord2i(0, 0);
-    vertex2i(0, 0);
-    texCoord2i(2048, 0);
-    vertex2i(480, 0);
-    texCoord2i(2048, 2048);
-    vertex2i(480, 480);
-    texCoord2i(0, 2048);
-    vertex2i(0, 480);
-    
     //send data to GPU
     int numVertices = quadIndex + lineIndex;
     //make sure VBO is big enough (do not shrink if there is extra space)
@@ -43,10 +27,8 @@ void ImmediateDraw::draw()
         vbo.resize(numVertices);
     vbo.writeData(0, quadIndex, &quadVertices[0]);
     vbo.writeData(quadIndex, lineIndex, &lineVertices[0]);
-    PRINT("Immediate mode drawing quads.");
     vbo.drawWithClip(0, quadIndex, GL_QUADS, clipMarkers);
-    //TODO: add another vector of clip markers for lines if line clipping becomes necessary for UI
-    PRINT("Immediate mode drawing lines.");
+    //add another vector of clip markers for lines if line clipping becomes necessary for UI
     vbo.draw(quadIndex, lineIndex, GL_LINES);
 }
 
@@ -143,6 +125,7 @@ void ImmediateDraw::drawStringAuto(std::string& text, Rectangle dest, Justify ju
     }
     int charW = scale * fw;
     int charH = scale * fh;
+    dest.y = dest.y + dest.h / 2 - charH / 2;
     if(just == Justify::LEFT_JUST)
     {
         drawString(text, dest.x, dest.y, charW, charH);
@@ -162,20 +145,26 @@ void ImmediateDraw::drawStringAuto(std::string& text, Rectangle dest, Color4 col
 
 void ImmediateDraw::blit(int texID, int x, int y)
 {
-    auto tex = Atlas::textureFromID(texID);
+    auto& tex = Atlas::textureFromID(texID);
     genericTexturedQuad(tex, {x, y, tex.width, tex.height});
 }
 
 void ImmediateDraw::blit(std::string texName, int x, int y)
 {
-    auto tex = Atlas::textureFromName(texName);
+    auto& tex = Atlas::textureFromName(texName);
     genericTexturedQuad(tex, {x, y, tex.width, tex.height});
 }
 
 void ImmediateDraw::blit(int texID, int x1, int y1, int x2, int y2)
 {
-    auto tex = Atlas::textureFromID(texID);
+    auto& tex = Atlas::textureFromID(texID);
     genericTexturedQuad(tex, {x1, y1, x2 - x1, y2 - y1});
+}
+
+void ImmediateDraw::blit(int texID, Rectangle rect)
+{
+    auto& tex = Atlas::textureFromID(texID);
+    genericTexturedQuad(tex, rect);
 }
 
 void ImmediateDraw::blit(std::string texName, Rectangle rect)
@@ -190,6 +179,7 @@ void ImmediateDraw::blit(std::string texName, int x1, int y1, int x2, int y2)
 
 void ImmediateDraw::genericTexturedQuad(const Texture &tex, Rectangle dest)
 {
+    enableTextures();
     texCoord2i(tex.x, tex.y);
     vertex2i(dest.x, dest.y);
     texCoord2i(tex.x + tex.width, tex.y);
@@ -204,8 +194,8 @@ void ImmediateDraw::genericBlitChar(char c, Rectangle dest)
 {
     if(c != ' ')
     {
-        auto tex = Atlas::textureFromID(Atlas::tileFromChar(c));
-        genericTexturedQuad(tex, dest);
+        enableTextures();
+        blit(Atlas::tileFromChar(c), dest);
     }
 }
 

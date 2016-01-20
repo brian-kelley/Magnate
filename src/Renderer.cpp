@@ -17,7 +17,6 @@ uiRend()
 
 void Renderer::update()
 {
-    PRINT("\n~~~STARTING FRAME~~~\n");
     win.prepareFrame();
     //Draw the world first, if in game
     GLERR
