@@ -4,14 +4,15 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <ctime>
 #include "GenTypes.h"
 #include "GUI.h"
 #include "SdlHeaders.h"
 #include "FileIO.h"
 #include "Renderer.h"
 #include "World.h"
-#include "Atlas.h"
-#include "Input.h"
+#include "Camera.h"
+#include "Menus.h"
 
 class Game
 {
@@ -25,12 +26,9 @@ private:
     void mainLoop();
     void update();
     bool terminating;        //whether the program will terminate after this frame
-    //gui
-    void initScenes();       //create all widgets
-    static void mainStart(void* inst, void*);
-    static void mainQuit(void* inst, void*);
     static void processWindow(void* inst, const SDL_WindowEvent& event);
     static void processMisc(void* inst, const SDL_EventType& event);
+    static void processMenuEvent(void* inst, const GeneralMsg& msg);
 };
 
 #endif

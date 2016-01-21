@@ -27,7 +27,7 @@ void Button::processResize()
 
 void Button::mouseButton(const SDL_MouseButtonEvent& event)
 {
-    if(whenPressed.func && isMouseOver())
+    if(whenPressed.func && isMouseOver() && event.state == SDL_PRESSED)
         whenPressed(this);
 }
 

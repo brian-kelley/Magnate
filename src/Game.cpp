@@ -9,9 +9,10 @@ Game::Game() : renderer()
     Camera::init();
     //TODO: Find where to put main menu and initialize here
     terminating = false;
-    initScenes();
+    Menus::initAll();
     Input::windowBroadcaster.addListener(this, processWindow);
     Input::miscBroadcaster.addListener(this, processMisc);
+    Menus::bc.addListener(this, processMenuEvent);
     //Load a test world
     World::initDebug();
     mainLoop();
@@ -27,63 +28,29 @@ void Game::update()
     renderer.update();
 }
 
-void Game::initScenes()
-{
-    //Main menu
-    new Button(200, 150, 240, 100, StickyDirs::none, "Start Game", Callback(mainStart, this), &mainMenu);
-    new Button(200, 270, 240, 100, StickyDirs::none, "Quit Game", Callback(mainQuit, this), &mainMenu);
-    new Label(220, 40, 200, 100, StickyDirs::top, "Magnate", &mainMenu);
-    //Tell the GUI which scene to start with
-    GUI::init(&mainMenu);
-}
-
 void Game::mainLoop()
 {
-    //TODO: Have software limit framerate without busy waiting
+    //TODO: Have precise software FPS limit framerate without busy waiting
     //For now, run frames as quick as possible
+    auto programStart = time(NULL);
+    auto seconds = time(NULL);
+    int frameCount = 0;
     while(true)
     {
         update();
         if(terminating)
             break;
-    }
-    /*
-    while(true)
-    {
-        bool print = true;
-        //Get current (high-precision) time
-        auto start = chrono::high_resolution_clock::now();
-        update();
-        if(terminating)
-            break;
-        //Busy wait to get exactly 1/60 seconds for total loop
-        double time = 0;
-        while(time < 1.0 / 60)
+        auto current = time(NULL);
+        frameCount++;
+        if(seconds != current)
         {
-            auto end = chrono::high_resolution_clock::now();
-            double time = chrono::duration_cast<chrono::microseconds>(end - start).count() / 1000000.0;
-            if(print)
-            {
-                cout << "Frame took " << time << " seconds" << endl;
-                print = false;
-            }
+            //compute fps from time elapsed
+            int fps = frameCount / (current - seconds);
+            cout << fps << " FPS" << " during second " << current - programStart << endl;
+            frameCount = 0;
+            seconds = current;
         }
     }
-     */
-}
-
-void Game::mainStart(void *inst, void *)
-{
-    //Transition to save menu
-    Game* game = (Game*) inst;
-    GUI::transition(&game->saveMenu);
-}
-
-void Game::mainQuit(void *inst, void *)
-{
-    //Signal to quit
-    Game* game = (Game*) inst;
-    game->terminating = true;
 }
 
 void Game::processWindow(void *inst, const SDL_WindowEvent &event)
@@ -101,5 +68,16 @@ void Game::processMisc(void *inst, const SDL_EventType &event)
     {
         Game* game = (Game*) inst;
         game->terminating = true;
+    }
+}
+
+void Game::processMenuEvent(void* inst, const GeneralMsg& msg)
+{
+    switch(msg.eventType)
+    {
+        case MenuEvent::GAME_QUIT:
+            ((Game*) inst)->terminating = true;
+            break;
+        default:;
     }
 }

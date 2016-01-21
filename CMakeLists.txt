@@ -24,6 +24,7 @@ include/ImmediateDraw
 include/Input
 include/Label
 include/LinAlg
+include/Menus
 include/Minimap
 include/MultiSelect
 include/RandomUtils
@@ -65,6 +66,7 @@ src/ImmediateDraw
 src/Input
 src/Label
 src/LinAlg
+src/Menus
 src/Minimap
 src/MultiSelect
 src/RandomUtils

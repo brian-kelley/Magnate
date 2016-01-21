@@ -1,11 +1,3 @@
-//
-//  RandomUtils.h
-//  Magnate
-//
-//  Created by Brian Kelley on 7/27/15208.
-//
-//
-
 #ifndef __Magnate__RandomUtils__
 #define __Magnate__RandomUtils__
 
