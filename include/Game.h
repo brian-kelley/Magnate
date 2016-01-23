@@ -20,9 +20,6 @@ public:
     Game();
 private:
     Renderer renderer;
-    Scene mainMenu;
-    Scene saveMenu;
-    Scene gameScene;
     void mainLoop();
     void update();
     bool terminating;        //whether the program will terminate after this frame

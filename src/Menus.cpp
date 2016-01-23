@@ -3,6 +3,8 @@
 using namespace std;
 
 Broadcaster<GeneralMsg> Menus::bc;
+Scene* Menus::debugScene = nullptr;
+Label* Menus::fpsLabel = nullptr;
 Scene* Menus::mainMenu = nullptr;
 Scene* Menus::saveMenu = nullptr;
 ScrollBlock* Menus::saveScroll = nullptr;
@@ -23,6 +25,9 @@ GeneralMsg::GeneralMsg(MenuEvent eventType, void* data)
 
 void Menus::initAll()
 {
+    //Debug scene
+    debugScene = new Scene;
+    fpsLabel = new Label(10, 10, 100, 35, StickyDirs::left | StickyDirs::top | StickyDirs::fixedWidth | StickyDirs::fixedHeight, "", debugScene);
     //Main menu
     mainMenu = new Scene;
     new Label(220, 40, 200, 100, StickyDirs::top, "Magnate", mainMenu);
@@ -53,7 +58,7 @@ void Menus::initAll()
     creatingField = new Field(320, 100, 600, 50, StickyDirs::none, "", nullptr, createMenu);
     gameScene = new Scene;
     new Minimap(gameScene);
-    GUI::init(mainMenu);
+    GUI::init(mainMenu, debugScene);
 }
 
 // Main menu callbacks
@@ -185,4 +190,11 @@ void Menus::updateSaveList()
     saveSelect->clearSelection();
     saveSelect->setOptions(SaveManager::saves);
     saveScroll->matchCanvasToContents();
+}
+
+void Menus::updateFPS(int fps)
+{
+    char buf[10];
+    sprintf(buf, "FPS:%d", fps);
+    fpsLabel->getText() = buf;
 }

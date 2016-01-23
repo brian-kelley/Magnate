@@ -23,6 +23,7 @@ void UIRenderer::draw()
     glDisable(GL_DEPTH_TEST);
     imm.beginFrame();
     drawScene(GUI::current);
+    drawScene(GUI::debugScene);
     imm.blit("cursor", Input::mouseX, Input::mouseY);
     imm.draw();
 }

@@ -15,9 +15,10 @@
 class GUI
 {
 public:
-    static void init(Scene* initial);
+    static void init(Scene* initial, Scene* debug);
     static void transition(Scene* next);
     static Scene* current;
+    static Scene* debugScene;
 private:
     //Event listeners
     static void processKeyEvent(void*, const SDL_KeyboardEvent& event);

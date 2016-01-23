@@ -32,7 +32,6 @@ void Game::mainLoop()
 {
     //TODO: Have precise software FPS limit framerate without busy waiting
     //For now, run frames as quick as possible
-    auto programStart = time(NULL);
     auto seconds = time(NULL);
     int frameCount = 0;
     while(true)
@@ -46,7 +45,7 @@ void Game::mainLoop()
         {
             //compute fps from time elapsed
             int fps = frameCount / (current - seconds);
-            cout << fps << " FPS" << " during second " << current - programStart << endl;
+            Menus::updateFPS(fps);
             frameCount = 0;
             seconds = current;
         }

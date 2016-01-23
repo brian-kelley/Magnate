@@ -30,6 +30,9 @@ namespace Menus
 {
     void initAll();
     extern Broadcaster<GeneralMsg> bc;
+    void updateFPS(int fps);
+    extern Label* fpsLabel;
+    extern Scene* debugScene;
     //Main menu
     extern Scene* mainMenu;
     void mainStart(void* inst, void*);

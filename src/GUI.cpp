@@ -1,10 +1,12 @@
 #include "GUI.h"
 
 Scene* GUI::current = nullptr;
+Scene* GUI::debugScene = nullptr;
 
-void GUI::init(Scene *initial)
+void GUI::init(Scene *initial, Scene *debug)
 {
     current = initial;
+    debugScene = debug;
     //register input listeners
     Input::keyBroadcaster.addListener(NULL, processKeyEvent);
     Input::typingBroadcaster.addListener(NULL, processTypingEvent);
@@ -35,26 +37,31 @@ void GUI::transition(Scene *next)
 void GUI::processKeyEvent(void*, const SDL_KeyboardEvent &event)
 {
     current->keyEvent(event);
+    debugScene->keyEvent(event);
 }
 
 void GUI::processTypingEvent(void*, const SDL_TextInputEvent &event)
 {
     current->keyTyped(event);
+    debugScene->keyTyped(event);
 }
 
 void GUI::processButton(void*, const SDL_MouseButtonEvent &event)
 {
     current->mouseButton(event);
+    debugScene->mouseButton(event);
 }
 
 void GUI::processMotion(void*, const SDL_MouseMotionEvent &event)
 {
     current->mouseMotion(event);
+    debugScene->mouseMotion(event);
 }
 
 void GUI::processWheel(void*, const SDL_MouseWheelEvent &event)
 {
     current->mouseWheel(event);
+    debugScene->mouseWheel(event);
 }
 
 void GUI::processWindow(void*, const SDL_WindowEvent &event)
@@ -73,6 +80,9 @@ void GUI::processWindow(void*, const SDL_WindowEvent &event)
                 current->setWidth(newWidth);
                 current->setHeight(newHeight);
                 current->processResize();
+                debugScene->setWidth(newWidth);
+                debugScene->setHeight(newHeight);
+                debugScene->processResize();
             }
             break;
         }
