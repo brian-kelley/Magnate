@@ -16,6 +16,19 @@ void GUI::init(Scene *initial)
 
 void GUI::transition(Scene *next)
 {
+    //If previous scene had a Field with keyboard focus, lose it
+    if(Field::currentField)
+    {
+        Field::currentField->loseFocus();
+    }
+    //If the new scene has a different size than the window, resize scene before showing
+    auto& sceneRect = next->getScreenRect();
+    if(sceneRect.w != Input::winX || sceneRect.h != Input::winY)
+    {
+        next->setWidth(Input::winX);
+        next->setHeight(Input::winY);
+        next->processResize();
+    }
     current = next;
 }
 

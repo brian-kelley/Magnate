@@ -5,6 +5,7 @@
 #include "GenTypes.h"
 #include "SdlHeaders.h"
 #include "Broadcaster.h"
+#include "GlobalConfig.h"
 
 namespace Input
 {
@@ -13,6 +14,8 @@ namespace Input
     extern const u8* keystate;  //bool buffer of all keys (access with SDL_SCANCODE_*)
     extern int mouseX;
     extern int mouseY;
+    extern int winX;
+    extern int winY;
     extern Broadcaster<SDL_KeyboardEvent> keyBroadcaster;
     extern Broadcaster<SDL_TextInputEvent> typingBroadcaster;
     extern Broadcaster<SDL_MouseButtonEvent> buttonBroadcaster;

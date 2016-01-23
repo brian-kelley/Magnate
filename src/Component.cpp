@@ -58,8 +58,7 @@ void Component::keyTyped(const SDL_TextInputEvent &event)
 {
     for(Component* c : children)
     {
-        if(c->isMouseOver())
-            c->keyTyped(event);
+        c->keyTyped(event);
     }
 }
 
@@ -67,8 +66,7 @@ void Component::keyEvent(const SDL_KeyboardEvent& event)
 {
     for(Component* c : children)
     {
-        if(c->isMouseOver())
-            c->keyEvent(event);
+        c->keyEvent(event);
     }
 }
 

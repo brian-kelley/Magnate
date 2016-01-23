@@ -14,6 +14,10 @@ public:
     //The field object that currently has kbd focus, if any
     static Field* currentField;
     Field(int x, int y, int width, int height, u8 stickyFlags, std::string text, Callback cb, Component* parentComp);
+    static void staticMouseButton(const SDL_MouseButtonEvent& event);
+    void mouseButton(const SDL_MouseButtonEvent &event);
+    void keyTyped(const SDL_TextInputEvent& event);
+    void keyEvent(const SDL_KeyboardEvent& event);
     void setText(std::string text);
     void setLocation(int x, int y);
     void setSize(int width, int height);
@@ -22,18 +26,13 @@ public:
     std::string& getText();
     void updateSize();
     Callback getCallback();
-    bool isActive();
-    void activate();
-    void deactivate();
-    void processLeftClick();
     CompType getType();
-private:
     std::string text;
-    float fontScale;
+    void loseFocus();
+    void gainFocus();
+    bool isActive();
+private:
     Callback whenUpdated;
-    bool active;
-    bool hasCursor;
-    SDL_Point textLoc;
 };
 
 #endif

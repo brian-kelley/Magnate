@@ -94,12 +94,12 @@ void UIRenderer::drawMultiSelect(MultiSelect* ms)
             imm.vertex2i(rect.x + rect.w, optY + ms->getOptHeight() - PAD);
             imm.vertex2i(rect.x + rect.w, optY + ms->getOptHeight());
             imm.vertex2i(rect.x, optY + ms->getOptHeight());
-            for(int i = 0; i < int(list.size()); i++)
-            {
-                Rectangle optRect(rect.x + PAD, rect.y + PAD + i * ms->getOptHeight(), rect.w - PAD * 2, ms->getOptHeight() - PAD * 2);
-                imm.color3b(fg.r, fg.g, fg.b);
-                imm.drawStringAuto(list[i], optRect, Justify::LEFT_JUST);
-            }
+        }
+        for(int i = 0; i < int(list.size()); i++)
+        {
+            Rectangle optRect(rect.x + PAD, rect.y + PAD + i * ms->getOptHeight(), rect.w - PAD * 2, ms->getOptHeight() - PAD * 2);
+            imm.color3b(fg.r, fg.g, fg.b);
+            imm.drawStringAuto(list[i], optRect, Justify::LEFT_JUST);
         }
     }
 }
@@ -161,11 +161,11 @@ void UIRenderer::drawScrollBlock(ScrollBlock* sb)
     barRect.w = BAR_WIDTH;
     barRect.h = (rect.h - PAD * 2) * barH;
     imm.drawRect(fg, rect);
-    imm.scissorRect(rect);
-    imm.enableScissorTest();
+    //imm.scissorRect(rect);
+    //imm.enableScissorTest();
     for(auto c : sb->getChildren())
         drawComponent(c);
-    imm.disableScissorTest();
+    //imm.disableScissorTest();
 }
 
 void UIRenderer::drawDraggable(Draggable* d)

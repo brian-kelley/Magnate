@@ -180,3 +180,8 @@ vec4 Minimap::mapToWorld(Pos2 mapPos)
     vec4 tileVec = minimapToTile * mapVec;
     return tileToWorld(tileVec.x, World::getHeights().get(tileVec.x, tileVec.z), tileVec.z);
 }
+
+CompType Minimap::getType()
+{
+    return CompType::minimap;
+}

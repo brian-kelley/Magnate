@@ -20,7 +20,7 @@ typedef void(*CallbackFunc)(void*, void*);
 struct Callback
 {
     Callback();
-    Callback(CallbackFunc cbFunc, void* listener);
+    Callback(CallbackFunc cbFunc, void* listener = nullptr);
     void (*func)(void*, void*);     //the function to call
     void* lisInst;             //pointer to instance of listener, or NULL
     void operator()(void* widget);

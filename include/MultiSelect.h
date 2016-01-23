@@ -14,13 +14,14 @@ public:
     int getNumOptions();
     void removeOption(int which);
     int getOptHeight();
-    void processLeftClick();
+    void mouseButton(const SDL_MouseButtonEvent &event);
     int getSelection();
     std::string& getSelectionText();
     std::vector<std::string>& getOptions();
     void processResize();
     void clearSelection();
     int findSelection(std::string text);
+    void setOptions(std::vector<std::string>& opts);
     CompType getType();
 private:
     std::vector<std::string> options;
@@ -29,4 +30,4 @@ private:
     void matchSizeToOptions();
 };
 
-#endif /* defined(__Magnate__MultiSelect__) */
+#endif

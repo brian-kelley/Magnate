@@ -23,6 +23,7 @@ public:
     static void buildTexture();
 private:
     void update();  //set screenX/screenY based on mouseX/mouseY
+    CompType getType();
     static void plotPosOnMap(glm::vec2 worldPos); //also call vertex2i
     static void putMinimapPixel(int x, int y, Uint32* buf, int maxHeight);
     static Color4 colorFromTerrain(Ground g);

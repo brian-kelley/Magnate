@@ -19,7 +19,7 @@ public:
     static void init(std::string saveName, bool generate);
     static void read();
     static void write();
-    static void update();
+    static void update();       //do all game logic/simulation
     static const Heightmap& getHeights();
     static const Heightmap& getBiomes();
     static bool isDrawing();

@@ -41,7 +41,7 @@ SDL_Renderer* Window::getRenderer()
 
 void Window::configGL()
 {
-    glClearColor(1, 0, 0, 1);
+    glClearColor(1, 1, 1, 1);
     glEnable(GL_BLEND);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);

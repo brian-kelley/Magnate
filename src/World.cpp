@@ -66,7 +66,8 @@ void World::read()
 
 void World::update()
 {
-    //Do world simulation for one frame
+    //Do all world simulation for one frame
+    //TODO: double buffer all frequently updated world data for easier parallelism
 }
 
 const Heightmap& World::getHeights()

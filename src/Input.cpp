@@ -3,6 +3,8 @@
 const u8* Input::keystate;
 int Input::mouseX;
 int Input::mouseY;
+int Input::winX;
+int Input::winY;
 Broadcaster<SDL_KeyboardEvent> Input::keyBroadcaster;
 Broadcaster<SDL_TextInputEvent> Input::typingBroadcaster;
 Broadcaster<SDL_MouseButtonEvent> Input::buttonBroadcaster;
@@ -15,6 +17,8 @@ void Input::init()
 {
     keystate = SDL_GetKeyboardState(NULL);
     SDL_SetRelativeMouseMode(SDL_TRUE);
+    winX = GlobalConfig::WINDOW_W;
+    winY = GlobalConfig::WINDOW_H;
 }
 
 void Input::update()
@@ -33,8 +37,16 @@ void Input::update()
                 typingBroadcaster.send(event.text);
                 break;
             case SDL_WINDOWEVENT:
-                windowBroadcaster.send(event.window);
+            {
+                SDL_WindowEvent& wevent = event.window;
+                if(wevent.event == SDL_WINDOWEVENT_RESIZED)
+                {
+                    winX = wevent.data1;
+                    winY = wevent.data2;
+                }
+                windowBroadcaster.send(wevent);
                 break;
+            }
             case SDL_MOUSEBUTTONDOWN:
             case SDL_MOUSEBUTTONUP:
                 buttonBroadcaster.send(event.button);

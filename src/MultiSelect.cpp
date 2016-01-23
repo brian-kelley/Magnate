@@ -38,18 +38,6 @@ int MultiSelect::getOptHeight()
     return optHeight;
 }
 
-void MultiSelect::processLeftClick()
-{
-    if(isMouseOver())
-    {
-        selection = (Input::mouseY - screen.y) / optHeight;
-        if(selection >= options.size() || selection < 0)
-        {
-            selection = -1;
-        }
-    }
-}
-
 int MultiSelect::getSelection()
 {
     return selection;
@@ -82,9 +70,7 @@ int MultiSelect::findSelection(std::string text)
     for(int index = 0; index < int(options.size()); index++)
     {
         if(options[index] == text)
-        {
             return index;
-        }
     }
     return -1;
 }
@@ -92,4 +78,20 @@ int MultiSelect::findSelection(std::string text)
 CompType MultiSelect::getType()
 {
     return CompType::multiSelect;
+}
+
+void MultiSelect::setOptions(vector<string> &opts)
+{
+    options = opts;
+    matchSizeToOptions();
+}
+
+void MultiSelect::mouseButton(const SDL_MouseButtonEvent &event)
+{
+    if(isMouseOver())
+    {
+        selection = (Input::mouseY - screen.y) / optHeight;
+        if(selection < 0 || selection >= options.size())
+            selection = -1;
+    }
 }

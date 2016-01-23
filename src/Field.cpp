@@ -18,6 +18,12 @@ Field::Field(int x, int y, int width, int height, u8 stickyFlags, string text, C
     whenUpdated = cb;
 }
 
+void Field::staticMouseButton(const SDL_MouseButtonEvent &event)
+{
+    if(currentField && !currentField->isMouseOver())
+        currentField->loseFocus();
+}
+
 string& Field::getText()
 {
     return this->text;
@@ -28,31 +34,28 @@ void Field::setText(string newtext)
     this->text = newtext;
 }
 
-void Field::processKey(SDL_Event& e)
+void Field::keyEvent(const SDL_KeyboardEvent &event)
 {
-    if(e.type == SDL_TEXTINPUT)
+    if(isActive())
     {
-        text = text.substr(0, text.length() - 1) + string(e.text.text) + "_";
-    }
-    else if(e.type == SDL_KEYDOWN)
-    {
-        if(e.key.keysym.scancode == SDL_SCANCODE_BACKSPACE)
+        if(event.keysym.scancode == SDL_SCANCODE_BACKSPACE)
         {
             if(this->text.size() > 1)
             {
                 this->text = this->text.substr(0, (unsigned long) text.length() - 2) + "_";
             }
         }
-        else if(e.key.keysym.scancode == SDL_SCANCODE_RETURN)
+        else if(event.keysym.scancode == SDL_SCANCODE_RETURN)
         {
-            deactivate();
+            loseFocus();
         }
     }
 }
 
-float Field::getFontScale()
+void Field::keyTyped(const SDL_TextInputEvent &event)
 {
-    return this->fontScale;
+    if(isActive())
+        text = text.substr(0, text.length() - 1) + string(event.text) + "_";
 }
 
 Callback Field::getCallback()
@@ -60,54 +63,50 @@ Callback Field::getCallback()
     return whenUpdated;
 }
 
-bool Field::isActive()
-{
-    return active;
-}
-
-void Field::activate()
+void Field::gainFocus()
 {
     if(currentField)
     {
-        currentField->deactivate();
+        currentField->loseFocus();
     }
     text = text.append("_");
-    active = true;
-    hasCursor = true;
     currentField = this;
 }
 
-void Field::deactivate()
+void Field::loseFocus()
 {
-    if(isActive())
+    if(currentField == this)
     {
-        active = false;
         text = text.substr(0, int(text.length() - 1));
-        hasCursor = false;
         currentField = nullptr;
+        if(whenUpdated.func)
+            whenUpdated(this);
     }
-    if(whenUpdated.func)
-        whenUpdated(this);
 }
 
-void Field::processLeftClick()
+void Field::mouseButton(const SDL_MouseButtonEvent &event)
 {
     if(isMouseOver())
     {
-        if(!active)
+        if(!isActive())
         {
-            activate();
+            gainFocus();
             currentField = this;
         }
     }
     else
     {
-        if(active)
-            deactivate();
+        if(isActive())
+            loseFocus();
     }
 }
 
 CompType Field::getType()
 {
     return CompType::field;
+}
+
+bool Field::isActive()
+{
+    return this == currentField;
 }
