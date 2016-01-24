@@ -66,7 +66,6 @@ void Camera::update()
     }
     if(updated)
     {
-        PRINT("Cam updated.");
         cameraMotion.send(getViewMatrix());
     }
 }

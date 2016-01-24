@@ -118,6 +118,7 @@ void Menus::renameOK(void* inst, void* arg)
 
 void Menus::saveToCreate(void* inst, void *arg)
 {
+    GUI::transition(createMenu);
     creatingField->setText("");
     creatingField->gainFocus();
 }

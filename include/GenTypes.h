@@ -79,7 +79,7 @@ struct Vertex3D
     Pos3 pos;
 }; //20 bytes total
 
-std::ostream& operator<<(std::ostream& os, Rectangle& r);
+std::ostream& operator<<(std::ostream& os, const Rectangle& r);
 u32 getColor32(u8 r, u8 g, u8 b, u8 a = 0xFF);
 
 #endif

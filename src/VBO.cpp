@@ -57,46 +57,40 @@ void VBO::draw(int startIndex, int numVertices, int geom)
 void VBO::drawWithClip(int startIndex, int verticesToDraw, int geom, const vector<ClipMarker>& clipMarkers)
 {
     bind();
-    DBASSERT(geom == GL_TRIANGLES || geom == GL_QUADS || geom == GL_LINES || geom == GL_TRIANGLE_STRIP)
-    auto clipIter = clipMarkers.begin();
-    //Determine whether any clipping will happen at all
-    while(clipIter != clipMarkers.end() && clipIter->startVertex < startIndex)
-        clipIter++;
-    if(clipIter == clipMarkers.end())
+    /*
+    PRINT("Have " << verticesToDraw << " total vertices.");
+    PRINT("Have " << clipMarkers.size() << " clip markers:");
+    for(auto& cm : clipMarkers)
     {
-        //clip markers didn't affect the vertex range
-        glDrawArrays(geom, startIndex, verticesToDraw);
-        return;
-    }
-    else
-    {
-        //clipIter at first relevant clip marker
-        //while there are vertices to draw:
-        //  is the next vertex in a clipped range?
-        //  if yes, draw up to the end of the clipped range or end of drawing range (whichever lower)
-        //  if no, draw unclipped up to the beginning of next clipped range or end of drawing range (whichever lower)
-        int vertexIndex = startIndex;
-        int vertexEnd = startIndex + verticesToDraw;
-        while(vertexIndex < startIndex + verticesToDraw)
+        cout << cm.numVertices;
+        if(cm.enable)
         {
-            if(clipIter->startVertex > vertexIndex)
-            {
-                //next draw call not clipped
-                int endIndex = min(clipIter->startVertex, vertexEnd);
-                glDrawArrays(geom, vertexIndex, endIndex - vertexIndex);
-                vertexIndex = endIndex;
-            }
-            else
-            {
-                //next draw call will be clipped (clipIter has the current clip rectangle)
-                int endIndex = min(clipIter->startVertex + clipIter->numVertices, vertexEnd);
-                glScissor(clipIter->bounds.x, clipIter->bounds.y, clipIter->bounds.w, clipIter->bounds.h);
-                glEnable(GL_SCISSOR_TEST);
-                glDrawArrays(geom, vertexIndex, endIndex - vertexIndex);
-                vertexIndex = endIndex;
-            }
+            cout << ", enabled with rect " << cm.bounds << endl;
+        }
+        else
+            cout << ", disabled." << endl;
+    }
+    */
+    DBASSERT(geom == GL_TRIANGLES || geom == GL_QUADS || geom == GL_LINES || geom == GL_TRIANGLE_STRIP)
+    int numDrawn = 0;
+    for(auto& marker : clipMarkers)
+    {
+        if(marker.enable)
+        {
+            //Scissor uses vertically inverted coordinate system, convert rectangle
+            glScissor(marker.bounds.x, Input::winY - (marker.bounds.y + marker.bounds.h), marker.bounds.w, marker.bounds.h);
+            glEnable(GL_SCISSOR_TEST);
+            glDrawArrays(geom, numDrawn, marker.numVertices);
+            numDrawn += marker.numVertices;
+        }
+        else
+        {
+            glDisable(GL_SCISSOR_TEST);
+            glDrawArrays(geom, numDrawn, marker.numVertices);
+            numDrawn += marker.numVertices;
         }
     }
+    glDisable(GL_SCISSOR_TEST);
 }
 
 void VBO::loadAttribLocs(int programID)

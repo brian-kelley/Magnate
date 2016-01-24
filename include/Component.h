@@ -45,6 +45,7 @@ public:
     //accessors for local and screen rectangles;
     const Rectangle& getLocalRect();
     const Rectangle& getScreenRect();
+    void setScreenRect(const Rectangle& r);
     virtual void processResize();       //resize so borders in 4 directions constant
     std::vector<Component*>& getChildren();
     bool isMouseOver();

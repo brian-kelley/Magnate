@@ -166,7 +166,6 @@ void Atlas::parseTiles(path fpath)
 
 void Atlas::sendImage(void* pixels, int texID)
 {
-    PRINT("Adding a texture: " << texID);
     auto destRect = textureFromID(texID);
     //OS X and Windows have different color orderings
 #ifdef __APPLE__

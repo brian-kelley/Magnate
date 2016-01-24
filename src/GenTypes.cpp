@@ -86,7 +86,7 @@ Color4 Color4::operator*(const float rval) const
     return Color4(r * rval, g * rval, b * rval, a);
 }
 
-ostream& operator<<(ostream& os, Rectangle& r)
+ostream& operator<<(ostream& os, const Rectangle& r)
 {
     os << "(" << r.x << "," << r.y << "), " << r.w << "x" << r.h;
     return os;

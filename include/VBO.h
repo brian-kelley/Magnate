@@ -8,6 +8,8 @@
 #include "GlmHeaders.h"
 #include "Coord.h"
 #include "DebugTools.h"
+#include "GenTypes.h"
+#include "Input.h"
 
 /*
  Vertex fields/sizes
@@ -27,7 +29,7 @@
 
 struct ClipMarker
 {
-    int startVertex;
+    bool enable;
     int numVertices;
     Rectangle bounds;
 };

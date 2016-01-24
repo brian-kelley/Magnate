@@ -16,10 +16,14 @@ void ImmediateDraw::beginFrame()
     quadIndex = 0;
     lineIndex = 0;
     clipMarkers.clear();
+    clipState.numVertices = 0;
+    clipState.enable = false;
 }
 
 void ImmediateDraw::draw()
 {
+    //terminate last clip marker
+    clipMarkers.push_back(clipState);
     //send data to GPU
     int numVertices = quadIndex + lineIndex;
     //make sure VBO is big enough (do not shrink if there is extra space)
@@ -62,6 +66,7 @@ void ImmediateDraw::vertex2i(short x, short y)
     else
         quadVertices.push_back(state);
     quadIndex++;
+    clipState.numVertices++;
 }
 
 void ImmediateDraw::lineVertex2i(short x, short y)
@@ -255,33 +260,28 @@ void ImmediateDraw::enableScissorTest()
 {
     //initialize clip marker at current quad index
     //note: client code should set clip rectangle before this function
-    //in debug mode, check this
-    DBASSERT(clipState.startVertex != -1);
-    clipState.startVertex = quadIndex;
+    if(clipState.numVertices > 0)
+    {
+        clipMarkers.push_back(clipState);
+        clipState.numVertices = 0;
+    }
+    clipState.enable = true;
 }
 
 void ImmediateDraw::disableScissorTest()
 {
     //terminate clip marker and add to list
-    clipState.numVertices = quadIndex - clipState.startVertex;
-    if(clipState.numVertices > 0)
     clipMarkers.push_back(clipState);
-    clipState.startVertex = -1;
+    clipState.numVertices = 0;
+    clipState.enable = false;
 }
 
 void ImmediateDraw::scissorRect(Rectangle rect)
 {
-    //Set the clipping rectangle only if it would change
     if(rect != clipState.bounds)
     {
-        //If clipping was already enabled, terminate that marker and start a new one
-        if(clipState.startVertex != -1)
-        {
-            clipState.numVertices = quadIndex - clipState.startVertex;
-            clipMarkers.push_back(clipState);
-        }
-        //In all cases, set the start vertex and rectangle
-        clipState.startVertex = quadIndex;
-        clipState.bounds = rect;
+        clipMarkers.push_back(clipState);
+        clipState.numVertices = 0;
     }
+    clipState.bounds = rect;
 }

@@ -20,7 +20,7 @@ void ScrollBlock::updateCanvasHeight(int newHeight) //call this to get more spac
     updateScreenRect();
 }
 
-void ScrollBlock::processScroll(SDL_MouseWheelEvent& e)
+void ScrollBlock::mouseWheel(const SDL_MouseWheelEvent& e)
 {
     if(this->hasBar())
     {
@@ -41,10 +41,6 @@ void ScrollBlock::processScroll(SDL_MouseWheelEvent& e)
         }
         updateScreenRect();
         calcBarPlacement();
-        for(Component* c : children)
-        {
-            c->updateScreenRect();
-        }
     }
 }
 
@@ -90,12 +86,21 @@ void ScrollBlock::matchCanvasToContents()
         }
     }
     updateCanvasHeight(maxY);
+    viewport = 0;
+    calcBarPlacement();
 }
 
 void ScrollBlock::updateScreenRect()
 {
-    Component::updateScreenRect();
     calcBarPlacement();
+    Component::updateScreenRect();
+    for(auto c : children)
+    {
+        //Do regular component's behavior, then shift everything up by viewport
+        Rectangle r = c->getScreenRect();
+        r.y -= viewport;
+        c->setScreenRect(r);
+    }
 }
 
 CompType ScrollBlock::getType()

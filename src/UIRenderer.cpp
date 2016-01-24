@@ -78,6 +78,7 @@ void UIRenderer::drawMultiSelect(MultiSelect* ms)
         if(ms->getSelection() != -1)
         {
             imm.color3f(fg.r, fg.g, fg.b);
+            imm.disableTextures();
             int optY = rect.y + ms->getSelection() * ms->getOptHeight();
             imm.vertex2i(rect.x, optY);
             imm.vertex2i(rect.x + rect.w, optY);
@@ -161,12 +162,12 @@ void UIRenderer::drawScrollBlock(ScrollBlock* sb)
     barRect.y = rect.y + PAD + barY * (rect.h - PAD * 2);
     barRect.w = BAR_WIDTH;
     barRect.h = (rect.h - PAD * 2) * barH;
-    imm.drawRect(fg, rect);
-    //imm.scissorRect(rect);
-    //imm.enableScissorTest();
+    imm.drawRect(fg, barRect);
+    imm.scissorRect(rect);
+    imm.enableScissorTest();
     for(auto c : sb->getChildren())
         drawComponent(c);
-    //imm.disableScissorTest();
+    imm.disableScissorTest();
 }
 
 void UIRenderer::drawDraggable(Draggable* d)

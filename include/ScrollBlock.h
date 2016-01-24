@@ -16,7 +16,7 @@ class ScrollBlock : public Component
 public:
     ScrollBlock(int x, int y, int width, int height, u8 stickyFlags, Component* parentComp, int canvh, bool center = true);
     void updateCanvasHeight(int newHeight);
-    void processScroll(SDL_MouseWheelEvent& e);
+    void mouseWheel(const SDL_MouseWheelEvent& e);
     void processMouseMotionEvent(SDL_MouseMotionEvent& e);
     void calcBarPlacement();
     bool hasBar();

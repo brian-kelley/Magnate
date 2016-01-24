@@ -137,8 +137,8 @@ void Component::updateScreenRect()
     screen.y = local.y;
     if(parent)
     {
-        screen.x += parent->getScreenRect().x;
-        screen.y += parent->getScreenRect().y;
+        screen.x += parent->canvas.x;
+        screen.y += parent->canvas.y;
     }
     for(auto c : children)
         c->updateScreenRect();
@@ -157,4 +157,9 @@ const Rectangle& Component::getScreenRect()
 Pos2 Component::getLocalMouse()
 {
     return Pos2(Input::mouseX - screen.x, Input::mouseY - screen.y);
+}
+
+void Component::setScreenRect(const Rectangle &r)
+{
+    screen = r;
 }
