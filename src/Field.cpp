@@ -1,11 +1,3 @@
-//
-//  Field.cpp
-//  MagIndev
-//
-//  Created by Brian Kelley on 10/22/14295.
-//  Copyright (c) 2014 Brian Kelley. All rights reserved.
-//
-
 #include "Field.h"
 
 using namespace std;
@@ -38,16 +30,19 @@ void Field::keyEvent(const SDL_KeyboardEvent &event)
 {
     if(isActive())
     {
-        if(event.keysym.scancode == SDL_SCANCODE_BACKSPACE)
+        if(event.state == SDL_PRESSED)
         {
-            if(this->text.size() > 1)
+            if(event.keysym.scancode == SDL_SCANCODE_BACKSPACE)
             {
-                this->text = this->text.substr(0, (unsigned long) text.length() - 2) + "_";
+                if(this->text.size() > 1)
+                {
+                    this->text = this->text.substr(0, (unsigned long) text.length() - 2) + "_";
+                }
             }
-        }
-        else if(event.keysym.scancode == SDL_SCANCODE_RETURN)
-        {
-            loseFocus();
+            else if(event.keysym.scancode == SDL_SCANCODE_RETURN)
+            {
+                loseFocus();
+            }
         }
     }
 }

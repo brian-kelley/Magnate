@@ -15,6 +15,7 @@ public:
     Heightmap(int x, int y);
     Heightmap(const Heightmap& toCopy);
     ~Heightmap();
+    void setSize(int x, int y);
     void diamondSquare(double roughness, short cornerStart, short centerStart, bool isZeroMin);
     void fillSquare(int x, int y, int sz, double roughness);
     void fillDiamond(int x, int y, int sz, double roughness);

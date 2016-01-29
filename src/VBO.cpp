@@ -57,20 +57,6 @@ void VBO::draw(int startIndex, int numVertices, int geom)
 void VBO::drawWithClip(int startIndex, int verticesToDraw, int geom, const vector<ClipMarker>& clipMarkers)
 {
     bind();
-    /*
-    PRINT("Have " << verticesToDraw << " total vertices.");
-    PRINT("Have " << clipMarkers.size() << " clip markers:");
-    for(auto& cm : clipMarkers)
-    {
-        cout << cm.numVertices;
-        if(cm.enable)
-        {
-            cout << ", enabled with rect " << cm.bounds << endl;
-        }
-        else
-            cout << ", disabled." << endl;
-    }
-    */
     DBASSERT(geom == GL_TRIANGLES || geom == GL_QUADS || geom == GL_LINES || geom == GL_TRIANGLE_STRIP)
     int numDrawn = 0;
     for(auto& marker : clipMarkers)

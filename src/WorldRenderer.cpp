@@ -21,7 +21,7 @@ vbo(VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * 4, VBO::v3D, GL_DYNAMIC_DRAW)
     for(int i = 0; i < VBO_CHUNKS; i++)
         chunkAlloc[i].x = CHUNK_FREE;
     updateVBOChunks(true);
-    PRINT("Created world renderer.");
+    Camera::cameraMotion.addListener(this, processCameraUpdate);
 }
 
 WorldRenderer::~WorldRenderer()
@@ -32,8 +32,11 @@ WorldRenderer::~WorldRenderer()
 
 void WorldRenderer::draw()
 {
-    glEnable(GL_DEPTH_TEST);
-    vbo.draw(0, CHUNK_SIZE * CHUNK_SIZE * VBO_CHUNKS, GL_QUADS);
+    if(World::isDrawing())
+    {
+        glEnable(GL_DEPTH_TEST);
+        vbo.draw(0, 4 * CHUNK_SIZE * CHUNK_SIZE * VBO_CHUNKS, GL_QUADS);
+    }
 }
 
 Pos3 WorldRenderer::getTileVertexPos(int chunkX, int chunkZ, int tileX, int tileZ)
@@ -45,8 +48,8 @@ Pos3 WorldRenderer::getTileVertexPos(int chunkX, int chunkZ, int tileX, int tile
 //set attributes for the 4 vertices of a tile
 void WorldRenderer::getTileQuad(int quadIndex, int x, int z)
 {
-    auto heights = World::getHeights();
-    auto terrain = World::getBiomes();
+    const auto& heights = World::getHeights();
+    const auto& terrain = World::getBiomes();
     Vertex3D* quad = &vertexBuf[quadIndex * 4];
     //Positions
     quad[0].pos = tileToWorld(x, heights.get(x, z), z).xyz();
@@ -144,7 +147,6 @@ void WorldRenderer::processCameraUpdate(void* ins, const glm::mat4 &viewMat)
 
 void WorldRenderer::updateVBOChunks(bool force)
 {
-    cout << "VBO has allocated space for " << vbo.getNumVertices() << " vertices" << endl;
     //go through the currently allocated chunks and free if they are no longer in the visible square
     int dist = (int(sqrt(VBO_CHUNKS)) - 1) / 2; //maximum distance from centerChunk in x or z
     for(int i = 0; i < VBO_CHUNKS; i++)

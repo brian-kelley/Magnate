@@ -22,7 +22,7 @@ void Renderer::update()
     GLERR
     upload3DMatrices();
     GLERR
-    //worldRend.draw();
+    worldRend.draw();
     //Then draw GUI (function computes vertices and does draw calls)
     upload2DMatrices();
     GLERR

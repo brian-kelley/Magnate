@@ -19,6 +19,7 @@ namespace SaveManager
     void renameSave(std::string newName, std::string oldName);
     void deleteSave(std::string name);
     void loadWorld(std::string saveName);
+    void checkSaveFolder();
     extern std::vector<std::string> saves;
 };
 

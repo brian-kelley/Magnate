@@ -1,10 +1,13 @@
 #include "Input.h"
 
 const u8* Input::keystate;
+const u8* Input::keystateCurrent;
+int Input::numKeys = 0;
 int Input::mouseX;
 int Input::mouseY;
 int Input::winX;
 int Input::winY;
+float Input::dt;
 Broadcaster<SDL_KeyboardEvent> Input::keyBroadcaster;
 Broadcaster<SDL_TextInputEvent> Input::typingBroadcaster;
 Broadcaster<SDL_MouseButtonEvent> Input::buttonBroadcaster;
@@ -15,7 +18,9 @@ Broadcaster<SDL_EventType> Input::miscBroadcaster;
 
 void Input::init()
 {
-    keystate = SDL_GetKeyboardState(NULL);
+    keystateCurrent = SDL_GetKeyboardState(&numKeys);
+    keystate = new u8[numKeys];
+    copyKeystate();
     SDL_SetRelativeMouseMode(SDL_TRUE);
     winX = GlobalConfig::WINDOW_W;
     winY = GlobalConfig::WINDOW_H;
@@ -62,4 +67,10 @@ void Input::update()
                 miscBroadcaster.send(SDL_EventType(event.type));
         }
     }
+    copyKeystate();
+}
+
+void Input::copyKeystate()
+{
+    memcpy((void*) keystate, (void*) keystateCurrent, numKeys);
 }

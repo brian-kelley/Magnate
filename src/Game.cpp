@@ -12,9 +12,9 @@ Game::Game() : renderer()
     Menus::initAll();
     Input::windowBroadcaster.addListener(this, processWindow);
     Input::miscBroadcaster.addListener(this, processMisc);
+    Input::dt = 0;
     Menus::bc.addListener(this, processMenuEvent);
     //Load a test world
-    World::initDebug();
     mainLoop();
 }
 
@@ -36,6 +36,7 @@ void Game::mainLoop()
     int frameCount = 0;
     while(true)
     {
+        auto highPrecStart = chrono::high_resolution_clock::now();
         update();
         if(terminating)
             break;
@@ -49,6 +50,8 @@ void Game::mainLoop()
             frameCount = 0;
             seconds = current;
         }
+        //update Input::dt for the previous frame
+        Input::dt = chrono::duration<double>(chrono::high_resolution_clock::now() - highPrecStart).count();
     }
 }
 

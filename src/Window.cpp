@@ -21,9 +21,7 @@ Window::Window(int width, int height)
     sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, SDL_RENDERER_ACCELERATED);
     configGL();
     //Initialize atlas, which only depends on SDL being initialized
-    PRINT("Created window.");
     Atlas::init("main", sdlRenderer);
-    PRINT("Created atlas.");
 }
 
 Window::~Window()

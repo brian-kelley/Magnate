@@ -11,12 +11,13 @@ unsigned World::seed;
 
 void World::initDebug()
 {
-    init("asdf", true);
+    init("asdf");
     PRINT("Done loading test world.");
 }
 
-void World::init(std::string saveName, bool willGenerate)
+void World::init(std::string saveName)
 {
+    World::saveName = saveName;
     {
         Heightmap temp(GlobalConfig::WORLD_SIZE, GlobalConfig::WORLD_SIZE);
         height = temp;
@@ -30,17 +31,17 @@ void World::init(std::string saveName, bool willGenerate)
         exit(EXIT_FAILURE);
     }
     path wPath = saveFolder / string(saveName + ".mag");
-    if(willGenerate)
+    if(exists(wPath))
+    {
+        cout << "Will read existing world from disk." << endl;
+        read();
+    }
+    else
     {
         cout << "Will generate and save new world." << endl;
         seed = RandomUtils::gen();
         //write out initial data (seed)
         write();
-    }
-    else
-    {
-        cout << "Will read existing world from disk." << endl;
-        read();
     }
     TerrainGen tg(height, biomes);
     drawing = true; //TODO: When to set and unset this depends on where GUI widgets are implemented
@@ -67,7 +68,12 @@ void World::read()
 void World::update()
 {
     //Do all world simulation for one frame
-    //TODO: double buffer all frequently updated world data for easier parallelism
+    //TODO: double buffer all frequently updated world data for easy parallelism
+}
+
+void World::saveAndExit()
+{
+    
 }
 
 const Heightmap& World::getHeights()

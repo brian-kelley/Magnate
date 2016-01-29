@@ -77,7 +77,7 @@ void UIRenderer::drawMultiSelect(MultiSelect* ms)
         //if an option is selected, draw foreground rectangle around that
         if(ms->getSelection() != -1)
         {
-            imm.color3f(fg.r, fg.g, fg.b);
+            imm.color3b(fg.r, fg.g, fg.b);
             imm.disableTextures();
             int optY = rect.y + ms->getSelection() * ms->getOptHeight();
             imm.vertex2i(rect.x, optY);

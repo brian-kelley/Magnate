@@ -103,7 +103,6 @@ Shaders::Shaders()
     viewLoc = glGetUniformLocation(programID, "view");
     projLoc = glGetUniformLocation(programID, "proj");
     GLERR
-    PRINT("Created shaders.");
     VBO::loadAttribLocs(programID);
 }
 

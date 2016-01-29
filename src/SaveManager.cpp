@@ -11,8 +11,7 @@ void SaveManager::refreshSaveList()
     saves.clear();
     path saveFolder = initial_path() / FileIO::root / "saves";
     //Ensure that saves folder exists and is a directory
-    if(!is_directory(saveFolder))
-        create_directories(saveFolder);
+    checkSaveFolder();
     directory_iterator dirIter(saveFolder);
     directory_iterator end;
     while(dirIter != end)
@@ -26,16 +25,14 @@ void SaveManager::refreshSaveList()
 
 void SaveManager::loadWorld(string saveName)
 {
+    checkSaveFolder();
     path worldPath = initial_path() / FileIO::root / "saves" / (saveName + ".mag");
-    if(exists(worldPath))
-        cout << "World file already exists, will read." << endl;
-    else
-        cout << "World file does not exist, will be created." << endl;
-    World::init(saveName, !exists(worldPath));
+    World::init(saveName);
 }
 
 void SaveManager::renameSave(string newName, string oldName)
 {
+    checkSaveFolder();
     path oldPath = initial_path() / FileIO::root / "saves" / string(oldName + ".mag");
     path newPath = initial_path() / FileIO::root / "saves" / string(newName + ".mag");
     boost::filesystem::rename(oldPath, newPath);
@@ -43,6 +40,7 @@ void SaveManager::renameSave(string newName, string oldName)
 
 void SaveManager::deleteSave(string name)
 {
+    checkSaveFolder();
     path deletePath = initial_path() / FileIO::root / "saves" / string(name + ".mag");
     try
     {
@@ -51,5 +49,22 @@ void SaveManager::deleteSave(string name)
     catch (boost::filesystem::filesystem_error& e)
     {
         DBASSERT(false);
+    }
+}
+
+void SaveManager::checkSaveFolder()
+{
+    path saveFolder = initial_path() / FileIO::root / "saves";
+    if(!exists(saveFolder))
+    {
+        try
+        {
+            create_directories(saveFolder);
+        }
+        catch (exception& e)
+        {
+            cout << "Fatal error: can't create save folder." << endl;
+            abort();
+        }
     }
 }

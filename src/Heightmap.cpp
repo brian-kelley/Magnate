@@ -373,3 +373,13 @@ glm::vec2 Heightmap::grad(Pos2 loc)
 {
     return grad(loc.x, loc.y);
 }
+
+void Heightmap::setSize(int x, int y)
+{
+    DBASSERT(x > 0);
+    DBASSERT(y > 0);
+    delete[] buf;
+    buf = new short[x * y];
+    w = x;
+    h = y;
+}

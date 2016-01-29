@@ -49,13 +49,13 @@ void Menus::initAll()
     new Button(240, 300, 100, 50, StickyDirs::none, "Cancel", deleteCancel, deleteConfirmMenu);
     new Label(320, 100, 630, 50, StickyDirs::none, "Are you sure you want to delete", deleteConfirmMenu);
     renameMenu = new Scene;
-    renamingField = new Field(320, 100, 600, 50, StickyDirs::none, "", Callback(nullptr), renameMenu);
+    renamingField = new Field(20, 50, 600, 50, StickyDirs::none, "", Callback(nullptr), renameMenu);
     new Button(250, 250, 100, 50, StickyDirs::none, "OK", Callback(renameOK), renameMenu);
     new Button(390, 250, 100, 50, StickyDirs::none, "Cancel", Callback(renameCancel), renameMenu);
     createMenu = new Scene;
     new Button(250, 250, 100, 50, StickyDirs::none, "OK", Callback(createOK), createMenu);
     new Button(390, 250, 100, 50, StickyDirs::none, "Cancel", Callback(createCancel), createMenu);
-    creatingField = new Field(320, 100, 600, 50, StickyDirs::none, "", nullptr, createMenu);
+    creatingField = new Field(20, 50, 600, 50, StickyDirs::none, "", nullptr, createMenu);
     gameScene = new Scene;
     new Minimap(gameScene);
     GUI::init(mainMenu, debugScene);
@@ -88,6 +88,7 @@ void Menus::saveToRename(void* inst, void* arg)
     {
         renamingField->setText(saveSelect->getSelectionText());
         GUI::transition(renameMenu);
+        renamingField->gainFocus();
     }
 }
 
@@ -99,11 +100,14 @@ void Menus::renameCancel(void* inst, void *arg)
 
 void Menus::renameOK(void* inst, void* arg)
 {
+    //get rid of '_' at end of string
+    if(renamingField->isActive())
+        renamingField->loseFocus();
     string oldName = saveSelect->getSelectionText();
     string newName = renamingField->getText();
     if(strpbrk(newName.c_str(), "\\/:*?\"<>|") != NULL)
     {
-        new Label(320, 200, 300, 70, StickyDirs::none, "\\/:*?\"<>| not allowed in save file names.", renameMenu);
+        new Label(170, 165, 300, 70, StickyDirs::none, "\\/:*?\"<>| not allowed in save file names.", renameMenu);
     }
     else if(newName != "")
     {
@@ -130,25 +134,20 @@ void Menus::createCancel(void* inst, void *arg)
 
 void Menus::createOK(void* inst, void *arg)
 {
-    if(creatingField->isActive())
-    {
-        creatingField->loseFocus();
-    }
     string newName = creatingField->getText();
     if(newName.size() != 0)
     {
         //Check for invalid filename characters
         if(strpbrk(newName.c_str(), "\\/:*?\"<>|") != NULL)
         {
-            new Label(320, 200, 300, 70, StickyDirs::none, "\\/:*?\"<>| not allowed in save file names.", createMenu);
+            new Label(170, 165, 300, 70, StickyDirs::none, "\\/:*?\"<>| not allowed in save file names.", createMenu);
         }
         else
         {
-            saveSelect->addOption(newName);
-            ((ScrollBlock*) saveSelect->getParent())->matchCanvasToContents();
+            SaveManager::loadWorld(newName);
+            GUI::transition(saveMenu);
         }
     }
-    GUI::transition(saveMenu);
 }
 
 void Menus::deleteCancel(void* inst, void *arg)

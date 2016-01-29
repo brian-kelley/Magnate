@@ -11,11 +11,15 @@ namespace Input
 {
     void init();
     void update();
-    extern const u8* keystate;  //bool buffer of all keys (access with SDL_SCANCODE_*)
+    void copyKeystate();
+    extern const u8* keystate;  //bool buffer of all keys to read from (access with SDL_SCANCODE_*)
+    extern const u8* keystateCurrent;   //bool buffer of all keys that SDL writes to (don't read)
+    extern int numKeys;
     extern int mouseX;
     extern int mouseY;
     extern int winX;
     extern int winY;
+    extern float dt;
     extern Broadcaster<SDL_KeyboardEvent> keyBroadcaster;
     extern Broadcaster<SDL_TextInputEvent> typingBroadcaster;
     extern Broadcaster<SDL_MouseButtonEvent> buttonBroadcaster;

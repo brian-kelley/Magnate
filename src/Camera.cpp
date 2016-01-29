@@ -10,8 +10,8 @@ mat4 Camera::viewMat;
 mat4 Camera::projMat;
 float Camera::camAngle;
 float Camera::camPitch;
-const float Camera::ROTATE_SPEED = M_PI / 60.0;
-const float Camera::MOVE_SPEED = 0.02;
+const float Camera::ROTATE_SPEED = M_PI;
+const float Camera::MOVE_SPEED = 1.2;
 const float Camera::ZOOM_SPEED = 0.16;
 const float Camera::FOV = M_PI_4;
 const float Camera::NEAR = 1000;
@@ -89,7 +89,7 @@ void Camera::camFwd(short worldH)
     //get y component out of camDir
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
     float heightOverGround = camPos.y - worldH * Coord::TERRAIN_Y_SCALE;
-    lookDir *= (MOVE_SPEED * heightOverGround);
+    lookDir *= (Input::dt * MOVE_SPEED * heightOverGround);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
@@ -100,7 +100,7 @@ void Camera::camLeft(short worldH)
     //rotate pi/2 to the left
     lookDir = {lookDir.y, -lookDir.x};
     float heightOverGround = camPos.y - worldH * Coord::TERRAIN_Y_SCALE;
-    lookDir *= (MOVE_SPEED * heightOverGround);
+    lookDir *= (Input::dt * MOVE_SPEED * heightOverGround);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
@@ -110,7 +110,7 @@ void Camera::camRight(short worldH)
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
     lookDir = {-lookDir.y, lookDir.x};
     float heightOverGround = camPos.y - worldH * Coord::TERRAIN_Y_SCALE;
-    lookDir *= (MOVE_SPEED * heightOverGround);
+    lookDir *= (Input::dt * MOVE_SPEED * heightOverGround);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
@@ -119,21 +119,21 @@ void Camera::camBack(short worldH)
 {
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
     float heightOverGround = camPos.y - worldH * Coord::TERRAIN_Y_SCALE;
-    lookDir *= -(MOVE_SPEED * heightOverGround);
+    lookDir *= -(Input::dt * MOVE_SPEED * heightOverGround);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
 
 void Camera::camCCW() //positive radians (CAM_ROTATE_SPEED > 0)
 {
-    camDir = rotate(camDir, ROTATE_SPEED, {0, 1, 0});
-    camAngle += ROTATE_SPEED;
+    camDir = rotate(camDir, float(Input::dt * ROTATE_SPEED), {0, 1, 0});
+    camAngle += Input::dt * ROTATE_SPEED;
 }
 
 void Camera::camCW() //negative radians
 {
-    camDir = rotate(camDir, -ROTATE_SPEED, {0, 1, 0});
-    camAngle -= ROTATE_SPEED;
+    camDir = rotate(camDir, float(Input::dt * -ROTATE_SPEED), {0, 1, 0});
+    camAngle -= Input::dt * ROTATE_SPEED;
 }
 
 void Camera::zoomIn()
