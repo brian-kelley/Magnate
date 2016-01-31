@@ -6,8 +6,17 @@ using namespace GlobalConfig;
 
 void Topo::generateTopo()
 {
-    auto heights = World::getHeights();
-    const int STEP = (WORLD_SIZE / 2) / 15; // Height units between topo lines. WS / 2 is max height, so have 15 lines
+    const auto& heights = World::getHeights();
+    //get max height
+    short maxH = 0;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            maxH = max(maxH, heights.get(i, j));
+        }
+    }
+    const int STEP = maxH / 8; // Height units between topo lines. WS / 2 is max height, so have 15 lines
     auto tex = Atlas::textureFromName("topo");
     int topoSize = tex.width;
     short* buf = new short[topoSize * topoSize];
@@ -16,7 +25,7 @@ void Topo::generateTopo()
     {
         for(int j = 0; j < topoSize; j++)
         {
-            buf[topoSize * j + i] = float(heights.get(i * scl, j * scl) + STEP / 2) / STEP;
+            buf[i + topoSize * j] = float(heights.get(i * scl, j * scl) + STEP / 2) / STEP;
         }
     }
     Color4* pixels = new Color4[topoSize * topoSize];
@@ -27,7 +36,7 @@ void Topo::generateTopo()
         for(int j = 0; j < topoSize; j++)
         {
             //If a height in buf is different than all its neighbors and it is the least of its group, mark as a line
-            pixels[i + j * topoSize] = empty;
+            pixels[i + topoSize * j] = empty;
             Pos2 loc(i, j);
             for(int dir = UP; dir <= RIGHT; dir++)
             {

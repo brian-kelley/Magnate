@@ -21,6 +21,7 @@ public:
     void fillDiamond(int x, int y, int sz, double roughness);
     void set(short val, int x, int y);
     void set(short val, Pos2 loc);
+    void set(short val);                //fill whole map with value
     short get(int x, int y) const;
     short get(Pos2 loc) const;
     void add(const Heightmap& rval);

@@ -19,16 +19,19 @@ void Renderer::update()
 {
     win.prepareFrame();
     //Draw the world first, if in game
-    GLERR
+    //Use nearest neighbor texture sampling
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     upload3DMatrices();
-    GLERR
     worldRend.draw();
     //Then draw GUI (function computes vertices and does draw calls)
+    //Use bilinear for this
     upload2DMatrices();
-    GLERR
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     uiRend.draw();
-    GLERR
     //Finally, flip window
+    glFlush();
     win.endFrame();
 }
 

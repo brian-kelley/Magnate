@@ -4,49 +4,48 @@ using namespace std;
 using namespace Coord;
 using namespace GlobalConfig;
 
-Watershed::Watershed(Heightmap& worldMap, Heightmap& biomeMap, short threshold, int numRivers) : world(worldMap), biomes(biomeMap)
+Watershed::Watershed(short threshold, int numRivers) : world(World::getHeights()), biomes(World::getBiomes())
 {
-    Pos2 loc(0, 0);
-    int tries = 0;
-    while(world.get(loc) < threshold || biomes.get(loc) == LAKE || biomes.get(loc) == RIVER || biomes.get(loc) == STONE)
+    for(int i = 0; i < numRivers; i++)
     {
-        if(tries++ > 1000)
+        Pos2 loc(0, 0);
+        int tries = 0;
+        while(world.get(loc) < threshold || biomes.get(loc) == LAKE || biomes.get(loc) == RIVER)
         {
-            cout << "Error: Timeout to find high elevation headwaters." << endl;
-            return;
+            if(tries++ > 1000)
+            {
+                PRINT("Error: Timeout to find high elevation headwaters.");
+                return;
+            }
+            loc.x = RandomUtils::gen() % WORLD_SIZE;
+            loc.y = RandomUtils::gen() % WORLD_SIZE;
         }
-        loc.x = RandomUtils::gen() % GlobalConfig::WORLD_SIZE;
-        loc.y = RandomUtils::gen() % GlobalConfig::WORLD_SIZE;
-    }
-    while(true) //Flow downhill until reach ocean or y = 0 (only stopping conditions)
-    {
-        biomes.set(RIVER, loc);
-        int downhill = getNonLakeDownhillDir(loc);
-        if(downhill != NO_DIRECTION);
+        loc.x = loc.y = WORLD_SIZE / 2;
+        while(true) //Flow downhill until reach ocean or y = 0 (only stopping conditions)
         {
-            //Check if just flowed into a lake that already flows out to sea
-            Pos2 next = getTileInDir(loc, downhill);
-            if(biomes.get(next) == LAKE || biomes.get(next) == RIVER)
+            biomes.set(RIVER, loc);
+            int downhill = getNonLakeDownhillDir(loc);
+            if(downhill != NO_DIRECTION);
+            {
+                //Check if just flowed into a lake that already flows out to sea
+                Pos2 next = getTileInDir(loc, downhill);
+                if(biomes.get(next) == LAKE || biomes.get(next) == RIVER || biomes.get(next) == WATER)
+                    return;
+            }
+            //As long as there is nowhere to flow, form lake
+            while(downhill == NO_DIRECTION)
+            {
+                loc = formLake(loc);
+                if(loc.x == -1 || biomes.get(loc) == WATER || world.get(loc) <= 0)
+                    return;
+                downhill = getNonLakeDownhillDir(loc);
+            }
+            loc = getTileInDir(loc, downhill);
+            //Decide whether to end
+            if(biomes.get(loc) == WATER || world.get(loc) <= 0)
                 return;
         }
-        //As long as there is nowhere to flow, form lake
-        while(downhill == NO_DIRECTION)
-        {
-            loc = formLake(loc);
-            if(loc.x == -1 || biomes.get(loc) == WATER || world.get(loc) <= 0)
-                return;
-            downhill = getNonLakeDownhillDir(loc);
-        }
-        loc = getTileInDir(loc, downhill);
-        //Decide whether to end
-        if(biomes.get(loc) == WATER || biomes.get(loc) <= 0)
-            break;
     }
-}
-
-void Watershed::beginFlow(Pos2 pos)
-{
-    generalFlow(pos);
 }
 
 void Watershed::generalFlow(Pos2 pos)

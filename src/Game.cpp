@@ -15,6 +15,7 @@ Game::Game() : renderer()
     Input::dt = 0;
     Menus::bc.addListener(this, processMenuEvent);
     //Load a test world
+    debugInit();
     mainLoop();
 }
 
@@ -82,4 +83,10 @@ void Game::processMenuEvent(void* inst, const GeneralMsg& msg)
             break;
         default:;
     }
+}
+
+void Game::debugInit()
+{
+    World::initDebug();
+    GUI::transition(Menus::gameScene);
 }

@@ -8,13 +8,14 @@
 #include "Heightmap.h"
 #include "Terrain.h"
 #include "GlobalConfig.h"
+#include "DebugTools.h"
+#include "World.h"
 
 class Watershed
 {
 public:
-    Watershed(Heightmap& worldMap, Heightmap& biomeMap, short threshold, int numRivers);
+    Watershed(short threshold, int numRivers);
 private:
-    void beginFlow(Pos2 pos);
     void generalFlow(Pos2 pos);
     void processTile(Pos2 pos, std::queue<Pos2>& q);
     Pos2 getLowestNeighbor(Pos2 pos);

@@ -81,8 +81,8 @@ void Minimap::putMinimapPixel(int x, int y, Color4* buf, int maxHeight)
     if(compression < 1)
         compression = 1;
     Pos2 tilePos;
-    tilePos.x = x / compression;
-    tilePos.y = y / compression;
+    tilePos.x = x * compression;
+    tilePos.y = y * compression;
     //array of occurrences of each terrain type
     int occurences[NUM_TYPES];
     for(int i = 0; i < NUM_TYPES; i++)

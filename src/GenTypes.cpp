@@ -105,15 +105,18 @@ Color4 Color4::operator*(const float rval) const
 
 void Color4::operator*=(const float rval)
 {
-    r *= rval;
-    g *= rval;
-    b *= rval;
-    r = min<u8>(r, 255);
-    g = min<u8>(g, 255);
-    b = min<u8>(b, 255);
-    r = max<u8>(r, 0);
-    g = max<u8>(g, 0);
-    b = max<u8>(b, 0);
+    int rr = r * rval;
+    int gg = g * rval;
+    int bb = b * rval;
+    rr = min(rr, 255);
+    gg = min(gg, 255);
+    bb = min(bb, 255);
+    rr = max(rr, 0);
+    gg = max(gg, 0);
+    bb = max(bb, 0);
+    r = rr;
+    g = gg;
+    b = bb;
 }
 
 ostream& operator<<(ostream& os, const Rectangle& r)

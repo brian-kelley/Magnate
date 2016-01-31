@@ -22,6 +22,7 @@ private:
     Renderer renderer;
     void mainLoop();
     void update();
+    void debugInit();
     bool terminating;        //whether the program will terminate after this frame
     static void processWindow(void* inst, const SDL_WindowEvent& event);
     static void processMisc(void* inst, const SDL_EventType& event);

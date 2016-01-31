@@ -22,8 +22,8 @@ public:
     static void read();
     static void write();
     static void update();       //do all game logic/simulation
-    static const Heightmap& getHeights();
-    static const Heightmap& getBiomes();
+    static Heightmap& getHeights();
+    static Heightmap& getBiomes();
     static bool isDrawing();
     static Broadcaster<bool> worldLoaded;
 private:

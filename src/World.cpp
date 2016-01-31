@@ -44,7 +44,7 @@ void World::init(std::string saveName)
         //write out initial data (seed)
         write();
     }
-    TerrainGen tg(height, biomes);
+    TerrainGen tg;
     drawing = true; //TODO: When to set and unset this depends on where GUI widgets are implemented
     worldLoaded.send(true);
 }
@@ -78,12 +78,12 @@ void World::saveAndExit()
     worldLoaded.send(false);
 }
 
-const Heightmap& World::getHeights()
+Heightmap& World::getHeights()
 {
     return height;
 }
 
-const Heightmap& World::getBiomes()
+Heightmap& World::getBiomes()
 {
     return biomes;
 }

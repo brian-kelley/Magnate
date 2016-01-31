@@ -218,6 +218,17 @@ void Heightmap::set(short val, Pos2 loc)
         buf[loc.x + loc.y * w] = val;
 }
 
+void Heightmap::set(short val)
+{
+    for(int i = 0; i < w; i++)
+    {
+        for(int j = 0; j < h; j++)
+        {
+            set(val, i, j);
+        }
+    }
+}
+
 void Heightmap::add(const Heightmap &rval)
 {
     DBASSERT(w == rval.w && h == rval.h);
