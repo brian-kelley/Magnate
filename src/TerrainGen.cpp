@@ -6,7 +6,7 @@ using namespace GlobalConfig;
 
 TerrainGen::TerrainGen(Heightmap& worldHeights, Heightmap& worldBiomes) : world(worldHeights), biomes(worldBiomes)
 {
-    combinedGen();
+    pyramidGen();
 }
 
 void getSlope(Heightmap& world)
@@ -16,6 +16,21 @@ void getSlope(Heightmap& world)
         for(int j = 0; j < WORLD_SIZE; j++)
         {
             world.set(i * 5 - 50, i, j);
+        }
+    }
+}
+
+void TerrainGen::flat()
+{
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            world.set(1, i, j);
+            if(i + j < 200)
+                biomes.set(DECID_FOREST, i, j);
+            else
+                biomes.set(DESERT, i, j);
         }
     }
 }
@@ -642,6 +657,34 @@ void TerrainGen::roughCone()
                 world.set(0, i, j);
             else
                 world.set((r - dist) * (float(h) / r), i, j);
+        }
+    }
+}
+
+void TerrainGen::simpleBiomes()
+{
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(world.get(i, j) == 0)
+                biomes.set(WATER, i, j);
+            else
+                biomes.set(DECID_FOREST, i, j);
+        }
+    }
+}
+
+void TerrainGen::pyramidGen()
+{
+    const int w = WORLD_SIZE / 2;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            int dist = max(abs(i - w), abs(j - w));
+            world.set(4 * (w - dist), i, j);
+            biomes.set(DESERT, i, j);
         }
     }
 }

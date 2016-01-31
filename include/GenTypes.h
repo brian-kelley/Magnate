@@ -30,6 +30,9 @@ struct Pos2
 {
     Pos2();
     Pos2(short x, short y);
+    Pos2 operator*(const float& rval);
+    Pos2 operator+(const Pos2& rval);
+    void operator+=(const Pos2& rval);
     short x;
     short y;
 };
@@ -45,6 +48,8 @@ struct Rectangle
     int h;
 };
 
+bool isPointInRect(Rectangle& rect, Pos2 pos);
+
 struct TexCoord
 {
     TexCoord();
@@ -59,6 +64,7 @@ struct Color4
     Color4(int r, int g, int b, int a);
     void operator=(const Color4& rval);
     Color4 operator*(const float rval) const;
+    void operator*=(const float rval);
     u8 r;
     u8 g;
     u8 b;

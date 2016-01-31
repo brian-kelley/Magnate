@@ -43,7 +43,14 @@ void Component::mouseButton(const SDL_MouseButtonEvent &event)
     }
 }
 
-void Component::mouseMotion(const SDL_MouseMotionEvent &event) {}
+void Component::mouseMotion(const SDL_MouseMotionEvent &event)
+{
+    for(Component* c : children)
+    {
+        if(c->isMouseOver())
+            c->mouseMotion(event);
+    }
+}
 
 void Component::mouseWheel(const SDL_MouseWheelEvent &event)
 {

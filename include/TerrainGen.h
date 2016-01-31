@@ -18,6 +18,7 @@ public:
 private:
     void oldGeneration();
     void diamondSquare();
+    void pyramidGen();
     void defuzz();       //remove non-water tiles that are surrounded by water on at least 3 sides (adjacent)
     void flattenWater(); //force lake/ocean tiles to be flat (same height)
     //Tests whether the mesh
@@ -28,6 +29,7 @@ private:
     void clampSeaLevel();
     void defaultGen();
     void combinedGen();
+    void flat();
     void erosionGen();
     void shelfMask();  //simulate continental shelf by lowering ground near world boundary. Shaped like beveled square.
     void smooth(int iters = 1);
@@ -43,6 +45,7 @@ private:
     void roughCone();
     void getSlope();
     void getCanal();
+    void simpleBiomes();
     //Biome-related code
     enum Latitude
     {

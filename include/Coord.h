@@ -23,14 +23,6 @@ struct Plane
     float d;
 };
 
-struct FrustumCorners
-{
-    glm::vec4 upperLeft;
-    glm::vec4 upperRight;
-    glm::vec4 lowerRight;
-    glm::vec4 lowerLeft;
-};
-
 enum Direction
 {
     UP,    //-y
@@ -49,8 +41,6 @@ namespace Coord
     extern const double TERRAIN_TILE_SIZE;
     extern const double TERRAIN_Y_SCALE;
     glm::vec4 getViewCenter(const glm::mat4& view); //get the point on XZ plane at center of view
-    FrustumCorners getFrustumCorners(const glm::mat4& view, const glm::mat4& proj);
-    //Component vectors for constructing worldspace coords from tile indices and heightmap heights
     extern const glm::vec4 tileI;
     extern const glm::vec4 tileJ;
     extern const glm::vec4 tileK;

@@ -30,7 +30,7 @@ public:
     static const Texture& textureFromName(std::string texname);
     static const Texture& textureFromID(int id);
     static int tileFromChar(char c);
-    static void sendImage(void* pixels, int texID);
+    static void sendImage(Color4* pixels, int texID);
     static const GLuint getTextureID();
     static int getFontW();
     static int getFontH();

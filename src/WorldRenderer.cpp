@@ -6,9 +6,6 @@ using namespace glm;
 
 WorldRenderer::WorldRenderer() :
 sunlight(0.3, 0.9055, 0.3),
-CHUNK_SIZE(64),
-VBO_CHUNKS(25),
-CHUNK_FREE(0x7FFF),
 ambientWeight(0.3),
 diffuseWeight(0.7),
 vbo(VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * 4, VBO::v3D, GL_DYNAMIC_DRAW)
@@ -20,8 +17,9 @@ vbo(VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * 4, VBO::v3D, GL_DYNAMIC_DRAW)
     chunkAlloc = new Pos2[VBO_CHUNKS];
     for(int i = 0; i < VBO_CHUNKS; i++)
         chunkAlloc[i].x = CHUNK_FREE;
-    updateVBOChunks(true);
+    updateVBOChunks();
     Camera::cameraMotion.addListener(this, processCameraUpdate);
+    World::worldLoaded.addListener(this, processWorldLoad);
 }
 
 WorldRenderer::~WorldRenderer()
@@ -63,6 +61,11 @@ void WorldRenderer::getTileQuad(int quadIndex, int x, int z)
         diffuse = 0;
     float light = diffuse * diffuseWeight + ambientWeight;
     auto ground = terrain.get(x, z);
+    if(ground == 0)
+    {
+        if(heights.get(x, z) == 0)
+            ground = WATER;
+    }
     quad[0].texcoord = uvCache[ground * 4 + 0];
     quad[1].texcoord = uvCache[ground * 4 + 1];
     quad[2].texcoord = uvCache[ground * 4 + 2];
@@ -74,7 +77,7 @@ void WorldRenderer::getTileQuad(int quadIndex, int x, int z)
     quad[3].color = color;
 }
 
-bool WorldRenderer::allocChunk(int x, int z)
+void WorldRenderer::allocChunk(Pos2 pos)
 {
     int allocTarget = -1;
     for(int i = 0; i < VBO_CHUNKS; i++)
@@ -85,10 +88,9 @@ bool WorldRenderer::allocChunk(int x, int z)
             break;
         }
     }
-    if(allocTarget == -1)
-        return false;
-    int chunkXOffset = CHUNK_SIZE * x;
-    int chunkZOffset = CHUNK_SIZE * z;
+    DBASSERT(allocTarget != -1);
+    int chunkXOffset = CHUNK_SIZE * pos.x;
+    int chunkZOffset = CHUNK_SIZE * pos.y;
     //Populate scratch space with quads for requested chunk
     for(int i = 0; i < CHUNK_SIZE; i++) //tiles by x
     {
@@ -98,33 +100,17 @@ bool WorldRenderer::allocChunk(int x, int z)
         }
     }
     //mark slot in chunkAlloc as filled
-    chunkAlloc[allocTarget].x = x;
-    chunkAlloc[allocTarget].y = z;
-    //copy quads to terrain VBO
-    //must already be bound!
+    chunkAlloc[allocTarget].x = pos.x;
+    chunkAlloc[allocTarget].y = pos.y;
     int vertexOffset = 4 * CHUNK_SIZE * CHUNK_SIZE * allocTarget;
     vbo.writeData(vertexOffset, CHUNK_SIZE * CHUNK_SIZE * 4, vertexBuf);
-    return true;
 }
 
-bool WorldRenderer::freeChunk(int x, int z)
+bool WorldRenderer::isChunkAllocated(Pos2 pos)
 {
     for(int i = 0; i < VBO_CHUNKS; i++)
     {
-        if(chunkAlloc[i].x == x && chunkAlloc[i].y == z)
-        {
-            chunkAlloc[i] = {CHUNK_FREE, 0};
-            return true;
-        }
-    }
-    return false;
-}
-
-bool WorldRenderer::isChunkAllocated(int x, int z)
-{
-    for(int i = 0; i < VBO_CHUNKS; i++)
-    {
-        if(chunkAlloc[i].x == x && chunkAlloc[i].y == z)
+        if(chunkAlloc[i] == pos)
             return true;
     }
     return false;
@@ -145,25 +131,27 @@ void WorldRenderer::processCameraUpdate(void* ins, const glm::mat4 &viewMat)
     }
 }
 
-void WorldRenderer::updateVBOChunks(bool force)
+void WorldRenderer::updateVBOChunks()
 {
     //go through the currently allocated chunks and free if they are no longer in the visible square
-    int dist = (int(sqrt(VBO_CHUNKS)) - 1) / 2; //maximum distance from centerChunk in x or z
+    //first, make a rectangle representing chunks that should be loaded
+    int s = sqrt(VBO_CHUNKS);
+    Rectangle toLoad(centerChunk.x - s / 2, centerChunk.y - s / 2, s, s);
     for(int i = 0; i < VBO_CHUNKS; i++)
     {
-        if(chunkAlloc[i].x != CHUNK_FREE && (abs(chunkAlloc[i].x - centerChunk.x) > dist || abs(chunkAlloc[i].y - centerChunk.y) > dist))
+        if(chunkAlloc[i].x != CHUNK_FREE && !isPointInRect(toLoad, chunkAlloc[i]))
         {
-            //PRINT("Chunk at " << chunkAlloc[i].x << ", " << chunkAlloc[i].y << " is too far from center, deallocating.")
-            chunkAlloc[i] = {CHUNK_FREE, 0};
+            chunkAlloc[i] = Pos2{CHUNK_FREE, 0};
         }
     }
     //now go through all chunks that need to be in the vbo and allocate them if not already there
-    for(int i = centerChunk.x - dist; i <= centerChunk.x + dist; i++)
+    for(int i = toLoad.x; i < toLoad.x + toLoad.w; i++)
     {
-        for(int j = centerChunk.y - dist; j <= centerChunk.y + dist; j++)
+        for(int j = toLoad.y; j < toLoad.y + toLoad.h; j++)
         {
-            if(!isChunkAllocated(i, j))
-                DBASSERT(allocChunk(i, j));
+            Pos2 pos(i, j);
+            if(!isChunkAllocated(pos))
+                allocChunk(pos);
         }
     }
 }
@@ -177,5 +165,18 @@ void WorldRenderer::createUVCache()
         uvCache[g * 4 + 1] = {tile.x + tile.width, tile.y};
         uvCache[g * 4 + 2] = {tile.x + tile.width, tile.y + tile.height};
         uvCache[g * 4 + 3] = {tile.x, tile.y + tile.height};
+    }
+}
+
+void WorldRenderer::processWorldLoad(void* ins, const bool& val)
+{
+    if(val)
+    {
+        WorldRenderer* wr = (WorldRenderer*) ins;
+        for(int i = 0; i < wr->VBO_CHUNKS; i++)
+        {
+            wr->chunkAlloc[i].x = CHUNK_FREE;
+        }
+        wr->updateVBOChunks();
     }
 }

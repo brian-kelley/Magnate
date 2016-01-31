@@ -164,12 +164,12 @@ void Atlas::parseTiles(path fpath)
     }
 }
 
-void Atlas::sendImage(void* pixels, int texID)
+void Atlas::sendImage(Color4* pixels, int texID)
 {
-    auto destRect = textureFromID(texID);
+    const auto& tex = textureFromID(texID);
     //OS X and Windows have different color orderings
 #ifdef __APPLE__
-    glTexSubImage2D(GL_TEXTURE_2D, 0, destRect.x, destRect.y, destRect.width, destRect.height, GL_BGRA, GL_UNSIGNED_BYTE, pixels);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, tex.x, tex.y, tex.width, tex.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 #elif _WIN32
     glTexSubImage2D(GL_TEXTURE_2D, 0, destRect.x, destRect.y, destRect.width, destRect.height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 #endif

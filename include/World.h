@@ -11,6 +11,7 @@
 #include "Topo.h"
 #include "RandomUtils.h"
 #include "Heightmap.h"
+#include "Broadcaster.h"
 
 class World
 {
@@ -24,6 +25,7 @@ public:
     static const Heightmap& getHeights();
     static const Heightmap& getBiomes();
     static bool isDrawing();
+    static Broadcaster<bool> worldLoaded;
 private:
     static bool drawing;
     static Heightmap height;

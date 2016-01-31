@@ -40,6 +40,7 @@ public:
     void color4b(u8 r, u8 g, u8 b, u8 a);
     void vertex2i(short x, short y);
     void lineVertex2i(short x, short y);
+    void lineVertex2i(Pos2 pos);
     void texCoord2f(float u, float v);
     void texCoord2i(short u, short v);
     void blit(int texID, int x, int y);   //blit at actual size

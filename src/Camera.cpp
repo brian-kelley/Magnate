@@ -14,7 +14,7 @@ const float Camera::ROTATE_SPEED = M_PI;
 const float Camera::MOVE_SPEED = 1.2;
 const float Camera::ZOOM_SPEED = 0.16;
 const float Camera::FOV = M_PI_4;
-const float Camera::NEAR = 1000;
+const float Camera::NEAR = 10000;
 const float Camera::FAR = 0.01;
 const Heightmap* Camera::heights = nullptr;
 
@@ -76,12 +76,14 @@ glm::mat4 Camera::getViewMatrix()
     vec3 camUp = {sin(camPitch) * sin(camAngle), cos(camPitch), sin(camPitch) * cos(camAngle)};
     camUp = normalize(camUp);
     camDir = normalize(at - camPos);
-    return lookAt(camPos, at, camUp);
+    viewMat = lookAt(camPos, at, camUp);
+    return viewMat;
 }
 
 glm::mat4 Camera::getProjMatrix(int winW, int winH)
 {
-    return perspectiveFov<float>(FOV, winW, winH, NEAR, FAR);
+    projMat = perspectiveFov<float>(FOV, winW, winH, NEAR, FAR);
+    return projMat;
 }
 
 void Camera::camFwd(short worldH)
@@ -165,4 +167,65 @@ void Camera::moveToPos(glm::vec4 pos)
 vec3 Camera::getPosition()
 {
     return camPos;
+}
+
+FrustumCorners Camera::getFrustumCorners(const glm::mat4 &view, const glm::mat4 &proj)
+{
+    FrustumCorners corners;
+    //Calculate camera at position from view matrix (is origin in camera space)
+    mat4 projInv = glm::inverse(proj);
+    mat4 viewInv = glm::inverse(view);
+    float back = 1;
+    float front = -1;
+    float left = -1;
+    float right = 1;
+    float up = 1;
+    float down = -1;
+    vec4 lub = {left, up, back, 1};
+    vec4 rub = {right, up, back, 1};
+    vec4 rdb = {right, down, back, 1};
+    vec4 ldb = {left, down, back, 1};
+    vec4 luf = {left, up, front, 1};
+    vec4 ruf = {right, up, front, 1};
+    vec4 rdf = {right, down, front, 1};
+    vec4 ldf = {left, down, front, 1};
+    lub = projInv * lub;
+    rub = projInv * rub;
+    rdb = projInv * rdb;
+    ldb = projInv * ldb;
+    luf = projInv * luf;
+    ruf = projInv * ruf;
+    rdf = projInv * rdf;
+    ldf = projInv * ldf;
+    lub /= lub.w;
+    rub /= rub.w;
+    rdb /= rdb.w;
+    ldb /= ldb.w;
+    luf /= luf.w;
+    ruf /= ruf.w;
+    rdf /= rdf.w;
+    ldf /= ldf.w;
+    lub = viewInv * lub;
+    rub = viewInv * rub;
+    rdb = viewInv * rdb;
+    ldb = viewInv * ldb;
+    luf = viewInv * luf;
+    ruf = viewInv * ruf;
+    rdf = viewInv * rdf;
+    ldf = viewInv * ldf;
+    //frustum corner points are now world space
+    //draw line between front and back point pairs and find where y = 0
+    vec4 luVec = normalize(luf - lub);
+    vec4 ruVec = normalize(ruf - rub);
+    vec4 rdVec = normalize(rdf - rdb);
+    vec4 ldVec = normalize(ldf - ldb);
+    float luMult = -lub.y / luVec.y;
+    float ruMult = -rub.y / ruVec.y;
+    float rdMult = -rdb.y / rdVec.y;
+    float ldMult = -ldb.y / ldVec.y;
+    corners.upperLeft = {camPos.x + luMult * luVec.x, 0, camPos.z + luMult * luVec.z, 1};
+    corners.upperRight = {camPos.x + ruMult * ruVec.x, 0, camPos.z + ruMult * ruVec.z, 1};
+    corners.lowerRight = {camPos.x + rdMult * rdVec.x, 0, camPos.z + rdMult * rdVec.z, 1};
+    corners.lowerLeft = {camPos.x + ldMult * ldVec.x, 0, camPos.z + ldMult * ldVec.z, 1};
+    return corners;
 }

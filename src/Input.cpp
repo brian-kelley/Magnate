@@ -7,6 +7,7 @@ int Input::mouseX;
 int Input::mouseY;
 int Input::winX;
 int Input::winY;
+bool Input::isMouseDown;
 float Input::dt;
 Broadcaster<SDL_KeyboardEvent> Input::keyBroadcaster;
 Broadcaster<SDL_TextInputEvent> Input::typingBroadcaster;
@@ -30,6 +31,7 @@ void Input::update()
 {
     SDL_PumpEvents();
     SDL_Event event;
+    isMouseDown = SDL_GetMouseState(&mouseX, &mouseY) & SDL_BUTTON(SDL_BUTTON_LEFT);
     while(SDL_PollEvent(&event))
     {
         switch(event.type)
@@ -58,7 +60,6 @@ void Input::update()
                 break;
             case SDL_MOUSEMOTION:
                 motionBroadcaster.send(event.motion);
-                SDL_GetMouseState(&mouseX, &mouseY);
                 break;
             case SDL_MOUSEWHEEL:
                 wheelBroadcaster.send(event.wheel);

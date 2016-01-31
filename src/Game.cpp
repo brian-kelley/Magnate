@@ -1,10 +1,10 @@
 #include "Game.h"
 
 using namespace std;
-using namespace Coord;
 
 Game::Game() : renderer()
 {
+    Coord::initCoord();
     Input::init();
     Camera::init();
     //TODO: Find where to put main menu and initialize here

@@ -80,6 +80,11 @@ void ImmediateDraw::lineVertex2i(short x, short y)
     lineIndex++;
 }
 
+void ImmediateDraw::lineVertex2i(Pos2 pos)
+{
+    lineVertex2i(pos.x, pos.y);
+}
+
 void ImmediateDraw::texCoord2f(float u, float v)
 {
     state.texcoord = TexCoord(u, v);
@@ -220,8 +225,12 @@ void ImmediateDraw::drawLineRect(Color4 color, Rectangle rect)
     color4b(color.r, color.g, color.b, color.a);
     lineVertex2i(rect.x, rect.y);
     lineVertex2i(rect.x + rect.w, rect.y);
+    lineVertex2i(rect.x + rect.w, rect.y);
+    lineVertex2i(rect.x + rect.w, rect.y + rect.h);
     lineVertex2i(rect.x + rect.w, rect.y + rect.h);
     lineVertex2i(rect.x, rect.y + rect.h);
+    lineVertex2i(rect.x, rect.y + rect.h);
+    lineVertex2i(rect.x, rect.y);
 }
 
 void ImmediateDraw::drawBevelFrame(Color4 light, Color4 dark, Rectangle rect, int borderWidth)

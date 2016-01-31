@@ -17,6 +17,7 @@ namespace Input
     extern int numKeys;
     extern int mouseX;
     extern int mouseY;
+    extern bool isMouseDown;
     extern int winX;
     extern int winY;
     extern float dt;

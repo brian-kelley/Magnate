@@ -20,6 +20,7 @@
 #include "VBO.h"
 #include "Coord.h"
 #include "Input.h"
+#include "Camera.h"
 
 class UIRenderer
 {

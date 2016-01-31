@@ -23,6 +23,23 @@ void Callback::operator()(void *widget)
 Pos2::Pos2() : x(0), y(0) {}
 Pos2::Pos2(short xx, short yy) : x(xx), y(yy) {}
 
+Pos2 Pos2::operator*(const float &rval)
+{
+    return Pos2(x * rval, y * rval);
+}
+
+void Pos2::operator+=(const Pos2 &rval)
+{
+    x += rval.x;
+    y += rval.y;
+}
+
+Pos2 Pos2::operator+(const Pos2 &rval)
+{
+    Pos2 rv(x + rval.x, y + rval.y);
+    return rv;
+}
+
 Rectangle::Rectangle() {}
 Rectangle::Rectangle(int x, int y, int w, int h)
 {
@@ -86,6 +103,19 @@ Color4 Color4::operator*(const float rval) const
     return Color4(r * rval, g * rval, b * rval, a);
 }
 
+void Color4::operator*=(const float rval)
+{
+    r *= rval;
+    g *= rval;
+    b *= rval;
+    r = min<u8>(r, 255);
+    g = min<u8>(g, 255);
+    b = min<u8>(b, 255);
+    r = max<u8>(r, 0);
+    g = max<u8>(g, 0);
+    b = max<u8>(b, 0);
+}
+
 ostream& operator<<(ostream& os, const Rectangle& r)
 {
     os << "(" << r.x << "," << r.y << "), " << r.w << "x" << r.h;
@@ -105,4 +135,11 @@ u32 getColor32(u8 r, u8 g, u8 b, u8 a)
     //RGBA
     return rr << 24 | gg << 16 | bb << 8 | aa;
 #endif
+}
+
+bool isPointInRect(Rectangle& rect, Pos2 pos)
+{
+    if(pos.x >= rect.x && pos.x < rect.x + rect.w && pos.y >= rect.y && pos.y < rect.y + rect.h)
+        return true;
+    return false;
 }

@@ -15,7 +15,6 @@ SHADE(0.85)
 {
     GLERR
     imm = ImmediateDraw(QUAD_INIT, LINE_INIT);
-    PRINT("Created UI renderer.");
 }
 
 void UIRenderer::draw()
@@ -177,13 +176,26 @@ void UIRenderer::drawDraggable(Draggable* d)
 
 void UIRenderer::drawMinimap(Minimap *mm)
 {
-    imm.drawBevelFrame(fg, fg * SHADE, mm->getScreenRect(), BORDER_WIDTH);
-    auto interior = mm->getScreenRect();
-    interior.x += BORDER_WIDTH;
-    interior.y += BORDER_WIDTH;
-    interior.w -= 2 * BORDER_WIDTH;
-    interior.h -= 2 * BORDER_WIDTH;
-    imm.blit("minimap", interior);
+    auto& rect = mm->getScreenRect();
+    imm.blit("minimap", rect);
     if(Input::keystate[SDL_SCANCODE_T])
-        imm.blit("topo", interior);
+        imm.blit("topo", rect);
+    imm.drawLineRect(fg, rect);
+    auto fc = Camera::getFrustumCorners(Camera::viewMat, Camera::projMat);
+    imm.disableTextures();
+    imm.setColor(fg);
+    float mult = float(mm->getScreenRect().w) / GlobalConfig::WORLD_SIZE;
+    Pos2 origin(rect.x, rect.y);
+    auto p1 = Coord::worldToTile(fc.upperLeft) * mult + origin;
+    auto p2 = Coord::worldToTile(fc.upperRight) * mult + origin;
+    auto p3 = Coord::worldToTile(fc.lowerRight) * mult + origin;
+    auto p4 = Coord::worldToTile(fc.lowerLeft) * mult + origin;
+    imm.lineVertex2i(p1);
+    imm.lineVertex2i(p2);
+    imm.lineVertex2i(p2);
+    imm.lineVertex2i(p3);
+    imm.lineVertex2i(p3);
+    imm.lineVertex2i(p4);
+    imm.lineVertex2i(p1);
+    imm.lineVertex2i(p4);
 }

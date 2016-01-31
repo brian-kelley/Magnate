@@ -19,9 +19,9 @@ void Topo::generateTopo()
             buf[topoSize * j + i] = float(heights.get(i * scl, j * scl) + STEP / 2) / STEP;
         }
     }
-    Uint32* pixels = new Uint32[topoSize * topoSize];
-    const Uint32 line = getColor32(0, 0, 0);     //black
-    const Uint32 empty = getColor32(0, 0, 0, 0); //transparency
+    Color4* pixels = new Color4[topoSize * topoSize];
+    const Color4 line(0, 0, 0, 255);     //opaque black
+    const Color4 empty(0, 0, 0, 0);      //transparency
     for(int i = 0; i < topoSize; i++)
     {
         for(int j = 0; j < topoSize; j++)
