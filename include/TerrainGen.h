@@ -24,20 +24,22 @@ struct TerrainGen
     void sphereMask();
     void clampSeaLevel();
     void simpleBiomes();
+    void assignBiomes();
     short maxHeightOfTile(Pos2 loc);
-    void defaultGen();
+    void getDSLayer();
     void smooth(int iters = 1);
     void scatterCentralVolcanoes();
     void addEntropy();
     void verticalNormalize();
     void stretchToFill();
-    void combinedGen();
+    Ground getGround(int temperature, int wetness, int altitude);
     short getAverageHeight();   //Get average height of non-ocean tiles
     short getMaxHeight();
     float getLandArea();           //# non-water tiles as proportion
     void addWatershed(float cutoff, short maxH, short avgH);
     void scaleHeight(int target, int maxH);
     void unsmooth(short maxH);
+    void analyzeBiomes();
 };
 
 #endif

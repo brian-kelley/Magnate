@@ -7,6 +7,7 @@ using namespace Coord;
 TerrainGen::TerrainGen() : world(World::getHeights()), biomes(World::getBiomes())
 {
     generate();
+    analyzeBiomes();
 }
 
 void TerrainGen::generate()
@@ -14,8 +15,26 @@ void TerrainGen::generate()
     clock_t start = clock();
     RandomUtils::seed(start);
     clearAll(); //prevent invalid height/ground in world
-    combinedGen();
-    cout << "Generation took " << (double(clock()) - start) / CLOCKS_PER_SEC << " seconds." << endl;
+    //Generate one buffer
+    getDSLayer();
+    stretchToFill();
+    //Save the first buffer
+    Heightmap first = world;
+    //Generate another buffer
+    clearAll();
+    getDSLayer();
+    stretchToFill();
+    //Combine them
+    world.add(first);
+    smooth(2);
+    short avgH = getAverageHeight();
+    short maxH = getMaxHeight();
+    unsmooth(maxH);
+    assignBiomes();
+    defuzz();
+    addWatershed(0.6, maxH, avgH);
+    scaleHeight(WORLD_SIZE / 2, getMaxHeight());
+    flattenWater();
 }
 
 void TerrainGen::defuzz()
@@ -24,33 +43,17 @@ void TerrainGen::defuzz()
     {
         for(short j = 0; j < WORLD_SIZE; j++)
         {
-            if(biomes.get(i, j) != WATER)
+            Pos2 loc(i, j);
+            int numDifferent = 0;
+            auto here = biomes.get(loc);
+            for(int dir = UP; dir <= RIGHT; dir++)
             {
-                int waterNeighbors = 0;
-                for(int k = UP; k <= RIGHT; k++)
-                {
-                    if(biomes.get(getTileInDir({i, j}, k)) == WATER)
-                        waterNeighbors++;
-                }
-                if(waterNeighbors >= 3)
-                {
-                    biomes.set(WATER, i, j);
-                }
+                auto neiGround = biomes.get(getTileInDir(loc, dir));
+                if(neiGround != here)
+                    numDifferent++;
             }
-            else
-            {
-                int waterNeighbors = 0;
-                for(int k = UP; k <= RIGHT; k++)
-                {
-                    if(biomes.get(getTileInDir({i, j}, k)) != WATER)
-                        waterNeighbors++;
-                }
-                if(waterNeighbors >= 3)
-                {
-                    world.set(1, i, j);
-                    biomes.set(DESERT, i, j);
-                }
-            }
+            if(numDifferent >= 3)
+                biomes.set(biomes.get(getTileInDir(loc, RandomUtils::gen() % 4)), loc);
         }
     }
 }
@@ -324,7 +327,7 @@ void TerrainGen::stretchToFill()
     }
 }
 
-void TerrainGen::defaultGen()
+void TerrainGen::getDSLayer()
 {
     biomes.set(DESERT);
     world.diamondSquare(2, 10, 100, true);
@@ -332,28 +335,6 @@ void TerrainGen::defaultGen()
     sphereMask();
     clampSeaLevel();
     defuzz();
-}
-
-void TerrainGen::combinedGen()
-{
-    //Generate one buffer
-    defaultGen();
-    stretchToFill();
-    //Save the first buffer
-    Heightmap first = world;
-    //Generate another buffer
-    clearAll();
-    defaultGen();
-    stretchToFill();
-    //Combine them
-    world.add(first);
-    smooth(2);
-    simpleBiomes();
-    short avgH = getAverageHeight();
-    short maxH = getMaxHeight();
-    unsmooth(maxH);
-    addWatershed(0.6, maxH, avgH);
-    scaleHeight(WORLD_SIZE / 2, getMaxHeight());
 }
 
 short TerrainGen::getAverageHeight()
@@ -460,5 +441,96 @@ void TerrainGen::simpleBiomes()
             else
                 biomes.set(WATER, i, j);
         }
+    }
+}
+
+void TerrainGen::assignBiomes()
+{
+    Heightmap rainfall(WORLD_SIZE, WORLD_SIZE);
+    rainfall.diamondSquare(10, 0, 0, false);
+    rainfall.normalize();
+    float heightScale = 1000.0 / (SHRT_MAX - 50);
+    Heightmap temperature(WORLD_SIZE, WORLD_SIZE);
+    temperature.diamondSquare(10, 0, 0, false);
+    temperature.normalize(300);
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            temperature.add(-world.get(i, j) * heightScale, i, j);  //Higher = colder
+            temperature.add(-3 * abs(WORLD_SIZE / 2 - j), i, j);     //Higher latitude = colder
+        }
+    }
+    temperature.normalize();
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(world.get(i, j) <= 0)
+                biomes.set(WATER, i, j);
+            else
+            {
+                biomes.set(getGround(temperature.get(i, j), rainfall.get(i, j), world.get(i, j) * heightScale), i, j);
+            }
+        }
+    }
+}
+
+Ground TerrainGen::getGround(int temperature, int wetness, int altitude)
+{
+    if(altitude > 900)
+    {
+        if(temperature < 450)
+            return SNOWCAP;
+        else
+            return MOUNTAINS;
+    }
+    else
+    {
+        //Non-mountainous heights
+        if(wetness > 800)
+            //wet
+            return RAINFOREST;
+        else if(wetness < 300)
+        {
+            //dry
+            if(temperature < 300)
+                //dry & cold
+                return TUNDRA;
+            else if(temperature > 700)
+                //dry & hot
+                return DESERT;
+            else
+                //dry & med. temp
+                return PLAINS;
+        }
+        else
+        {
+            if(temperature > 800)
+                return SAVANNA;
+            else if(temperature < 300)
+                return BOREAL_FOREST;
+            else
+                return DECID_FOREST;
+        }
+    }
+}
+
+void TerrainGen::analyzeBiomes()
+{
+    float occur[Ground::NUM_TYPES] = {0};
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            occur[biomes.get(i, j)]++;
+        }
+    }
+    for(int i = 0; i < NUM_TYPES; i++)
+    {
+        occur[i] /= (WORLD_SIZE * WORLD_SIZE);
+        occur[i] *= 100;
+        if(occur[i] > 1)
+            printf("%-15s: %f\n", Terrain::getName(Ground(i)).c_str(), occur[i]);
     }
 }

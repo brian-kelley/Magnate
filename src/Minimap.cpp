@@ -34,20 +34,18 @@ Color4 Minimap::colorFromTerrain(Ground g)
             rv.b = 0x10;
             return rv;
         case DECID_FOREST:
-        case CONIFER_FOREST:
-        case TAIGA:
+        case BOREAL_FOREST:
             rv.r = 0x00;
             rv.g = 0x9A;
             rv.b = 0x2F;
             return rv;
         case MOUNTAINS:
-        case STONE:
             rv.r = 0xA0;
             rv.g = 0xA0;
             rv.b = 0xA0;
             return rv;
         case PLAINS:
-        case FLOODPLAINS:
+        case SAVANNA:
             rv.r = 0xA8;
             rv.g = 0xDC;
             rv.b = 0x66;

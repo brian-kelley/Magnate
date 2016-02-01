@@ -16,7 +16,7 @@ void Topo::generateTopo()
             maxH = max(maxH, heights.get(i, j));
         }
     }
-    const int STEP = maxH / 8; // Height units between topo lines. WS / 2 is max height, so have 15 lines
+    const int STEP = maxH / 5; // Height units between topo lines. WS / 2 is max height, so have 15 lines
     auto tex = Atlas::textureFromName("topo");
     int topoSize = tex.width;
     short* buf = new short[topoSize * topoSize];
