@@ -80,7 +80,7 @@ void Heightmap::diamondSquare(double roughness, short cornerStart, short centerS
     }
     if(useNewBuf)
     {
-        //Now copy newbuf's pixels into thisbuf if a new buffer was used
+        //Now copy newbuf into this if they are different
         for(int i = 0; i < w; i++)
         {
             for(int j = 0; j < h; j++)
@@ -183,10 +183,12 @@ short Heightmap::calcVal(int avg, int size, double roughness)
     int rn = RandomUtils::gen() % range;
     int newVal = avg + rn - range / 2;
     if(floorZero)
-        newVal = newVal < 0 ? 0 : newVal;
+        newVal = max(newVal, 0);
     else
-        newVal = newVal < SHRT_MIN ? SHRT_MIN : newVal;
-    newVal = newVal > SHRT_MAX ? SHRT_MAX : newVal;
+    {
+        newVal = max(newVal, SHRT_MIN);
+        newVal = min(newVal, SHRT_MAX);
+    }
     return newVal;
 }
 

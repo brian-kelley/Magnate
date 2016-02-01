@@ -1,9 +1,9 @@
-#ifndef __TERRAIN_GEN_INCLUDED__
-#define __TERRAIN_GEN_INCLUDED__
+#ifndef __TERRAIN_GEN_H__
+#define __TERRAIN_GEN_H__
 
+#define ROUGHNESS 2.0
 #include <iostream>
 #include <queue>
-#define ROUGHNESS 2.0
 #include "GlobalConfig.h"
 #include "Coord.h"
 #include "World.h"

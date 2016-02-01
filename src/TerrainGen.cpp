@@ -12,8 +12,7 @@ TerrainGen::TerrainGen() : world(World::getHeights()), biomes(World::getBiomes()
 void TerrainGen::generate()
 {
     clock_t start = clock();
-    RandomUtils::seed(time(NULL));
-    //RandomUtils::seed(2);
+    RandomUtils::seed(start);
     clearAll(); //prevent invalid height/ground in world
     combinedGen();
     cout << "Generation took " << (double(clock()) - start) / CLOCKS_PER_SEC << " seconds." << endl;
@@ -57,10 +56,6 @@ void TerrainGen::diamondSquare()
     world.set(10, 0, WORLD_SIZE - 1);
     world.set(10, WORLD_SIZE - 1, WORLD_SIZE - 1);
     //World edge midpoints
-    world.set(10, WORLD_SIZE / 2, 0);
-    world.set(10, 0, WORLD_SIZE);
-    world.set(10, WORLD_SIZE / 2, WORLD_SIZE - 1);
-    world.set(10, WORLD_SIZE - 1, WORLD_SIZE / 2);
     //Center tile
     world.set(seedH, WORLD_SIZE / 2, WORLD_SIZE / 2);
     //repeatedly go over mesh and do these steps, making grid progressively finer
@@ -102,11 +97,8 @@ bool TerrainGen::inMesh(int x, int y)
 
 void TerrainGen::fillDiamond(int x, int y, int size)
 {
-    //place point at center of a diamond (square corner)
-    //size = total width/height of the diamond being filled in
     int sum = 0;
     int n = 0;
-    //cout << "Filling in diamond @ " << x << "," << y << " with size " << size << endl;
     if(inMesh(x - size / 2, y))
     {
         n++;
@@ -137,9 +129,6 @@ void TerrainGen::fillSquare(int x, int y, int size)
 {
     int sum = 0;
     int n = 0;
-    //cout << "Filling in square @ " << x << "," << y << " with size " << size << endl;
-    //sometimes (x,y) is right on boundary of chunk so we have to check this
-    //size is the side length of square being filled in
     if(inMesh(x - size / 2, y - size / 2))
     {
         n++;
@@ -461,13 +450,6 @@ void TerrainGen::scatterCentralVolcanoes()
         diam = minDiam + RandomUtils::gen() % (maxDiam - minDiam);
         slope = minSlope + (RandomUtils::gen() % 1000) * (maxSlope - minSlope) / 1000;
         addVolcano(x, y, diam * slope / 2, diam / 2);
-        for(int i = -5; i < 5; i++)
-        {
-            for(int j = -5; j < 5; j++)
-            {
-                biomes.set(MOUNTAINS, i + x, j + y);
-            }
-        }
     }
 }
 
@@ -564,7 +546,8 @@ void TerrainGen::stretchToFill()
 
 void TerrainGen::defaultGen()
 {
-    diamondSquare();
+    biomes.set(DESERT);
+    world.diamondSquare(ROUGHNESS, 10, 100, true);
     scatterCentralVolcanoes();
     sphereMask();
     clampSeaLevel();
