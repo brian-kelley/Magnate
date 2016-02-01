@@ -133,13 +133,14 @@ void Menus::createCancel(void* inst, void *arg)
 
 void Menus::createOK(void* inst, void *arg)
 {
+    creatingField->loseFocus();
     string newName = creatingField->getText();
     if(newName.size() != 0)
     {
         //Check for invalid filename characters
         if(strpbrk(newName.c_str(), "\\/:*?\"<>|") != NULL)
         {
-            new Label(170, 165, 300, 70, StickyDirs::none, "\\/:*?\"<>| not allowed in save file names.", createMenu);
+            new Label(20, 165, 600, 100, StickyDirs::none, "\\/:*?\"<>| not allowed in save file names.", createMenu);
         }
         else
         {
