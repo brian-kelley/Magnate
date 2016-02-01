@@ -1,51 +1,59 @@
 #include "Watershed.h"
 
 using namespace std;
-using namespace Coord;
 using namespace GlobalConfig;
+using namespace Coord;
 
-Watershed::Watershed(short threshold, int numRivers) : world(World::getHeights()), biomes(World::getBiomes())
+Watershed::Watershed(int numRivers, short minH) : world(World::getHeights()), biomes(World::getBiomes())
 {
     for(int i = 0; i < numRivers; i++)
+        addRiver(minH);
+}
+
+void Watershed::addRiver(Height minHeight)
+{
+    Pos2 loc(0, 0);
+    int tries = 0;
+    while(world.get(loc) < minHeight || biomes.get(loc) == LAKE || biomes.get(loc) == RIVER)
     {
-        Pos2 loc(0, 0);
-        int tries = 0;
-        while(world.get(loc) < threshold || biomes.get(loc) == LAKE || biomes.get(loc) == RIVER)
+        if(tries++ > 1000)
         {
-            if(tries++ > 1000)
-            {
-                PRINT("Error: Timeout to find high elevation headwaters.");
-                return;
-            }
-            loc.x = RandomUtils::gen() % WORLD_SIZE;
-            loc.y = RandomUtils::gen() % WORLD_SIZE;
+            cout << "Error: Timeout to find high elevation headwaters." << endl;
+            return;
         }
-        loc.x = loc.y = WORLD_SIZE / 2;
-        while(true) //Flow downhill until reach ocean or y = 0 (only stopping conditions)
-        {
-            biomes.set(RIVER, loc);
-            int downhill = getNonLakeDownhillDir(loc);
-            if(downhill != NO_DIRECTION);
-            {
-                //Check if just flowed into a lake that already flows out to sea
-                Pos2 next = getTileInDir(loc, downhill);
-                if(biomes.get(next) == LAKE || biomes.get(next) == RIVER || biomes.get(next) == WATER)
-                    return;
-            }
-            //As long as there is nowhere to flow, form lake
-            while(downhill == NO_DIRECTION)
-            {
-                loc = formLake(loc);
-                if(loc.x == -1 || biomes.get(loc) == WATER || world.get(loc) <= 0)
-                    return;
-                downhill = getNonLakeDownhillDir(loc);
-            }
-            loc = getTileInDir(loc, downhill);
-            //Decide whether to end
-            if(biomes.get(loc) == WATER || world.get(loc) <= 0)
-                return;
-        }
+        loc.x = RandomUtils::gen() % WORLD_SIZE;
+        loc.y = RandomUtils::gen() % WORLD_SIZE;
     }
+    while(true) //Flow downhill until reach ocean or y = 0 (only stopping conditions)
+    {
+        biomes.set(RIVER, loc);
+        int downhill = getNonLakeDownhillDir(loc);
+        if(downhill != NO_DIRECTION);
+        {
+            //Check if just flowed into a lake that already flows out to sea
+            Pos2 next = getTileInDir(loc, downhill);
+            if(biomes.get(next) == LAKE || biomes.get(next) == RIVER)
+                return;
+        }
+        //As long as there is nowhere to flow, form lake
+        while(downhill == NO_DIRECTION)
+        {
+            loc = formLake(loc);
+            if(loc.x == -1 || biomes.get(loc) == WATER || world.get(loc) <= 0)
+                return;
+            
+            downhill = getNonLakeDownhillDir(loc);
+        }
+        loc = getTileInDir(loc, downhill);
+        //Decide whether to end
+        if(biomes.get(loc) == WATER || world.get(loc) <= 0)
+            break;
+    }
+}
+
+void Watershed::beginFlow(Pos2 pos)
+{
+    generalFlow(pos);
 }
 
 void Watershed::generalFlow(Pos2 pos)
@@ -63,7 +71,7 @@ void Watershed::generalFlow(Pos2 pos)
 Pos2 Watershed::getLowestNeighbor(Pos2 pos)
 {
     Pos2 bestPos = {-1, -1};
-    short bestH = SHRT_MAX;
+    Height bestH = SHRT_MAX;
     for(int dir = UP; dir <= RIGHT; dir++)
     {
         Pos2 nei = getTileInDir(pos, dir);
@@ -90,7 +98,7 @@ void Watershed::processTile(Pos2 pos, std::queue<Pos2>& q)
         q.push(lowestNei);
         return;
     }
-    auto posH = world.get(pos);
+    Height posH = world.get(pos);
     int newFloods[4];       //Array of the directions to be stored
     int numNewFloods = 0;   //Number of directions in newFloods
     for(int dir = UP; dir <= RIGHT; dir++)
@@ -167,6 +175,40 @@ void Watershed::riverRandomWalk(Pos2 p1, Pos2 p2)
     }
 }
 
+void Watershed::dropWater(Pos2 loc)
+{
+    bool doErode = false;
+    //Simulate some water starting at loc, flowing downhill untill it can no longer flow downhill or it reaches the ocean
+    while(true)
+    {
+        Pos2 lowestNei = getLowestNeighbor(loc);
+        if(biomes.get(lowestNei) == WATER || world.get(lowestNei) <= 0)
+            break;
+        if(world.get(lowestNei) < world.get(loc))
+        {
+            //Simulate the (occasional) carrying of some soil from the uphill position downhill
+            if(doErode && RandomUtils::gen() % 2 == 0)
+            {
+                world.add(-1, loc);
+                world.add(1, lowestNei);
+            }
+            loc = lowestNei;
+        }
+        else if(world.get(lowestNei) == world.get(loc))
+        {
+            //Height equal
+            world.add(1, loc);
+            break;
+        }
+        else
+        {
+            world.set(world.get(loc), lowestNei);
+            biomes.set(LAKE, lowestNei);
+            break;
+        }
+    }
+}
+
 Pos2 Watershed::getLandTile()
 {
     Pos2 rv;
@@ -177,6 +219,52 @@ Pos2 Watershed::getLandTile()
     }
     while(world.get(rv) <= 0);
     return rv;
+}
+
+void Watershed::rainForTime(int sec)
+{
+    clock_t start = clock();
+    do
+    {
+        for(int i = 0; i < 1000; i++)
+        {
+            Pos2 target;
+            do
+            {
+                target.x = RandomUtils::gen() % WORLD_SIZE;
+                target.y = RandomUtils::gen() % WORLD_SIZE;
+            }
+            while(biomes.get(target) == WATER);
+            dropWater(target);
+        }
+    }
+    while((clock() - start) / CLOCKS_PER_SEC < sec);
+}
+
+Gradient Watershed::getTileGradient(Pos2 loc)
+{
+    Gradient grad;
+    //dx is change in height with respect to x, or avg height difference between node at x = k+1 and node at x = k
+    Height h1 = world.get(loc.x, loc.y);
+    Height h2 = world.get(loc.x + 1, loc.y);
+    Height h3 = world.get(loc.x + 1, loc.y + 1);
+    Height h4 = world.get(loc.x, loc.y + 1);
+    grad.dx = ((h2 - h1) + (h3 - h4)) / 2;
+    grad.dy = ((h4 - h1) + (h3 - h2)) / 2;
+    return grad;
+}
+
+void Watershed::doErosion()
+{
+    Gradient* gradBuf = new Gradient[WORLD_SIZE * WORLD_SIZE];
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            gradBuf[i + j * WORLD_SIZE] = getTileGradient(Pos2(i, j));
+        }
+    }
+    delete[] gradBuf;
 }
 
 Pos2 Watershed::flowDownhill(Pos2 loc)
@@ -195,7 +283,7 @@ int Watershed::getNonLakeDownhillDir(Pos2 loc)
 {
     int poss[4];
     int iter = 0;
-    auto h = world.get(loc);
+    Height h = world.get(loc);
     for(int dir = UP; dir <= RIGHT; dir++)
     {
         Pos2 nei = getTileInDir(loc, dir);
@@ -211,7 +299,7 @@ int Watershed::getNonLakeDownhillDir(Pos2 loc)
         return poss[RandomUtils::gen() % iter];
 }
 
-int Watershed::getNonLakeEqualDir(Pos2 loc, short flood)
+int Watershed::getNonLakeEqualDir(Pos2 loc, Height flood)
 {
     for(int dir = UP; dir <= RIGHT; dir++)
     {
@@ -314,9 +402,10 @@ Pos2 Watershed::formLake(Pos2 loc)
     //Expanding boundary approach
     vector<Pos2> boundary;
     vector<Pos2> outlets;
-    auto flood = world.get(loc);
+    Height flood = world.get(loc);
     biomes.set(LAKE_BOUNDARY, loc);
     boundary.push_back(loc);
+    int iteration = 0;
     while(outlets.size() == 0)
     {
         //cout << "Have flood height " << flood << endl;

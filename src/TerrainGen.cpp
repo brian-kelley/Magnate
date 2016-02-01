@@ -1,8 +1,8 @@
 #include "TerrainGen.h"
 
 using namespace std;
-using namespace Coord;
 using namespace GlobalConfig;
+using namespace Coord;
 
 TerrainGen::TerrainGen() : world(World::getHeights()), biomes(World::getBiomes())
 {
@@ -12,10 +12,84 @@ TerrainGen::TerrainGen() : world(World::getHeights()), biomes(World::getBiomes()
 void TerrainGen::generate()
 {
     clock_t start = clock();
+    RandomUtils::seed(time(NULL));
     //RandomUtils::seed(2);
     clearAll(); //prevent invalid height/ground in world
     combinedGen();
     cout << "Generation took " << (double(clock()) - start) / CLOCKS_PER_SEC << " seconds." << endl;
+}
+
+void TerrainGen::tester()
+{
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            world.set(i, i, j);
+            biomes.set(DESERT, i, j);
+        }
+    }
+    for(int i = 0; i < 50; i++)
+    {
+        addVolcano(RandomUtils::gen() % WORLD_SIZE, RandomUtils::gen() % WORLD_SIZE, -100, 150);
+    }
+    clampSeaLevel();
+    Watershed(50, getMaxHeight() * 0.6);
+}
+
+//Generates height based on average surrounding height, and how fine grid is
+Height TerrainGen::getHeight(int avg, int size)
+{
+    int range = double(size) * ROUGHNESS;
+    if(range == 0)
+        return avg;
+    range = range > SHRT_MAX ? SHRT_MAX : range;
+    int result = (avg + (RandomUtils::gen() % range) - (range / 2));
+    return result;
+}
+
+void TerrainGen::diamondSquare()
+{
+    const Height seedH = 100;
+    //World corners
+    world.set(10, 0, 0);
+    world.set(10, WORLD_SIZE - 1, 0);
+    world.set(10, 0, WORLD_SIZE - 1);
+    world.set(10, WORLD_SIZE - 1, WORLD_SIZE - 1);
+    //World edge midpoints
+    world.set(10, WORLD_SIZE / 2, 0);
+    world.set(10, 0, WORLD_SIZE);
+    world.set(10, WORLD_SIZE / 2, WORLD_SIZE - 1);
+    world.set(10, WORLD_SIZE - 1, WORLD_SIZE / 2);
+    //Center tile
+    world.set(seedH, WORLD_SIZE / 2, WORLD_SIZE / 2);
+    //repeatedly go over mesh and do these steps, making grid progressively finer
+    //(squares first, then diamonds)
+    //Note: if squares then diamonds, same size can be used each iteration
+    int size = WORLD_SIZE / 2;
+    while(size > 0)
+    {
+        //Fill in the diamonds
+        //Iterate over all grid points, check if needs a diamond fill-in
+        for(int i = 0; i < WORLD_SIZE; i += size)
+        {
+            for(int j = 0; j < WORLD_SIZE; j += size)
+            {
+                if((i + j) % (size * 2) != 0)
+                {
+                    fillDiamond(i, j, size * 2);
+                }
+            }
+        }
+        for(int i = size / 2; i < WORLD_SIZE; i += size)
+        {
+            for(int j = size / 2; j < WORLD_SIZE; j += size)
+            {
+                fillSquare(i, j, size);
+            }
+        }
+        size /= 2;
+    }
 }
 
 bool TerrainGen::inMesh(int x, int y)
@@ -24,6 +98,73 @@ bool TerrainGen::inMesh(int x, int y)
         return true;
     else
         return false;
+}
+
+void TerrainGen::fillDiamond(int x, int y, int size)
+{
+    //place point at center of a diamond (square corner)
+    //size = total width/height of the diamond being filled in
+    int sum = 0;
+    int n = 0;
+    //cout << "Filling in diamond @ " << x << "," << y << " with size " << size << endl;
+    if(inMesh(x - size / 2, y))
+    {
+        n++;
+        sum += world.get(x - size / 2, y);
+    }
+    if(inMesh(x + size / 2, y))
+    {
+        n++;
+        sum += world.get(x + size / 2, y);
+    }
+    if(inMesh(x, y - size / 2))
+    {
+        n++;
+        sum += world.get(x, y - size / 2);
+    }
+    if(inMesh(x, y + size / 2))
+    {
+        n++;
+        sum += world.get(x, y + size / 2);
+    }
+    if(n == 0)
+        return;
+    world.set(getHeight(sum / n, size), x, y);
+    biomes.set(DESERT, x, y);
+}
+
+void TerrainGen::fillSquare(int x, int y, int size)
+{
+    int sum = 0;
+    int n = 0;
+    //cout << "Filling in square @ " << x << "," << y << " with size " << size << endl;
+    //sometimes (x,y) is right on boundary of chunk so we have to check this
+    //size is the side length of square being filled in
+    if(inMesh(x - size / 2, y - size / 2))
+    {
+        n++;
+        sum += world.get(x - size / 2, y - size / 2);
+    }
+    if(inMesh(x - size / 2, y + size / 2))
+    {
+        n++;
+        sum += world.get(x - size / 2, y + size / 2);
+    }
+    if(inMesh(x + size / 2, y + size / 2))
+    {
+        n++;
+        sum += world.get(x + size / 2, y + size / 2);
+    }
+    if(inMesh(x + size / 2, y - size / 2))
+    {
+        n++;
+        sum += world.get(x + size / 2, y - size / 2);
+    }
+    //Put in height for center of square
+    if(n == 0)
+        return;
+    world.set(getHeight(sum / n, size), x, y);
+    biomes.set(DESERT, x, y);
 }
 
 void TerrainGen::defuzz()
@@ -71,7 +212,7 @@ void TerrainGen::flattenWater()
         {
             if(biomes.get(i, j) == WATER)
             {
-                short minHeight = world.get(i, j);
+                Height minHeight = world.get(i, j);
                 bool needsUpdate = false;
                 if(world.get(i + 1, j) < minHeight)
                 {
@@ -117,8 +258,7 @@ void TerrainGen::addVolcano(int x, int y, short height, int radius)
             if(dist < rad)
             {
                 int change = 0.5 + height - (float(height) * (dist / rad));
-                if(world.validPoint(i, j))
-                    world.set(world.get(i, j) + change, i, j);
+                world.set(world.get(i, j) + change, i, j);
             }
         }
     }
@@ -143,7 +283,7 @@ void TerrainGen::scatterVolcanos()
         int x = RandomUtils::gen() % WORLD_SIZE;
         int y = RandomUtils::gen() % WORLD_SIZE;
         int height = 100 + RandomUtils::gen() % 500;
-        float heightMult = Coord::TERRAIN_TILE_SIZE / Coord::TERRAIN_Y_SCALE;
+        float heightMult = TERRAIN_TILE_SIZE / TERRAIN_Y_SCALE;
         int radius = (height * (RandomUtils::gen() % 5 + 5)) / heightMult;
         addVolcano(x, y, height, radius);
     }
@@ -151,7 +291,7 @@ void TerrainGen::scatterVolcanos()
 
 void TerrainGen::pyramidMask()
 {
-    short reduction = -SHRT_MAX;
+    Height reduction = -SHRT_MAX;
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         if(world.get(i, 0) > reduction)
@@ -169,13 +309,14 @@ void TerrainGen::pyramidMask()
         {
             double dist = double(max(abs(i - WORLD_SIZE / 2), abs(j - WORLD_SIZE / 2))) / (WORLD_SIZE / 2);
             world.set(world.get(i, j) - dist * reduction, i, j);
+            //world.set(world.get(i, j) - reduction, i, j);
         }
     }
 }
 
 void TerrainGen::sphereMask()
 {
-    short reduction = -SHRT_MAX;
+    Height reduction = -SHRT_MAX;
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         if(world.get(i, 0) > reduction)
@@ -206,19 +347,22 @@ void TerrainGen::clampSeaLevel()
         for(int j = 0; j < WORLD_SIZE; j++)
         {
             if(world.get(i, j) < 0)
+            {
+                biomes.set(WATER, i, j);
                 world.set(0, i, j);
+            }
         }
     }
 }
 
 void TerrainGen::erode(int numTimesteps)
 {
-    //Erosion(world, rainfall);
+    
 }
 
-short TerrainGen::maxHeightOfTile(Pos2 loc)
+Height TerrainGen::maxHeightOfTile(Pos2 loc)
 {
-    short h = world.get(loc.x, loc.y);
+    Height h = world.get(loc.x, loc.y);
     h = max(h, world.get(loc.x + 1, loc.y));
     h = max(h, world.get(loc.x + 1, loc.y + 1));
     h = max(h, world.get(loc.x, loc.y + 1));
@@ -227,7 +371,7 @@ short TerrainGen::maxHeightOfTile(Pos2 loc)
 
 void TerrainGen::shelfMask()
 {
-    short slopeDrop = world.get(0, 0);
+    Height slopeDrop = world.get(0, 0);
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         if(world.get(0, i) > slopeDrop)
@@ -249,7 +393,7 @@ void TerrainGen::shelfMask()
             if(i >= j && i < WORLD_SIZE - j)
             {
                 //i, j gives point in the upper bevel edge
-                short drop = (slopeLen - j) * slope;
+                Height drop = (slopeLen - j) * slope;
                 world.add(-drop, i, j);
                 world.add(-drop, WORLD_SIZE - j, i);
                 world.add(-drop, WORLD_SIZE - i, WORLD_SIZE - j);
@@ -268,7 +412,7 @@ void TerrainGen::shelfMask()
 
 void TerrainGen::smooth(int iters)
 {
-    Heightmap copy = world;
+    Height* buf = new Height[WORLD_SIZE * WORLD_SIZE];
     for(int it = 0; it < iters; it++)
     {
         for(int i = 1; i < WORLD_SIZE - 1; i++)
@@ -276,15 +420,23 @@ void TerrainGen::smooth(int iters)
             for(int j = 1; j < WORLD_SIZE - 1; j++)
             {
                 int sum = 0;
-                sum += copy.get(i, j);
-                sum += copy.get(i + 1, j);
-                sum += copy.get(i - 1, j);
-                sum += copy.get(i, j + 1);
-                sum += copy.get(i, j - 1);
-                world.set(sum / 5, i, j);
+                sum += world.get(i, j);
+                sum += world.get(i + 1, j);
+                sum += world.get(i - 1, j);
+                sum += world.get(i, j + 1);
+                sum += world.get(i, j - 1);
+                buf[i * WORLD_SIZE + j] = sum / 5;
+            }
+        }
+        for(int i = 1; i < WORLD_SIZE - 1; i++)
+        {
+            for(int j = 1; j < WORLD_SIZE - 1; j++)
+            {
+                world.set(buf[i * WORLD_SIZE + j], i, j);
             }
         }
     }
+    delete[] buf;
 }
 
 void TerrainGen::scatterCentralVolcanoes()
@@ -329,7 +481,7 @@ void TerrainGen::addEntropy()
 
 void TerrainGen::verticalNormalize()
 {
-    short reduction = world.get(0, 0);
+    Height reduction = world.get(0, 0);
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         if(world.get(0, i) > reduction)
@@ -353,7 +505,6 @@ void TerrainGen::verticalNormalize()
 
 void TerrainGen::stretchToFill()
 {
-    //Do bilinear interpolation to get new heights
     int minx = WORLD_SIZE / 2;
     int maxx = minx;
     int miny = minx;
@@ -362,7 +513,7 @@ void TerrainGen::stretchToFill()
     {
         for(int j = 0; j < WORLD_SIZE; j++)
         {
-            if(world.get(i, j) > 0)
+            if(biomes.get(i, j) != WATER)
             {
                 if(i < minx)
                     minx = i;
@@ -389,29 +540,31 @@ void TerrainGen::stretchToFill()
         miny = 0;
     if(maxy >= WORLD_SIZE)
         maxy = WORLD_SIZE - 1;
-    Heightmap copy = world;
-    for(int i = 0; i < WORLD_SIZE; i++) //i is new (dest) x
+    Height* buf = new Height[WORLD_SIZE * WORLD_SIZE];
+    for(int i = 0; i < WORLD_SIZE; i++)
     {
-        for(int j = 0; j < WORLD_SIZE; j++) //j is new (dest) y
+        for(int j = 0; j < WORLD_SIZE; j++)
         {
-            float oldX = minx + (float(i) / WORLD_SIZE) * (maxx - minx);
-            float oldY = miny + (float(j) / WORLD_SIZE) * (maxy - miny);
-            float x1 = int(oldX);
-            float x2 = x1 + 1;
-            float y1 = int(oldY);
-            float y2 = y1 + 1;
-            short q11 = copy.get(x1, y1);
-            short q21 = copy.get(x2, y1);
-            short q12 = copy.get(x1, y2);
-            short q22 = copy.get(x2, y2);
-            world.set(q11*(x2-oldX)*(y2-oldY) + q21*(oldX-x1)*(y2-oldY) + q12*(x2-oldX)*(oldY-y1) + q22*(oldX-x1)*(oldY-y1), i, j);
+            buf[WORLD_SIZE * i + j] = world.get(minx + float(i) / WORLD_SIZE * (maxx - minx), miny + float(j) / WORLD_SIZE * (maxy - miny));
         }
     }
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            world.set(buf[WORLD_SIZE * i + j], i, j);
+            if(world.get(i, j) <= 0)
+                biomes.set(WATER, i, j);
+            else
+                biomes.set(DESERT, i, j);
+        }
+    }
+    delete[] buf;
 }
 
 void TerrainGen::defaultGen()
 {
-    world.diamondSquare(2, 10, 10, true);
+    diamondSquare();
     scatterCentralVolcanoes();
     sphereMask();
     clampSeaLevel();
@@ -421,27 +574,55 @@ void TerrainGen::defaultGen()
 
 void TerrainGen::combinedGen()
 {
-    //Create two "default gen" diamond-square islands
-    //Stretch both to the boundaries of map
-    //Add them together
+    //Generate one buffer
     defaultGen();
     stretchToFill();
     //Save the first buffer
-    Heightmap first = world;
+    Height* firstGen = getHeightBuffer();
+    //Generate another buffer
+    clearAll();
     defaultGen();
     stretchToFill();
     //Combine them
-    world.add(first);
-    clampSeaLevel();
-    unsmooth();
-    assignBiomes();
-    addWatershed(0.5, SHRT_MAX - 50, getAverageHeight());
-    scaleHeight(WORLD_SIZE / 2, SHRT_MAX - 50);
-    smooth(3);
+    addBuffer(firstGen);
+    smooth(6);
+    delete[] firstGen;
+    flattenWater();
+    Height avgH = getAverageHeight();
+    Height maxH = getMaxHeight();
+    unsmooth(maxH);
+    addWatershed(0.6, maxH, avgH);
+    scaleHeight(WORLD_SIZE / 2, getMaxHeight());
     clampSeaLevel();
 }
 
-short TerrainGen::getAverageHeight()
+Height* TerrainGen::getHeightBuffer()
+{
+    Height* buf = new Height[WORLD_SIZE * WORLD_SIZE];
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            buf[i + j * WORLD_SIZE] = world.get(i, j);
+        }
+    }
+    return buf;
+}
+
+void TerrainGen::addBuffer(Height *buf)
+{
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            world.add(buf[i + j * WORLD_SIZE], i, j);
+            if(world.get(i, j) > 0)
+                biomes.set(DESERT, i, j);
+        }
+    }
+}
+
+Height TerrainGen::getAverageHeight()
 {
     int sum = 0;
     int n = 0;
@@ -473,9 +654,78 @@ float TerrainGen::getLandArea()
     return float(c) / (WORLD_SIZE * WORLD_SIZE);
 }
 
-short TerrainGen::getMaxHeight()
+void TerrainGen::fancySmooth()
 {
-    short h = -1000;
+    const int bsize = 3;
+    Height* buf = new Height[WORLD_SIZE * WORLD_SIZE];
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            int sum = 0;
+            for(int k = i - bsize / 2; k <= i + bsize / 2; k++)
+            {
+                for(int l = j - bsize / 2; l <= j + bsize / 2; l++)
+                {
+                    sum += world.get(k, l);
+                }
+            }
+            buf[i + j * WORLD_SIZE] = sum / (bsize * bsize);
+        }
+    }
+    clearAll();
+    addBuffer(buf);
+    delete[] buf;
+}
+
+void TerrainGen::addWatershed(float cutoff, Height maxH, Height avgH)
+{
+    Watershed(50, avgH + cutoff * (maxH - avgH));
+}
+
+/*
+void TerrainGen::removeLake(Pos2 pos)
+{
+    queue<Pos2> q;
+    q.push(pos);
+    while(q.size() > 0)
+    {
+        Pos2 proc = q.front();
+        q.pop();
+        short procG = biomes.get(proc);
+        if(procG == LAKE || procG == FLOODING)
+        {
+            biomes.set(DESERT, proc);
+            for(int dir = UP; dir <= RIGHT; dir++)
+            {
+                Pos2 inDir = getTileInDir(proc, dir);
+                Ground g = biomes.get(inDir);
+                if(g == LAKE || g == FLOODING)
+                    q.push(inDir);
+            }
+        }
+    }
+}
+*/
+
+void TerrainGen::placeRivers(float headAlt, int num)
+{
+    Height avg = getAverageHeight();
+    for(int i = 0; i < num; i++)
+    {
+        Pos2 loc;
+        do
+        {
+            loc.x = RandomUtils::gen() % WORLD_SIZE;
+            loc.y = RandomUtils::gen() % WORLD_SIZE;
+        }
+        while(world.get(loc) < headAlt * avg);
+    }
+}
+
+Height TerrainGen::getMaxHeight()
+{
+    Height h = -1000;
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
@@ -515,19 +765,16 @@ void TerrainGen::scaleHeight(int target, int maxH)
     }
 }
 
-void TerrainGen::unsmooth()
+void TerrainGen::unsmooth(Height maxH)
 {
-    short maxH = getMaxHeight();
-    //Scale up as much as possible
-    int mult = (SHRT_MAX - 50) / maxH;
-    scaleHeight(mult * maxH, maxH);
+    scaleHeight(5 * maxH, maxH);
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
         {
-            if(world.get(i, j) > 0)
+            if(biomes.get(i, j) != WATER && world.get(i, j) > 0)
             {
-                short h, n1, n2, n3, n4;
+                Height h, n1, n2, n3, n4;
                 while(true)
                 {
                     h = world.get(i, j);
@@ -543,53 +790,4 @@ void TerrainGen::unsmooth()
             }
         }
     }
-}
-
-void TerrainGen::assignBiomes()
-{
-    for(int i = 0; i < WORLD_SIZE; i++)
-    {
-        for(int j = 0; j < WORLD_SIZE; j++)
-        {
-            if(biomes.get(i, j) != RIVER && biomes.get(i, j) != LAKE)
-            {
-                if(world.get(i, j) <= 0)
-                    biomes.set(WATER, i, j);
-                else
-                    biomes.set(DESERT, i, j);
-            }
-        }
-    }
-}
-
-Ground TerrainGen::decideGround(bool rain, bool high, Latitude lat)
-{
-    //Wet: decid_forest snowcap rainforest taiga
-    //Dry: conifer_forest plains desert stone tundra
-    if(rain)
-    {
-        if(high)
-            return SNOWCAP;
-        if(lat == TROPICAL)
-            return RAINFOREST;
-        if(lat == POLAR)
-            return TAIGA;
-        //Default for wet, moderate elevation, moderate latitude
-        return DECID_FOREST;
-    }
-    else
-    {
-        if(high)
-            return STONE;
-        if(lat == POLAR)
-            return TUNDRA;
-        
-            return PLAINS;
-        return CONIFER_FOREST;
-    }
-}
-
-void TerrainGen::addWatershed(float cutoff, short maxH, short avgH)
-{
-    Watershed(cutoff * maxH, 30);
 }
