@@ -3,27 +3,35 @@
 using namespace std;
 using namespace Coord;
 using namespace RandomUtils;
+using namespace GlobalConfig;
 
-Erosion::Erosion(Heightmap& worldHeights, Heightmap& worldRainfall) : world(worldHeights), rainfall(worldRainfall)
+Erosion::Erosion(Heightmap& worldHeights, vector<Pos2>& focusLocs) : world(worldHeights), hitMap(WORLD_SIZE, WORLD_SIZE)
 {
-    rainfall.diamondSquare(2, 0, 0, true);
     //TODO: How many runners are needed?
     //How is that affected by world size?
-    for(int i = 0; i < 1000; i++)
-        simpleRunner();
+    hitMap.set(0);
+    for(int i = 0; i < focusLocs.size(); i++)
+    {
+        for(int j = 0; j < 20000 / focusLocs.size(); j++)
+        {
+            simpleRunner(focusLocs[i]);
+        }
+    }
+    world.smooth();
 }
 
-void Erosion::simpleRunner()
+void Erosion::simpleRunner(Pos2 focus)
 {
     Pos2 loc;
     do
     {
-        loc.x = gen() % GlobalConfig::WORLD_SIZE;
-        loc.y = gen() % GlobalConfig::WORLD_SIZE;
+        loc.x = focus.x + (gen() % focusRad) - (focusRad / 2);
+        loc.y = focus.y + (gen() % focusRad) - (focusRad / 2);
     }
     while(world.get(loc) <= 0);
     while(world.get(loc) > 0)
     {
+        hitMap.add(1, loc);
         int downhill = getDownhill(loc);
         if(downhill == NO_DIRECTION)
         {
@@ -34,6 +42,8 @@ void Erosion::simpleRunner()
         {
             world.add(-1, loc);
             loc = getTileInDir(loc, downhill);
+            if(hitMap.get(loc) > maxHits)
+                break;
         }
     }
 }
@@ -53,52 +63,4 @@ int Erosion::getDownhill(Pos2 loc)
         }
     }
     return minDir;
-}
-
-void Erosion::fillPit(Pos2 loc, short sed)
-{
-    //while sediment remains, raise loc & all equal neighbors to the height of the next lowest neighbor
-    while(sed > 0)
-    {
-        short locH = world.get(loc);
-        short lowNei = SHRT_MAX;
-        for(int dir = UP; dir <= RIGHT; dir++)
-        {
-            Pos2 nei = getTileInDir(loc, dir);
-            if(world.get(nei) < lowNei && world.get(nei) > locH)
-            {
-                lowNei = world.get(nei);
-            }
-        }
-        //cout << endl;
-        //cout << "next lowest neighbor height is " << lowNei << endl;
-        if(lowNei == SHRT_MAX)
-        {
-            //loc and all neighbors raised to the max, do nothing
-            return;
-        }
-        int numRaise = 1;   //# of tiles to be raised, including loc
-        int change = lowNei - locH; //maximum height change of each tile
-        for(int dir = UP; dir <= RIGHT; dir++)
-        {
-            if(world.get(getTileInDir(loc, dir)) == lowNei)
-                numRaise++;
-        }
-        if(change * numRaise > sed)
-            change = 0.5 + float(sed) / numRaise;
-        if(change == 0)
-            break;
-        //deduct sediment
-        sed -= change * numRaise;
-        //apply raise
-        for(int dir = UP; dir <= RIGHT; dir++)
-        {
-            Pos2 nei = getTileInDir(loc, dir);
-            if(world.get(nei) == lowNei)
-                world.add(change, nei);
-        }
-        world.add(change, loc);
-        if(sed <= 0)
-            return;
-    }
 }

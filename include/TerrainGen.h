@@ -8,12 +8,15 @@
 #include "World.h"
 #include "Watershed.h"
 #include "Heightmap.h"
+#include "Erosion.h"
 
 struct TerrainGen
 {
     TerrainGen();
     Heightmap& world;
     Heightmap& biomes;
+    std::vector<Pos2> focusLocs;
+    Heightmap rainfall;
     void generate();
     void defuzz();       //remove non-water tiles that are surrounded by water on at least 3 sides (adjacent)
     void flattenWater(); //force water tiles to have constant height at all 4 corners
@@ -27,7 +30,6 @@ struct TerrainGen
     void assignBiomes();
     short maxHeightOfTile(Pos2 loc);
     void getDSLayer();
-    void smooth(int iters = 1);
     void scatterCentralVolcanoes();
     void addEntropy();
     void verticalNormalize();

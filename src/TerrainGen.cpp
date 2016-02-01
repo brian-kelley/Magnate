@@ -4,10 +4,11 @@ using namespace std;
 using namespace GlobalConfig;
 using namespace Coord;
 
-TerrainGen::TerrainGen() : world(World::getHeights()), biomes(World::getBiomes())
+TerrainGen::TerrainGen() : world(World::getHeights()), biomes(World::getBiomes()), rainfall(WORLD_SIZE, WORLD_SIZE)
 {
+    RandomUtils::seed(12);
     generate();
-    analyzeBiomes();
+    //analyzeBiomes();
 }
 
 void TerrainGen::generate()
@@ -26,11 +27,12 @@ void TerrainGen::generate()
     stretchToFill();
     //Combine them
     world.add(first);
-    smooth(2);
+    world.smooth(2);
     short avgH = getAverageHeight();
     short maxH = getMaxHeight();
+    //Erosion e(world, focusLocs);
     unsmooth(maxH);
-    assignBiomes();
+    assignBiomes();                 //this intializes [0,1000) rainfall map
     defuzz();
     addWatershed(0.6, maxH, avgH);
     scaleHeight(WORLD_SIZE / 2, getMaxHeight());
@@ -130,19 +132,6 @@ void TerrainGen::clearAll()
     }
 }
 
-void TerrainGen::scatterVolcanos()
-{
-    for(int i = 0; i < 20; i++)
-    {
-        int x = RandomUtils::gen() % WORLD_SIZE;
-        int y = RandomUtils::gen() % WORLD_SIZE;
-        int height = 100 + RandomUtils::gen() % 500;
-        float heightMult = TERRAIN_TILE_SIZE / TERRAIN_Y_SCALE;
-        int radius = (height * (RandomUtils::gen() % 5 + 5)) / heightMult;
-        addVolcano(x, y, height, radius);
-    }
-}
-
 void TerrainGen::sphereMask()
 {
     short reduction = -SHRT_MAX;
@@ -193,35 +182,14 @@ short TerrainGen::maxHeightOfTile(Pos2 loc)
     return h;
 }
 
-void TerrainGen::smooth(int iters)
-{
-    Heightmap copy = world;
-    for(int it = 0; it < iters; it++)
-    {
-        for(int i = 1; i < WORLD_SIZE - 1; i++)
-        {
-            for(int j = 1; j < WORLD_SIZE - 1; j++)
-            {
-                int sum = 0;
-                sum += copy.get(i, j);
-                sum += copy.get(i + 1, j);
-                sum += copy.get(i - 1, j);
-                sum += copy.get(i, j + 1);
-                sum += copy.get(i, j - 1);
-                world.set(sum / 5, i, j);
-            }
-        }
-    }
-}
-
 void TerrainGen::scatterCentralVolcanoes()
 {
-    const int numVolcanoes = 6;
-    const int minEdgeDist = WORLD_SIZE / 8;
-    const int minDiam = WORLD_SIZE / 10;
+    const int numVolcanoes = 10;
+    const int minEdgeDist = WORLD_SIZE / 6;
+    const int minDiam = WORLD_SIZE / 8;
     const int maxDiam = 2 * minDiam;
-    const float minSlope = 0.1;
-    const float maxSlope = 0.5;
+    const float minSlope = 0.2;
+    const float maxSlope = 3;
     int x = 0;
     int y = 0;
     int diam;
@@ -233,6 +201,7 @@ void TerrainGen::scatterCentralVolcanoes()
         diam = minDiam + RandomUtils::gen() % (maxDiam - minDiam);
         slope = minSlope + (RandomUtils::gen() % 1000) * (maxSlope - minSlope) / 1000;
         addVolcano(x, y, diam * slope / 2, diam / 2);
+        focusLocs.push_back(Pos2(x, y));
     }
 }
 
@@ -314,7 +283,7 @@ void TerrainGen::stretchToFill()
             world.set(copy.get(minx + float(i) / WORLD_SIZE * (maxx - minx), miny + float(j) / WORLD_SIZE * (maxy - miny)), i, j);
         }
     }
-    smooth();
+    world.smooth();
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)

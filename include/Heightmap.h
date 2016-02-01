@@ -27,6 +27,7 @@ public:
     void add(const Heightmap& rval);
     void add(short val, int x, int y);
     void add(short val, Pos2 loc);
+    void smooth(int iters = 1);
     bool validPoint(int x, int y) const;
     int getSteepness(int x, int y); //get a relative measure of steepness
     int getSteepness(Pos2 loc);

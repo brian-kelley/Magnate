@@ -396,3 +396,27 @@ void Heightmap::setSize(int x, int y)
     w = x;
     h = y;
 }
+
+
+void Heightmap::smooth(int iters)
+{
+    Heightmap copy(w, h);
+    for(int it = 0; it < iters; it++)
+    {
+        copy.set(0);
+        copy.add(*this);
+        for(int i = 1; i < w - 1; i++)
+        {
+            for(int j = 1; j < h - 1; j++)
+            {
+                int sum = 0;
+                sum += copy.get(i, j);
+                sum += copy.get(i + 1, j);
+                sum += copy.get(i - 1, j);
+                sum += copy.get(i, j + 1);
+                sum += copy.get(i, j - 1);
+                set(sum / 5, i, j);
+            }
+        }
+    }
+}
