@@ -1,7 +1,6 @@
 #ifndef __TERRAIN_GEN_H__
 #define __TERRAIN_GEN_H__
 
-#define ROUGHNESS 2.0
 #include <iostream>
 #include <queue>
 #include "GlobalConfig.h"
@@ -10,58 +9,35 @@
 #include "Watershed.h"
 #include "Heightmap.h"
 
-typedef short Height;
-
 struct TerrainGen
 {
     TerrainGen();
     Heightmap& world;
     Heightmap& biomes;
     void generate();
-    void diamondSquare();
     void defuzz();       //remove non-water tiles that are surrounded by water on at least 3 sides (adjacent)
     void flattenWater(); //force water tiles to have constant height at all 4 corners
-    void fillSquare(int x, int y, int size);
-    void fillDiamond(int x, int y, int size);
-    //Tests whether the mesh
-    bool inMesh(int x, int y);
-    Height getHeight(int avg, int size);
+    short getHeight(int avg, int size);
     void scatterVolcanos();
     void addVolcano(int x, int y, short height, int radius); //create a cone-shaped hill (or cone-shaped pit if height < 0)
-    void erode(int numTimesteps); //do one timestep's worth of erosion
     void clearAll();  //fill world with water at sea level
-    void pyramidMask(); //lower elevation corresponding to distance from world center, so that around the edges is only water
     void sphereMask();
     void clampSeaLevel();
-    /*
-     max of height values of four corners of tile
-     */
-    Height maxHeightOfTile(Pos2 loc);
-    void tester();
+    void simpleBiomes();
+    short maxHeightOfTile(Pos2 loc);
     void defaultGen();
-    void shelfMask();  //simulate continental shelf by lowering ground near world boundary. Shaped like beveled square.
     void smooth(int iters = 1);
-    void fancySmooth();
     void scatterCentralVolcanoes();
     void addEntropy();
     void verticalNormalize();
     void stretchToFill();
-    Height* getHeightBuffer(); //Return a copy of world's heightmap
     void combinedGen();
-    void addBuffer(Height* buf); //Add buffer over world's current heightmap
-    Height getAverageHeight();   //Get average height of non-ocean tiles
-    Height getMaxHeight();
+    short getAverageHeight();   //Get average height of non-ocean tiles
+    short getMaxHeight();
     float getLandArea();           //# non-water tiles as proportion
-    void addWatershed(float cutoff, Height maxH, Height avgH);
-    void placeRivers(float headAlt, int num);
-    int floodToHeight(Pos2 lastRiver, Height flood, bool markBoundary = false);
-    Height getFloodHeight(Pos2 lastRiver);
-    bool findOutlet(Pos2 lastRiver, Pos2& result);
-    void fillToHeight(Pos2 pos, Height flood);
-    void removeLake(Pos2 pos);
-    void riverHeightAdjust();
+    void addWatershed(float cutoff, short maxH, short avgH);
     void scaleHeight(int target, int maxH);
-    void unsmooth(Height maxH);
+    void unsmooth(short maxH);
 };
 
 #endif
