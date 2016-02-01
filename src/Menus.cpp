@@ -47,7 +47,6 @@ void Menus::initAll()
     deleteConfirmLabel = new Label(20, 20, 600, 80, StickyDirs::top | StickyDirs::left | StickyDirs::right, "", deleteConfirmMenu);
     new Button(400, 300, 100, 50, StickyDirs::none, "OK", deleteOK, deleteConfirmMenu);
     new Button(240, 300, 100, 50, StickyDirs::none, "Cancel", deleteCancel, deleteConfirmMenu);
-    new Label(320, 100, 630, 50, StickyDirs::none, "Are you sure you want to delete", deleteConfirmMenu);
     renameMenu = new Scene;
     renamingField = new Field(20, 50, 600, 50, StickyDirs::none, "", Callback(nullptr), renameMenu);
     new Button(250, 250, 100, 50, StickyDirs::none, "OK", Callback(renameOK), renameMenu);
@@ -145,7 +144,7 @@ void Menus::createOK(void* inst, void *arg)
         else
         {
             SaveManager::loadWorld(newName);
-            GUI::transition(saveMenu);
+            GUI::transition(gameScene);
         }
     }
 }
@@ -177,6 +176,7 @@ void Menus::saveToDelete(void* inst, void*)
 {
     if(saveSelect->getSelection() != -1)
     {
+        GUI::transition(deleteConfirmMenu);
         //Initialize delete label text
         string text = "Are you sure you want to delete \"" + saveSelect->getSelectionText() + "\"?";
         deleteConfirmLabel->getText() = text;
