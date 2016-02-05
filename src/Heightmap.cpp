@@ -445,23 +445,19 @@ void Heightmap::landHeightDist(short targetMax, float k)
         occur[i] = n;
         n += temp;
     }
+    //now n has total number of nonzero tiles
     //Array of the new values, indexed by old values
     short* newVals = new short[maxVal];
     newVals[0] = 0;
     for(int i = 1; i < maxVal; i++)
     {
-        //This function demonstrated in "misc/Altitude distribution.gcx"
-        int nv = (targetMax*n*k)/(n*(1+k)-occur[i])*(float(targetMax)/(targetMax-(k*targetMax)/(1+k)))-k*targetMax+1;
-        //int nv = 1 + (targetMax * n * k) / (n*(1+k) - occur[i]);
-        DBASSERT(nv < SHRT_MAX);
-        DBASSERT(nv > SHRT_MIN);
+        //This crazy function demonstrated in "misc/Altitude distribution.gcx"
+        //output values range from exactly 1 to exactly targetMax, as input goes from 0 to n
+        long double nv = (long double) targetMax * n * k * (long double) targetMax / (long double) ((n * (1+k) - occur[i]) * (targetMax - (k*targetMax)/(1+k))) - k * targetMax + 1;
+        DBASSERT(nv < SHRT_MAX);        //do the math with high precision,
+        DBASSERT(nv > SHRT_MIN);        //but end result must fit in s16
         newVals[i] = nv;
     }
-    for(int i = 1; i < 10; i++)
-    {
-        cout << i << " -> " << newVals[i] << " with occur " << occur[i] << endl;
-    }
-    //now n has total number of nonzero tiles
     Heightmap copy = *this;
     //now assign new heights back into this, based on copy's values
     for(int i = 0; i < w; i++)

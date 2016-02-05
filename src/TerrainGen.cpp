@@ -34,10 +34,9 @@ void TerrainGen::generate()
     TIMEIT(assignBiomes());
     TIMEIT(defuzz());
     TIMEIT(unsmooth(targetMax));
-    TIMEIT(addWatershed(0.2, targetMax, avgH));
+    TIMEIT(addWatershed(0.3, targetMax, avgH));
     TIMEIT(flattenWater());
-    //TIMEIT(world.landHeightDist(getMaxHeight(), 1000));
-    PRINT("Difference between target and actual is " << abs(world.getMax() - targetMax));
+    TIMEIT(world.landHeightDist(getMaxHeight(), 0.05));
 }
 
 void TerrainGen::defuzz()

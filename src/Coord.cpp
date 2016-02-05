@@ -6,7 +6,7 @@ using namespace std;
 mat4 Coord::tileToWorldMat;
 mat4 Coord::worldToTileMat;
 const double Coord::TERRAIN_TILE_SIZE = 0.5;
-const double Coord::TERRAIN_Y_SCALE = 0.005;
+const double Coord::TERRAIN_Y_SCALE = 0.001;
 const vec4 Coord::tileI = {TERRAIN_TILE_SIZE, 0, 0, 0};
 const vec4 Coord::tileJ = {0, TERRAIN_Y_SCALE, 0, 0};
 const vec4 Coord::tileK = {0, 0, TERRAIN_TILE_SIZE, 0};
