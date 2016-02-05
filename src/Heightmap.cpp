@@ -427,8 +427,7 @@ void Heightmap::landHeightDist(short targetMax, float k)
     cout << "k: " << k << endl;
     int maxVal = getMax() + 1;
     int* occur = new int[maxVal];
-    for(int i = 0; i < maxVal; i++)
-        occur[i] = 0;
+    memset(occur, 0, sizeof(int) * SHRT_MAX);
     for(int i = 0; i < w; i++)
     {
         for(int j = 0; j < h; j++)
@@ -482,4 +481,41 @@ short Heightmap::getMax()
         }
     }
     return maxVal;
+}
+
+void Heightmap::linearDist(short targetMin, short targetMax)
+{
+    int* occur = new int[SHRT_MAX];
+    memset(occur, 0, sizeof(int) * SHRT_MAX);
+    for(int i = 0; i < w; i++)
+    {
+        for(int j = 0; j < h; j++)
+        {
+            if(get(i, j) >= 0)
+                occur[get(i, j)]++;
+        }
+    }
+    int n = 0;
+    for(int i = 0; i < SHRT_MAX; i++)
+    {
+        int temp = occur[i];
+        occur[i] = n;
+        n += temp;
+    }
+    short* newVals = new short[SHRT_MAX];
+    for(int i = 0; i < SHRT_MAX; i++)
+    {
+        newVals[i] = targetMin + (double(occur[i]) / n) * (targetMax - targetMin);
+    }
+    Heightmap copy = *this;
+    for(int i = 0; i < w; i++)
+    {
+        for(int j = 0; j < h; j++)
+        {
+            if(copy.get(i, j) >= 0)
+                set(newVals[copy.get(i, j)], i, j);
+        }
+    }
+    delete[] occur;
+    delete[] newVals;
 }

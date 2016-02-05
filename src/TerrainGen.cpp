@@ -340,7 +340,7 @@ float TerrainGen::getLandArea()
 
 void TerrainGen::addWatershed(float cutoff, short maxH, short avgH)
 {
-    Watershed(30, avgH + cutoff * (maxH - avgH));
+    Watershed(20, avgH + cutoff * (maxH - avgH));
 }
 
 short TerrainGen::getMaxHeight()
@@ -415,21 +415,23 @@ void TerrainGen::simpleBiomes()
 void TerrainGen::assignBiomes()
 {
     Heightmap rainfall(WORLD_SIZE, WORLD_SIZE);
-    rainfall.diamondSquare(5, 0, 0, false);
+    rainfall.diamondSquare(4, 0, 0, false);
     rainfall.normalize();
-    float heightScale = 1000.0 / (SHRT_MAX - 50);
+    rainfall.linearDist(0, 1000);
+    float heightScale = 0.5 * (1000.0 / world.getMax());
     Heightmap temperature(WORLD_SIZE, WORLD_SIZE);
-    temperature.diamondSquare(10, 0, 0, false);
-    temperature.normalize(300);
+    temperature.diamondSquare(4, 0, 0, false);
+    temperature.normalize();
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
         {
             temperature.add(-world.get(i, j) * heightScale, i, j);  //Higher = colder
-            temperature.add(-1.3 * abs(WORLD_SIZE / 2 - j), i, j);     //Higher latitude = colder
+            temperature.add(-1.3 * abs(WORLD_SIZE / 2 - i), i, j);     //Higher latitude = colder
         }
     }
     temperature.normalize();
+    temperature.linearDist(0, 1000);
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
@@ -455,8 +457,8 @@ Ground TerrainGen::getGround(int temperature, int wetness, int altitude)
     }
     else
     {
-        //Non-mountainous heights
-        if(wetness > 800)
+        //Non-mountainous
+        if(wetness > 800 && temperature > 700)
             //wet
             return RAINFOREST;
         else if(wetness < 300)

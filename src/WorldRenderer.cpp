@@ -6,8 +6,8 @@ using namespace glm;
 
 WorldRenderer::WorldRenderer() :
 sunlight(0.3, 0.9055, 0.3),
-ambientWeight(0.3),
-diffuseWeight(0.7),
+ambientWeight(0.1),
+diffuseWeight(0.9),
 vbo(VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * 4, VBO::v3D, GL_DYNAMIC_DRAW)
 {
     createUVCache();

@@ -30,8 +30,8 @@ Color4 Minimap::colorFromTerrain(Ground g)
             return rv;
         case RAINFOREST:
             rv.r = 0x00;
-            rv.g = 0x80;
-            rv.b = 0x10;
+            rv.g = 0x50;
+            rv.b = 0x0A;
             return rv;
         case DECID_FOREST:
         case BOREAL_FOREST:
