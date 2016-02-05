@@ -12,6 +12,7 @@
 #include "RandomUtils.h"
 #include "Heightmap.h"
 #include "Broadcaster.h"
+#include "Building.h"
 
 class World
 {
@@ -30,6 +31,7 @@ private:
     static bool drawing;
     static Heightmap height;
     static Heightmap biomes;
+    static std::vector<Building> buildings;
     static std::string saveName;
     static unsigned seed;
 };

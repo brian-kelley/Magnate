@@ -6,37 +6,38 @@ using namespace Coord;
 
 TerrainGen::TerrainGen() : world(World::getHeights()), biomes(World::getBiomes()), rainfall(WORLD_SIZE, WORLD_SIZE)
 {
-    RandomUtils::seed(12);
+    RandomUtils::seed(clock());
     generate();
     //analyzeBiomes();
 }
 
 void TerrainGen::generate()
 {
-    clock_t start = clock();
-    RandomUtils::seed(start);
     clearAll(); //prevent invalid height/ground in world
     //Generate one buffer
-    getDSLayer();
-    stretchToFill();
+    TIMEIT(getDSLayer());
+    TIMEIT(stretchToFill());
     //Save the first buffer
     Heightmap first = world;
     //Generate another buffer
     clearAll();
-    getDSLayer();
-    stretchToFill();
+    TIMEIT(getDSLayer());
+    TIMEIT(stretchToFill());
     //Combine them
     world.add(first);
-    world.smooth(2);
+    TIMEIT(world.smooth(2));
+    TIMEIT(correctOceans());
+    short targetMax = 10000;
     short avgH = getAverageHeight();
-    short maxH = getMaxHeight();
-    //Erosion e(world, focusLocs);
-    unsmooth(maxH);
-    assignBiomes();                 //this intializes [0,1000) rainfall map
-    defuzz();
-    addWatershed(0.6, maxH, avgH);
-    scaleHeight(WORLD_SIZE / 2, getMaxHeight());
-    flattenWater();
+    //Erosion e(world);
+    TIMEIT(scaleHeight(targetMax, world.getMax()));
+    TIMEIT(assignBiomes());
+    TIMEIT(defuzz());
+    TIMEIT(unsmooth(targetMax));
+    TIMEIT(addWatershed(0.2, targetMax, avgH));
+    TIMEIT(flattenWater());
+    //TIMEIT(world.landHeightDist(getMaxHeight(), 1000));
+    PRINT("Difference between target and actual is " << abs(world.getMax() - targetMax));
 }
 
 void TerrainGen::defuzz()
@@ -340,7 +341,7 @@ float TerrainGen::getLandArea()
 
 void TerrainGen::addWatershed(float cutoff, short maxH, short avgH)
 {
-    Watershed(50, avgH + cutoff * (maxH - avgH));
+    Watershed(30, avgH + cutoff * (maxH - avgH));
 }
 
 short TerrainGen::getMaxHeight()
@@ -374,7 +375,6 @@ void TerrainGen::scaleHeight(int target, int maxH)
 
 void TerrainGen::unsmooth(short maxH)
 {
-    scaleHeight(5 * maxH, maxH);
     for(int i = 0; i < WORLD_SIZE; i++)
     {
         for(int j = 0; j < WORLD_SIZE; j++)
@@ -416,7 +416,7 @@ void TerrainGen::simpleBiomes()
 void TerrainGen::assignBiomes()
 {
     Heightmap rainfall(WORLD_SIZE, WORLD_SIZE);
-    rainfall.diamondSquare(10, 0, 0, false);
+    rainfall.diamondSquare(5, 0, 0, false);
     rainfall.normalize();
     float heightScale = 1000.0 / (SHRT_MAX - 50);
     Heightmap temperature(WORLD_SIZE, WORLD_SIZE);
@@ -427,7 +427,7 @@ void TerrainGen::assignBiomes()
         for(int j = 0; j < WORLD_SIZE; j++)
         {
             temperature.add(-world.get(i, j) * heightScale, i, j);  //Higher = colder
-            temperature.add(-3 * abs(WORLD_SIZE / 2 - j), i, j);     //Higher latitude = colder
+            temperature.add(-1.3 * abs(WORLD_SIZE / 2 - j), i, j);     //Higher latitude = colder
         }
     }
     temperature.normalize();
@@ -501,5 +501,51 @@ void TerrainGen::analyzeBiomes()
         occur[i] *= 100;
         if(occur[i] > 1)
             printf("%-15s: %f\n", Terrain::getName(Ground(i)).c_str(), occur[i]);
+    }
+}
+
+void TerrainGen::correctOceans()
+{
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(world.get(i, j) <= 0)
+                biomes.set(OCEAN_SEARCHED, i, j);
+            else
+                biomes.set(DESERT, i, j);
+        }
+    }
+    Pos2 loc = {0, 0};  //tile that should always be ocean and at sea level
+    DBASSERT(biomes.get(loc) == OCEAN_SEARCHED);
+    //Flood fill the ocean with a utility tile
+    queue<Pos2> q;
+    q.push(loc);
+    while(q.size())
+    {
+        auto proc = q.front();
+        q.pop();
+        if(biomes.get(proc) == OCEAN_SEARCHED)
+        {
+            biomes.set(WATER, proc);
+            for(int dir = UP; dir <= RIGHT; dir++)
+            {
+                Pos2 nei = getTileInDir(proc, dir);
+                if(biomes.validPoint(nei.x, nei.y) && biomes.get(nei) == OCEAN_SEARCHED)
+                    q.push(nei);
+            }
+        }
+    }
+    //Now scan for tiles that are still ocean and convert them to flat, low ground
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
+        {
+            if(biomes.get(i, j) == OCEAN_SEARCHED)
+            {
+                biomes.set(DESERT, i, j);
+                world.add(2, i, j);
+            }
+        }
     }
 }

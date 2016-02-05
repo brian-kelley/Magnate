@@ -42,6 +42,9 @@ public:
     Heightmap& operator=(Heightmap& hm);
     int getW() const;
     int getH() const;
+    //Adjusts heights to a 1/(n-x) histogram of heights. Larger k = more linear.
+    void landHeightDist(short targetMax, float k);
+    short getMax();
 private:
     short calcVal(int avg, int size, double roughness);
     int w;

@@ -1,5 +1,25 @@
--Mountain peaks - minimum spanning tree over hexagonal grid points?
--some form of erosion to make river valleys
--finalize biome areas, make equatorial/polar biomes have smoother transition
--texture generation for each biome
--Procedural terrain texture tesselation and tiling
+<><><><><><><><><>
+< HIGH PRIORITY  >
+<><><><><><><><><>
+
+-Extensible building rendering system for later models
+-Meshification of the heightmap (triangles)
+-Building placement (find location on tiles, check if suitable)
+-Rail placement
+-Train stations
+-Train movement
+
+<><><><><><><><><>
+< MEDIUM PRIORITY>
+<><><><><><><><><>
+
+-Train pathfinding
+
+<><><><><><><><><>
+<  LOW PRIORITY  >
+<><><><><><><><><>
+
+-Procedural terrain texture generation, tesselation and rendering 
+-Prettier fonts
+-Prettier UI components
+

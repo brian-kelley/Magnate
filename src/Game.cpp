@@ -15,7 +15,7 @@ Game::Game() : renderer()
     Input::dt = 0;
     Menus::bc.addListener(this, processMenuEvent);
     //Load a test world
-    //debugInit();
+    debugInit();
     mainLoop();
 }
 

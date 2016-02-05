@@ -1,3 +1,3 @@
 #!/bin/bash
 
-./sloc.pl include/ src/
+sloc.pl include/ src/

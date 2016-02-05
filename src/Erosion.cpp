@@ -5,46 +5,58 @@ using namespace Coord;
 using namespace RandomUtils;
 using namespace GlobalConfig;
 
-Erosion::Erosion(Heightmap& worldHeights, vector<Pos2>& focusLocs) : world(worldHeights), hitMap(WORLD_SIZE, WORLD_SIZE)
+Erosion::Erosion(Heightmap& worldHeights) : world(worldHeights), erosionMap(WORLD_SIZE, WORLD_SIZE), hitMap(WORLD_SIZE, WORLD_SIZE)
 {
+    PRINT("Starting erosion...");
     //TODO: How many runners are needed?
     //How is that affected by world size?
-    hitMap.set(0);
-    for(int i = 0; i < focusLocs.size(); i++)
+    erosionMap.set(0);
+    const int n = 100000;
+    const int step = n / 10;
+    for(int i = 0; i < n; i++)
     {
-        for(int j = 0; j < 20000 / focusLocs.size(); j++)
+        simpleRunner();
+        if(i % step == 0)
+            cout << "i = " << i << endl;
+    }
+    erosionMap.normalize(maxChange);
+    world += erosionMap;
+    for(int i = 0; i < WORLD_SIZE; i++)
+    {
+        for(int j = 0; j < WORLD_SIZE; j++)
         {
-            simpleRunner(focusLocs[i]);
+            if(world.get(i, j) < 0)
+                world.set(0, i, j);
         }
     }
-    world.smooth();
+    PRINT("Done with erosion");
 }
 
-void Erosion::simpleRunner(Pos2 focus)
+void Erosion::simpleRunner()
 {
     Pos2 loc;
     do
     {
-        loc.x = focus.x + (gen() % focusRad) - (focusRad / 2);
-        loc.y = focus.y + (gen() % focusRad) - (focusRad / 2);
+        loc.x = gen() % WORLD_SIZE;
+        loc.y = gen() % WORLD_SIZE;
     }
     while(world.get(loc) <= 0);
     while(world.get(loc) > 0)
     {
-        hitMap.add(1, loc);
         int downhill = getDownhill(loc);
         if(downhill == NO_DIRECTION)
         {
-            world.add(1, loc);
+            erosionMap.add(1, loc);
             break;
         }
         else
         {
-            world.add(-1, loc);
+            erosionMap.add(-1, loc);
             loc = getTileInDir(loc, downhill);
-            if(hitMap.get(loc) > maxHits)
-                break;
         }
+        hitMap.add(1, loc);
+        if(hitMap.get(loc) == maxHits)
+            break;
     }
 }
 

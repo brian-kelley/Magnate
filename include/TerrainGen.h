@@ -41,6 +41,8 @@ struct TerrainGen
     void addWatershed(float cutoff, short maxH, short avgH);
     void scaleHeight(int target, int maxH);
     void unsmooth(short maxH);
+    void correctOceans();          //make sure that all y=0 tiles connect directly to the ocean
+    void logisticHeightDist();
     void analyzeBiomes();
 };
 

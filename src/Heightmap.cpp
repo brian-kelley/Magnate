@@ -420,3 +420,70 @@ void Heightmap::smooth(int iters)
         }
     }
 }
+
+void Heightmap::landHeightDist(short targetMax, float k)
+{
+    cout << "t: " << targetMax << endl;
+    cout << "k: " << k << endl;
+    int maxVal = getMax() + 1;
+    int* occur = new int[maxVal];
+    for(int i = 0; i < maxVal; i++)
+        occur[i] = 0;
+    for(int i = 0; i < w; i++)
+    {
+        for(int j = 0; j < h; j++)
+        {
+            if(get(i, j) > 0)
+                occur[get(i, j)]++;
+        }
+    }
+    //Make occur cumulative
+    int n = 0;
+    for(int i = 1; i < maxVal; i++)
+    {
+        int temp = occur[i];
+        occur[i] = n;
+        n += temp;
+    }
+    //Array of the new values, indexed by old values
+    short* newVals = new short[maxVal];
+    newVals[0] = 0;
+    for(int i = 1; i < maxVal; i++)
+    {
+        //This function demonstrated in "misc/Altitude distribution.gcx"
+        int nv = (targetMax*n*k)/(n*(1+k)-occur[i])*(float(targetMax)/(targetMax-(k*targetMax)/(1+k)))-k*targetMax+1;
+        //int nv = 1 + (targetMax * n * k) / (n*(1+k) - occur[i]);
+        DBASSERT(nv < SHRT_MAX);
+        DBASSERT(nv > SHRT_MIN);
+        newVals[i] = nv;
+    }
+    for(int i = 1; i < 10; i++)
+    {
+        cout << i << " -> " << newVals[i] << " with occur " << occur[i] << endl;
+    }
+    //now n has total number of nonzero tiles
+    Heightmap copy = *this;
+    //now assign new heights back into this, based on copy's values
+    for(int i = 0; i < w; i++)
+    {
+        for(int j = 0; j < h; j++)
+        {
+            set(newVals[copy.get(i, j)], i, j);
+        }
+    }
+    delete[] newVals;
+    delete[] occur;
+}
+
+short Heightmap::getMax()
+{
+    short maxVal = SHRT_MIN;
+    for(int i = 0; i < w; i++)
+    {
+        for(int j = 0; j < h; j++)
+        {
+            maxVal = max(get(i, j), maxVal);
+        }
+    }
+    return maxVal;
+}

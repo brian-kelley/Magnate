@@ -21,6 +21,7 @@ enum Ground : unsigned char
     //Utilties
     OUTLET_SEARCHED, //marks tiles visited by lake outlet searching
     LAKE_BOUNDARY,   //marks tiles of lakes under construction
+    OCEAN_SEARCHED,  //marks real ocean tiles
     NUM_TYPES
 };
 

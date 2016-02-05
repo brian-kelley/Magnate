@@ -14,14 +14,16 @@
 class Erosion
 {
 public:
-    Erosion(Heightmap& worldHeights, std::vector<Pos2>& focusLocs);
+    Erosion(Heightmap& worldHeights);
 private:
-    void simpleRunner(Pos2 focus);
+    void simpleRunner();
     int getDownhill(Pos2 loc);
+    void normalizeAndAdd();
     Heightmap& world;
+    Heightmap erosionMap;
     Heightmap hitMap;
-    static constexpr int focusRad = 100;
     static constexpr int maxHits = 80;
+    static constexpr int maxChange = 50;
 };
 
 #endif
