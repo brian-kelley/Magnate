@@ -5,9 +5,6 @@ using namespace Coord;
 using namespace glm;
 
 WorldRenderer::WorldRenderer() :
-sunlight(0.3, 0.9055, 0.3),
-ambientWeight(0.1),
-diffuseWeight(0.9),
 vbo(VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * 4, VBO::v3D, GL_DYNAMIC_DRAW)
 {
     createUVCache();
@@ -56,10 +53,6 @@ void WorldRenderer::getTileQuad(int quadIndex, int x, int z)
     quad[3].pos = tileToWorld(x, heights.get(x, z + 1), z + 1).xyz();
     //get normal to produce color (on CPU)
     vec3 normal = normalize(cross(quad[1].pos - quad[3].pos, quad[0].pos - quad[2].pos));
-    float diffuse = dot(normal, sunlight);
-    if(diffuse < 0)
-        diffuse = 0;
-    float light = diffuse * diffuseWeight + ambientWeight;
     auto ground = terrain.get(x, z);
     if(ground == 0)
     {
@@ -70,11 +63,11 @@ void WorldRenderer::getTileQuad(int quadIndex, int x, int z)
     quad[1].texcoord = uvCache[ground * 4 + 1];
     quad[2].texcoord = uvCache[ground * 4 + 2];
     quad[3].texcoord = uvCache[ground * 4 + 3];
-    Color4 color = {(unsigned char)(light * 255), (unsigned char)(light * 255), (unsigned char)(light * 255), 255};
-    quad[0].color = color;
-    quad[1].color = color;
-    quad[2].color = color;
-    quad[3].color = color;
+    //Color4 color = {(unsigned char)(light * 255), (unsigned char)(light * 255), (unsigned char)(light * 255), 255};
+    quad[0].norm = normal;
+    quad[1].norm = normal;
+    quad[2].norm = normal;
+    quad[3].norm = normal;
 }
 
 void WorldRenderer::allocChunk(Pos2 pos)

@@ -29,14 +29,11 @@ private:
     void getTileQuad(int quadIndex, int x, int z);
     Pos2 centerChunk; //chunk at center of view
     TexCoord uvCache[Ground::NUM_TYPES * 4];
-    glm::vec3 sunlight; //eventually could make this dynamic (day-night cycle?)
     static const int CHUNK_SIZE = 32;      //64 tiles on a side
     static const int VBO_CHUNKS = 81;      //5x5 grid
     static const short CHUNK_FREE = 0x7FFF; //value for x to mark free chunk
     Vertex3D* vertexBuf;             //Scratch buffer for a single chunk before sending to GPU
     Pos2* chunkAlloc;                //Fixed-length list of chunks that are currently in VBO
-    const float ambientWeight = 0.3; //Eventual TODO: Have fancy shaders where different materials have different lighting properties
-    const float diffuseWeight = 0.7;
     VBO vbo;
 };
 

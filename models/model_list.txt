@@ -1,0 +1,2 @@
+#Format: model_name model_obj_file targetUVSize
+sphereTank sphereTank.obj 256

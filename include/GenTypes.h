@@ -73,17 +73,18 @@ struct Color4
 
 struct Vertex2D
 {
-    Color4 color;
-    TexCoord texcoord;
-    Pos2 pos;
+    Color4 color;       //4
+    TexCoord texcoord;  //4
+    Pos2 pos;           //4
 }; //12 bytes total
 
 struct Vertex3D
 {
-    Color4 color;
-    TexCoord texcoord;
-    Pos3 pos;
-}; //20 bytes total
+    Color4 color;       //4
+    TexCoord texcoord;  //4
+    Pos3 pos;           //12
+    Pos3 norm;          //12
+}; //32 bytes total
 
 std::ostream& operator<<(std::ostream& os, const Rectangle& r);
 u32 getColor32(u8 r, u8 g, u8 b, u8 a = 0xFF);

@@ -3,7 +3,7 @@
 <><><><><><><><><>
 
 -Extensible building rendering system for later models
--Meshification of the heightmap (triangles)
+-How to construct 3D models for buildings and vehicles
 -Building placement (find location on tiles, check if suitable)
 -Rail placement
 -Train stations

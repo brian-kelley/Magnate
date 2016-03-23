@@ -19,8 +19,10 @@ private:
     GLuint programID;
     GLuint vshadeID;
     GLuint fshadeID;
+    GLuint modelLoc;
     GLuint viewLoc;
     GLuint projLoc;
+    GLuint sunLoc;
 };
 
 #endif

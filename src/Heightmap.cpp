@@ -423,8 +423,6 @@ void Heightmap::smooth(int iters)
 
 void Heightmap::landHeightDist(short targetMax, float k)
 {
-    cout << "t: " << targetMax << endl;
-    cout << "k: " << k << endl;
     int maxVal = getMax() + 1;
     int* occur = new int[maxVal];
     memset(occur, 0, sizeof(int) * SHRT_MAX);
