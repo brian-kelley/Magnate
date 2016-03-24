@@ -39,8 +39,8 @@ class VBO
 public:
     enum Type
     {
-        v3D,     //use Vertex3D (for terrain & models)
-        v2D      //use Vertex2D (for GUI)
+        v3D,     //use Vertex3D
+        v2D      //use Vertex2D
     };
     VBO(int numVertices, Type type, int updateHint);
     void resize(int numVertices);
@@ -59,8 +59,6 @@ private:
     static int colorAttribLoc;
     static int texCoordAttribLoc;
     static int posAttribLoc;
-    static int normAttribLoc;
-    static int useNormalsLoc;
     static VBO* currentBound;
 };
 

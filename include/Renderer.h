@@ -29,6 +29,7 @@ private:
     Shaders shaders;
     WorldRenderer worldRend;
     UIRenderer uiRend;
+    GLuint modelLoc;
     GLuint projLoc;
     GLuint viewLoc;
 };

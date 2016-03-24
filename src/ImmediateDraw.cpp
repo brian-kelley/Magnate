@@ -29,6 +29,7 @@ void ImmediateDraw::draw()
     //make sure VBO is big enough (do not shrink if there is extra space)
     if(numVertices > vbo.getNumVertices())
         vbo.resize(numVertices);
+    PRINT("Writing " << quadIndex << " vertices to vbo");
     vbo.writeData(0, quadIndex, &quadVertices[0]);
     vbo.writeData(quadIndex, lineIndex, &lineVertices[0]);
     vbo.drawWithClip(0, quadIndex, GL_QUADS, clipMarkers);
@@ -61,7 +62,7 @@ void ImmediateDraw::vertex2i(short x, short y)
     if(!texturesEnabled)
         state.texcoord = {-1, -1};
     state.pos = {x, y};
-    if(quadIndex < quadVertices.size())
+    if(quadIndex < int(quadVertices.size()))
         quadVertices[quadIndex] = state;
     else
         quadVertices.push_back(state);
@@ -73,7 +74,7 @@ void ImmediateDraw::lineVertex2i(short x, short y)
 {
     state.texcoord = {-1, -1};
     state.pos = {x, y};
-    if(lineIndex < lineVertices.size())
+    if(lineIndex < int(lineVertices.size()))
         lineVertices[lineIndex] = state;
     else
         lineVertices.push_back(state);
@@ -107,7 +108,7 @@ void ImmediateDraw::disableTextures()
 
 void ImmediateDraw::drawString(std::string& text, int x, int y, int w, int h)
 {
-    for(int i = 0; i < text.size(); i++)
+    for(int i = 0; i < int(text.size()); i++)
     {
         genericBlitChar(text[i], {x + w * i, y, w, h});
     }
@@ -116,7 +117,7 @@ void ImmediateDraw::drawString(std::string& text, int x, int y, int w, int h)
 void ImmediateDraw::drawStringScaled(std::string& text, Rectangle dest)
 {
     int glyphW = 0.5 + double(dest.w) / text.length();
-    for(int i = 0; i < text.size(); i++)
+    for(int i = 0; i < int(text.size()); i++)
     {
         genericBlitChar(text[i], {dest.x + glyphW * i, dest.y, glyphW, dest.h});
     }

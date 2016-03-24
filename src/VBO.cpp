@@ -5,8 +5,6 @@ using namespace std;
 int VBO::colorAttribLoc = -1;
 int VBO::texCoordAttribLoc = -1;
 int VBO::posAttribLoc = -1;
-int VBO::normAttribLoc = -1;
-int VBO::useNormalsLoc = -1;
 VBO* VBO::currentBound = nullptr;
 
 VBO::VBO(int numVertices, Type type, int updateHint)
@@ -84,10 +82,11 @@ void VBO::drawWithClip(int startIndex, int verticesToDraw, int geom, const vecto
 void VBO::loadAttribLocs(int programID)
 {
     colorAttribLoc = glGetAttribLocation(programID, "color");
+    GLERR;
     texCoordAttribLoc = glGetAttribLocation(programID, "texCoord");
+    GLERR;
     posAttribLoc = glGetAttribLocation(programID, "vertex");
-    normAttribLoc = glGetAttribLocation(programID, "normal");
-    useNormalsLoc = glGetUniformLocation(programID, "useNormals");
+    GLERR;
     glEnableVertexAttribArray(colorAttribLoc);
     glEnableVertexAttribArray(texCoordAttribLoc);
     glEnableVertexAttribArray(posAttribLoc);
@@ -110,19 +109,12 @@ void VBO::bind()
     glBindBuffer(GL_ARRAY_BUFFER, vboID);
     if(type == v3D)
     {
-        //Enable normals
-        glEnableVertexAttribArray(normAttribLoc);
-        glUniform1i(useNormalsLoc, 1);
         glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex3D), (GLvoid*) 0);
         glVertexAttribPointer(texCoordAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 4);
         glVertexAttribPointer(posAttribLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 8);
-        glVertexAttribPointer(normAttribLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 20);
     }
     else if(type == v2D)
     {
-        //Disable normals (not used for 2D)
-        glDisableVertexAttribArray(normAttribLoc);
-        glUniform1i(useNormalsLoc, 0);
         glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex2D), (GLvoid*) 0);
         glVertexAttribPointer(texCoordAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex2D), (GLvoid*) 4);
         glVertexAttribPointer(posAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex2D), (GLvoid*) 8);
