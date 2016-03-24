@@ -29,7 +29,6 @@ void ImmediateDraw::draw()
     //make sure VBO is big enough (do not shrink if there is extra space)
     if(numVertices > vbo.getNumVertices())
         vbo.resize(numVertices);
-    PRINT("Writing " << quadIndex << " vertices to vbo");
     vbo.writeData(0, quadIndex, &quadVertices[0]);
     vbo.writeData(quadIndex, lineIndex, &lineVertices[0]);
     vbo.drawWithClip(0, quadIndex, GL_QUADS, clipMarkers);

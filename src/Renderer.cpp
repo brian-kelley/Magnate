@@ -13,7 +13,7 @@ uiRend()
     viewLoc = shaders.getViewMatLoc();
     projLoc = shaders.getProjMatLoc();
     //modelLoc = shaders.getModelMatLoc();
-    Atlas::init("main", win.getRenderer());
+    Atlas::init("main");
 }
 
 void Renderer::update()

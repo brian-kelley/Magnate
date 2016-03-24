@@ -1,10 +1,9 @@
 #ifndef __BROADCASTER_H__
 #define __BROADCASTER_H__
 
-#include "DebugTools.h"
-#include <iostream>
 #include <vector>
 #include <algorithm>
+#include <string>
 
 //Listener is the type that implements the Callback
 //Msg is the type that the Broadcaster sends out

@@ -37,7 +37,6 @@ import ycm_core
 flags = [
 '-Wall',
 '-Wextra',
-'-Werror',
 '-fexceptions',
 '-std=c++11',
 '-x',

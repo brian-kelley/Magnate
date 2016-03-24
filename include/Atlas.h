@@ -1,17 +1,11 @@
 #ifndef __ATLAS_H__
 #define __ATLAS_H__
 
-#include <iostream>
-#include <string>
-#include <ios>
-#include <fstream>
-#include <vector>
-#include <map>
-#include <stdexcept>
 #include "GenTypes.h"
-#include "DebugTools.h"
 #include "SdlHeaders.h"
-#include "FileIO.h"
+#include <map>
+#include <vector>
+#include <boost/filesystem.hpp>
 
 struct Texture
 {
@@ -25,13 +19,13 @@ struct Texture
 class Atlas
 {
 public:
-    static void init(std::string imageName, SDL_Renderer* renderer);
+    static void init(std::string imageName);
     static int tileFromName(std::string tilename);
     static const Texture& textureFromName(std::string texname);
     static const Texture& textureFromID(int id);
     static int tileFromChar(char c);
     static void sendImage(Color4* pixels, int texID);
-    static const GLuint getTextureID();
+    static GLuint getTextureID();
     static int getFontW();
     static int getFontH();
 private:

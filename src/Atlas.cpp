@@ -1,4 +1,11 @@
+#include <iostream>
+#include <string>
+#include <ios>
+#include <fstream>
+#include <stdexcept>
 #include "Atlas.h"
+#include "DebugTools.h"
+#include "FileIO.h"
 
 using namespace std;
 using namespace boost::filesystem;
@@ -11,7 +18,7 @@ int Atlas::fontH;
 GLuint Atlas::textureID;
 
 //Call this to initialize an atlas that already exists as assets/filename
-void Atlas::init(string atlasName, SDL_Renderer* renderer)
+void Atlas::init(string atlasName)
 {
     int imgFlags = IMG_INIT_PNG;
     if(!(IMG_Init(IMG_INIT_PNG) & imgFlags))
