@@ -17,7 +17,7 @@ modelRend(shaders.modelLoc)
     projLoc = glGetUniformLocation(progID, "proj");
     //set the sunlight vector (TODO: do somewhere else)
     auto sunLoc = glGetUniformLocation(progID, "sunlight");
-    vec3 sunlight(0.4, -0.8, 0.2);
+    vec3 sunlight(0.4, 0.8, 0.2);
     sunlight = normalize(sunlight);
     glUniform3fv(sunLoc, 1, value_ptr(sunlight));
     Atlas::init("main");

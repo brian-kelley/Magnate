@@ -28,6 +28,10 @@ Shaders::Shaders()
         "   {"
         "       fragNorm = normal;"
         "   }"
+        "   else"
+        "   {"
+        "       fragNorm = sunlight;"
+        "   }"
         "}";
 
     const char* fshader =
@@ -55,7 +59,9 @@ Shaders::Shaders()
         "   }"
         "   if(useNormals != 0)"
         "   {"
-        "       gl_FragColor = gl_FragColor * dot(fragNorm, sunlight);"
+        "       float alpha = gl_FragColor.w;"
+        "       gl_FragColor = gl_FragColor * (0.6 + 0.4 * dot(fragNorm, sunlight));"
+        "       gl_FragColor.w = alpha;"
         "   }"
         "}";
 

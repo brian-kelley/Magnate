@@ -76,7 +76,6 @@ glm::mat4 Camera::getViewMatrix()
     vec3 camUp = {sin(camPitch) * sin(camAngle), cos(camPitch), sin(camPitch) * cos(camAngle)};
     camUp = normalize(camUp);
     camDir = normalize(at - camPos);
-    PRINT("Cam looking in dir: " << camDir);
     viewMat = lookAt(camPos, at, camUp);
     return viewMat;
 }

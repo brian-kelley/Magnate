@@ -167,16 +167,14 @@ void VBO::bind()
     if(type == v3D)
     {
         glUniform1i(useNormalsLoc, 1);
-        glEnableVertexAttribArray(normAttribLoc);
         glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex3D), COLOR_3D);
         glVertexAttribPointer(texCoordAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex3D), TEXCOORD_3D);
         glVertexAttribPointer(posAttribLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), POSITION_3D);
-        glVertexAttribPointer(normAttribLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), NORMAL_3D);
+        glVertexAttribPointer(normAttribLoc, 3, GL_FLOAT, GL_TRUE, sizeof(Vertex3D), NORMAL_3D);
     }
     else if(type == v2D)
     {
         glUniform1i(useNormalsLoc, 0);
-        glDisableVertexAttribArray(normAttribLoc);
         glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex2D), COLOR_2D);
         glVertexAttribPointer(texCoordAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex2D), TEXCOORD_2D);
         glVertexAttribPointer(posAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex2D), POSITION_2D);
