@@ -19,6 +19,7 @@ class World
 public:
     static void initDebug();    //quickly jump into game with fresh world
     static void init(std::string saveName);
+    static void initCached(std::string name);
     static void saveAndExit();
     static void read();
     static void write();

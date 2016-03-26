@@ -9,7 +9,7 @@ vector<string> SaveManager::saves;
 void SaveManager::refreshSaveList()
 {
     saves.clear();
-    path saveFolder = initial_path() / FileIO::root / "saves";
+    path saveFolder = FileIO::root() / "saves";
     //Ensure that saves folder exists and is a directory
     checkSaveFolder();
     directory_iterator dirIter(saveFolder);
@@ -26,22 +26,22 @@ void SaveManager::refreshSaveList()
 void SaveManager::loadWorld(string saveName)
 {
     checkSaveFolder();
-    path worldPath = initial_path() / FileIO::root / "saves" / (saveName + ".mag");
+    path worldPath = FileIO::root() / "saves" / (saveName + ".mag");
     World::init(saveName);
 }
 
 void SaveManager::renameSave(string newName, string oldName)
 {
     checkSaveFolder();
-    path oldPath = initial_path() / FileIO::root / "saves" / string(oldName + ".mag");
-    path newPath = initial_path() / FileIO::root / "saves" / string(newName + ".mag");
+    path oldPath = FileIO::root() / "saves" / string(oldName + ".mag");
+    path newPath = FileIO::root() / "saves" / string(newName + ".mag");
     boost::filesystem::rename(oldPath, newPath);
 }
 
 void SaveManager::deleteSave(string name)
 {
     checkSaveFolder();
-    path deletePath = initial_path() / FileIO::root / "saves" / string(name + ".mag");
+    path deletePath = FileIO::root() / "saves" / string(name + ".mag");
     try
     {
         boost::filesystem::remove(deletePath);
@@ -54,7 +54,7 @@ void SaveManager::deleteSave(string name)
 
 void SaveManager::checkSaveFolder()
 {
-    path saveFolder = initial_path() / FileIO::root / "saves";
+    path saveFolder = FileIO::root() / "saves";
     if(!exists(saveFolder))
     {
         try

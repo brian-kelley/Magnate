@@ -4,27 +4,17 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <fstream>
+#include <cstdio>
+#include <cstring>
 #include "SdlHeaders.h"
 #include "FileIO.h"
 #include "VBO.h"
 
 using namespace std;
 
-struct MPos
-{
-    float x, y, z;
-};
-
-struct MUV
-{
-    float u, v;
-};
-
-struct MNorm
-{
-    float nx, ny, nz;
-};
+typedef glm::vec3 MPos;
+typedef glm::vec2 MUV;
+typedef glm::vec3 MNorm;
 
 struct Face
 {
@@ -40,29 +30,29 @@ struct Face
     int vn3;
 };
 
-istream& operator>>(istream& is, MPos& pos);
-istream& operator>>(istream& is, MUV& uv);
-istream& operator>>(istream& is, MNorm& norm);
-istream& operator>>(istream& is, Face& face);
+ostream& operator<<(ostream& os, const Face& f);
 
 struct Model
 {
+    void computeNormals(); //do this if .obj doensn't have normals
+    void fixPosition();    //translate so model in 1st octant at origin
     string name;
     vector<MPos> vertices;
     vector<MUV> uvs;
     vector<MNorm> norms;
     vector<Face> faces;
     int vboStart;
-    int numVertices;
 };
 
 class ModelRenderer
 {
 public:
-    ModelRenderer(GLuint modelLoc, bool readOBJs = true);
+    ModelRenderer(bool readOBJs = true);
+    void drawModel(string modelName, glm::mat4& model);
 private:
     void loadOBJs();        //load all obj files in models folder
     void createVBO();       //store all models in one vbo
+    void createIndexBuf();
     void readModelFile(boost::filesystem::path fpath);
     unordered_map<string, Model> models;
     VBO vbo;

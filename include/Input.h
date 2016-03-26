@@ -6,6 +6,7 @@
 #include "SdlHeaders.h"
 #include "Broadcaster.h"
 #include "GlobalConfig.h"
+#include "DebugTools.h"
 
 namespace Input
 {

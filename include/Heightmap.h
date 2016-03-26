@@ -34,7 +34,6 @@ public:
     void normalize(int val = 1000);
     glm::vec2 grad(int x, int y);   //gradient at tile center
     glm::vec2 grad(Pos2 loc);
-    short* buf;
     void operator+=(Heightmap& hm);
     void operator-=(Heightmap& hm);
     Heightmap operator*(Heightmap& hm);
@@ -46,6 +45,8 @@ public:
     void landHeightDist(short targetMax, float k);
     void linearDist(short targetMin, short targetMax);
     short getMax();
+    size_t getByteSize();
+    short* buf;
 private:
     short calcVal(int avg, int size, double roughness);
     int w;

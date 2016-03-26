@@ -14,8 +14,8 @@ const float Camera::ROTATE_SPEED = M_PI;
 const float Camera::MOVE_SPEED = 1.2;
 const float Camera::ZOOM_SPEED = 0.16;
 const float Camera::FOV = M_PI_4;
-const float Camera::NEAR = 10000;
-const float Camera::FAR = 0.01;
+const float Camera::NEAR = 2;
+const float Camera::FAR = 10000;
 const Heightmap* Camera::heights = nullptr;
 
 void Camera::init()
@@ -23,7 +23,7 @@ void Camera::init()
     camPos = {0, 20, 0};
     camAngle = 0;
     camPitch = M_PI_2 * 0.8;
-    Input::wheelBroadcaster.addListener(nullptr, processWheel);
+    Input::wheelBroadcaster.addListener(NULL, processWheel);
     heights = &World::getHeights();      //simple handle for world's height data
 }
 
@@ -76,13 +76,14 @@ glm::mat4 Camera::getViewMatrix()
     vec3 camUp = {sin(camPitch) * sin(camAngle), cos(camPitch), sin(camPitch) * cos(camAngle)};
     camUp = normalize(camUp);
     camDir = normalize(at - camPos);
+    PRINT("Cam looking in dir: " << camDir);
     viewMat = lookAt(camPos, at, camUp);
     return viewMat;
 }
 
 glm::mat4 Camera::getProjMatrix(int winW, int winH)
 {
-    projMat = perspectiveFov<float>(FOV, winW, winH, NEAR, FAR);
+    projMat = perspectiveFov<float>(FOV, winW, winH, FAR, NEAR);
     return projMat;
 }
 
@@ -150,7 +151,7 @@ void Camera::zoomOut()
     camPos.y += ZOOM_SPEED * (camPos.y - worldH * Coord::TERRAIN_Y_SCALE);
 }
 
-void Camera::processWheel(void* ins, const SDL_MouseWheelEvent &event)
+void Camera::processWheel(void*, const SDL_MouseWheelEvent &event)
 {
     if(event.y > 0)
         zoomIn();
@@ -168,7 +169,7 @@ vec3 Camera::getPosition()
 {
     return camPos;
 }
-
+ 
 FrustumCorners Camera::getFrustumCorners(const glm::mat4 &view, const glm::mat4 &proj)
 {
     FrustumCorners corners;

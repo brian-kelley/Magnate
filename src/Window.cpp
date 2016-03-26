@@ -40,9 +40,11 @@ SDL_Renderer* Window::getRenderer()
 void Window::configGL()
 {
     glClearColor(1, 1, 1, 1);
+    glClearDepth(0);
     glEnable(GL_BLEND);
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_GREATER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

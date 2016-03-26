@@ -35,7 +35,8 @@ Heightmap::Heightmap(const Heightmap& toCopy)
 
 Heightmap::~Heightmap()
 {
-    delete[] buf;
+    if(buf)
+        delete[] buf;
 }
 
 void Heightmap::diamondSquare(double roughness, short cornerStart, short centerStart, bool isZeroMin)
@@ -89,6 +90,7 @@ void Heightmap::diamondSquare(double roughness, short cornerStart, short centerS
             }
         }
         delete buf;
+        buf = NULL;
     }
 }
 
@@ -391,7 +393,8 @@ void Heightmap::setSize(int x, int y)
 {
     DBASSERT(x > 0);
     DBASSERT(y > 0);
-    delete[] buf;
+    if(buf)
+        delete[] buf;
     buf = new short[x * y];
     w = x;
     h = y;
@@ -425,7 +428,7 @@ void Heightmap::landHeightDist(short targetMax, float k)
 {
     int maxVal = getMax() + 1;
     int* occur = new int[maxVal];
-    memset(occur, 0, sizeof(int) * SHRT_MAX);
+    memset(occur, 0, sizeof(int) * maxVal);
     for(int i = 0; i < w; i++)
     {
         for(int j = 0; j < h; j++)
@@ -517,3 +520,9 @@ void Heightmap::linearDist(short targetMin, short targetMax)
     delete[] occur;
     delete[] newVals;
 }
+
+size_t Heightmap::getByteSize()
+{
+    return 2 * w * h;
+}
+

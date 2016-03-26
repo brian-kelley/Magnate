@@ -1,17 +1,14 @@
 #include "FileIO.h"
 
-using namespace std;
+using namespace boost::filesystem;
 
+path FileIO::root()
+{
 #ifdef __APPLE__
-
-const string FileIO::root = "../..";
-
+    return initial_path() / "../..";
 #elif _WIN32
-
-const string FileIO::root = "../..";
-
+    return initial_path() / "../..";
 #elif __linux
-
-const string FileIO::root = "../..";
-
+    return initial_path() / "../..";
 #endif
+}

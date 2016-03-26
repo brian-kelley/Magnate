@@ -63,11 +63,14 @@ void WorldRenderer::getTileQuad(int quadIndex, int x, int z)
     quad[1].texcoord = uvCache[ground * 4 + 1];
     quad[2].texcoord = uvCache[ground * 4 + 2];
     quad[3].texcoord = uvCache[ground * 4 + 3];
-    //Color4 color = {(unsigned char)(light * 255), (unsigned char)(light * 255), (unsigned char)(light * 255), 255};
     quad[0].norm = normal;
     quad[1].norm = normal;
     quad[2].norm = normal;
     quad[3].norm = normal;
+    quad[0].color = {255, 255, 255, 255};
+    quad[1].color = {255, 255, 255, 255};
+    quad[2].color = {255, 255, 255, 255};
+    quad[3].color = {255, 255, 255, 255};
 }
 
 void WorldRenderer::allocChunk(Pos2 pos)

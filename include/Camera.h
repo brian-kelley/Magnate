@@ -35,7 +35,7 @@ public:
     static glm::mat4 projMat;
 private:
     static const Heightmap* heights;
-    static void processWheel(void* ins, const SDL_MouseWheelEvent& event); //handles scroll events
+    static void processWheel(void*, const SDL_MouseWheelEvent& event); //handles scroll events
     static void camFwd(short worldH);
     static void camLeft(short worldH);
     static void camBack(short worldH);

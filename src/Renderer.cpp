@@ -8,11 +8,13 @@ Renderer::Renderer() :
 win(640, 480),
 shaders(),
 worldRend(),
-uiRend()
+uiRend(),
+modelRend()
 {
-    viewLoc = shaders.getViewMatLoc();
-    projLoc = shaders.getProjMatLoc();
-    //modelLoc = shaders.getModelMatLoc();
+    auto progID = shaders.getProgramID();
+    modelLoc = glGetUniformLocation(progID, "model");
+    viewLoc = glGetUniformLocation(progID, "view");
+    projLoc = glGetUniformLocation(progID, "proj");
     Atlas::init("main");
 }
 
@@ -25,6 +27,9 @@ void Renderer::update()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     upload3DMatrices();
     worldRend.draw();
+    //Model renderer test
+    modelTest();
+    GLERR
     //Then draw GUI (function computes vertices and does draw calls)
     //Use bilinear for this
     upload2DMatrices();
@@ -42,12 +47,11 @@ void Renderer::upload2DMatrices()
     auto winSize = win.getSize();
     mat4 proj2 = ortho<float>(0, winSize.x, winSize.y, 0, -1, 1);
     mat4 view2 = glm::mat4(); //ID mat: (0,0,0) is camera origin
+    mat4 model;
     //glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(view2));
-    GLERR;
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model));
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, value_ptr(view2));
-    GLERR
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, value_ptr(proj2));
-    GLERR
 }
 
 void Renderer::upload3DMatrices()
@@ -56,10 +60,16 @@ void Renderer::upload3DMatrices()
     mat4 proj3 = Camera::getProjMatrix(winSize.x, winSize.y);
     mat4 view3 = Camera::getViewMatrix();
     mat4 model3 = glm::mat4();
-    //glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model3));
-    GLERR
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model3));
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, value_ptr(view3));
-    GLERR
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, value_ptr(proj3));
-    GLERR
+}
+
+void Renderer::modelTest()
+{
+    glm::mat4 mat;
+    glm::vec3 scale(10, 10, 10);
+    mat = glm::scale(mat, scale);
+    //todo: test scale/rotate/translate
+    modelRend.drawModel("sphereTank", mat);
 }

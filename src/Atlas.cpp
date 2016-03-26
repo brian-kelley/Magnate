@@ -27,8 +27,8 @@ void Atlas::init(string atlasName)
         cout << "Not going to attempt loading main atlas." << endl;
         exit(EXIT_FAILURE);
     }
-    path imagePath = initial_path() / FileIO::root / "assets" / (atlasName + "_atlas.png");
-    path tilePath = initial_path() / FileIO::root / "data" / (atlasName + "_tiles.txt");
+    path imagePath = FileIO::root() / "assets" / (atlasName + "_atlas.png");
+    path tilePath = FileIO::root() / "data" / (atlasName + "_tiles.txt");
     SDL_Surface* loadedSurface = IMG_Load(imagePath.string().c_str());
     if(loadedSurface->w != loadedSurface->h)
         throw runtime_error("Atlas not square!");
@@ -130,7 +130,7 @@ void Atlas::initCharTiles()
 void Atlas::parseTiles(path fpath)
 {
     string line;
-    ifstream tfile(fpath.string().c_str());
+    std::ifstream tfile(fpath.string().c_str());
     unsigned long index;
     //pos is used to store search result to find whitespace in file
     if(tfile.is_open())

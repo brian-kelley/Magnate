@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 3.0)
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.10)
 set(CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk)
 project (Magnate)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall")
 add_executable (Magnate
 include/Atlas
 include/Building
@@ -28,6 +28,7 @@ include/Label
 include/LinAlg
 include/Menus
 include/Minimap
+include/Models
 include/MultiSelect
 include/RandomUtils
 include/Renderer
@@ -47,6 +48,7 @@ include/Watershed
 include/Window
 include/World
 include/WorldRenderer
+
 src/main
 src/Atlas
 src/Building
@@ -70,6 +72,7 @@ src/Label
 src/LinAlg
 src/Menus
 src/Minimap
+src/Models
 src/MultiSelect
 src/RandomUtils
 src/Renderer
@@ -145,7 +148,7 @@ if(MINGW)
 endif()
 if(APPLE)
 	message("Building project for OS X")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -L/Library/Frameworks -I/System/Library/Frameworks/OpenGL.framework/Headers -I/Library/Frameworks/SDL2.framework/Headers -I/Library/Frameworks/SDL2_image.framework/Headers -I/Library/Frameworks/SDL2_ttf.framework/Headers -I/usr/local/include/glm")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dgdb -I/System/Library/Frameworks/OpenGL.framework/Headers -I/Library/Frameworks/SDL2.framework/Headers -I/Library/Frameworks/SDL2_image.framework/Headers -I/Library/Frameworks/SDL2_ttf.framework/Headers -I/usr/local/include/glm")
 	find_library(OPENGL OpenGL)
 	find_library(SDL2_LIB SDL2)
 	find_library(SDL2_IMAGE_LIB SDL2_image)

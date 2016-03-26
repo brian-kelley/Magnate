@@ -1,6 +1,7 @@
 #include "GenTypes.h"
 
 using namespace std;
+using namespace glm;
 
 Callback::Callback()
 {
@@ -76,14 +77,14 @@ Color4::Color4()
 
 Color4::Color4(int r, int g, int b, int a)
 {
-    r = min(r, 255);
-    g = min(g, 255);
-    b = min(b, 255);
-    a = min(a, 255);
-    r = max(r, 0);
-    g = max(g, 0);
-    b = max(b, 0);
-    a = max(a, 0);
+    r = MIN(r, 255);
+    g = MIN(g, 255);
+    b = MIN(b, 255);
+    a = MIN(a, 255);
+    r = MAX(r, 0);
+    g = MAX(g, 0);
+    b = MAX(b, 0);
+    a = MAX(a, 0);
     this->r = r;
     this->g = g;
     this->b = b;
@@ -108,12 +109,12 @@ void Color4::operator*=(const float rval)
     int rr = r * rval;
     int gg = g * rval;
     int bb = b * rval;
-    rr = min(rr, 255);
-    gg = min(gg, 255);
-    bb = min(bb, 255);
-    rr = max(rr, 0);
-    gg = max(gg, 0);
-    bb = max(bb, 0);
+    rr = MIN(rr, 255);
+    gg = MIN(gg, 255);
+    bb = MIN(bb, 255);
+    rr = MAX(rr, 0);
+    gg = MAX(gg, 0);
+    bb = MAX(bb, 0);
     r = rr;
     g = gg;
     b = bb;
@@ -122,6 +123,23 @@ void Color4::operator*=(const float rval)
 ostream& operator<<(ostream& os, const Rectangle& r)
 {
     os << "(" << r.x << "," << r.y << "), " << r.w << "x" << r.h;
+    return os;
+}
+
+ostream& operator<<(ostream& os, const vec3& v)
+{
+    os << "(" << v.x << "," << v.y << "," << v.z << ")";
+    return os;
+}
+
+ostream& operator<<(ostream& os, const vec4& v)
+{
+    os << "(" << v.x << "," << v.y << "," << v.z << "," << v.w << ")";
+    return os;
+}
+
+ostream& operator<<(ostream& os, const mat4& m)
+{
     return os;
 }
 

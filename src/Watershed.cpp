@@ -28,7 +28,7 @@ void Watershed::addRiver(short minHeight)
     {
         biomes.set(RIVER, loc);
         int downhill = getNonLakeDownhillDir(loc);
-        if(downhill != NO_DIRECTION);
+        if(downhill != NO_DIRECTION)
         {
             //Check if just flowed into a lake that already flows out to sea
             Pos2 next = getTileInDir(loc, downhill);

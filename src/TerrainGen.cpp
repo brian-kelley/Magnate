@@ -28,7 +28,6 @@ void TerrainGen::generate()
     TIMEIT(world.smooth(2));
     TIMEIT(correctOceans());
     short targetMax = 10000;
-    short avgH = getAverageHeight();
     //Erosion e(world);
     TIMEIT(scaleHeight(targetMax, world.getMax()));
     TIMEIT(assignBiomes());

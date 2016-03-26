@@ -1,6 +1,9 @@
 #include "World.h"
 
+#define USE_CACHED_TERRAIN true
+
 using namespace std;
+using namespace GlobalConfig;
 using namespace boost::filesystem;
 
 bool World::drawing = false;
@@ -13,18 +16,14 @@ Broadcaster<bool> World::worldLoaded;
 void World::initDebug()
 {
     init("asdf");
-    PRINT("Done loading test world.");
 }
 
 void World::init(std::string saveName)
 {
     World::saveName = saveName;
-    {
-        Heightmap temp(GlobalConfig::WORLD_SIZE, GlobalConfig::WORLD_SIZE);
-        height = temp;
-        biomes = temp;
-    }
-    path saveFolder = initial_path() / FileIO::root / "saves";
+    height.setSize(WORLD_SIZE, WORLD_SIZE);
+    biomes.setSize(WORLD_SIZE, WORLD_SIZE);
+    path saveFolder = FileIO::root() / "saves";
     if(!exists(saveFolder))
     {
         cout << "Fatal error: save folder doesn't exist where expected:" << endl;
@@ -49,9 +48,41 @@ void World::init(std::string saveName)
     worldLoaded.send(true);
 }
 
+void World::initCached(string name)
+{
+    path cache = FileIO::root() / "temp" / name;
+    if(!USE_CACHED_TERRAIN)
+    {
+        PRINT("Terrain caching disabled.");
+        init("asdf");
+    }
+    else if(!exists(cache))
+    {
+        PRINT("Will generate and save terrain.");
+        init("asdf");
+        FILE* f = fopen(cache.string().c_str(), "wb");
+        fwrite(height.buf, 1, height.getByteSize(), f);
+        fwrite(biomes.buf, 1, biomes.getByteSize(), f);
+        PRINT("Wrote cached debug terrain.");
+        return;
+    }
+    else
+    {
+        PRINT("Will load cached terrain.");
+        //quickly load from the file straight into the heightmaps
+        FILE* f = fopen(cache.string().c_str(), "rb");
+        height.setSize(WORLD_SIZE, WORLD_SIZE);
+        biomes.setSize(WORLD_SIZE, WORLD_SIZE);
+        fread(height.buf, 1, height.getByteSize(), f);
+        fread(biomes.buf, 1, biomes.getByteSize(), f);
+        PRINT("Loaded cached terrain");
+        fclose(f);
+    }
+}
+
 void World::write()
 {
-    path outPath = initial_path() / FileIO::root / "saves" / string(saveName + ".mag");
+    path outPath = FileIO::root() / "saves" / string(saveName + ".mag");
     FILE* os = fopen(outPath.c_str(), "wb");
     fwrite(&seed, sizeof(seed), 1, os);
     fclose(os);
@@ -61,7 +92,7 @@ void World::write()
 
 void World::read()
 {
-    path inPath = initial_path() / FileIO::root / "saves" / (saveName + ".mag");
+    path inPath = FileIO::root() / "saves" / (saveName + ".mag");
     FILE* is = fopen(inPath.c_str(), "rb");
     fread(&seed, sizeof(seed), 1, is);
     fclose(is);

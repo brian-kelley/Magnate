@@ -17,6 +17,9 @@ typedef glm::vec3 Pos3;
 
 typedef void(*CallbackFunc)(void*, void*);
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
 struct Callback
 {
     Callback();
@@ -87,6 +90,8 @@ struct Vertex3D
 }; //32 bytes total
 
 std::ostream& operator<<(std::ostream& os, const Rectangle& r);
+std::ostream& operator<<(std::ostream& os, const glm::vec3& v);
+std::ostream& operator<<(std::ostream& os, const glm::vec4& v);
 u32 getColor32(u8 r, u8 g, u8 b, u8 a = 0xFF);
 
 #endif

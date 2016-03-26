@@ -11,6 +11,7 @@
 #include "DebugTools.h"
 #include "WorldRenderer.h"
 #include "UIRenderer.h"
+#include "Models.h"
 #include "VBO.h"
 #include "Shaders.h"
 #include "Window.h"
@@ -24,11 +25,13 @@ public:
     void upload3DMatrices();                 //when FOV or window changes
     void uploadMatrices(int dims); //before draw call, 2 or 3
     void update();
+    void modelTest();
 private:
     Window win;
     Shaders shaders;
     WorldRenderer worldRend;
     UIRenderer uiRend;
+    ModelRenderer modelRend;
     GLuint modelLoc;
     GLuint projLoc;
     GLuint viewLoc;
