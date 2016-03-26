@@ -101,10 +101,12 @@ Shaders::Shaders()
     GLERR
     glUniform1i(samplerLoc, 0);
     GLERR
+    modelLoc = glGetUniformLocation(programID, "model");
     viewLoc = glGetUniformLocation(programID, "view");
     projLoc = glGetUniformLocation(programID, "proj");
     GLERR
     VBO::loadAttribLocs(programID);
+    GLERR
 }
 
 Shaders::~Shaders()
@@ -114,19 +116,4 @@ Shaders::~Shaders()
     glDeleteShader(vshadeID);
     glDeleteShader(fshadeID);
     glDeleteProgram(programID);
-}
-
-GLuint Shaders::getViewMatLoc()
-{
-    return viewLoc;
-}
-
-GLuint Shaders::getProjMatLoc()
-{
-    return projLoc;
-}
-
-GLuint Shaders::getProgramID()
-{
-    return programID;
 }

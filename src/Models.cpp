@@ -58,18 +58,17 @@ void Model::fixPosition()
     }
 }
 
-ModelRenderer::ModelRenderer(bool readOBJs) : vbo(0, VBO::v3D, GL_STATIC_DRAW)
+ModelRenderer::ModelRenderer(GLint modelLoc) : vbo(0, VBO::v3D, GL_STATIC_DRAW)
 {
-    if(readOBJs)
-    {
-        loadOBJs();
-        createVBO();
-    }
+    GLERR
+    this->modelLoc = modelLoc;
+    loadOBJs();
+    createVBO();
+    GLERR
 }
-
-void ModelRenderer::drawModel(string modelName, glm::mat4& model)
+void ModelRenderer::drawModel(string modelName, mat4& modelMat)
 {
-    glUniformMatrix4fv(VBO::modelLoc, 1, GL_FALSE, value_ptr(model));
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(modelMat));
     auto pos = models.find(modelName);
     if(pos == models.end())
     {
@@ -78,7 +77,7 @@ void ModelRenderer::drawModel(string modelName, glm::mat4& model)
     }
     Model& m = pos->second;
     vbo.draw(m.vboStart, m.faces.size() * 3, GL_TRIANGLES);
-    auto sample = model * vec4(m.vertices[0], 1);
+    auto sample = modelMat * vec4(m.vertices[0], 1);
     GLERR
 }
 

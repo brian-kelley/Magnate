@@ -3,13 +3,21 @@
 using namespace std;
 
 #define INDEX_SIZE (sizeof(unsigned int))
+//shorthand for attribute offsets, correct if alignment/ordering change
+#define COLOR_2D ((GLvoid*) offsetof(Vertex2D, color))
+#define TEXCOORD_2D ((GLvoid*) offsetof(Vertex2D, texcoord))
+#define POSITION_2D ((GLvoid*) offsetof(Vertex2D, pos))
+#define COLOR_3D ((GLvoid*) offsetof(Vertex3D, color))
+#define TEXCOORD_3D ((GLvoid*) offsetof(Vertex3D, texcoord))
+#define POSITION_3D ((GLvoid*) offsetof(Vertex3D, pos))
+#define NORMAL_3D ((GLvoid*) offsetof(Vertex3D, norm))
 
 int VBO::colorAttribLoc = -1;
 int VBO::texCoordAttribLoc = -1;
 int VBO::posAttribLoc = -1;
-int VBO::modelLoc = -1;
+int VBO::normAttribLoc = -1;
 VBO* VBO::currentBound = nullptr;
-
+;
 VBO::VBO(int numVertices, Type type, int updateHint, bool hasIndex, int numIndices)
 {
     this->type = type;
@@ -132,10 +140,11 @@ void VBO::loadAttribLocs(int programID)
     colorAttribLoc = glGetAttribLocation(programID, "color");
     texCoordAttribLoc = glGetAttribLocation(programID, "texCoord");
     posAttribLoc = glGetAttribLocation(programID, "vertex");
-    modelLoc = glGetUniformLocation(programID, "model");
+    //normAttribLoc = glGetAttribLocation(programID, "normal");
     glEnableVertexAttribArray(colorAttribLoc);
     glEnableVertexAttribArray(texCoordAttribLoc);
     glEnableVertexAttribArray(posAttribLoc);
+    //glEnableVertexAttribArray(normAttribLoc);
 }
 
 int VBO::getByteSize(int vertices)
@@ -155,15 +164,15 @@ void VBO::bind()
     glBindBuffer(GL_ARRAY_BUFFER, vboID);
     if(type == v3D)
     {
-        glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex3D), (GLvoid*) 0);
-        glVertexAttribPointer(texCoordAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 4);
-        glVertexAttribPointer(posAttribLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), (GLvoid*) 8);
+        glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex3D), COLOR_3D);
+        glVertexAttribPointer(texCoordAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex3D), TEXCOORD_3D);
+        glVertexAttribPointer(posAttribLoc, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex3D), POSITION_3D);
     }
     else if(type == v2D)
     {
-        glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex2D), (GLvoid*) 0);
-        glVertexAttribPointer(texCoordAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex2D), (GLvoid*) 4);
-        glVertexAttribPointer(posAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex2D), (GLvoid*) 8);
+        glVertexAttribPointer(colorAttribLoc, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex2D), COLOR_2D);
+        glVertexAttribPointer(texCoordAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex2D), TEXCOORD_2D);
+        glVertexAttribPointer(posAttribLoc, 2, GL_SHORT, GL_FALSE, sizeof(Vertex2D), POSITION_2D);
     }
     //and mark this vbo as currently bound
     currentBound = this;

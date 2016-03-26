@@ -9,9 +9,9 @@ win(640, 480),
 shaders(),
 worldRend(),
 uiRend(),
-modelRend()
+modelRend(shaders.modelLoc)
 {
-    auto progID = shaders.getProgramID();
+    auto progID = shaders.programID;
     modelLoc = glGetUniformLocation(progID, "model");
     viewLoc = glGetUniformLocation(progID, "view");
     projLoc = glGetUniformLocation(progID, "proj");

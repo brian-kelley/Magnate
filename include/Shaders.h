@@ -12,15 +12,12 @@ class Shaders
 public:
     Shaders();
     ~Shaders();
-    GLuint getViewMatLoc();
-    GLuint getProjMatLoc();
-    GLuint getProgramID();
-private:
-    GLuint programID;
-    GLuint vshadeID;
-    GLuint fshadeID;
-    GLuint viewLoc;
-    GLuint projLoc;
+    GLint programID;
+    GLint vshadeID;
+    GLint fshadeID;
+    GLint modelLoc;
+    GLint viewLoc;
+    GLint projLoc;
 };
 
 #endif

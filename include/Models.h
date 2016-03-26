@@ -47,7 +47,7 @@ struct Model
 class ModelRenderer
 {
 public:
-    ModelRenderer(bool readOBJs = true);
+    ModelRenderer(GLint modelLoc);
     void drawModel(string modelName, glm::mat4& model);
 private:
     void loadOBJs();        //load all obj files in models folder
@@ -55,6 +55,7 @@ private:
     void createIndexBuf();
     void readModelFile(boost::filesystem::path fpath);
     unordered_map<string, Model> models;
+    GLint modelLoc;
     VBO vbo;
 };
 

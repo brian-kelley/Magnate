@@ -11,22 +11,6 @@
 #include "GenTypes.h"
 #include "Input.h"
 
-/*
- Vertex fields/sizes
- (SOA) - all positions, all colors, all texcoords in one VBO
- 2D:
- -short vec2 pos                (normalized to [-1, 1])
- -unsigned char vec4 color      (normalized to [0, 1])
- -short vec2 texcoord           (normalized to [-1, 1])
- Total: 12 bytes/vertex
- 
- 3D:
- -float vec3 pos
- -unsigned char vec4 color
- -short vec2 texcoord
- Total: 20 bytes/vertex
- */
-
 struct ClipMarker
 {
     bool enable;
@@ -55,7 +39,7 @@ public:
     static int colorAttribLoc;
     static int texCoordAttribLoc;
     static int posAttribLoc;
-    static int modelLoc;
+    static int normAttribLoc;
 private:
     int getByteSize(int vertices);  //just multiplies vertices by the size of a vertex in bytes
     void bind();                    //bind the VBO and set attribute pointers
