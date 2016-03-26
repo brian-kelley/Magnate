@@ -4,60 +4,64 @@ using namespace std;
 
 Shaders::Shaders()
 {
-    vector<string> code = {
-        "#version 120",
-        "attribute vec3 vertex;",
-        "attribute vec4 color;",
-        "attribute vec2 texCoord;",
-        "varying vec2 fragTexCoord;",
-        "varying vec4 fragBaseColor;",
-        "uniform mat4 model;",
-        "uniform mat4 view;",
-        "uniform mat4 proj;",
-        "uniform sampler2D sampler;",
-        "void main()",
-        "{",
-        "    gl_Position = proj * view * model * vec4(vertex, 1.0);",
-        "    fragTexCoord = texCoord;",
-        "    fragBaseColor = color;",
-        "}"};
-    string vertexShadeCode = "";
-    for(auto line : code)
-    {
-        vertexShadeCode += line + "\n";
-    }
-    code = {
-        "#version 120",
-        "uniform sampler2D sampler;",
-        "varying vec2 fragTexCoord;",
-        "varying vec4 fragBaseColor;",
-        "void main()",
-        "{",
-        "    if(fragTexCoord.x == -1)",
-        "    {",
-        "        gl_FragColor = fragBaseColor;",
-        "    }",
-        "    else",
-        "    {",
-        "        vec2 normalTexCoord = fragTexCoord / 2048.0;",
-        "        vec4 texelColor = texture2D(sampler, normalTexCoord);",
-        "        gl_FragColor.x = texelColor.x * fragBaseColor.x;",
-        "        gl_FragColor.y = texelColor.y * fragBaseColor.y;",
-        "        gl_FragColor.z = texelColor.z * fragBaseColor.z;",
-        "        gl_FragColor.w = texelColor.w * fragBaseColor.w;",
-        "    }",
-        "}"};
-    string fragmentShadeCode = "";
-    for(auto line : code)
-    {
-        fragmentShadeCode += line + "\n";
-    }
-    code.clear();
-    const char* vcstr = vertexShadeCode.c_str();
-    const char* fcstr = fragmentShadeCode.c_str();
+    const char* vshader = 
+        "#version 120\n"
+        "attribute vec3 vertex;"
+        "attribute vec4 color;"
+        "attribute vec2 texCoord;"
+        "attribute vec3 normal;"
+        "varying vec2 fragTexCoord;"
+        "varying vec4 fragBaseColor;"
+        "varying vec3 fragNorm;"
+        "uniform mat4 model;"
+        "uniform mat4 view;"
+        "uniform mat4 proj;"
+        "uniform int useNormals;"
+        "uniform vec3 sunlight;"
+        "uniform sampler2D sampler;"
+        "void main()"
+        "{"
+        "   gl_Position = proj * view * model * vec4(vertex, 1.0);"
+        "   fragTexCoord = texCoord;"
+        "   fragBaseColor = color;"
+        "   if(useNormals != 0)"
+        "   {"
+        "       fragNorm = normal;"
+        "   }"
+        "}";
+
+    const char* fshader =
+        "#version 120\n"
+        "uniform sampler2D sampler;"
+        "uniform int useNormals;"
+        "uniform vec3 sunlight;"
+        "varying vec2 fragTexCoord;"
+        "varying vec4 fragBaseColor;"
+        "varying vec3 fragNorm;"
+        "void main()"
+        "{"
+        "   if(fragTexCoord.x == -1)"
+        "   {"
+        "       gl_FragColor = fragBaseColor;"
+        "   }"
+        "   else"
+        "   {"
+        "       vec2 normalTexCoord = fragTexCoord / 2048.0;"
+        "       vec4 texelColor = texture2D(sampler, normalTexCoord);"
+        "       gl_FragColor.x = texelColor.x * fragBaseColor.x;"
+        "       gl_FragColor.y = texelColor.y * fragBaseColor.y;"
+        "       gl_FragColor.z = texelColor.z * fragBaseColor.z;"
+        "       gl_FragColor.w = texelColor.w * fragBaseColor.w;"
+        "   }"
+        "   if(useNormals != 0)"
+        "   {"
+        "       gl_FragColor = gl_FragColor * dot(fragNorm, sunlight);"
+        "   }"
+        "}";
+
     programID = glCreateProgram();
     vshadeID = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vshadeID, 1, &vcstr, NULL);
+    glShaderSource(vshadeID, 1, &vshader, NULL);
     glCompileShader(vshadeID);
     int ERR_BUF_LEN = 500;
     char error[ERR_BUF_LEN];
@@ -69,7 +73,7 @@ Shaders::Shaders()
         throw runtime_error("Vertex shader compile error.");
     }
     fshadeID = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fshadeID, 1, &fcstr, NULL);
+    glShaderSource(fshadeID, 1, &fshader, NULL);
     glCompileShader(fshadeID);
     error[0] = 0;
     glGetShaderInfoLog(fshadeID, 500, NULL, error);

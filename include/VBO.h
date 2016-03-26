@@ -36,10 +36,11 @@ public:
     void drawWithClip(int startIndex, int numVertices, int geom, const std::vector<ClipMarker>& clipMarkers);  //note: clipMarker indices map to the entire VBO, not just the given range
     int getNumVertices();
     static void loadAttribLocs(int programID);
-    static int colorAttribLoc;
-    static int texCoordAttribLoc;
-    static int posAttribLoc;
-    static int normAttribLoc;
+    static GLint colorAttribLoc;
+    static GLint texCoordAttribLoc;
+    static GLint posAttribLoc;
+    static GLint normAttribLoc;
+    static GLint useNormalsLoc;
 private:
     int getByteSize(int vertices);  //just multiplies vertices by the size of a vertex in bytes
     void bind();                    //bind the VBO and set attribute pointers
