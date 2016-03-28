@@ -2,6 +2,14 @@
 
 using namespace boost::filesystem;
 
+bool FileIO::fileExists(path fpath)
+{
+    FILE* f = fopen(fpath.c_str(), "rb");
+    bool doesExist = f;
+    fclose(f);
+    return doesExist;
+}
+
 path FileIO::root()
 {
 #ifdef __APPLE__

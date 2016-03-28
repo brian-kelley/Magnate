@@ -4,12 +4,11 @@ using namespace std;
 
 Draggable* Draggable::activeDrag = nullptr;
 
-Draggable::Draggable(int x, int y, int width, int height, u8 stickyFlags, int imageID, Component* parentComp, Callback whenDropped, DRAG_IMAGE_TYPES imgType) : Component(x, y, width, height, stickyFlags, true, parentComp)
+Draggable::Draggable(int x, int y, int width, int height, u8 stickyFlags, int imageID, Component* parentComp, Callback whenDropped) : Component(x, y, width, height, stickyFlags, true, parentComp)
 {
     img = imageID;
     onDrop = whenDropped;
     dragging = false;
-    this->imgType = imgType;
 }
 
 void Draggable::processLeftClick()
@@ -42,11 +41,6 @@ void Draggable::deactivate()
     dragging = false;
     onDrop(this);
     activeDrag = nullptr;
-}
-
-DRAG_IMAGE_TYPES Draggable::getImageType()
-{
-    return imgType;
 }
 
 int Draggable::getImageNum()

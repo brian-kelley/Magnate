@@ -32,7 +32,7 @@ void TerrainGen::generate()
     TIMEIT(scaleHeight(targetMax, world.getMax()));
     TIMEIT(assignBiomes());
     TIMEIT(defuzz());
-    TIMEIT(unsmooth(targetMax));
+    TIMEIT(unsmooth());
     //TIMEIT(addWatershed(0.3, targetMax, avgH));
     TIMEIT(flattenWater());
     TIMEIT(world.landHeightDist(getMaxHeight(), 0.05));
@@ -371,7 +371,7 @@ void TerrainGen::scaleHeight(int target, int maxH)
     }
 }
 
-void TerrainGen::unsmooth(short maxH)
+void TerrainGen::unsmooth()
 {
     for(int i = 0; i < WORLD_SIZE; i++)
     {

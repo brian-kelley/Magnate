@@ -177,6 +177,7 @@ void UIRenderer::drawDraggable(Draggable* d)
 void UIRenderer::drawMinimap(Minimap *mm)
 {
     auto& rect = mm->getScreenRect();
+    imm.color3b(255, 255, 255);
     imm.blit("minimap", rect);
     if(Input::keystate[SDL_SCANCODE_T])
         imm.blit("topo", rect);

@@ -72,9 +72,23 @@ void Renderer::upload3DMatrices()
 
 void Renderer::modelTest()
 {
-    glm::mat4 mat;
-    glm::vec3 scale(10, 10, 10);
+    mat4 mat;
+    vec3 scale(10, 10, 10);
     mat = glm::scale(mat, scale);
     //todo: test scale/rotate/translate
     modelRend.drawModel("sphereTank", mat);
+    vec3 xtrans(1.2, 0, 0);
+    vec3 ztrans(0, 0, 1.2);
+    mat4 row = mat;
+    int square = 60;
+    for(int i = 0; i < square; i++)
+    {
+        glm::mat4 col = row;
+        for(int j = 0; j < square; j++)
+        {
+            modelRend.drawModel("sphereTank", col);
+            col = translate(col, ztrans);
+        }
+        row = translate(row, xtrans);
+    }
 }

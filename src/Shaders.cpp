@@ -28,10 +28,6 @@ Shaders::Shaders()
         "   {"
         "       fragNorm = normal;"
         "   }"
-        "   else"
-        "   {"
-        "       fragNorm = sunlight;"
-        "   }"
         "}";
 
     const char* fshader =

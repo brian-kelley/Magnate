@@ -28,6 +28,8 @@ public:
     static Heightmap& getBiomes();
     static bool isDrawing();
     static Broadcaster<bool> worldLoaded;
+    static void readTerrainCache(std::string name);
+    static void writeTerrainCache(std::string name);
 private:
     static bool drawing;
     static Heightmap height;

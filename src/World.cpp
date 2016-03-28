@@ -3,6 +3,7 @@
 #define USE_CACHED_TERRAIN true
 
 using namespace std;
+using namespace FileIO;
 using namespace GlobalConfig;
 using namespace boost::filesystem;
 
@@ -15,7 +16,7 @@ Broadcaster<bool> World::worldLoaded;
 
 void World::initDebug()
 {
-    init("asdf");
+    initCached("asdf");
 }
 
 void World::init(std::string saveName)
@@ -51,33 +52,28 @@ void World::init(std::string saveName)
 void World::initCached(string name)
 {
     path cache = FileIO::root() / "temp" / name;
+    World::saveName = name;
+    height.setSize(WORLD_SIZE, WORLD_SIZE);
+    biomes.setSize(WORLD_SIZE, WORLD_SIZE);
     if(!USE_CACHED_TERRAIN)
     {
         PRINT("Terrain caching disabled.");
         init("asdf");
     }
-    else if(!exists(cache))
+    else if(!fileExists(cache))
     {
-        PRINT("Will generate and save terrain.");
-        init("asdf");
-        FILE* f = fopen(cache.string().c_str(), "wb");
-        fwrite(height.buf, 1, height.getByteSize(), f);
-        fwrite(biomes.buf, 1, biomes.getByteSize(), f);
-        PRINT("Wrote cached debug terrain.");
-        return;
+        init(name);
+        PRINT("Creating terrain cache.");
+        writeTerrainCache(name);
     }
     else
     {
-        PRINT("Will load cached terrain.");
-        //quickly load from the file straight into the heightmaps
-        FILE* f = fopen(cache.string().c_str(), "rb");
-        height.setSize(WORLD_SIZE, WORLD_SIZE);
-        biomes.setSize(WORLD_SIZE, WORLD_SIZE);
-        fread(height.buf, 1, height.getByteSize(), f);
-        fread(biomes.buf, 1, biomes.getByteSize(), f);
-        PRINT("Loaded cached terrain");
-        fclose(f);
+        read();
+        PRINT("Will read from terrain cache.");
+        readTerrainCache(name);
     }
+    drawing = true;
+    worldLoaded.send(true);
 }
 
 void World::write()
@@ -122,4 +118,50 @@ Heightmap& World::getBiomes()
 bool World::isDrawing()
 {
     return drawing;
+}
+
+void World::readTerrainCache(string name)
+{
+    path p = FileIO::root() / "temp" / name;
+    FILE* f = fopen(p.c_str(), "rb");
+    if(!f)
+    {
+        PRINT("Error opening terrain cache file for reading!");
+        init("asdf");
+        return;
+    }
+    size_t num = WORLD_SIZE * WORLD_SIZE;
+    height.setSize(WORLD_SIZE, WORLD_SIZE);
+    biomes.setSize(WORLD_SIZE, WORLD_SIZE);
+    for(size_t i = 0; i < num; i++)
+    {
+        fread(&height.buf[i], 2, 1, f);
+    }
+    for(size_t i = 0; i < num; i++)
+    {
+        fread(&biomes.buf[i], 2, 1, f);
+    }
+    fclose(f);
+}
+
+void World::writeTerrainCache(string name)
+{
+    path p = FileIO::root() / "temp" / name;
+    FILE* f = fopen(p.c_str(), "wb");
+    if(!f)
+    {
+        PRINT("Error opening terrain cache file for writing!");
+        init("asdf");
+        return;
+    }
+    size_t num = WORLD_SIZE * WORLD_SIZE;
+    for(size_t i = 0; i < num; i++)
+    {
+        fwrite(&height.buf[i], 2, 1, f);
+    }
+    for(size_t i = 0; i < num; i++)
+    {
+        fwrite(&biomes.buf[i], 2, 1, f);
+    }
+    fclose(f);
 }

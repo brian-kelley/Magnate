@@ -36,7 +36,10 @@ Heightmap::Heightmap(const Heightmap& toCopy)
 Heightmap::~Heightmap()
 {
     if(buf)
+    {
         delete[] buf;
+        buf = NULL;
+    }
 }
 
 void Heightmap::diamondSquare(double roughness, short cornerStart, short centerStart, bool isZeroMin)
