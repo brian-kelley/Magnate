@@ -2,10 +2,16 @@
 
 using namespace std;
 
-Window::Window(int width, int height)
+int Window::w;
+int Window::h;
+SDL_Window* Window::sdlWindow;
+SDL_Renderer* Window::sdlRenderer;
+SDL_GLContext Window::glContext;
+
+void Window::init(int w, int h)
 {
-    w = width;
-    h = height;
+    Window::w = w;
+    Window::h = h;
     //Initialize SDL window
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0)
         cout << "Failed to SDL video." << endl;
@@ -20,11 +26,9 @@ Window::Window(int width, int height)
     SDL_GL_SetSwapInterval(1);
     sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, SDL_RENDERER_ACCELERATED);
     configGL();
-    //Initialize atlas, which only depends on SDL being initialized
-    Atlas::init("main");
 }
 
-Window::~Window()
+void Window::dispose()
 {
     SDL_DestroyRenderer(sdlRenderer);
     SDL_DestroyWindow(sdlWindow);

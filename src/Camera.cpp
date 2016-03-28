@@ -229,3 +229,15 @@ FrustumCorners Camera::getFrustumCorners(const glm::mat4 &view, const glm::mat4 
     corners.lowerLeft = {camPos.x + ldMult * ldVec.x, 0, camPos.z + ldMult * ldVec.z, 1};
     return corners;
 }
+
+vec3 Camera::getWorldIntersect(int winX, int winY)
+{
+    //transform point and direction to worldspace
+    vec3 head = {winX, winY, 0};
+    vec3 dir = {0, 0, 1};
+}
+
+vec3 Camera::getWorldIntersect(vec3 head, vec3 dir)
+{
+
+}

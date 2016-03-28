@@ -16,10 +16,9 @@ enum struct Justify
     CENTER_JUST
 };
 
-class ImmediateDraw
+namespace ImmediateDraw
 {
-public:
-    ImmediateDraw(int quadInit, int lineInit);
+    void init(int quadInit, int lineInit);
     void beginFrame();
     //Simpler, abstracted drawing functions
     void setColor(Color4 color);
@@ -52,16 +51,15 @@ public:
     void enableTextures();
     void disableTextures();
     void draw();    //called by owner in its draw function
-private:
-    VBO vbo;
-    std::vector<Vertex2D> quadVertices;
-    std::vector<Vertex2D> lineVertices;
-    std::vector<ClipMarker> clipMarkers;
-    int quadIndex;
-    int lineIndex;
-    Vertex2D state;
-    ClipMarker clipState;
-    bool texturesEnabled;
+    extern VBO vbo;
+    extern std::vector<Vertex2D> quadVertices;
+    extern std::vector<Vertex2D> lineVertices;
+    extern std::vector<ClipMarker> clipMarkers;
+    extern int quadIndex;
+    extern int lineIndex;
+    extern Vertex2D state;
+    extern ClipMarker clipState;
+    extern bool texturesEnabled;
     //utility functions
     void genericTexturedQuad(const Texture& tex, Rectangle dest);
     void genericBlitChar(char c, Rectangle dest);

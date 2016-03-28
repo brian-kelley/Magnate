@@ -7,17 +7,16 @@
 #include "DebugTools.h"
 #include "VBO.h"
 
-class Shaders
+namespace Shaders
 {
-public:
-    Shaders();
-    ~Shaders();
-    GLint programID;
-    GLint vshadeID;
-    GLint fshadeID;
-    GLint modelLoc;
-    GLint viewLoc;
-    GLint projLoc;
+    void init();
+    void dispose();
+    extern GLint programID;
+    extern GLint vshadeID;
+    extern GLint fshadeID;
+    extern GLint modelLoc;
+    extern GLint viewLoc;
+    extern GLint projLoc;
 };
 
 #endif

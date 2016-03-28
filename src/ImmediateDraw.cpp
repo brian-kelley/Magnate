@@ -2,8 +2,21 @@
 
 using namespace std;
 
-ImmediateDraw::ImmediateDraw(int quadInit, int lineInit) : vbo(quadInit * 4 + lineInit * 2, VBO::v2D, GL_STREAM_DRAW), quadVertices(quadInit), lineVertices(lineInit)
+std::vector<Vertex2D> ImmediateDraw::quadVertices;
+std::vector<Vertex2D> ImmediateDraw::lineVertices;
+std::vector<ClipMarker> ImmediateDraw::clipMarkers;
+int ImmediateDraw::quadIndex;
+int ImmediateDraw::lineIndex;
+Vertex2D ImmediateDraw::state;
+ClipMarker ImmediateDraw::clipState;
+bool ImmediateDraw::texturesEnabled;
+VBO ImmediateDraw::vbo;
+
+void ImmediateDraw::init(int quadInit, int lineInit)
 {
+    vbo = VBO(quadInit * 4 + lineInit * 2, VBO::v2D, GL_STREAM_DRAW);
+    quadVertices.resize(quadInit);
+    lineVertices.resize(lineInit);
     state.pos = Pos2(0, 0);
     state.color = {255, 255, 255, 255};
     state.texcoord = {-1, -1};

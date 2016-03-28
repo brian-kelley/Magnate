@@ -14,19 +14,16 @@
 #include "Camera.h"
 #include "Menus.h"
 
-class Game
+namespace Game
 {
-public:
-    Game();
-private:
-    Renderer renderer;
+    void init();
     void mainLoop();
     void update();
     void debugInit();
-    bool terminating;        //whether the program will terminate after this frame
-    static void processWindow(void* inst, const SDL_WindowEvent& event);
-    static void processMisc(void* inst, const SDL_EventType& event);
-    static void processMenuEvent(void* inst, const GeneralMsg& msg);
+    void processWindow(void* inst, const SDL_WindowEvent& event);
+    void processMisc(void* inst, const SDL_EventType& event);
+    void processMenuEvent(void* inst, const GeneralMsg& msg);
+    extern bool terminating;        //whether the program will terminate after this frame
 };
 
 #endif

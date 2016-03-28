@@ -9,6 +9,7 @@
 #include "Heightmap.h"
 #include "World.h"
 #include "DebugTools.h"
+#include "Window.h"
 
 struct FrustumCorners
 {
@@ -33,6 +34,8 @@ public:
     static Broadcaster<glm::mat4> cameraMotion;    //broadcasts view matrix after updates
     static glm::mat4 viewMat;
     static glm::mat4 projMat;
+    static glm::vec3 getWorldIntersect(int winX, int winY);             //get first intersection of window pixel with world mesh
+    static glm::vec3 getWorldIntersect(glm::vec3 head, glm::vec3 dir);  //get first intersection of worldspace vector
 private:
     static const Heightmap* heights;
     static void processWheel(void*, const SDL_MouseWheelEvent& event); //handles scroll events

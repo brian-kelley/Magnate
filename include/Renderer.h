@@ -16,23 +16,19 @@
 #include "Shaders.h"
 #include "Window.h"
 #include "GlobalConfig.h"
+#include "Atlas.h"
 
-class Renderer
+namespace Renderer
 {
-public:
-    Renderer();
+    void init();
     void upload2DMatrices();                 //only call during init
     void upload3DMatrices();                 //when FOV or window changes
     void uploadMatrices(int dims); //before draw call, 2 or 3
     void update();
     void modelTest();
-private:
-    Window win;
-    Shaders shaders;
-    WorldRenderer worldRend;
-    UIRenderer uiRend;
-    GLuint modelLoc;
-    GLuint projLoc;
-    GLuint viewLoc;
-};
+    extern GLint modelLoc;
+    extern GLint viewLoc;
+    extern GLint projLoc;
+}
+
 #endif

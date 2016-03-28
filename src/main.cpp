@@ -2,8 +2,8 @@
 
 using namespace std;
 
-int main(int argc, char** argv)
+int main()
 {
-    Game g;
+    Game::init();
     return 0;
 }

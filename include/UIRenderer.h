@@ -22,13 +22,11 @@
 #include "Input.h"
 #include "Camera.h"
 
-class UIRenderer
+namespace UIRenderer
 {
-public:
-    UIRenderer();
+    void init();
     void drawComponent(Component* c);
     void draw();         //do GL draw call for all visible components
-private:
     void drawScene(Scene* s);
     void drawButton(Button* b);
     void drawLabel(Label* l);
@@ -37,16 +35,15 @@ private:
     void drawMultiSelect(MultiSelect* ms);
     void drawDraggable(Draggable* d);
     void drawMinimap(Minimap* mm);
-    const int QUAD_INIT;
-    const int LINE_INIT;
-    ImmediateDraw imm;      //handles VBO for easy drawing
+    extern const int QUAD_INIT;
+    extern const int LINE_INIT;
     //Aesthetic constants
-    const Color4 fg;
-    const Color4 bg;
-    const int BORDER_WIDTH;
-    const int PAD;
-    const int BAR_WIDTH;
-    const float SHADE;
-};
+    extern const Color4 fg;
+    extern const Color4 bg;
+    extern const int BORDER_WIDTH;
+    extern const int PAD;
+    extern const int BAR_WIDTH;
+    extern const float SHADE;
+}
 
 #endif

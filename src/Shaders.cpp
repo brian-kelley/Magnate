@@ -2,7 +2,14 @@
 
 using namespace std;
 
-Shaders::Shaders()
+GLint Shaders::programID;
+GLint Shaders::vshadeID;
+GLint Shaders::fshadeID;
+GLint Shaders::modelLoc;
+GLint Shaders::viewLoc;
+GLint Shaders::projLoc;
+
+void Shaders::init()
 {
     const char* vshader = 
         "#version 120\n"
@@ -115,7 +122,7 @@ Shaders::Shaders()
     GLERR
 }
 
-Shaders::~Shaders()
+void Shaders::dispose()
 {
     glDetachShader(programID, vshadeID);
     glDetachShader(programID, fshadeID);

@@ -2,18 +2,20 @@
 
 using namespace std;
 
-Game::Game() : renderer()
+bool Game::terminating = false;
+
+void Game::init()
 {
+    Renderer::init();
     Coord::initCoord();
     Input::init();
     Camera::init();
-    //TODO: Find where to put main menu and initialize here
     terminating = false;
     Menus::initAll();
-    Input::windowBroadcaster.addListener(this, processWindow);
-    Input::miscBroadcaster.addListener(this, processMisc);
+    Input::windowBroadcaster.addListener(NULL, processWindow);
+    Input::miscBroadcaster.addListener(NULL, processMisc);
     Input::dt = 0;
-    Menus::bc.addListener(this, processMenuEvent);
+    Menus::bc.addListener(NULL, processMenuEvent);
     //Load a test world
     debugInit();
     mainLoop();
@@ -26,7 +28,7 @@ void Game::update()
     Camera::update();
     //Update world
     World::update();
-    renderer.update();
+    Renderer::update();
 }
 
 void Game::mainLoop()
@@ -56,30 +58,24 @@ void Game::mainLoop()
     }
 }
 
-void Game::processWindow(void *inst, const SDL_WindowEvent &event)
+void Game::processWindow(void*, const SDL_WindowEvent &event)
 {
     if(event.event == SDL_WINDOWEVENT_CLOSE)
-    {
-        Game* game = (Game*) inst;
-        game->terminating = true;
-    }
+        terminating = true;
 }
 
-void Game::processMisc(void *inst, const SDL_EventType &event)
+void Game::processMisc(void*, const SDL_EventType &event)
 {
     if(event == SDL_QUIT)
-    {
-        Game* game = (Game*) inst;
-        game->terminating = true;
-    }
+        terminating = true;
 }
 
-void Game::processMenuEvent(void* inst, const GeneralMsg& msg)
+void Game::processMenuEvent(void*, const GeneralMsg& msg)
 {
     switch(msg.eventType)
     {
         case MenuEvent::GAME_QUIT:
-            ((Game*) inst)->terminating = true;
+            terminating = true;
             break;
         default:;
     }

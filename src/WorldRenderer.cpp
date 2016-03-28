@@ -4,9 +4,18 @@ using namespace std;
 using namespace Coord;
 using namespace glm;
 
-WorldRenderer::WorldRenderer() :
-vbo(VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * 4, VBO::v3D, GL_DYNAMIC_DRAW)
+Pos2 WorldRenderer::centerChunk;
+TexCoord WorldRenderer::uvCache[4 * Ground::NUM_TYPES];
+const int WorldRenderer::CHUNK_SIZE = 32;      //64 tiles on a side
+const int WorldRenderer::VBO_CHUNKS = 81;      //5x5 grid
+const short WorldRenderer::CHUNK_FREE = 0x7FFF; //value for x to mark free chunk
+Vertex3D* WorldRenderer::vertexBuf;             //Scratch buffer for a single chunk before sending to GPU
+Pos2* WorldRenderer::chunkAlloc;                //Fixed-length list of chunks that are currently in VBO
+VBO WorldRenderer::vbo;
+
+void WorldRenderer::init()
 {
+    vbo = VBO(VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * 4, VBO::v3D, GL_DYNAMIC_DRAW);
     createUVCache();
     //create a statically sized buffer for tiles (copy of VBO)
     vertexBuf = new Vertex3D[4 * CHUNK_SIZE * CHUNK_SIZE];
@@ -15,11 +24,11 @@ vbo(VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * 4, VBO::v3D, GL_DYNAMIC_DRAW)
     for(int i = 0; i < VBO_CHUNKS; i++)
         chunkAlloc[i].x = CHUNK_FREE;
     updateVBOChunks();
-    Camera::cameraMotion.addListener(this, processCameraUpdate);
-    World::worldLoaded.addListener(this, processWorldLoad);
+    Camera::cameraMotion.addListener(NULL, processCameraUpdate);
+    World::worldLoaded.addListener(NULL, processWorldLoad);
 }
 
-WorldRenderer::~WorldRenderer()
+void WorldRenderer::dispose()
 {
     delete vertexBuf;
     delete chunkAlloc;
@@ -112,18 +121,17 @@ bool WorldRenderer::isChunkAllocated(Pos2 pos)
     return false;
 }
 
-void WorldRenderer::processCameraUpdate(void* ins, const glm::mat4 &viewMat)
+void WorldRenderer::processCameraUpdate(void*, const glm::mat4 &viewMat)
 {
-    auto wr = (WorldRenderer*) ins;
     //First, figure out if center chunk has changed and update VBO accordingly
     auto center = Coord::getViewCenter(viewMat);
     auto centerTile = Coord::worldToTile(center);
-    Pos2 newCenterChunk(centerTile.x / wr->CHUNK_SIZE, centerTile.y / wr->CHUNK_SIZE);
-    if(wr->centerChunk != newCenterChunk)
+    Pos2 newCenterChunk(centerTile.x / CHUNK_SIZE, centerTile.y / CHUNK_SIZE);
+    if(centerChunk != newCenterChunk)
     {
         //center of view has moved across chunk boundary
-        wr->centerChunk = newCenterChunk;
-        wr->updateVBOChunks();
+        centerChunk = newCenterChunk;
+        updateVBOChunks();
     }
 }
 
@@ -164,15 +172,14 @@ void WorldRenderer::createUVCache()
     }
 }
 
-void WorldRenderer::processWorldLoad(void* ins, const bool& val)
+void WorldRenderer::processWorldLoad(void*, const bool& val)
 {
     if(val)
     {
-        WorldRenderer* wr = (WorldRenderer*) ins;
-        for(int i = 0; i < wr->VBO_CHUNKS; i++)
+        for(int i = 0; i < VBO_CHUNKS; i++)
         {
-            wr->chunkAlloc[i].x = CHUNK_FREE;
+            chunkAlloc[i].x = CHUNK_FREE;
         }
-        wr->updateVBOChunks();
+        updateVBOChunks();
     }
 }

@@ -15,24 +15,22 @@ enum struct WindowMode
     FULLSCREEN              //actual fullscreen
 };
 
-class Window
+namespace Window
 {
-public:
-    Window(int width, int height);
-    ~Window();
+    void init(int w, int h);
+    void dispose();
     Pos2 getSize();
     SDL_Renderer* getRenderer();
     void prepareFrame();
     void endFrame();
     void resize(int w, int h);
     void toggleFullscreen(WindowMode wm);
-private:
     void configGL();
-    int w;
-    int h;
-    SDL_Window* sdlWindow;
-    SDL_Renderer* sdlRenderer;
-    SDL_GLContext glContext;
+    extern int w;
+    extern int h;
+    extern SDL_Window* sdlWindow;
+    extern SDL_Renderer* sdlRenderer;
+    extern SDL_GLContext glContext;
 };
 
 #endif

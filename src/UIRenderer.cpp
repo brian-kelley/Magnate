@@ -1,30 +1,31 @@
 #include "UIRenderer.h"
 
 using namespace std;
+using namespace ImmediateDraw;
 
-UIRenderer::UIRenderer() :
-QUAD_INIT(1000),
-LINE_INIT(100),
-imm(QUAD_INIT, LINE_INIT),
-fg(190, 190, 190, 255),
-bg(120, 120, 120, 255),
-BORDER_WIDTH(3),
-PAD(5),
-BAR_WIDTH(6),
-SHADE(0.85)
+const int UIRenderer::QUAD_INIT = 1000;
+const int UIRenderer::LINE_INIT = 100;
+//Aesthetic constants
+const Color4 UIRenderer::fg(190, 190, 190, 255);
+const Color4 UIRenderer::bg(120, 120, 120, 255);
+const int UIRenderer::BORDER_WIDTH = 3;
+const int UIRenderer::PAD = 5;
+const int UIRenderer::BAR_WIDTH = 6;
+const float UIRenderer::SHADE = 0.85;
+
+void UIRenderer::init()
 {
-    GLERR
-    imm = ImmediateDraw(QUAD_INIT, LINE_INIT);
+    ImmediateDraw::init(QUAD_INIT, LINE_INIT);
 }
 
 void UIRenderer::draw()
 {
     glDisable(GL_DEPTH_TEST);
-    imm.beginFrame();
+    beginFrame();
     drawScene(GUI::current);
     drawScene(GUI::debugScene);
-    imm.blit("cursor", Input::mouseX, Input::mouseY);
-    imm.draw();
+    blit("cursor", Input::mouseX, Input::mouseY);
+    ImmediateDraw::draw();
 }
 
 void UIRenderer::drawComponent(Component *c)
@@ -72,35 +73,35 @@ void UIRenderer::drawMultiSelect(MultiSelect* ms)
         vector<string>& list = ms->getOptions();
         auto rect = ms->getScreenRect();
         //fill whole rectangle with background color
-        imm.drawRect(bg, rect);
+        drawRect(bg, rect);
         //if an option is selected, draw foreground rectangle around that
         if(ms->getSelection() != -1)
         {
-            imm.color3b(fg.r, fg.g, fg.b);
-            imm.disableTextures();
+            color3b(fg.r, fg.g, fg.b);
+            disableTextures();
             int optY = rect.y + ms->getSelection() * ms->getOptHeight();
-            imm.vertex2i(rect.x, optY);
-            imm.vertex2i(rect.x + rect.w, optY);
-            imm.vertex2i(rect.x + rect.w, optY + PAD);
-            imm.vertex2i(rect.x, optY + PAD);
-            imm.vertex2i(rect.x, optY + PAD);
-            imm.vertex2i(rect.x + PAD, optY + PAD);
-            imm.vertex2i(rect.x + PAD, optY + ms->getOptHeight() - PAD);
-            imm.vertex2i(rect.x, optY + ms->getOptHeight() - PAD);
-            imm.vertex2i(rect.x + rect.w - PAD, optY + PAD);
-            imm.vertex2i(rect.x + rect.w, optY + PAD);
-            imm.vertex2i(rect.x + rect.w, optY + ms->getOptHeight() - PAD);
-            imm.vertex2i(rect.x + rect.w - PAD, optY + ms->getOptHeight() - PAD);
-            imm.vertex2i(rect.x, optY + ms->getOptHeight() - PAD);
-            imm.vertex2i(rect.x + rect.w, optY + ms->getOptHeight() - PAD);
-            imm.vertex2i(rect.x + rect.w, optY + ms->getOptHeight());
-            imm.vertex2i(rect.x, optY + ms->getOptHeight());
+            vertex2i(rect.x, optY);
+            vertex2i(rect.x + rect.w, optY);
+            vertex2i(rect.x + rect.w, optY + PAD);
+            vertex2i(rect.x, optY + PAD);
+            vertex2i(rect.x, optY + PAD);
+            vertex2i(rect.x + PAD, optY + PAD);
+            vertex2i(rect.x + PAD, optY + ms->getOptHeight() - PAD);
+            vertex2i(rect.x, optY + ms->getOptHeight() - PAD);
+            vertex2i(rect.x + rect.w - PAD, optY + PAD);
+            vertex2i(rect.x + rect.w, optY + PAD);
+            vertex2i(rect.x + rect.w, optY + ms->getOptHeight() - PAD);
+            vertex2i(rect.x + rect.w - PAD, optY + ms->getOptHeight() - PAD);
+            vertex2i(rect.x, optY + ms->getOptHeight() - PAD);
+            vertex2i(rect.x + rect.w, optY + ms->getOptHeight() - PAD);
+            vertex2i(rect.x + rect.w, optY + ms->getOptHeight());
+            vertex2i(rect.x, optY + ms->getOptHeight());
         }
         for(int i = 0; i < int(list.size()); i++)
         {
             Rectangle optRect(rect.x + PAD, rect.y + PAD + i * ms->getOptHeight(), rect.w - PAD * 2, ms->getOptHeight() - PAD * 2);
-            imm.color3b(fg.r, fg.g, fg.b);
-            imm.drawStringAuto(list[i], optRect, Justify::LEFT_JUST);
+            color3b(fg.r, fg.g, fg.b);
+            drawStringAuto(list[i], optRect, Justify::LEFT_JUST);
         }
     }
 }
@@ -108,20 +109,20 @@ void UIRenderer::drawMultiSelect(MultiSelect* ms)
 void UIRenderer::drawLabel(Label* l)
 {
     auto lrect = l->getScreenRect();
-    imm.color3b(fg.r, fg.g, fg.b);
-    imm.drawStringAuto(l->getText(), lrect, Justify::CENTER_JUST);
+    color3b(fg.r, fg.g, fg.b);
+    drawStringAuto(l->getText(), lrect, Justify::CENTER_JUST);
 }
 
 void UIRenderer::drawField(Field* f)
 {
     auto rect = f->getScreenRect();
     //Fill with background
-    imm.drawRect(bg, rect);
+    drawRect(bg, rect);
     //draw lines around border
-    imm.drawLineRect(fg, rect);
+    drawLineRect(fg, rect);
     //draw text
     Rectangle textRect(rect.x + PAD, rect.y + PAD, rect.w - 2 * PAD, rect.h - 2 * PAD);
-    imm.drawStringAuto(f->getText(), textRect, Justify::LEFT_JUST);
+    drawStringAuto(f->getText(), textRect, Justify::LEFT_JUST);
 }
 
 void UIRenderer::drawButton(Button* b)
@@ -142,18 +143,18 @@ void UIRenderer::drawButton(Button* b)
         dark = dark * SHADE;
     }
     //Draw background
-    imm.drawRect(background, rect);
+    drawRect(background, rect);
     //Draw beveled frame
-    imm.drawBevelFrame(light, dark, rect, BORDER_WIDTH);
+    drawBevelFrame(light, dark, rect, BORDER_WIDTH);
     //Draw text
     Rectangle textRect(rect.x + PAD, rect.y + PAD, rect.w - PAD * 2, rect.h - PAD * 2);
-    imm.drawStringAuto(b->getText(), textRect, light);
+    drawStringAuto(b->getText(), textRect, light);
 }
 
 void UIRenderer::drawScrollBlock(ScrollBlock* sb)
 {
     auto rect = sb->getScreenRect();
-    imm.drawRect(bg * SHADE, rect);
+    drawRect(bg * SHADE, rect);
     Rectangle barRect;
     auto barH = sb->getBarHeight();
     auto barY = sb->getBarPos();
@@ -161,12 +162,12 @@ void UIRenderer::drawScrollBlock(ScrollBlock* sb)
     barRect.y = rect.y + PAD + barY * (rect.h - PAD * 2);
     barRect.w = BAR_WIDTH;
     barRect.h = (rect.h - PAD * 2) * barH;
-    imm.drawRect(fg, barRect);
-    imm.scissorRect(rect);
-    imm.enableScissorTest();
+    drawRect(fg, barRect);
+    scissorRect(rect);
+    enableScissorTest();
     for(auto c : sb->getChildren())
         drawComponent(c);
-    imm.disableScissorTest();
+    disableScissorTest();
 }
 
 void UIRenderer::drawDraggable(Draggable* d)
@@ -177,26 +178,26 @@ void UIRenderer::drawDraggable(Draggable* d)
 void UIRenderer::drawMinimap(Minimap *mm)
 {
     auto& rect = mm->getScreenRect();
-    imm.color3b(255, 255, 255);
-    imm.blit("minimap", rect);
+    color3b(255, 255, 255);
+    blit("minimap", rect);
     if(Input::keystate[SDL_SCANCODE_T])
-        imm.blit("topo", rect);
-    imm.drawLineRect(fg, rect);
+        blit("topo", rect);
+    drawLineRect(fg, rect);
     auto fc = Camera::getFrustumCorners(Camera::viewMat, Camera::projMat);
-    imm.disableTextures();
-    imm.setColor(fg);
+    disableTextures();
+    setColor(fg);
     float mult = float(mm->getScreenRect().w) / GlobalConfig::WORLD_SIZE;
     Pos2 origin(rect.x, rect.y);
     auto p1 = Coord::worldToTile(fc.upperLeft) * mult + origin;
     auto p2 = Coord::worldToTile(fc.upperRight) * mult + origin;
     auto p3 = Coord::worldToTile(fc.lowerRight) * mult + origin;
     auto p4 = Coord::worldToTile(fc.lowerLeft) * mult + origin;
-    imm.lineVertex2i(p1);
-    imm.lineVertex2i(p2);
-    imm.lineVertex2i(p2);
-    imm.lineVertex2i(p3);
-    imm.lineVertex2i(p3);
-    imm.lineVertex2i(p4);
-    imm.lineVertex2i(p1);
-    imm.lineVertex2i(p4);
+    lineVertex2i(p1);
+    lineVertex2i(p2);
+    lineVertex2i(p2);
+    lineVertex2i(p3);
+    lineVertex2i(p3);
+    lineVertex2i(p4);
+    lineVertex2i(p1);
+    lineVertex2i(p4);
 }

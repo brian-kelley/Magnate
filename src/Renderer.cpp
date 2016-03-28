@@ -4,14 +4,19 @@ using namespace std;
 using namespace glm;
 using namespace Coord;
 
-Renderer::Renderer() :
-win(640, 480),
-shaders(),
-worldRend(),
-uiRend()
+GLint Renderer::modelLoc = -1;
+GLint Renderer::viewLoc = -1;
+GLint Renderer::projLoc = -1;
+
+void Renderer::init()
 {
-    ModelRenderer::init(shaders.modelLoc);
-    auto progID = shaders.programID;
+    Window::init(640, 480);
+    Atlas::init("main");
+    Shaders::init();
+    WorldRenderer::init();
+    UIRenderer::init();
+    ModelRenderer::init(Shaders::modelLoc);
+    auto progID = Shaders::programID;
     modelLoc = glGetUniformLocation(progID, "model");
     viewLoc = glGetUniformLocation(progID, "view");
     projLoc = glGetUniformLocation(progID, "proj");
@@ -25,13 +30,13 @@ uiRend()
 
 void Renderer::update()
 {
-    win.prepareFrame();
+    Window::prepareFrame();
     //Draw the world first, if in game
     //Use nearest neighbor texture sampling
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     upload3DMatrices();
-    worldRend.draw();
+    WorldRenderer::draw();
     //Model renderer test
     modelTest();
     GLERR
@@ -40,16 +45,16 @@ void Renderer::update()
     upload2DMatrices();
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    uiRend.draw();
+    UIRenderer::draw();
     //Finally, flip window
     glFlush();
-    win.endFrame();
+    Window::endFrame();
 }
 
 void Renderer::upload2DMatrices()
 {
     GLERR
-    auto winSize = win.getSize();
+    auto winSize = Window::getSize();
     mat4 proj2 = ortho<float>(0, winSize.x, winSize.y, 0, -1, 1);
     mat4 view2 = glm::mat4(); //ID mat: (0,0,0) is camera origin
     mat4 model;
@@ -61,7 +66,7 @@ void Renderer::upload2DMatrices()
 
 void Renderer::upload3DMatrices()
 {
-    auto winSize = win.getSize();
+    auto winSize = Window::getSize();
     mat4 proj3 = Camera::getProjMatrix(winSize.x, winSize.y);
     mat4 view3 = Camera::getViewMatrix();
     mat4 model3 = glm::mat4();
