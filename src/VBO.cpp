@@ -18,7 +18,16 @@ GLint VBO::posAttribLoc = -1;
 GLint VBO::normAttribLoc = -1;
 GLint VBO::useNormalsLoc = -1;
 VBO* VBO::currentBound = nullptr;
-;
+
+VBO::VBO()
+{
+    this->type = v3D;
+    this->numVertices = 0;
+    this->updateHint = GL_STATIC_DRAW;
+    this->hasIndexBuf = false;
+    this->vboID = -1;
+}
+
 VBO::VBO(int numVertices, Type type, int updateHint, bool hasIndex, int numIndices)
 {
     this->type = type;

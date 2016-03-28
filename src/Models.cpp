@@ -4,6 +4,11 @@ using namespace std;
 using namespace glm;
 using namespace boost::filesystem;
 
+vector<Model> ModelRenderer::models;
+unordered_map<string, int> ModelRenderer::modelNames;
+GLint ModelRenderer::modelLoc;
+VBO ModelRenderer::vbo;
+
 ostream& operator<<(ostream& os, const Face& f)
 {
     os << f.v1 << '/' << f.vt1 << '/' << f.vn1 << ' ' << f.v2 << '/' << f.vt2 << '/' << f.vn2 << ' ' << f.v3 << '/' << f.vt3 << '/' << f.vn3;
@@ -58,27 +63,32 @@ void Model::fixPosition()
     }
 }
 
-ModelRenderer::ModelRenderer(GLint modelLoc) : vbo(0, VBO::v3D, GL_STATIC_DRAW)
+void ModelRenderer::init(GLint modelLoc)
 {
-    GLERR
-    this->modelLoc = modelLoc;
+    ModelRenderer::modelLoc = modelLoc;
+    vbo = VBO(0, VBO::v3D, GL_STATIC_DRAW);
     loadOBJs();
     createVBO();
-    GLERR
 }
-void ModelRenderer::drawModel(string modelName, mat4& modelMat)
+
+void ModelRenderer::drawModel(int modelID, mat4& model)
 {
-    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(modelMat));
-    auto pos = models.find(modelName);
-    if(pos == models.end())
+    Model& toDraw = models[modelID];
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model));
+    vbo.draw(toDraw.vboStart, toDraw.faces.size() * 3, GL_TRIANGLES);
+}
+
+void ModelRenderer::drawModel(string modelName, mat4& model)
+{
+    auto it = modelNames.find(modelName);
+    if(it == modelNames.end())
     {
-        PRINT("Error: no model named \"" << modelName << "\""); 
+        PRINT("Error: model \"" << modelName << "\" not found.");
         return;
     }
-    Model& m = pos->second;
-    vbo.draw(m.vboStart, m.faces.size() * 3, GL_TRIANGLES);
-    auto sample = modelMat * vec4(m.vertices[0], 1);
-    GLERR
+    Model& toDraw = models[it->second];
+    glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model));
+    vbo.draw(toDraw.vboStart, toDraw.faces.size() * 3, GL_TRIANGLES);
 }
 
 void ModelRenderer::loadOBJs()
@@ -224,7 +234,8 @@ void ModelRenderer::readModelFile(path fpath)
         lineno++;
     }
     fclose(input);
-    models[fpath.stem().string()] = model;
+    models.push_back(move(model));
+    modelNames[fpath.stem().string()] = models.size() - 1;
 }
 
 void ModelRenderer::createVBO()
@@ -234,13 +245,13 @@ void ModelRenderer::createVBO()
     Color4 white(255, 255, 255, 255);
     int totalVerts = 0;
     for(auto& modelEntry : models)
-        totalVerts += 3 * modelEntry.second.faces.size();
+        totalVerts += 3 * modelEntry.faces.size();
     PRINT("Setting vbo size to " << totalVerts);
     vbo.resize(totalVerts);
     int modelIndex = 0;
     for(auto& modelEntry : models)
     {
-        auto& model = modelEntry.second;
+        auto& model = modelEntry;
         model.vboStart = modelIndex;
         int modelVertices = model.faces.size() * 3;
         //allocate space for this model

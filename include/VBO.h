@@ -26,6 +26,7 @@ public:
         v3D,     //use Vertex3D
         v2D      //use Vertex2D
     };
+    VBO();
     VBO(int numVertices, Type type, int updateHint, bool hasIndex = false, int numIndices = 0);
     void resize(int numVertices);
     void resizeIndexBuf(int numIndices);

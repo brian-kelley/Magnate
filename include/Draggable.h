@@ -2,8 +2,17 @@
 #define __DRAGGABLE_H__
 
 #include <iostream>
+#include <vector>
 #include "Component.h"
 #include "Building.h"
+
+//Structure to describe how to draw each model
+//angle = yaw rotation
+//may need entire model matrix in future
+struct ModelDrawParams
+{
+    float angle;
+};
 
 class Draggable : public Component
 {
@@ -15,6 +24,9 @@ public:
     Pos2 getDragPos();
     void deactivate();
     int getImageNum();
+    static void initParams();
+    static std::vector<ModelDrawParams> params; //params for all models
+    static bool initialized;
 private:
     int img;
     Callback onDrop;

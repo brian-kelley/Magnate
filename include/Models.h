@@ -10,8 +10,6 @@
 #include "FileIO.h"
 #include "VBO.h"
 
-using namespace std;
-
 typedef glm::vec3 MPos;
 typedef glm::vec2 MUV;
 typedef glm::vec3 MNorm;
@@ -30,33 +28,32 @@ struct Face
     int vn3;
 };
 
-ostream& operator<<(ostream& os, const Face& f);
+std::ostream& operator<<(std::ostream& os, const Face& f);
 
 struct Model
 {
     void computeNormals(); //do this if .obj doensn't have normals
     void fixPosition();    //translate so model in 1st octant at origin
-    string name;
-    vector<MPos> vertices;
-    vector<MUV> uvs;
-    vector<MNorm> norms;
-    vector<Face> faces;
+    std::string name;
+    std::vector<MPos> vertices;
+    std::vector<MUV> uvs;
+    std::vector<MNorm> norms;
+    std::vector<Face> faces;
     int vboStart;
 };
 
-class ModelRenderer
+namespace ModelRenderer
 {
-public:
-    ModelRenderer(GLint modelLoc);
-    void drawModel(string modelName, glm::mat4& model);
-private:
-    void loadOBJs();        //load all obj files in models folder
-    void createVBO();       //store all models in one vbo
-    void createIndexBuf();
+    void init(GLint modelLoc);
+    void drawModel(int modelID, glm::mat4& model);
+    void drawModel(std::string name, glm::mat4& model);
+    void loadOBJs();
+    void createVBO();
     void readModelFile(boost::filesystem::path fpath);
-    unordered_map<string, Model> models;
-    GLint modelLoc;
-    VBO vbo;
+    extern std::vector<Model> models;
+    extern std::unordered_map<std::string, int> modelNames;
+    extern GLint modelLoc;
+    extern VBO vbo;
 };
 
 #endif

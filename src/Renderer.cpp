@@ -8,9 +8,9 @@ Renderer::Renderer() :
 win(640, 480),
 shaders(),
 worldRend(),
-uiRend(),
-modelRend(shaders.modelLoc)
+uiRend()
 {
+    ModelRenderer::init(shaders.modelLoc);
     auto progID = shaders.programID;
     modelLoc = glGetUniformLocation(progID, "model");
     viewLoc = glGetUniformLocation(progID, "view");
@@ -76,19 +76,5 @@ void Renderer::modelTest()
     vec3 scale(10, 10, 10);
     mat = glm::scale(mat, scale);
     //todo: test scale/rotate/translate
-    modelRend.drawModel("sphereTank", mat);
-    vec3 xtrans(1.2, 0, 0);
-    vec3 ztrans(0, 0, 1.2);
-    mat4 row = mat;
-    int square = 60;
-    for(int i = 0; i < square; i++)
-    {
-        glm::mat4 col = row;
-        for(int j = 0; j < square; j++)
-        {
-            modelRend.drawModel("sphereTank", col);
-            col = translate(col, ztrans);
-        }
-        row = translate(row, xtrans);
-    }
+    ModelRenderer::drawModel("sphereTank", mat);
 }
