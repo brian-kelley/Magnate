@@ -4,7 +4,7 @@ using namespace std;
 using namespace GlobalConfig;
 using namespace Coord;
 
-TerrainGen::TerrainGen() : world(World::getHeights()), biomes(World::getBiomes()), rainfall(WORLD_SIZE, WORLD_SIZE)
+TerrainGen::TerrainGen(Heightmap& heights, Heightmap& worldBiomes) : world(heights), biomes(worldBiomes)
 {
     RandomUtils::seed(clock());
     generate();
@@ -339,7 +339,7 @@ float TerrainGen::getLandArea()
 
 void TerrainGen::addWatershed(float cutoff, short maxH, short avgH)
 {
-    Watershed(20, avgH + cutoff * (maxH - avgH));
+    Watershed(world, biomes, 20, avgH + cutoff * (maxH - avgH));
 }
 
 short TerrainGen::getMaxHeight()

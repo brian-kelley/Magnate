@@ -4,7 +4,7 @@ using namespace std;
 using namespace GlobalConfig;
 using namespace Coord;
 
-Watershed::Watershed(int numRivers, short minH) : world(World::getHeights()), biomes(World::getBiomes())
+Watershed::Watershed(Heightmap& worldHeights, Heightmap& worldBiomes, int numRivers, short minH) : world(worldHeights), biomes(worldBiomes)
 {
     for(int i = 0; i < numRivers; i++)
         addRiver(minH);

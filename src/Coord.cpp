@@ -2,6 +2,9 @@
 
 using namespace glm;
 using namespace std;
+using namespace LinAlg;
+
+#define EPSILON (1e-9)
 
 mat4 Coord::tileToWorldMat;
 mat4 Coord::worldToTileMat;
@@ -10,6 +13,45 @@ const double Coord::TERRAIN_Y_SCALE = 0.0015;
 const vec4 Coord::tileI = {TERRAIN_TILE_SIZE, 0, 0, 0};
 const vec4 Coord::tileJ = {0, TERRAIN_Y_SCALE, 0, 0};
 const vec4 Coord::tileK = {0, 0, TERRAIN_TILE_SIZE, 0};
+
+vec2 Geom::leftNormal(vec2 dir)
+{
+    return {-dir.y, dir.x};
+}
+
+vec2 Geom::rightNormal(vec2 dir)
+{
+    return {dir.y, -dir.x};
+}
+
+bool Geom::intersect(vec2& result, vec2 p1, vec2 p2, vec2 p3, vec2 p4)
+{
+    float dx = (p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x);
+    if(dx > -EPSILON && dx < EPSILON)
+        return false;
+    float nx = (p1.x * p2.y - p1.y * p2.x) * (p3.x - p4.x) 
+        - (p1.x - p2.x) * (p3.x * p4.y - p3.y * p4.x);
+    float dy = (p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x);
+    if(dy > -EPSILON && dy < EPSILON)
+        return false;
+    float ny = (p1.x * p2.y - p1.y * p2.x) * (p3.y - p4.y)
+        - (p1.y - p2.y) * (p3.x * p4.y - p3.y * p4.x);
+    result = {nx / dx, ny / dy};
+    return true;
+}
+
+Direction Geom::sideOfRay(vec2 p, vec2 dir, vec2 test)
+{
+    vec2 diff = test - p;
+    vec2 rightNorm = rightNormal(dir);
+    float val = dot(rightNorm, diff);
+    if(val > EPSILON)
+        return RIGHT;
+    else if(val < -EPSILON)
+        return LEFT;
+    else
+        return NO_DIRECTION;
+}
 
 void Coord::initCoord()
 {

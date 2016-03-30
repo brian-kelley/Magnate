@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cstdint>
+#include <iomanip>
 #include "GlmHeaders.h"
 
 typedef int8_t s8;
@@ -92,6 +93,7 @@ struct Vertex3D
 std::ostream& operator<<(std::ostream& os, const Rectangle& r);
 std::ostream& operator<<(std::ostream& os, const glm::vec3& v);
 std::ostream& operator<<(std::ostream& os, const glm::vec4& v);
+std::ostream& operator<<(std::ostream& os, const glm::mat4& v);
 u32 getColor32(u8 r, u8 g, u8 b, u8 a = 0xFF);
 
 #endif

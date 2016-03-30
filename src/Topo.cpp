@@ -4,9 +4,8 @@ using namespace std;
 using namespace Coord;
 using namespace GlobalConfig;
 
-void Topo::generateTopo()
+void Topo::generateTopo(Heightmap& heights)
 {
-    const auto& heights = World::getHeights();
     //get max height
     short maxH = 0;
     for(int i = 0; i < WORLD_SIZE; i++)

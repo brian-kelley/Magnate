@@ -8,11 +8,11 @@
 #include "Terrain.h"
 #include "TerrainGen.h"
 #include "FileIO.h"
-#include "Topo.h"
 #include "RandomUtils.h"
 #include "Heightmap.h"
 #include "Broadcaster.h"
 #include "Building.h"
+#include "TriMesh.h"
 
 class World
 {

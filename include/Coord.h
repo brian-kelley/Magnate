@@ -32,6 +32,16 @@ enum Direction
     NO_DIRECTION
 };
 
+namespace Geom
+{
+    glm::vec2 leftNormal(glm::vec2 dir);    //rotate dir left 90 degrees
+    glm::vec2 rightNormal(glm::vec2 dir);   //rotate right 90
+    bool intersect(glm::vec2& result, glm::vec2 p, glm::vec2 dir, glm::vec2 testP, glm::vec2 testDir);
+    Direction sideOfRay(glm::vec2 p, glm::vec2 dir, glm::vec2 test); //LEFT, RIGHT, NO_DIR
+    void findTriVal(float target, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float v1, float v2, float v3);
+    float triInterp(glm::vec3 target, glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, float v1, float v2, float v3);
+}
+
 namespace Coord
 {
     void initCoord();

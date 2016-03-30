@@ -5,14 +5,13 @@
 #include <queue>
 #include "GlobalConfig.h"
 #include "Coord.h"
-#include "World.h"
 #include "Watershed.h"
 #include "Heightmap.h"
 #include "Erosion.h"
 
 struct TerrainGen
 {
-    TerrainGen();
+    TerrainGen(Heightmap& heights, Heightmap& biomes);
     Heightmap& world;
     Heightmap& biomes;
     std::vector<Pos2> focusLocs;

@@ -156,13 +156,13 @@ CompType Minimap::getType()
     return CompType::minimap;
 }
 
-void Minimap::mouseButton(const SDL_MouseButtonEvent &event)
+void Minimap::mouseButton(const SDL_MouseButtonEvent&)
 {
     if(Input::isMouseDown)
         setCam();
 }
 
-void Minimap::mouseMotion(const SDL_MouseMotionEvent &event)
+void Minimap::mouseMotion(const SDL_MouseMotionEvent&)
 {
     if(Input::isMouseDown)
         setCam();
@@ -181,6 +181,6 @@ void Minimap::processWorldLoading(void*, const bool& isLoaded)
     if(isLoaded)
     {
         buildTexture();
-        Topo::generateTopo();
+        Topo::generateTopo(World::getHeights());
     }
 }

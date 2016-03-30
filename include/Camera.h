@@ -35,7 +35,7 @@ public:
     static glm::mat4 viewMat;
     static glm::mat4 projMat;
     static glm::vec3 getWorldIntersect(int winX, int winY);             //get first intersection of window pixel with world mesh
-    static glm::vec3 getWorldIntersect(glm::vec3 head, glm::vec3 dir);  //get first intersection of worldspace vector
+    static glm::vec3 getWorldIntersect(glm::vec4 head, glm::vec4 dir);  //get first intersection of worldspace vector
 private:
     static const Heightmap* heights;
     static void processWheel(void*, const SDL_MouseWheelEvent& event); //handles scroll events

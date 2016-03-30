@@ -1,6 +1,7 @@
 #include "Camera.h"
 
 using namespace glm;
+using namespace Coord;
 
 Broadcaster<glm::mat4> Camera::cameraMotion;
 vec3 Camera::camDir;
@@ -83,6 +84,8 @@ glm::mat4 Camera::getViewMatrix()
 glm::mat4 Camera::getProjMatrix(int winW, int winH)
 {
     projMat = perspectiveFov<float>(FOV, winW, winH, FAR, NEAR);
+    //do a test
+    getWorldIntersect(0, 0);
     return projMat;
 }
 
@@ -233,11 +236,31 @@ FrustumCorners Camera::getFrustumCorners(const glm::mat4 &view, const glm::mat4 
 vec3 Camera::getWorldIntersect(int winX, int winY)
 {
     //transform point and direction to worldspace
-    vec3 head = {winX, winY, 0};
-    vec3 dir = {0, 0, -1};
+    vec4 tail = {winX, winY, 2, 1};
+    vec4 head = {winX, winY, 1, 1};
+    //convert head from viewport to clip
+    head.x *= (2.0 / Window::w);
+    head.y *= (2.0 / Window::h);
+    tail.x *= (2.0 / Window::w);
+    tail.y *= (2.0 / Window::h);
+    //convert head and dir from clip to view
+    mat4 invProj = inverse(projMat);
+    head = invProj * head;
+    tail = invProj * tail;
+    head /= head.w;
+    tail /= tail.w;
+    //convert head and dir from view to world
+    mat4 invView = inverse(viewMat);
+    head = invView * head;
+    tail = invView * tail;
+    return getWorldIntersect(head, head - tail);
 }
 
-vec3 Camera::getWorldIntersect(vec3 head, vec3 dir)
+vec3 Camera::getWorldIntersect(vec4 head, vec4 dir)
 {
-
+    //get sea level intersection point
+    vec2 seaLevel = (head - dir * (head.y / dir.y)).xz();
+    Pos2 tileStart = worldToTile(head);
+    vec2 iter = tileToWorld(tileStart.x, 0, tileStart.y).xz();
+    vec2 traceDir = normalize(vec2(seaLevel.x - iter.x, seaLevel.y - iter.y));
 }

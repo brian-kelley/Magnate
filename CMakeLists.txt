@@ -42,6 +42,7 @@ include/TerrainGen
 include/TexGen
 include/TexManager
 include/Topo
+include/TriMesh
 include/UIRenderer
 include/VBO
 include/Watershed
@@ -85,6 +86,7 @@ src/TerrainGen
 src/TexGen
 src/TexManager
 src/Topo
+src/TriMesh
 src/UIRenderer
 src/VBO
 src/Watershed

@@ -8,7 +8,6 @@
 #include "Watershed.h"
 #include "DebugTools.h"
 #include "Coord.h"
-#include "World.h"
 #include "GenTypes.h"
 
 class Erosion

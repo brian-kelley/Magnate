@@ -122,24 +122,35 @@ void Color4::operator*=(const float rval)
 
 ostream& operator<<(ostream& os, const Rectangle& r)
 {
-    os << "(" << r.x << "," << r.y << "), " << r.w << "x" << r.h;
+    os << "(" << r.x << ", " << r.y << "), " << r.w << "x" << r.h;
     return os;
 }
 
 ostream& operator<<(ostream& os, const vec3& v)
 {
-    os << "(" << v.x << "," << v.y << "," << v.z << ")";
+    os << "(" << v.x << ", " << v.y << ", " << v.z << ")";
     return os;
 }
 
 ostream& operator<<(ostream& os, const vec4& v)
 {
-    os << "(" << v.x << "," << v.y << "," << v.z << "," << v.w << ")";
+    os << "(" << v.x << ", " << v.y << ", " << v.z << ", " << v.w << ")";
     return os;
 }
 
-ostream& operator<<(ostream& os, const mat4& m)
+ostream& operator<<(ostream& os, const mat4& mat)
 {
+    for(int i = 0; i < 4; i++)
+    {
+        os << "[";
+        for(int j = 0; j < 4; j++)
+        {
+            os << mat[i][j];
+            if(j != 3)
+                os << " ";
+        }
+        os << "]" << endl;
+    }
     return os;
 }
 

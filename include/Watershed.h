@@ -5,13 +5,13 @@
 #include <vector>
 #include <queue>
 #include "GlobalConfig.h"
-#include "World.h"
 #include "Coord.h"
 #include "Heightmap.h"
+#include "Terrain.h"
 
 struct Watershed
 {
-    Watershed(int numRivers, short minH);
+    Watershed(Heightmap& worldHeights, Heightmap& worldBiomes, int numRivers, short minH);
     Heightmap& world;
     Heightmap& biomes;
     void addRiver(short threshold);
