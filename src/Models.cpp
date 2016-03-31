@@ -11,7 +11,7 @@ VBO ModelRenderer::vbo;
 
 ostream& operator<<(ostream& os, const Face& f)
 {
-    os << f.v1 << '/' << f.vt1 << '/' << f.vn1 << ' ' << f.v2 << '/' << f.vt2 << '/' << f.vn2 << ' ' << f.v3 << '/' << f.vt3 << '/' << f.vn3;
+    os << f.v[0] << '/' << f.vt[0] << '/' << f.vn[0] << ' ' << f.v[1] << '/' << f.vt[1] << '/' << f.vn[1] << ' ' << f.v[2] << '/' << f.vt[2] << '/' << f.vn[2];
     return os;
 }
 
@@ -19,22 +19,23 @@ void Model::computeNormals()
 {
     for(auto& face : faces)
     {
-        if(face.vn1 != -1 && face.vn2 != -1 && face.vn3 != -1)
+        if(face.vn[0] != -1 && face.vn[1] != -1 && face.vn[2] != -1)
             continue;
-        auto& v1 = vertices[face.v1];
-        auto& v2 = vertices[face.v2];
-        auto& v3 = vertices[face.v3];
-        vec3 d1(v3.x - v2.x, v3.y - v2.y, v3.z - v2.z);
-        vec3 d2(v2.x - v1.x, v2.y - v1.y, v2.z - v1.z);
+        PRINT("Need to compute normal!");
+        auto& v1 = vertices[face.v[0]];
+        auto& v2 = vertices[face.v[1]];
+        auto& v3 = vertices[face.v[2]];
+        vec3 d1 = {v3.x - v2.x, v3.y - v2.y, v3.z - v2.z};
+        vec3 d2 = {v2.x - v1.x, v2.y - v1.y, v2.z - v1.z};
         MNorm newNorm = normalize(cross(d1, d2));
         norms.push_back(newNorm);
         //use the new norm for all vertices whose normals haven't been set
-        if(face.vn1 == -1)
-            face.vn1 = norms.size() - 1;
-        if(face.vn2 == -1)
-            face.vn2 = norms.size() - 1;
-        if(face.vn3 == -1)
-            face.vn3 = norms.size() - 1;
+        if(face.vn[0] == -1)
+            face.vn[0] = norms.size() - 1;
+        if(face.vn[1] == -1)
+            face.vn[1] = norms.size() - 1;
+        if(face.vn[2] == -1)
+            face.vn[2] = norms.size() - 1;
     }
 }
 
@@ -172,62 +173,41 @@ void ModelRenderer::readModelFile(path fpath)
         else if(!strcmp("f", tok))
         {
             //face: vertex/texcoord/normal 
-            //could be "v1 v2 v3", "v1/t1 v2/t2 v3/t3", or "v/t/n ..."
-            //(3, 6 or 9 values)
+            //texcoord and normal optional
             Face f;
-            int values[9];
-            int num = 0;
-            tok = strtok(NULL, delims);
-            while(tok)  //scan integers until end of line
+            const char* faceDelims = " \t";
+            tok = strtok(NULL, faceDelims);
+            //tok ===> first n/n/n block
+            for(int i = 0; i < 3; i++)
             {
-                sscanf(tok, "%i", &values[num]);
-                values[num]--;     //obj indices start at 1
-                num++;
-                tok = strtok(NULL, delims);
-            }
-            if(num == 3)
-            {
-                //position only
-                f.v1 = values[0];
-                f.vt1 = -1;
-                f.vn1 = -1;
-                f.v2 = values[1];
-                f.vt2 = -1;
-                f.vn2 = -1;
-                f.v3 = values[2];
-                f.vt3 = -1;
-                f.vn3 = -1;
-            }
-            else if(num == 6)
-            {
-                //position and normal 
-                f.v1 = values[0];
-                f.vt1 = values[1];
-                f.vn1 = -1;
-                f.v2 = values[2];
-                f.vt2 = values[3];
-                f.vn2 = -1;
-                f.v3 = values[4];
-                f.vt3 = values[5];
-                f.vn3 = -1;
-            }
-            else if(num == 9)
-            {
-                //position, normal, texcoord
-                f.v1 = values[0];
-                f.vt1 = values[1];
-                f.vn1 = values[2];
-                f.v2 = values[3];
-                f.vt2 = values[4];
-                f.vn2 = values[5];
-                f.v3 = values[6];
-                f.vt3 = values[7];
-                f.vn3 = values[8];
-            }
-            else
-            {
-                PRINT("Malformed face line:");
-                PRINT(line);
+                int result = sscanf(tok, "%i/%i/%i", &f.v[i], &f.vt[i], &f.vn[i]);
+                if(result != 3)
+                {
+                    result = sscanf(tok, "%i//%i", &f.v[i], &f.vn[i]);
+                    if(result != 2)
+                    {
+                        result = sscanf(tok, "%i//%i", &f.v[i], &f.vt[i]);
+                        if(result != 2)
+                        {
+                            if(1 != sscanf(tok, "%i//", &f.v[i]))
+                                PRINT("Malformed vertex in face on line " << lineno);
+                            f.vt[i] = 0;
+                            f.vn[i] = 0;
+                        }
+                        else
+                        {
+                            f.vn[i] = 0;
+                        }
+                    }
+                    else
+                    {
+                        f.vt[i] = 0;
+                    }
+                }
+                tok = strtok(NULL, faceDelims);
+                f.v[i]--;
+                f.vt[i]--;
+                f.vn[i]--;
             }
             model.faces.push_back(f);
         }
@@ -246,7 +226,6 @@ void ModelRenderer::createVBO()
     int totalVerts = 0;
     for(auto& modelEntry : models)
         totalVerts += 3 * modelEntry.faces.size();
-    PRINT("Setting vbo size to " << totalVerts);
     vbo.resize(totalVerts);
     int modelIndex = 0;
     for(auto& modelEntry : models)
@@ -261,26 +240,23 @@ void ModelRenderer::createVBO()
         model.fixPosition();
         for(auto& face : model.faces)
         {
-            int verts[3] = {face.v1, face.v2, face.v3};
-            int uvs[3] = {face.vt1, face.vt2, face.vt3};
-            int norms[3] = {face.vn1, face.vn2, face.vn3};
             for(int i = 0; i < 3; i++)
             {
                 Vertex3D temp;
-                temp.pos = model.vertices[verts[i]];
+                temp.pos = model.vertices[face.v[i]];
                 if(0)
                 //if(uvs[i] != -1) //test sphereTank with no textures
                 {
-                    temp.texcoord.u = 2048 * model.uvs[uvs[i]].x;
-                    temp.texcoord.v = 2048 * model.uvs[uvs[i]].y;
+                    temp.texcoord.u = 2048 * model.uvs[face.vt[i]].x;
+                    temp.texcoord.v = 2048 * model.uvs[face.vt[i]].y;
                 }
                 else
                 {
                     temp.texcoord.u = -1;
                     temp.texcoord.v = -1;
                 }
-                temp.norm = model.norms[norms[i]];
-                temp.color = {255, 0, 0, 255};
+                temp.norm = model.norms[face.vn[i]];
+                temp.color = {255, 100, 0, 255};
                 vertbuf[vertIndex] = temp;
                 vertIndex++;
             }

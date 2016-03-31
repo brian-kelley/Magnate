@@ -14,29 +14,26 @@
 #include "Building.h"
 #include "TriMesh.h"
 
-class World
+namespace World
 {
-public:
-    static void initDebug();    //quickly jump into game with fresh world
-    static void init(std::string saveName);
-    static void initCached(std::string name);
-    static void saveAndExit();
-    static void read();
-    static void write();
-    static void update();       //do all game logic/simulation
-    static Heightmap& getHeights();
-    static Heightmap& getBiomes();
-    static bool isDrawing();
-    static Broadcaster<bool> worldLoaded;
-    static void readTerrainCache(std::string name);
-    static void writeTerrainCache(std::string name);
-private:
-    static bool drawing;
-    static Heightmap height;
-    static Heightmap biomes;
-    static std::vector<Building> buildings;
-    static std::string saveName;
-    static unsigned seed;
+    void initDebug();    //quickly jump into game with fresh world
+    void init(std::string saveName);
+    void initCached(std::string name);
+    void saveAndExit();
+    void read();
+    void write();
+    void update();       //do all game logic/simulation
+    Heightmap& getHeights();
+    Heightmap& getBiomes();
+    void readTerrainCache(std::string name);
+    void writeTerrainCache(std::string name);
+    extern bool drawing;
+    extern Heightmap height;
+    extern Heightmap biomes;
+    extern std::vector<Building> buildings;
+    extern std::string saveName;
+    extern unsigned seed;
+    extern Broadcaster<bool> worldLoaded;
 };
 
 #endif

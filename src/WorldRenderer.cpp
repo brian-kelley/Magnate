@@ -36,7 +36,7 @@ void WorldRenderer::dispose()
 
 void WorldRenderer::draw()
 {
-    if(World::isDrawing())
+    if(World::drawing)
     {
         glEnable(GL_DEPTH_TEST);
         vbo.draw(0, 4 * CHUNK_SIZE * CHUNK_SIZE * VBO_CHUNKS, GL_QUADS);

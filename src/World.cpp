@@ -115,11 +115,6 @@ Heightmap& World::getBiomes()
     return biomes;
 }
 
-bool World::isDrawing()
-{
-    return drawing;
-}
-
 void World::readTerrainCache(string name)
 {
     path p = FileIO::root() / "temp" / name;

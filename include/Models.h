@@ -16,16 +16,9 @@ typedef glm::vec3 MNorm;
 
 struct Face
 {
-    //Needs index of
-    int v1;
-    int vt1;
-    int vn1;
-    int v2;
-    int vt2;
-    int vn2;
-    int v3;
-    int vt3;
-    int vn3;
+    int v[3];
+    int vt[3];
+    int vn[3];
 };
 
 std::ostream& operator<<(std::ostream& os, const Face& f);
