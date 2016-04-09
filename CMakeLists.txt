@@ -27,6 +27,7 @@ include/Input
 include/Label
 include/LinAlg
 include/Menus
+include/Mesh
 include/Minimap
 include/Models
 include/MultiSelect
@@ -42,7 +43,6 @@ include/TerrainGen
 include/TexGen
 include/TexManager
 include/Topo
-include/TriMesh
 include/UIRenderer
 include/VBO
 include/Watershed
@@ -72,6 +72,7 @@ src/Input
 src/Label
 src/LinAlg
 src/Menus
+src/Mesh
 src/Minimap
 src/Models
 src/MultiSelect
@@ -86,7 +87,6 @@ src/TerrainGen
 src/TexGen
 src/TexManager
 src/Topo
-src/TriMesh
 src/UIRenderer
 src/VBO
 src/Watershed

@@ -47,8 +47,7 @@ VBO::VBO(int numVertices, Type type, int updateHint, bool hasIndex, int numIndic
         GLERR;
     }
     currentBound = nullptr;     //initially, no vbo is bound
-    if(0)
-    //if(hasIndexBuf)
+    if(hasIndexBuf)
     {
         glGenBuffers(1, &indexID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexID);

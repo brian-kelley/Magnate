@@ -12,10 +12,12 @@ const short WorldRenderer::CHUNK_FREE = 0x7FFF; //value for x to mark free chunk
 Vertex3D* WorldRenderer::vertexBuf;             //Scratch buffer for a single chunk before sending to GPU
 Pos2* WorldRenderer::chunkAlloc;                //Fixed-length list of chunks that are currently in VBO
 VBO WorldRenderer::vbo;
+VBO WorldRenderer::meshVBO;
 
 void WorldRenderer::init()
 {
     vbo = VBO(VBO_CHUNKS * CHUNK_SIZE * CHUNK_SIZE * 4, VBO::v3D, GL_DYNAMIC_DRAW);
+    meshVBO = VBO(0, VBO::v3D, GL_STATIC_DRAW);
     createUVCache();
     //create a statically sized buffer for tiles (copy of VBO)
     vertexBuf = new Vertex3D[4 * CHUNK_SIZE * CHUNK_SIZE];
@@ -38,6 +40,14 @@ void WorldRenderer::draw()
 {
     if(World::drawing)
     {
+#ifdef MAGNATE_DEBUG
+        if(Input::keystate[SDL_SCANCODE_M])
+        {
+            //Draw a red wireframe mesh instead of solid heightmap quads
+            drawDebugWireframeMesh();
+            return;
+        }
+#endif
         glEnable(GL_DEPTH_TEST);
         vbo.draw(0, 4 * CHUNK_SIZE * CHUNK_SIZE * VBO_CHUNKS, GL_QUADS);
     }
@@ -181,5 +191,46 @@ void WorldRenderer::processWorldLoad(void*, const bool& val)
             chunkAlloc[i].x = CHUNK_FREE;
         }
         updateVBOChunks();
+        buildMeshVBO();
     }
 }
+
+void WorldRenderer::buildMeshVBO()
+{
+    PRINT("verts allocated: " << meshVBO.getNumVertices());
+    //create a triangle for each face (VBO is already correct size)
+    auto& faces = World::mesh.faces;
+    auto& verts = World::mesh.vertices;
+    Vertex3D v1, v2, v3;
+    //only positions and norms are modified
+    v1 = v2 = v3 = {Color4(170, 0, 0, 255), TexCoord(-1, -1), Pos3(0, 0, 0), Pos3(0, 1, 0)};
+    int numVertices = 3 * faces.size;
+    meshVBO.resize(numVertices);
+    GLERR;
+    Vertex3D* meshbuf = (Vertex3D*) malloc(numVertices * sizeof(Vertex3D));
+    int vIndex = 0;
+    for(auto it = faces.begin(); it != faces.end(); it++)
+    {
+        v1.norm = v2.norm = v3.norm = it->getNorm();
+        v1.pos = verts[it->v[0]];
+        v2.pos = verts[it->v[1]];
+        v3.pos = verts[it->v[2]];
+        meshbuf[vIndex++] = v1;
+        meshbuf[vIndex++] = v2;
+        meshbuf[vIndex++] = v3;
+    }
+    meshVBO.writeData(0, numVertices, meshbuf);
+    free(meshbuf);
+}
+
+void WorldRenderer::drawDebugWireframeMesh()
+{
+    //go to wireframe mode
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    PRINT("Mesh vbo has " << meshVBO.getNumVertices() << " verts");
+    PRINT("Going to draw " << 3 * World::mesh.faces.size << " starting at 0.");
+    meshVBO.draw(0, 3 * World::mesh.faces.size, GL_TRIANGLES);
+    //restore
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+

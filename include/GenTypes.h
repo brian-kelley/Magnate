@@ -20,6 +20,7 @@ typedef void(*CallbackFunc)(void*, void*);
 
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
+#define SWAP(a, b) {auto temp = a; a = b; b = temp;}
 
 struct Callback
 {

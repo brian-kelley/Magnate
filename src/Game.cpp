@@ -83,6 +83,6 @@ void Game::processMenuEvent(void*, const GeneralMsg& msg)
 
 void Game::debugInit()
 {
-    World::initDebug();
+    World::init();  //defaults to debug save name (see World.h)
     GUI::transition(Menus::gameScene);
 }

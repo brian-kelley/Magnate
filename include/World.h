@@ -12,12 +12,13 @@
 #include "Heightmap.h"
 #include "Broadcaster.h"
 #include "Building.h"
-#include "TriMesh.h"
+#include "Mesh.h"
+
+#define DEBUG_SAVE_NAME ("debug_world")
 
 namespace World
 {
-    void initDebug();    //quickly jump into game with fresh world
-    void init(std::string saveName);
+    void init(std::string saveName = DEBUG_SAVE_NAME);
     void initCached(std::string name);
     void saveAndExit();
     void read();
@@ -30,6 +31,7 @@ namespace World
     extern bool drawing;
     extern Heightmap height;
     extern Heightmap biomes;
+    extern Mesh mesh;
     extern std::vector<Building> buildings;
     extern std::string saveName;
     extern unsigned seed;

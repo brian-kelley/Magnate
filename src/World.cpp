@@ -1,6 +1,6 @@
 #include "World.h"
 
-#define USE_CACHED_TERRAIN true
+#define USE_CACHED_TERRAIN false
 
 using namespace std;
 using namespace FileIO;
@@ -10,14 +10,10 @@ using namespace boost::filesystem;
 bool World::drawing = false;
 Heightmap World::height;
 Heightmap World::biomes;
+Mesh World::mesh;
 string World::saveName;
 unsigned World::seed;
 Broadcaster<bool> World::worldLoaded;
-
-void World::initDebug()
-{
-    initCached("asdf");
-}
 
 void World::init(std::string saveName)
 {
@@ -25,26 +21,33 @@ void World::init(std::string saveName)
     height.setSize(WORLD_SIZE, WORLD_SIZE);
     biomes.setSize(WORLD_SIZE, WORLD_SIZE);
     path saveFolder = FileIO::root() / "saves";
-    if(!exists(saveFolder))
+    if(!fileExists(saveFolder))
     {
         cout << "Fatal error: save folder doesn't exist where expected:" << endl;
         cout << absolute(saveFolder) << endl;
         exit(EXIT_FAILURE);
     }
     path wPath = saveFolder / string(saveName + ".mag");
-    if(exists(wPath))
+    if(fileExists(wPath))
     {
-        cout << "Will read existing world from disk." << endl;
-        read();
+        PRINT("Loading world...");
+        read();                     //loads seed
     }
     else
     {
-        cout << "Will generate and save new world." << endl;
-        seed = RandomUtils::gen();
-        //write out initial data (seed)
+        PRINT("Writing world...");
+        seed = RandomUtils::gen();  //create a random seed
         write();
     }
-    TerrainGen tg(height, biomes);
+    if(USE_CACHED_TERRAIN)
+    {
+        initCached(saveName);
+    }
+    else
+    {
+        TerrainGen tg(height, biomes);
+    }
+    mesh.simpleLoadHeightmap(height, biomes);
     drawing = true; //TODO: When to set and unset this depends on where GUI widgets are implemented
     worldLoaded.send(true);
 }
@@ -52,18 +55,10 @@ void World::init(std::string saveName)
 void World::initCached(string name)
 {
     path cache = FileIO::root() / "temp" / name;
-    World::saveName = name;
-    height.setSize(WORLD_SIZE, WORLD_SIZE);
-    biomes.setSize(WORLD_SIZE, WORLD_SIZE);
-    if(!USE_CACHED_TERRAIN)
+    if(!fileExists(cache))
     {
-        PRINT("Terrain caching disabled.");
-        init("asdf");
-    }
-    else if(!fileExists(cache))
-    {
-        init(name);
         PRINT("Creating terrain cache.");
+        TerrainGen tg(height, biomes);
         writeTerrainCache(name);
     }
     else
@@ -72,14 +67,17 @@ void World::initCached(string name)
         PRINT("Will read from terrain cache.");
         readTerrainCache(name);
     }
-    drawing = true;
-    worldLoaded.send(true);
 }
 
 void World::write()
 {
     path outPath = FileIO::root() / "saves" / string(saveName + ".mag");
     FILE* os = fopen(outPath.c_str(), "wb");
+    if(!os)
+    {
+        PRINT("Could not open save file \"" << outPath << "\" for writing!");
+        return;
+    }
     fwrite(&seed, sizeof(seed), 1, os);
     fclose(os);
     cout << "Wrote out world file to:" << endl;
@@ -90,6 +88,11 @@ void World::read()
 {
     path inPath = FileIO::root() / "saves" / (saveName + ".mag");
     FILE* is = fopen(inPath.c_str(), "rb");
+    if(!is)
+    {
+        PRINT("Could not open save file \"" << inPath << "\" for reading!");
+        return;
+    }
     fread(&seed, sizeof(seed), 1, is);
     fclose(is);
 }
