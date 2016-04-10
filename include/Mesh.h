@@ -69,7 +69,10 @@ public:
     int hmVertIndex(int x, int y);
     int hmEdgeIndex(int x, int y, EdgeDir which);
     int hmFaceIndex(int x, int y, FaceDir which);
-    bool collapseConnectivity(int edge);
+    //check connectivity ok for edge collapse
+    bool collapseConnectivity(int edge);    
+    //check that no triangles flip in collapse without performing collapse
+    bool collapseFlip(int edge); 
 };
 
 #endif

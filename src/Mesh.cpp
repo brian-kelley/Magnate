@@ -70,13 +70,12 @@ void Mesh::simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues)
     vertices.clear();
     edges.clear();
     faces.clear();
-    int WS1 = WORLD_SIZE + 1;
     //Iterate over heightmap vertices, add vertices row-by-row
-    for(int i = 0; i <= WORLD_SIZE; i++)        //tile x, rows
+    for(int y = 0; y <= WORLD_SIZE; y++)
     {
-        for(int j = 0; j <= WORLD_SIZE; j++)    //tile y, columns
+        for(int x = 0; x <= WORLD_SIZE; x++)
         {
-            Vertex loc = Coord::tileToWorld(i, heights.get(i, j), j).xyz();
+            Vertex loc = Coord::tileToWorld(x, heights.get(x, y), y).xyz();
             vertices.alloc(loc);
         }
     }
@@ -85,51 +84,53 @@ void Mesh::simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues)
     //Each quad has left, top, and diagonal edges
     //Additionally, quads on right and bottom boundary of world have right/bottom resp.
     //Assume (i,j) is tile coords of upper-left corner
-    for(int i = 0; i < WORLD_SIZE; i++)
+    for(int y = 0; y < WORLD_SIZE; y++)
     {
-        for(int j = 0; j < WORLD_SIZE; j++)
+        for(int x = 0; x < WORLD_SIZE; x++)
         {
-            int ulv = i * WS1 + j;          //upper left vertex etc.
-            int urv = ulv + 1;
-            int llv = ulv + WS1;
-            int lrv = llv + 1;
-            int f1 = (i * WORLD_SIZE + j) * 2;
-            int f2 = f1 + 1;                //other triangle in the quad is next
-            int fleft = f1 - 1;             //these values may be incorrect (NONE)
-            int ftop = f1 - 2 * WORLD_SIZE + 1; //up a row to above upper-left, plus 1
+            int ulv = hmVertIndex(x, y);
+            int urv = hmVertIndex(x + 1, y);
+            int llv = hmVertIndex(x, y + 1);
+            int lrv = hmVertIndex(x + 1, y + 1);
+            int eleft = hmEdgeIndex(x, y, EdgeDir::LEFT);
+            int eright = hmEdgeIndex(x, y, EdgeDir::RIGHT);
+            int etop = hmEdgeIndex(x, y, EdgeDir::TOP);
+            int ebot = hmEdgeIndex(x, y, EdgeDir::BOTTOM);
+            int ediag = hmEdgeIndex(x, y, EdgeDir::DIAGONAL);
+            int f1 = hmFaceIndex(x, y, FaceDir::UPPER_LEFT);
+            int f2 = hmFaceIndex(x, y, FaceDir::LOWER_RIGHT);
+            int fleft = hmFaceIndex(x - 1, y, FaceDir::LOWER_RIGHT);
+            int ftop = hmFaceIndex(x, y - 1, FaceDir::LOWER_RIGHT);
+            //left, top, diagonal, right, bottom
+            //left
+            DBASSERT(eleft == edges.alloc(Edge(ulv, llv, f1, fleft)));
+            //top
+            DBASSERT(etop == edges.alloc(Edge(ulv, urv, f1, ftop)));
             //Diagonal edge 
-            edges.alloc(Edge(urv, llv, f1, f2));
-            //Vertical edges (left and right of quad)
-            //Create the normal edge, and then modify if edges/corners of map
-            Edge eleft(ulv, llv, f1, fleft);
-            if(j == 0)
+            DBASSERT(ediag == edges.alloc(Edge(urv, llv, f1, f2)));
+            //right, if on right edge of map
+            if(x == WORLD_SIZE - 1)
             {
-                //on left edge of map, left = NO_FACE
-                eleft.f[1] = NO_FACE;
+                DBASSERT(eright == edges.alloc(Edge(urv, lrv, f2, NO_FACE)));
             }
-            else if(j == WORLD_SIZE - 1)
+            //bottom, if on bottom edge of map
+            if(y == WORLD_SIZE - 1)
             {
-                //on right edge of map, create a right edge also
-                edges.alloc(Edge(urv, lrv, f2, NO_FACE));
-            }
-            edges.alloc(eleft);
-            Edge etop(ulv, urv, f1, ftop);
-            if(i == 0)
-            {
-                //map top, top = NO_FACE
-                etop.f[1] = NO_FACE;
-            }
-            else if(i == WORLD_SIZE - 1)
-            {
-                edges.alloc(Edge(llv, lrv, f2, NO_FACE));
-            }
-            edges.alloc(etop);
+                if(ebot != edges.alloc(Edge(llv, lrv, f2, NO_FACE)))
+                {
+                    PRINT("Expected: " << ebot);
+                    PRINT("Actual: " << edges.size - 1);
+                    PRINT("At " << x << ", " << y);
+                    throw exception();
+                }
+                //DBASSERT(ebot == edges.alloc(Edge(llv, lrv, f2, NO_FACE)));
+            } 
             //Faces (upper-left and lower-right)
-            int faceval = faceValues.get(i, j); //both triangles have same value
+            int faceval = faceValues.get(x, y); //both triangles have same value
             //upper-left
-            faces.alloc(Face(ulv, ulv + 1, ulv + WS1, fleft, ftop, f2, faceval));
+            DBASSERT(f1 == faces.alloc(Face(ulv, urv, llv, eleft, etop, ediag, faceval)));
             //lower-right
-            faces.alloc(Face(ulv + 1, ulv + 1 + WS1, ulv + WS1, 0, 0, 0, faceval));
+            DBASSERT(f2 == faces.alloc(Face(urv, lrv, llv, ediag, eright, ebot, faceval)));
         }
     }
 }
@@ -196,20 +197,47 @@ int Mesh::getMaxFaces()
 
 bool Mesh::collapseConnectivity(int edge)
 {
+
 }
 
-int hmVertIndex(int x, int y)
+int Mesh::hmVertIndex(int x, int y)
 {
     return (WORLD_SIZE + 1) * y + x; 
 }
 
-int hmEdgeIndex(int x, int y, EdgeDir which)
+int Mesh::hmEdgeIndex(int x, int y, EdgeDir which)
 {
-    int ulv = hmVertIndex(x, y);
+    int base =  y + 3 * (x + WORLD_SIZE * y);
+    if(y == WORLD_SIZE - 1)
+        base += x;
+    switch(which)
+    {
+        case EdgeDir::LEFT:
+            return base;
+        case EdgeDir::TOP:
+            return base + 1;
+        case EdgeDir::DIAGONAL:
+            return base + 2;
+        default:;
+    }
+    if(x == WORLD_SIZE - 1 && y == WORLD_SIZE - 1)
+    {
+        if(which == EdgeDir::RIGHT)
+            return base + 3;
+        else
+            return base + 4;
+    }
+    return base + 3;
 }
 
-int hmFaceIndex(int x, int y, FaceDir which)
+int Mesh::hmFaceIndex(int x, int y, FaceDir which)
 {
-
+    if(x < 0 || x >= WORLD_SIZE || y < 0 || y >= WORLD_SIZE)
+        return NO_FACE;
+    int base = 2 * (x + y * WORLD_SIZE);
+    if(which == FaceDir::UPPER_LEFT)
+        return base;
+    else 
+        return base + 1;
 }
 

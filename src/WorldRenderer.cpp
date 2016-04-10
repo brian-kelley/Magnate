@@ -227,8 +227,6 @@ void WorldRenderer::drawDebugWireframeMesh()
 {
     //go to wireframe mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    PRINT("Mesh vbo has " << meshVBO.getNumVertices() << " verts");
-    PRINT("Going to draw " << 3 * World::mesh.faces.size << " starting at 0.");
     meshVBO.draw(0, 3 * World::mesh.faces.size, GL_TRIANGLES);
     //restore
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
