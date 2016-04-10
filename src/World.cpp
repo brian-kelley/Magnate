@@ -1,6 +1,6 @@
 #include "World.h"
 
-#define USE_CACHED_TERRAIN false
+#define USE_CACHED_TERRAIN true
 
 using namespace std;
 using namespace FileIO;
@@ -39,6 +39,7 @@ void World::init(std::string saveName)
         seed = RandomUtils::gen();  //create a random seed
         write();
     }
+    RandomUtils::seed(seed);
     if(USE_CACHED_TERRAIN)
     {
         initCached(saveName);
@@ -47,9 +48,11 @@ void World::init(std::string saveName)
     {
         TerrainGen tg(height, biomes);
     }
+    RandomUtils::seed(seed);
     mesh.simpleLoadHeightmap(height, biomes);
     drawing = true; //TODO: When to set and unset this depends on where GUI widgets are implemented
     worldLoaded.send(true);
+    PRINT("World seed = " << seed);
 }
 
 void World::initCached(string name)

@@ -6,7 +6,6 @@ using namespace Coord;
 
 TerrainGen::TerrainGen(Heightmap& heights, Heightmap& worldBiomes) : world(heights), biomes(worldBiomes)
 {
-    RandomUtils::seed(clock());
     generate();
     //analyzeBiomes();
 }

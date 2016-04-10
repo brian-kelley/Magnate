@@ -12,17 +12,26 @@
 
 namespace MeshTypes
 {
-    extern const int NO_FACE;
-    typedef glm::vec3 Vertex;
     typedef glm::vec3 Vec3;
+    struct Vertex
+    {
+        Vec3 pos;
+        vector<int> edges;
+    };
     struct Edge
     {
+        Edge();
         Edge(int v1, int v2, int f1, int f2);
         int v[2]; //vertex endpoints
         int f[2]; //triangles containing the edge
+        bool hasVert(int query);
+        bool hasFace(int query);
+        static Pool<Vertex>* vertArray;
+        static Pool<Edge>* edgeArray;
     };
     struct Face     //Vertices 0,1,2 clockwise: (2-1)x(1-0) points outward (up)
     {
+        Face();
         Face(int v1, int v2, int v3, int e1, int e2, int e3, int value);
         int v[3];
         int e[3];   //links to neighboring edges, which have links to neighboring faces
@@ -30,6 +39,9 @@ namespace MeshTypes
         static int NONE_VALUE;
         Vec3 getNorm();
         static Pool<Vertex>* vertArray;
+        bool hasVert(int query);
+        bool hasEdge(int query);
+        bool isClockwise(int v1, int v2);   //is v2 clockwise of v1
     };
 }
 
@@ -69,10 +81,16 @@ public:
     int hmVertIndex(int x, int y);
     int hmEdgeIndex(int x, int y, EdgeDir which);
     int hmFaceIndex(int x, int y, FaceDir which);
-    //check connectivity ok for edge collapse
-    bool collapseConnectivity(int edge);    
-    //check that no triangles flip in collapse without performing collapse
+    //check connectivity ok for edge collapse (no holes/overlaps will happen)
+    bool collapseConnectivity(int edge); 
+    //check that no triangles flip in collapse (without modifying mesh)
     bool collapseFlip(int edge); 
+    //get 4 neighboring faces for collapse
+    void getNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, int& f22);
+    //get the two faces neighboring the face, but excluding "exclude"
+    void getFaceNeighbors(int f, int exclude, int& f1, int& f2);
+    int getOtherFace(int f, int e);    //get the face neighboring f across the eth edge of f
+    int getSharedEdge(int f1, int f2);
 };
 
 #endif

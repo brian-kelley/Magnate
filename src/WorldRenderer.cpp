@@ -197,7 +197,6 @@ void WorldRenderer::processWorldLoad(void*, const bool& val)
 
 void WorldRenderer::buildMeshVBO()
 {
-    PRINT("verts allocated: " << meshVBO.getNumVertices());
     //create a triangle for each face (VBO is already correct size)
     auto& faces = World::mesh.faces;
     auto& verts = World::mesh.vertices;
@@ -212,9 +211,9 @@ void WorldRenderer::buildMeshVBO()
     for(auto it = faces.begin(); it != faces.end(); it++)
     {
         v1.norm = v2.norm = v3.norm = it->getNorm();
-        v1.pos = verts[it->v[0]];
-        v2.pos = verts[it->v[1]];
-        v3.pos = verts[it->v[2]];
+        v1.pos = verts[it->v[0]].pos;
+        v2.pos = verts[it->v[1]].pos;
+        v3.pos = verts[it->v[2]].pos;
         meshbuf[vIndex++] = v1;
         meshbuf[vIndex++] = v2;
         meshbuf[vIndex++] = v3;

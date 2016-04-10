@@ -87,6 +87,7 @@ int Pool<T>::alloc()
 #endif
     allocMap[loc] = true;
     size++;
+    data[loc] = T();
     return loc;
 }
 
@@ -102,6 +103,7 @@ template<typename T>
 void Pool<T>::free(T* ptr)
 {
     int index = (ptr - data) / sizeof(T);
+    data[index].~T();
     allocMap[index] = false;
     if(index != top - 1)
     {
