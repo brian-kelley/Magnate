@@ -14,6 +14,7 @@
 #define GLERR {auto errcode = glGetError(); if(errcode != GL_NO_ERROR) {throw runtime_error("GL error!");}}
 #define PRINT(msg) {std::cout << msg << std::endl;}
 #define ASSERT_EQ(ex1, ex2) {DBASSERT(fabs((ex1) - (ex2)) < 1e-3)}
+#define PRINTVAR(a) {std::cout << #a << " = " << a << endl;};
 #define TIMEIT(func) \
 { \
     clock_t _start = clock(); \
@@ -30,7 +31,8 @@
 #define GLERR
 #define PRINT(msg)
 #define ASSERT_EQ(ex1, ex2)
-#define TIMEIT(func)
+#define TIMEIT(func) func;  //need to call the function, but don't do timing/output
+#define PRINTVAR(a)
 
 #endif
 

@@ -16,6 +16,28 @@ Pool<Vertex>* Face::vertArray = nullptr;    //TODO: won't work if multiple Meshe
 Pool<Vertex>* Edge::vertArray = nullptr;
 Pool<Edge>* Edge::edgeArray = nullptr;
 
+void Vertex::addEdge(int e)
+{
+    edges.push_back(e);
+}
+
+void Vertex::removeEdge(int e)
+{
+    for(auto it = edges.begin(); it != edges.end(); it++)
+    {
+        if(*it == e)
+        {
+            edges.erase(it);
+            break;
+        }
+    }
+}
+
+bool Vertex::isOnBoundary()
+{
+    return minWorldX(pos) || maxWorldX(pos) || minWorldY(pos) || maxWorldY(pos);
+}
+
 Edge::Edge()
 {
     v[0] = -1;
@@ -42,6 +64,18 @@ bool Edge::hasFace(int query)
 bool Edge::hasVert(int query)
 {
     return v[0] == query || v[1] == query;
+}
+
+void Edge::replaceFaceLink(int toReplace, int newLink)
+{
+    if(f[0] == toReplace)
+    {
+        f[0] = newLink;
+    }
+    else if(f[1] == toReplace)
+    {
+        f[1] = newLink;
+    }
 }
 
 Face::Face()
@@ -115,6 +149,41 @@ bool Face::isClockwise(int v1, int v2)
     return (v1loc + 1) % 3 == v2loc;
 }
 
+void Face::replaceEdgeLink(int toReplace, int newLink)
+{
+    for(int i = 0; i < 3; i++)
+    {
+        if(e[i] == toReplace)
+        {
+            e[i] = newLink;
+            break;
+        }
+    }
+    PRINT("Error: Tried to replace link to edge " << toReplace << " with " << newLink << " but face didn't have reference!");
+    throw runtime_error("oh man");
+}
+
+void Face::replaceVertexLink(int toReplace, int newLink)
+{
+    for(int i = 0; i < 3; i++)
+    {
+        if(v[i] == toReplace)
+        {
+            v[i] = newLink;
+            return;
+        }
+    }
+    //OK if no vertices matched
+}
+
+void Face::checkNormal()
+{
+    if(getNorm().y < 0)
+    {
+        SWAP(v[0], v[1]);
+    }
+}
+
 Mesh::Mesh() : vertices(getMaxVertices()), edges(getMaxEdges()), faces(getMaxFaces())
 {
     Face::vertArray = &vertices;
@@ -127,6 +196,9 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     PRINT("Constructing tri mesh.");
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
+    //Testing edge collapse
+    PRINT("collapsing edge 64...");
+    edgeCollapse(64);
     //simplify(faceMatchCutoff);
     PRINT("Done with mesh.");
 }
@@ -216,6 +288,9 @@ void Mesh::simplify(float faceMatchCutoff)
             auto dotprod = dot(f1.getNorm(), f2.getNorm());
             if(dotprod < faceMatchCutoff)
                 continue;
+            //check that geometric conditions are met
+            if(!collapseConnectivity(it.loc) || !collapseFlip(it.loc))
+                continue;
             edgeCollapse(it.loc);
             changes++;
         }
@@ -228,6 +303,56 @@ void Mesh::edgeCollapse(int edgeNum)
     auto& edge = edges[edgeNum];
     int f1, f2, f11, f12, f21, f22;
     getNeighbors(edgeNum, f1, f2, f11, f12, f21, f22);
+    int e11 = getSharedEdge(f1, f11);
+    int e12 = getSharedEdge(f1, f12);
+    int e21 = getSharedEdge(f2, f21);
+    int e22 = getSharedEdge(f2, f22);
+    int v1 = edge.v[0];
+    int v2 = edge.v[1];
+    PRINTVAR(f1);
+    PRINTVAR(f2);
+    PRINTVAR(f11);
+    PRINTVAR(f12);
+    PRINTVAR(f21);
+    PRINTVAR(f22);
+    PRINTVAR(e11);
+    PRINTVAR(e12);
+    PRINTVAR(e21);
+    PRINTVAR(e22);
+    PRINTVAR(v1);
+    PRINTVAR(v2);
+    bool moveVertex = true; //by default, move remaining vertex to midpoint of old ones
+    //don't want to move or remove a vertex on the map boundary
+    if(vertices[v1].isOnBoundary())
+    {
+        //keep v1, delete v2 instead (just by swapping names)
+        SWAP(v1, v2);
+        moveVertex = false;
+    }
+    if(vertices[v1].isOnBoundary())
+    {
+        moveVertex = false;
+    }
+    replaceVertexLinks(v1, v2); //note: does not free v1, but does free edgeNum
+    //e11.v == e12.v, e21.v == e22.v (only face links different, will change)
+    if(moveVertex)
+    {
+        vertices[v2].pos = (vertices[v1].pos + vertices[v2].pos) * 0.5f;
+    }
+    //mesh no longer contains any links to v1, can safely delete it
+    vertices.free(v1);
+    //update fxx edge links 
+    faces[f11].replaceEdgeLink(e11, e12);
+    faces[f21].replaceEdgeLink(e21, e22);
+    //now e11 and e21 can be deleted
+    edges.free(e11);
+    edges.free(e21);
+    //prepare to remove f1/f2 by updating e12/e22 face links
+    edges[e12].replaceFaceLink(f1, f11);
+    edges[e22].replaceFaceLink(f2, f21);
+    //nothing links to f1, f2 anymore, delete them
+    faces.free(f1);
+    faces.free(f2);
 }
 
 int Mesh::getMaxVertices()
@@ -249,7 +374,6 @@ int Mesh::getMaxFaces()
 
 bool Mesh::collapseConnectivity(int edge)
 {
-
 
 }
 
@@ -320,15 +444,30 @@ void Mesh::getFaceNeighbors(int f, int exclude, int& f1, int& f2)
     }
     int e1 = (excludeEdge + 1) % 3;
     int e2 = (e1 + 1) % 3;
+    PRINTVAR(exclude);
+    PRINT("In getFaceNeighbors...");
     f1 = getOtherFace(f, e1);
     f2 = getOtherFace(f, e2);
-}
+    PRINTVAR(e1);
+    PRINTVAR(e2);
+    PRINTVAR(f1);
+    PRINTVAR(f2);
+    PRINT("Returning from getFaceNeighbors");
+} 
 
 int Mesh::getOtherFace(int f, int e)
 {
     Face& face = faces[f];
     Edge& edge = edges[face.e[e]];
-    return edge.f[0] == f ? edge.f[1] : edge.f[0];
+    PRINT("In getOtherFace");
+    PRINTVAR(f);
+    PRINTVAR(e);
+    PRINTVAR(edge.f[0]);
+    PRINTVAR(edge.f[1]);
+    int rv = edge.f[0] == f ? edge.f[1] : edge.f[0];
+    PRINTVAR(rv);
+    PRINT("getOtherFace ret");
+    return rv;
 }
 
 int Mesh::getSharedEdge(int f1, int f2)
@@ -339,5 +478,62 @@ int Mesh::getSharedEdge(int f1, int f2)
         if(faces[f2].hasEdge(edge))
             return edge;
     }
+#ifdef MAGNATE_DEBUG
+    PRINT("Serious warning: expected faces " << f1 << " and " << f2 << " to share an edge but they don't. Returning -1.");
+#endif
     return -1;
 }
+
+void Mesh::replaceVertexLinks(int toReplace, int newLink)
+{
+    auto& vertex = vertices[toReplace];
+    for(int edgeNum : vertex.edges)
+    {
+        auto& edge = edges[edgeNum];
+        if(edge.v[0] == toReplace)
+        {
+            edge.v[0] = newLink;
+        }
+        else if(edge.v[1] == toReplace)
+        {
+            edge.v[1] = newLink;
+        }
+        //remove the edge completely if now degenerate
+        //two faces will have references to that edge -- they will be removed later
+        if(edge.v[0] == edge.v[1])
+        {
+            removeEdgeRefs(edgeNum);
+            edges.free(edgeNum);
+        }
+        faces[edge.f[0]].replaceVertexLink(toReplace, newLink);
+        faces[edge.f[0]].checkNormal();
+        faces[edge.f[1]].replaceVertexLink(toReplace, newLink);
+        faces[edge.f[1]].checkNormal();
+    }
+}
+
+void Mesh::removeEdgeRefs(int e)
+{
+    auto& edge = edges[e];
+    vertices[edge.v[0]].removeEdge(e);
+    vertices[edge.v[1]].removeEdge(e);
+}
+
+bool minWorldX(vec3& loc)
+{
+    return loc.x < 1e-7;
+}
+bool maxWorldX(vec3& loc)
+{
+    return loc.x > WORLD_SIZE * Coord::TERRAIN_TILE_SIZE - 1e-7;
+
+}
+bool minWorldY(vec3& loc)
+{
+    return loc.z < 1e-7;
+}
+bool maxWorldY(vec3& loc)
+{
+    return loc.z > WORLD_SIZE * Coord::TERRAIN_TILE_SIZE - 1e-7;
+}
+

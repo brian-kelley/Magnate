@@ -8,7 +8,8 @@ using std::runtime_error;
 /*  Simple fixed-size pool allocator for fast
  *  allocation of individual objects.
  *  Allows for int as a pointer (index into pool)
- *  and STL-style iteration 
+ *  and STL-style iteration.
+ *  No RAII!
  */
 
 template<typename T>
@@ -21,6 +22,7 @@ class Pool
         T& operator[](int index);
         int alloc();
         int alloc(T val);
+        void free(int index);
         void free(T* ptr);
         void clear();
         struct iterator
@@ -86,8 +88,9 @@ int Pool<T>::alloc()
         throw runtime_error("Pool allocation failed!");
 #endif
     allocMap[loc] = true;
+    //intialize the location with default constructor (required for RAII to work)
+    new (&data[loc]) T;
     size++;
-    data[loc] = T();
     return loc;
 }
 
@@ -100,9 +103,8 @@ int Pool<T>::alloc(T val)
 }
 
 template<typename T>
-void Pool<T>::free(T* ptr)
+void Pool<T>::free(int index)
 {
-    int index = (ptr - data) / sizeof(T);
     data[index].~T();
     allocMap[index] = false;
     if(index != top - 1)
@@ -110,6 +112,12 @@ void Pool<T>::free(T* ptr)
         freeList.push_back(index);
     }
     size--;
+}
+
+template<typename T>
+void Pool<T>::free(T* ptr)
+{
+    free((ptr - data) / sizeof(T));
 }
 
 template<typename T>

@@ -10,6 +10,11 @@
 /* Unstructured triangular mesh for
  * efficiently storing terrain */
 
+bool minWorldX(glm::vec3& loc);
+bool maxWorldX(glm::vec3& loc);
+bool minWorldY(glm::vec3& loc);
+bool maxWorldY(glm::vec3& loc);
+
 namespace MeshTypes
 {
     typedef glm::vec3 Vec3;
@@ -17,6 +22,9 @@ namespace MeshTypes
     {
         Vec3 pos;
         vector<int> edges;
+        void addEdge(int e);
+        void removeEdge(int e);
+        bool isOnBoundary();    //is the vertex on the world boundary?
     };
     struct Edge
     {
@@ -26,6 +34,7 @@ namespace MeshTypes
         int f[2]; //triangles containing the edge
         bool hasVert(int query);
         bool hasFace(int query);
+        void replaceFaceLink(int toReplace, int newLink);
         static Pool<Vertex>* vertArray;
         static Pool<Edge>* edgeArray;
     };
@@ -41,7 +50,10 @@ namespace MeshTypes
         static Pool<Vertex>* vertArray;
         bool hasVert(int query);
         bool hasEdge(int query);
+        void checkNormal();
         bool isClockwise(int v1, int v2);   //is v2 clockwise of v1
+        void replaceEdgeLink(int toReplace, int newLink);
+        void replaceVertexLink(int toReplace, int newLink);
     };
 }
 
@@ -91,6 +103,10 @@ public:
     void getFaceNeighbors(int f, int exclude, int& f1, int& f2);
     int getOtherFace(int f, int e);    //get the face neighboring f across the eth edge of f
     int getSharedEdge(int f1, int f2);
+    //replace all links to toReplace with newLink (changes links in faces and edges)
+    void replaceVertexLinks(int toReplace, int newLink);
+    //remove vertices' edge reference
+    void removeEdgeRefs(int e);
 };
 
 #endif

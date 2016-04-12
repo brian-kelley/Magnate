@@ -1,6 +1,6 @@
 #include "World.h"
 
-#define USE_CACHED_TERRAIN true
+#define USE_CACHED_TERRAIN false
 
 using namespace std;
 using namespace FileIO;
@@ -30,12 +30,10 @@ void World::init(std::string saveName)
     path wPath = saveFolder / string(saveName + ".mag");
     if(fileExists(wPath))
     {
-        PRINT("Loading world...");
         read();                     //loads seed
     }
     else
     {
-        PRINT("Writing world...");
         seed = RandomUtils::gen();  //create a random seed
         write();
     }
@@ -46,10 +44,16 @@ void World::init(std::string saveName)
     }
     else
     {
-        TerrainGen tg(height, biomes);
+        //EDGE COLLAPSE TEST - NOT DOING TERRAIN GEN
+        for(int i = 0; i < WORLD_SIZE * WORLD_SIZE; i++)
+        {
+            height.buf[i] = 0;
+            biomes.buf[i] = WATER;
+        }
+        //TerrainGen tg(height, biomes);
     }
     RandomUtils::seed(seed);
-    mesh.simpleLoadHeightmap(height, biomes);
+    mesh.initWorldMesh(height, biomes);
     drawing = true; //TODO: When to set and unset this depends on where GUI widgets are implemented
     worldLoaded.send(true);
     PRINT("World seed = " << seed);

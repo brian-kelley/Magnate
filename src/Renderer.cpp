@@ -81,5 +81,5 @@ void Renderer::modelTest()
     vec3 scale(10, 10, 10);
     mat = glm::scale(mat, scale);
     //todo: test scale/rotate/translate
-    ModelRenderer::drawModel("sphereTank", mat);
+    //ModelRenderer::drawModel("sphereTank", mat);
 }
