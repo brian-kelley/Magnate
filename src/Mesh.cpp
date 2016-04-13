@@ -156,7 +156,7 @@ void Face::replaceEdgeLink(int toReplace, int newLink)
         if(e[i] == toReplace)
         {
             e[i] = newLink;
-            break;
+            return;
         }
     }
     PRINT("Error: Tried to replace link to edge " << toReplace << " with " << newLink << " but face didn't have reference!");
@@ -199,6 +199,7 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     //Testing edge collapse
     PRINT("collapsing edge 64...");
     edgeCollapse(64);
+    edgeCollapse(88);
     //simplify(faceMatchCutoff);
     PRINT("Done with mesh.");
 }
@@ -329,6 +330,12 @@ void Mesh::edgeCollapse(int edgeNum)
     PRINTVAR(f12);
     PRINTVAR(f21);
     PRINTVAR(f22);
+    PRINTVAR(faces[f1]);
+    PRINTVAR(faces[f2]);
+    PRINTVAR(faces[f11]);
+    PRINTVAR(faces[f12]);
+    PRINTVAR(faces[f21]);
+    PRINTVAR(faces[f22]);
     int e11 = getSharedEdge(f1, f11);
     int e12 = getSharedEdge(f1, f12);
     int e21 = getSharedEdge(f2, f21);
@@ -361,7 +368,8 @@ void Mesh::edgeCollapse(int edgeNum)
     }
     //mesh no longer contains any links to v1, can safely delete it
     vertices.free(v1);
-    //update fxx edge links 
+    //update fxx edge links
+    PRINT("Replacing links in face " << f11 << " to edge " << e11 << " with " << e12);
     faces[f11].replaceEdgeLink(e11, e12);
     if(f11 != f21)
         faces[f21].replaceEdgeLink(e21, e22);
@@ -518,17 +526,6 @@ int Mesh::getOtherFace(int f, int e)
 
 int Mesh::getSharedEdge(int f1, int f2)
 {
-    //display all edges (debug)
-    PRINT("f1 edges:");
-    for(int i = 0; i < 3; i++)
-    {
-        PRINTVAR(faces[f1].e[i]);
-    }
-    PRINT("f2 edges:");
-    for(int i = 0; i < 3; i++)
-    {
-        PRINTVAR(faces[f2].e[i]);
-    }
     for(int i = 0; i < 3; i++)
     {
         int edge = faces[f1].e[i];
@@ -595,3 +592,8 @@ bool maxWorldY(vec3& loc)
     return loc.z > WORLD_SIZE * Coord::TERRAIN_TILE_SIZE - 1e-7;
 }
 
+std::ostream& operator<<(std::ostream& os, const MeshTypes::Face& face)
+{
+    os << "v: " << face.v[0] << " " << face.v[1] << " " << face.v[2] << "   ";
+    return os << "e: " << face.e[0] << " " << face.e[1] << " " << face.e[2];
+}

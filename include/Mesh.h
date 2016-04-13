@@ -109,4 +109,6 @@ public:
     void removeEdgeRefs(int e);
 };
 
+std::ostream& operator<<(std::ostream& os, const MeshTypes::Face& face);
+
 #endif
