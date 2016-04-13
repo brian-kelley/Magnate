@@ -246,24 +246,44 @@ void Mesh::simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues)
             int ftop = hmFaceIndex(x, y - 1, FaceDir::LOWER_RIGHT);
             //left, top, diagonal, right, bottom
             //left
-            edges.alloc(Edge(ulv, llv, f1, fleft));
+            DBASSERT(eleft == edges.alloc(Edge(ulv, llv, f1, fleft)));
             //top
-            edges.alloc(Edge(ulv, urv, f1, ftop));
-            //Diagonal edge 
-            edges.alloc(Edge(urv, llv, f1, f2));
+            DBASSERT(etop == edges.alloc(Edge(ulv, urv, f1, ftop)));
+            //Diagonal edge
+            DBASSERT(ediag == edges.alloc(Edge(urv, llv, f1, f2)));
             //right, if on right edge of map
             if(x == WORLD_SIZE - 1)
             {
-                edges.alloc(Edge(urv, lrv, f2, -1));
+                DBASSERT(eright == edges.alloc(Edge(urv, lrv, f2, -1)));
             }
             //bottom, if on bottom edge of map
             if(y == WORLD_SIZE - 1)
             {
-                edges.alloc(Edge(llv, lrv, f2, -1));
+                int loc = edges.alloc(Edge(llv, lrv, f2, -1));
+                if(ebot != loc)
+                {
+                    PRINT("Expected " << ebot);
+                    PRINT("Actual " << loc);
+                    throw runtime_error("A");
+                }
             } 
             //Faces (upper-left and lower-right)
             int faceval = faceValues.get(x, y); //both triangles have same value
             //upper-left
+#ifdef MAGNATE_DEBUG
+            if(eleft == etop)
+                PRINT("err 1");
+            if(ediag == etop)
+                PRINT("err 2");
+            if(eleft == ediag)
+                PRINT("err 3");
+            if(ediag == eright)
+                PRINT("err 4");
+            if(ediag == ebot)
+                PRINT("err 5");
+            if(eright == ebot)
+                PRINT("err 6");
+#endif
             faces.alloc(Face(ulv, urv, llv, eleft, etop, ediag, faceval));
             //lower-right
             faces.alloc(Face(urv, lrv, llv, ediag, eright, ebot, faceval));
@@ -303,18 +323,18 @@ void Mesh::edgeCollapse(int edgeNum)
     auto& edge = edges[edgeNum];
     int f1, f2, f11, f12, f21, f22;
     getNeighbors(edgeNum, f1, f2, f11, f12, f21, f22);
-    int e11 = getSharedEdge(f1, f11);
-    int e12 = getSharedEdge(f1, f12);
-    int e21 = getSharedEdge(f2, f21);
-    int e22 = getSharedEdge(f2, f22);
-    int v1 = edge.v[0];
-    int v2 = edge.v[1];
     PRINTVAR(f1);
     PRINTVAR(f2);
     PRINTVAR(f11);
     PRINTVAR(f12);
     PRINTVAR(f21);
     PRINTVAR(f22);
+    int e11 = getSharedEdge(f1, f11);
+    int e12 = getSharedEdge(f1, f12);
+    int e21 = getSharedEdge(f2, f21);
+    int e22 = getSharedEdge(f2, f22);
+    int v1 = edge.v[0];
+    int v2 = edge.v[1];
     PRINTVAR(e11);
     PRINTVAR(e12);
     PRINTVAR(e21);
@@ -343,7 +363,8 @@ void Mesh::edgeCollapse(int edgeNum)
     vertices.free(v1);
     //update fxx edge links 
     faces[f11].replaceEdgeLink(e11, e12);
-    faces[f21].replaceEdgeLink(e21, e22);
+    if(f11 != f21)
+        faces[f21].replaceEdgeLink(e21, e22);
     //now e11 and e21 can be deleted
     edges.free(e11);
     edges.free(e21);
@@ -381,11 +402,14 @@ int Mesh::hmVertIndex(int x, int y)
 {
     return (WORLD_SIZE + 1) * y + x; 
 }
+
 int Mesh::hmEdgeIndex(int x, int y, EdgeDir which)
 {
     int base =  y + 3 * (x + WORLD_SIZE * y);
     if(y == WORLD_SIZE - 1)
+    {
         base += x;
+    }
     switch(which)
     {
         case EdgeDir::LEFT:
@@ -396,14 +420,33 @@ int Mesh::hmEdgeIndex(int x, int y, EdgeDir which)
             return base + 2;
         default:;
     }
-    if(x == WORLD_SIZE - 1 && y == WORLD_SIZE - 1)
+    if(x < WORLD_SIZE - 1 && which == EdgeDir::RIGHT)
     {
-        if(which == EdgeDir::RIGHT)
-            return base + 3;
-        else
-            return base + 4;
+        return hmEdgeIndex(x + 1, y, EdgeDir::LEFT);
     }
-    return base + 3;
+    if(y < WORLD_SIZE - 1 && which == EdgeDir::BOTTOM)
+    {
+        return hmEdgeIndex(x, y + 1, EdgeDir::TOP);
+    }
+    if(x == WORLD_SIZE - 1 && y != WORLD_SIZE - 1 && which == EdgeDir::RIGHT)
+    {
+        //right of map boundary (but not bottom right) creates right edge
+        return base + 3;
+    }
+    if(y == WORLD_SIZE - 1 &&  x != WORLD_SIZE - 1 && which == EdgeDir::BOTTOM)
+    {
+        //bottom of map boundary (but not bottom right) creates bottom edge
+        return base + 3;
+    }
+    //now on very bottom-right corner tile of map
+    if(which == EdgeDir::RIGHT)
+        return base + 3;
+    if(which == EdgeDir::BOTTOM)
+        return base + 4;
+#ifdef MAGNATE_DEBUG
+    throw runtime_error("Should not have gotten here!");
+#endif
+    return -1;
 }
 
 int Mesh::hmFaceIndex(int x, int y, FaceDir which)
@@ -444,34 +487,48 @@ void Mesh::getFaceNeighbors(int f, int exclude, int& f1, int& f2)
     }
     int e1 = (excludeEdge + 1) % 3;
     int e2 = (e1 + 1) % 3;
-    PRINTVAR(exclude);
-    PRINT("In getFaceNeighbors...");
+    //PRINTVAR(exclude);
+    //PRINT("In getFaceNeighbors...");
     f1 = getOtherFace(f, e1);
     f2 = getOtherFace(f, e2);
+    /*
     PRINTVAR(e1);
     PRINTVAR(e2);
     PRINTVAR(f1);
     PRINTVAR(f2);
     PRINT("Returning from getFaceNeighbors");
+    */
 } 
 
 int Mesh::getOtherFace(int f, int e)
 {
     Face& face = faces[f];
     Edge& edge = edges[face.e[e]];
+    /*
     PRINT("In getOtherFace");
     PRINTVAR(f);
     PRINTVAR(e);
     PRINTVAR(edge.f[0]);
-    PRINTVAR(edge.f[1]);
+    PRINTVAR(edge.f[1]);*/
     int rv = edge.f[0] == f ? edge.f[1] : edge.f[0];
-    PRINTVAR(rv);
-    PRINT("getOtherFace ret");
+    //PRINTVAR(rv);
+    //PRINT("getOtherFace ret");
     return rv;
 }
 
 int Mesh::getSharedEdge(int f1, int f2)
 {
+    //display all edges (debug)
+    PRINT("f1 edges:");
+    for(int i = 0; i < 3; i++)
+    {
+        PRINTVAR(faces[f1].e[i]);
+    }
+    PRINT("f2 edges:");
+    for(int i = 0; i < 3; i++)
+    {
+        PRINTVAR(faces[f2].e[i]);
+    }
     for(int i = 0; i < 3; i++)
     {
         int edge = faces[f1].e[i];
@@ -480,6 +537,7 @@ int Mesh::getSharedEdge(int f1, int f2)
     }
 #ifdef MAGNATE_DEBUG
     PRINT("Serious warning: expected faces " << f1 << " and " << f2 << " to share an edge but they don't. Returning -1.");
+    throw runtime_error("shart");
 #endif
     return -1;
 }

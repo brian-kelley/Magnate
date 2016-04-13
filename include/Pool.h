@@ -65,6 +65,13 @@ Pool<T>::~Pool()
 template<typename T>
 T& Pool<T>::operator[](int index)
 {
+#ifdef MAGNATE_DEBUG
+    if(index < 0 || index >= capacity || !allocMap[index])
+    {
+        PRINT("Illegal pool access!");
+        throw runtime_error("oh man");
+    }
+#endif
     return data[index];
 }
 
@@ -111,13 +118,19 @@ void Pool<T>::free(int index)
     {
         freeList.push_back(index);
     }
+    else
+    {
+        top--;
+    }
     size--;
 }
 
 template<typename T>
 void Pool<T>::free(T* ptr)
 {
-    free((ptr - data) / sizeof(T));
+    ptrdiff_t offset = (ptrdiff_t) ptr;
+    ptrdiff_t base = (ptrdiff_t) data;
+    free((offset - base) / sizeof(T));
 }
 
 template<typename T>
