@@ -25,6 +25,7 @@ namespace MeshTypes
         void addEdge(int e);
         void removeEdge(int e);
         bool isOnBoundary();    //is the vertex on the world boundary?
+        bool isInCorner();      //is the vertex at a corner of the world?
     };
     struct Edge
     {
@@ -107,6 +108,10 @@ public:
     void replaceVertexLinks(int toReplace, int newLink);
     //remove vertices' edge reference
     void removeEdgeRefs(int e);
+    void fullCorrectnessCheck();
+    bool validFace(int f);
+    bool validEdge(int e);
+    bool validVertex(int v);
 };
 
 std::ostream& operator<<(std::ostream& os, const MeshTypes::Face& face);

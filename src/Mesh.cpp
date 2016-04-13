@@ -38,6 +38,24 @@ bool Vertex::isOnBoundary()
     return minWorldX(pos) || maxWorldX(pos) || minWorldY(pos) || maxWorldY(pos);
 }
 
+bool Vertex::isInCorner()
+{
+    int score = 0;
+    if(minWorldX(pos))
+        score++;
+    if(maxWorldX(pos))
+        score++;
+    if(minWorldY(pos))
+        score++;
+    if(maxWorldY(pos))
+        score++;
+    //if score is 0, point in interior
+    //if score is 1, point on edge 
+    //if score is 2, point on corner
+    DBASSERT(score <= 2);
+    return score == 2;
+}
+
 Edge::Edge()
 {
     v[0] = -1;
@@ -196,10 +214,10 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     PRINT("Constructing tri mesh.");
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
+    //TIMEIT(fullCorrectnessCheck());
     //Testing edge collapse
     PRINT("collapsing edge 64...");
-    edgeCollapse(64);
-    edgeCollapse(88);
+    //edgeCollapse(90);
     //simplify(faceMatchCutoff);
     PRINT("Done with mesh.");
 }
@@ -349,8 +367,11 @@ void Mesh::edgeCollapse(int edgeNum)
     PRINTVAR(v1);
     PRINTVAR(v2);
     bool moveVertex = true; //by default, move remaining vertex to midpoint of old ones
+#ifdef MAGNATE_DEBUG
+    DBASSERT(!vertices[v1].isInCorner() || !vertices[v2].isInCorner());
+#endif
     //don't want to move or remove a vertex on the map boundary
-    if(vertices[v1].isOnBoundary())
+    if(vertices[v1].isInCorner() || (vertices[v1].isOnBoundary() && !vertices[v2].isInCorner()))
     {
         //keep v1, delete v2 instead (just by swapping names)
         SWAP(v1, v2);
@@ -369,7 +390,7 @@ void Mesh::edgeCollapse(int edgeNum)
     //mesh no longer contains any links to v1, can safely delete it
     vertices.free(v1);
     //update fxx edge links
-    PRINT("Replacing links in face " << f11 << " to edge " << e11 << " with " << e12);
+    //PRINT("Replacing links in face " << f11 << " to edge " << e11 << " with " << e12);
     faces[f11].replaceEdgeLink(e11, e12);
     if(f11 != f21)
         faces[f21].replaceEdgeLink(e21, e22);
@@ -597,3 +618,105 @@ std::ostream& operator<<(std::ostream& os, const MeshTypes::Face& face)
     os << "v: " << face.v[0] << " " << face.v[1] << " " << face.v[2] << "   ";
     return os << "e: " << face.e[0] << " " << face.e[1] << " " << face.e[2];
 }
+
+void Mesh::fullCorrectnessCheck()
+{
+    //check validity of all F => V and F => E links
+    for(auto it = faces.begin(); it != faces.end(); it++)
+    {
+        for(int j = 0; j < 3; j++)
+        {
+            if(!validVertex(it->v[j]))
+            {
+                PRINT("Face " << it.loc << " has ref to vertex " << it->v[j] << " but vert not allocated!");
+                throw exception();
+            }
+            if(!!validEdge(it->e[j]))
+            {
+                PRINT("Face " << it.loc << " has ref to edge " << it->e[j] << " but edge not allocated!");
+                throw exception();
+            }
+        }
+    }
+    //check validity of all E => V and E => F links
+    for(auto it = edges.begin(); it != edges.end(); it++)
+    {
+        for(int j = 0; j < 2; j++)
+        {
+            if(!validVertex(it->v[j]))
+            {
+                PRINT("Edge " << it.loc << " has ref to vertex " << it->v[j] << " but vert not allocated!");
+                throw exception();
+            }
+            if(validEdge(it->f[j]))
+            {
+                PRINT("Edge " << it.loc << " has ref to edge " << it->f[j] << " but edge not allocated!");
+                throw exception();
+            }
+        }
+    }
+    //check that all vertex adjacency lists include only valid edges, and that those edges link back to the vertex
+    for(auto it = vertices.begin(); it != vertices.end(); it++)
+    {
+        for(auto adj : it->edges)
+        {
+            if(!validEdge(adj))
+            {
+                PRINT("Vertex " << it.loc << " has ref to edge " << adj << " but that edge not allocated!");
+                throw exception();
+            }
+            if(!edges[adj].hasVert(it.loc))
+            {
+                PRINT("Vertex " << it.loc << " has ref to edge " << adj << " but that edge doesn't link back to the vertex!");
+                throw exception();
+            }
+        }
+    }
+    //check that edges don't connect a vertex to itself, or have same face on both sides
+    for(auto it = edges.begin(); it != edges.end(); it++)
+    {
+        if(it->v[0] == it->v[1])
+        {
+            PRINT("Edge " << it.loc << " links vertex " << it->v[0] << " to itself!");
+            throw exception();
+        }
+        if(it->f[0] == it->f[1])
+        {
+            PRINT("Edge " << it.loc << " has same face " << it->f[0] << " on both sides!");
+            throw exception();
+        }
+    }
+    //check that faces don't have duplicate edges or vertices
+    for(auto it = faces.begin(); it != faces.end(); it++)
+    {
+        if(it->v[0] == it->v[1] || it->v[1] == it->v[2] || it->v[0] == it->v[2] || it->e[0] == it->e[1] || it->e[1] == it->e[2] || it->e[0] == it->e[2])
+        {
+            PRINT("Face #" << it.loc << " contains a vertex or edge more than once!");
+            PRINT("The face: " << faces[it.loc]);
+            throw exception();
+        }
+    }
+    //check for backwards-facing faces
+    for(auto it = faces.begin(); it != faces.end(); it++)
+    {
+        if(it->getNorm().y < 0)
+        {
+            PRINT("Mesh error! Face " << it.loc << " facing wrong way!");
+            throw exception();
+        }
+    }
+}
+
+bool Mesh::validFace(int f)
+{
+    return f >= 0 && f < faces.capacity && faces.isAllocated(f);
+}
+bool Mesh::validEdge(int e)
+{
+    return e >= 0 && e < edges.capacity && edges.isAllocated(e);
+}
+bool Mesh::validVertex(int v)
+{
+    return v >= 0 && v < vertices.capacity && vertices.isAllocated(v);
+}
+

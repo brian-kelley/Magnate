@@ -35,6 +35,7 @@ class Pool
             bool operator==(const iterator& rhs);
             bool operator!=(const iterator& rhs);
         };
+        bool isAllocated(int index);
         iterator begin();
         iterator end();
         int size;
@@ -199,4 +200,10 @@ template<typename T>
 bool Pool<T>::iterator::operator!=(const Pool<T>::iterator& rhs)
 {
     return !(*this == rhs);
+}
+
+template<typename T>
+bool Pool<T>::isAllocated(int index)
+{
+    return allocMap[index];
 }
