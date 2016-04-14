@@ -1,4 +1,4 @@
-#include "Mesh.h"
+    #include "Mesh.h"
 #include "DebugTools.h"
 #include "RandomUtils.h"
 #include "GenTypes.h"
@@ -214,10 +214,11 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     PRINT("Constructing tri mesh.");
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
-    //TIMEIT(fullCorrectnessCheck());
     //Testing edge collapse
     PRINT("collapsing edge 64...");
-    //edgeCollapse(90);
+    fullCorrectnessCheck();
+    edgeCollapse(64);
+    fullCorrectnessCheck();
     //simplify(faceMatchCutoff);
     PRINT("Done with mesh.");
 }
@@ -390,7 +391,7 @@ void Mesh::edgeCollapse(int edgeNum)
     //mesh no longer contains any links to v1, can safely delete it
     vertices.free(v1);
     //update fxx edge links
-    //PRINT("Replacing links in face " << f11 << " to edge " << e11 << " with " << e12);
+    PRINT("Replacing links in face " << f11 << " to edge " << e11 << " with " << e12);
     faces[f11].replaceEdgeLink(e11, e12);
     if(f11 != f21)
         faces[f21].replaceEdgeLink(e21, e22);
@@ -569,6 +570,9 @@ void Mesh::replaceVertexLinks(int toReplace, int newLink)
         if(edge.v[0] == toReplace)
         {
             edge.v[0] = newLink;
+            //also move the V => E refs
+            vertices[toReplace].removeEdge(edgeNum);
+            vertices[newLink].addEdge(edgeNum);
         }
         else if(edge.v[1] == toReplace)
         {
@@ -619,6 +623,12 @@ std::ostream& operator<<(std::ostream& os, const MeshTypes::Face& face)
     return os << "e: " << face.e[0] << " " << face.e[1] << " " << face.e[2];
 }
 
+std::ostream& operator<<(std::ostream& os, const MeshTypes::Edge& edge)
+{
+    os << "v: " << edge.v[0] << " " << edge.v[1] << " ";
+    return os << "f: " << edge.f[0] << " " << edge.f[1];
+}
+
 void Mesh::fullCorrectnessCheck()
 {
     //check validity of all F => V and F => E links
@@ -631,7 +641,7 @@ void Mesh::fullCorrectnessCheck()
                 PRINT("Face " << it.loc << " has ref to vertex " << it->v[j] << " but vert not allocated!");
                 throw exception();
             }
-            if(!!validEdge(it->e[j]))
+            if(!validEdge(it->e[j]))
             {
                 PRINT("Face " << it.loc << " has ref to edge " << it->e[j] << " but edge not allocated!");
                 throw exception();
@@ -648,9 +658,10 @@ void Mesh::fullCorrectnessCheck()
                 PRINT("Edge " << it.loc << " has ref to vertex " << it->v[j] << " but vert not allocated!");
                 throw exception();
             }
-            if(validEdge(it->f[j]))
+            if(!validFace(it->f[j]) && it->f[j] != -1)  //-1 is allowed
             {
-                PRINT("Edge " << it.loc << " has ref to edge " << it->f[j] << " but edge not allocated!");
+                PRINT("Edge " << it.loc << " has ref to face " << it->f[j] << " but face not allocated!");
+                PRINT("The edge: " << *it);
                 throw exception();
             }
         }
