@@ -1,4 +1,4 @@
-    #include "Mesh.h"
+#include "Mesh.h"
 #include "DebugTools.h"
 #include "RandomUtils.h"
 #include "GenTypes.h"
@@ -18,7 +18,10 @@ Pool<Edge>* Edge::edgeArray = nullptr;
 
 void Vertex::addEdge(int e)
 {
-    edges.push_back(e);
+    if(!hasEdge(e))
+    {
+        edges.push_back(e);
+    }
 }
 
 void Vertex::removeEdge(int e)
@@ -56,6 +59,18 @@ bool Vertex::isInCorner()
     return score == 2;
 }
 
+bool Vertex::hasEdge(int e)
+{
+    for(auto it : edges)
+    {
+        if(it == e)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 Edge::Edge()
 {
     v[0] = -1;
@@ -82,6 +97,23 @@ bool Edge::hasFace(int query)
 bool Edge::hasVert(int query)
 {
     return v[0] == query || v[1] == query;
+}
+
+void Edge::replaceVertexLink(int toReplace, int newLink)
+{
+    if(v[0] == toReplace)
+    {
+        v[0] = newLink;
+        return;
+    }
+    else if(v[1] == toReplace)
+    {
+        v[1] = newLink;
+        return;
+    }
+#ifdef MAGNATE_DEBUG
+    throw runtime_error("Tried to replace a E => V link that didn't exist!");
+#endif
 }
 
 void Edge::replaceFaceLink(int toReplace, int newLink)
@@ -343,6 +375,7 @@ void Mesh::edgeCollapse(int edgeNum)
     auto& edge = edges[edgeNum];
     int f1, f2, f11, f12, f21, f22;
     getNeighbors(edgeNum, f1, f2, f11, f12, f21, f22);
+    PRINTVAR(edgeNum);
     PRINTVAR(f1);
     PRINTVAR(f2);
     PRINTVAR(f11);
@@ -382,45 +415,56 @@ void Mesh::edgeCollapse(int edgeNum)
     {
         moveVertex = false;
     }
+    PRINT("Replacing all links to vertex " << v1 << " with " << v2);
     replaceVertexLinks(v1, v2); //note: does not free v1, but does free edgeNum
+    for(auto it = edges.begin(); it != edges.end(); it++)
+    {
+        if(it->hasVert(v1))
+        {
+            throw runtime_error(string("replaceVertexLinks failed to replace all links to ") + to_string(v1));
+        }
+    }
     //e11.v == e12.v, e21.v == e22.v (only face links different, will change)
     if(moveVertex)
     {
         vertices[v2].pos = (vertices[v1].pos + vertices[v2].pos) * 0.5f;
     }
     //mesh no longer contains any links to v1, can safely delete it
-    vertices.free(v1);
+    PRINT("Deleting vertex " << v1);
+    vertices.dealloc(v1);
+    PRINT("Edges containing v2: ");
+    for(auto i : vertices[v2].edges)
+        cout << i << " ";
+    PRINT("");
+    PRINT("Removing edge " << edgeNum << " from vertex " << v2);
+    vertices[v2].removeEdge(edgeNum);
+    PRINT("Edges containing v2: ");
+    for(auto i : vertices[v2].edges)
+        cout << i << " ";
+    PRINT("");
     //update fxx edge links
     PRINT("Replacing links in face " << f11 << " to edge " << e11 << " with " << e12);
     faces[f11].replaceEdgeLink(e11, e12);
     if(f11 != f21)
+    {
+        PRINT("Replacing links in face " << f21 << " to edge " << e21 << " with " << e22);
         faces[f21].replaceEdgeLink(e21, e22);
+    }
     //now e11 and e21 can be deleted
-    edges.free(e11);
-    edges.free(e21);
+    PRINT("Deleting edges " << e11 << " and " << e21);
+    fullyDeleteEdge(e11);
+    fullyDeleteEdge(e21);
     //prepare to remove f1/f2 by updating e12/e22 face links
+    PRINT("On edge " << e12 << ", replacing link to face " << f1 << " with " << f11);
     edges[e12].replaceFaceLink(f1, f11);
+    PRINT("On edge " << e22 << ", replacing link to face " << f2 << " with " << f21);
     edges[e22].replaceFaceLink(f2, f21);
     //nothing links to f1, f2 anymore, delete them
-    faces.free(f1);
-    faces.free(f2);
+    PRINT("Deleting face " << f1);
+    faces.dealloc(f1);
+    PRINT("Deleting face " << f2);
+    faces.dealloc(f2);
 }
-
-int Mesh::getMaxVertices()
-{
-    return (WORLD_SIZE + 1) * (WORLD_SIZE + 1);
-}
-
-int Mesh::getMaxEdges()
-{
-    return 3 * (WORLD_SIZE * WORLD_SIZE) + 2 * WORLD_SIZE;
-}
-
-int Mesh::getMaxFaces()
-{
-    return 2 * WORLD_SIZE * WORLD_SIZE;
-}
-
 /* Mesh utility functions */
 
 bool Mesh::collapseConnectivity(int edge)
@@ -564,40 +608,33 @@ int Mesh::getSharedEdge(int f1, int f2)
 void Mesh::replaceVertexLinks(int toReplace, int newLink)
 {
     auto& vertex = vertices[toReplace];
-    for(int edgeNum : vertex.edges)
+    for(auto it = vertex.edges.begin(); it != vertex.edges.end(); it++)
     {
+        int edgeNum = *it;
         auto& edge = edges[edgeNum];
-        if(edge.v[0] == toReplace)
-        {
-            edge.v[0] = newLink;
-            //also move the V => E refs
-            vertices[toReplace].removeEdge(edgeNum);
-            vertices[newLink].addEdge(edgeNum);
-        }
-        else if(edge.v[1] == toReplace)
-        {
-            edge.v[1] = newLink;
-        }
-        //remove the edge completely if now degenerate
-        //two faces will have references to that edge -- they will be removed later
-        if(edge.v[0] == edge.v[1])
-        {
-            removeEdgeRefs(edgeNum);
-            edges.free(edgeNum);
-        }
         faces[edge.f[0]].replaceVertexLink(toReplace, newLink);
         faces[edge.f[0]].checkNormal();
         faces[edge.f[1]].replaceVertexLink(toReplace, newLink);
         faces[edge.f[1]].checkNormal();
+        edge.replaceVertexLink(toReplace, newLink);
+        vertices[newLink].addEdge(*it);
+        //remove the edge completely if now degenerate
+        //two faces will have references to that edge -- they will be removed later
+        if(edge.v[0] == edge.v[1])
+        {
+            //removeEdgeRefs(edgeNum);
+            edges.dealloc(edgeNum);
+        }
     }
 }
-
+/*
 void Mesh::removeEdgeRefs(int e)
 {
     auto& edge = edges[e];
     vertices[edge.v[0]].removeEdge(e);
     vertices[edge.v[1]].removeEdge(e);
 }
+ */
 
 bool minWorldX(vec3& loc)
 {
@@ -718,6 +755,30 @@ void Mesh::fullCorrectnessCheck()
     }
 }
 
+void Mesh::fullyDeleteEdge(int e)
+{
+    int v1 = edges[e].v[0];
+    int v2 = edges[e].v[1];
+    if(vertices.isAllocated(v1))
+    {
+        vertices[v1].removeEdge(e);
+    }
+    if(vertices.isAllocated(v2))
+    {
+        vertices[v2].removeEdge(e);
+    }
+    edges.dealloc(e);
+}
+
+void Mesh::mergeEdges(int e1, int e2, int f)
+{
+    //remove the shared face f, and update f's neighbors that share e1 and e2
+    //e1 will be merged into e2, and e1 will be deleted
+    int f1 = getOtherFace(f, e1);
+    int f2 = getOtherFace(f, e2);
+    faces[f1].replaceEdgeLink(e1, e2);
+}
+
 bool Mesh::validFace(int f)
 {
     return f >= 0 && f < faces.capacity && faces.isAllocated(f);
@@ -729,5 +790,20 @@ bool Mesh::validEdge(int e)
 bool Mesh::validVertex(int v)
 {
     return v >= 0 && v < vertices.capacity && vertices.isAllocated(v);
+}
+
+int Mesh::getMaxVertices()
+{
+    return (WORLD_SIZE + 1) * (WORLD_SIZE + 1);
+}
+
+int Mesh::getMaxEdges()
+{
+    return 3 * (WORLD_SIZE * WORLD_SIZE) + 2 * WORLD_SIZE;
+}
+
+int Mesh::getMaxFaces()
+{
+    return 2 * WORLD_SIZE * WORLD_SIZE;
 }
 

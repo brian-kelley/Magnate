@@ -1,0 +1,3 @@
+/Users/Brian/Dropbox/Magnate/xcodeBuild/CMakeFiles/ALL_BUILD.dir
+/Users/Brian/Dropbox/Magnate/xcodeBuild/CMakeFiles/Magnate.dir
+/Users/Brian/Dropbox/Magnate/xcodeBuild/CMakeFiles/ZERO_CHECK.dir

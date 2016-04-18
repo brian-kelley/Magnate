@@ -26,6 +26,7 @@ namespace MeshTypes
         void removeEdge(int e);
         bool isOnBoundary();    //is the vertex on the world boundary?
         bool isInCorner();      //is the vertex at a corner of the world?
+        bool hasEdge(int e);
     };
     struct Edge
     {
@@ -35,6 +36,7 @@ namespace MeshTypes
         int f[2]; //triangles containing the edge
         bool hasVert(int query);
         bool hasFace(int query);
+        void replaceVertexLink(int toReplace, int newLink);
         void replaceFaceLink(int toReplace, int newLink);
         static Pool<Vertex>* vertArray;
         static Pool<Edge>* edgeArray;
@@ -106,8 +108,8 @@ public:
     int getSharedEdge(int f1, int f2);
     //replace all links to toReplace with newLink (changes links in faces and edges)
     void replaceVertexLinks(int toReplace, int newLink);
-    //remove vertices' edge reference
-    void removeEdgeRefs(int e);
+    void fullyDeleteEdge(int e); //completely deletes edge. Faces must not link to it!
+    void mergeEdges(int e1, int e2, int f); //pass the edges to be merged, and shared face
     void fullCorrectnessCheck();
     bool validFace(int f);
     bool validEdge(int e);

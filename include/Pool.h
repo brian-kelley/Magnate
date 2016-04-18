@@ -22,8 +22,8 @@ class Pool
         T& operator[](int index);
         int alloc();
         int alloc(T val);
-        void free(int index);
-        void free(T* ptr);
+        void dealloc(int index);
+        void dealloc(T* ptr);
         void clear();
         struct iterator
         {
@@ -60,7 +60,12 @@ Pool<T>::Pool(int capacity) : allocMap(capacity, false)
 template<typename T>
 Pool<T>::~Pool()
 {
-    delete data;
+    //call destructor on all allocated objects
+    for(auto it = begin(); it != end(); it++)
+    {
+        it->~T();
+    }
+    free(data);
 }
 
 template<typename T>
@@ -68,7 +73,7 @@ T& Pool<T>::operator[](int index)
 {
 #ifdef MAGNATE_DEBUG
     if(index < 0 || index >= capacity || !allocMap[index])
-    {
+    {   
         PRINT("Illegal pool access!");
         throw runtime_error("oh man");
     }
@@ -111,7 +116,7 @@ int Pool<T>::alloc(T val)
 }
 
 template<typename T>
-void Pool<T>::free(int index)
+void Pool<T>::dealloc(int index)
 {
     data[index].~T();
     allocMap[index] = false;
@@ -127,11 +132,13 @@ void Pool<T>::free(int index)
 }
 
 template<typename T>
-void Pool<T>::free(T* ptr)
+void Pool<T>::dealloc(T* ptr)
 {
     ptrdiff_t offset = (ptrdiff_t) ptr;
     ptrdiff_t base = (ptrdiff_t) data;
-    free((offset - base) / sizeof(T));
+    PRINT("offset: " << offset);
+    PRINT("base: " << base);
+    dealloc((offset - base) / sizeof(T));
 }
 
 template<typename T>
@@ -180,7 +187,12 @@ T* Pool<T>::iterator::operator->()
 template<typename T>
 typename Pool<T>::iterator Pool<T>::begin()
 {
-    return {0, *this};
+    Pool<T>::iterator it = {0, *this};
+    while(!allocMap[it.loc] && it.loc < capacity)
+    {
+        it.loc++;
+    }
+    return it;
 }
 
 template<typename T>

@@ -37,8 +37,8 @@ void Renderer::update()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     upload3DMatrices();
     WorldRenderer::draw();
-    //Model renderer test
-    modelTest();
+    //Model renderer test - not doing while working on mesh
+    //modelTest();
     GLERR
     //Then draw GUI (function computes vertices and does draw calls)
     //Use bilinear for this
@@ -81,5 +81,5 @@ void Renderer::modelTest()
     vec3 scale(10, 10, 10);
     mat = glm::scale(mat, scale);
     //todo: test scale/rotate/translate
-    //ModelRenderer::drawModel("sphereTank", mat);
+    ModelRenderer::drawModel("sphereTank", mat);
 }

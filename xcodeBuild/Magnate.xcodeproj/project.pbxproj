@@ -1,0 +1,1014 @@
+// !$*UTF8*$!
+{
+       archiveVersion = 1;
+       classes = {
+       };
+       objectVersion = 46;
+       objects = {
+
+/* Begin PBXAggregateTarget section */
+              063B677FAE644FC0BA9FB2CC /* ALL_BUILD */ = {
+                     isa = PBXAggregateTarget;
+                     buildConfigurationList = 5D5E6E283FB842CC9F902486 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */;
+                     buildPhases = (
+                            AEBA6EB1BB6F4850BD71E322 /* CMake Rules */,
+                     );
+                     dependencies = (
+                            22CB81561E6040198B1C0203 /* PBXTargetDependency */,
+                            79A41F33E65E4472B18A1184 /* PBXTargetDependency */,
+                     );
+                     name = ALL_BUILD;
+                     productName = ALL_BUILD;
+              };
+              30747E43E61C4BAC90340ECB /* ZERO_CHECK */ = {
+                     isa = PBXAggregateTarget;
+                     buildConfigurationList = D77B8E5D6F914C9C92AF27BA /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */;
+                     buildPhases = (
+                            5CA505FA84C146E6ADC7B369 /* CMake Rules */,
+                     );
+                     dependencies = (
+                     );
+                     name = ZERO_CHECK;
+                     productName = ZERO_CHECK;
+              };
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+FA0D01A36B034FF5B2129B6D /* /Users/Brian/Dropbox/Magnate/CMakeLists.txt */ = {isa = PBXBuildFile; fileRef = C21E5073067C4F95ACA0EC36 /* /Users/Brian/Dropbox/Magnate/CMakeLists.txt */; settings = { COMPILER_FLAGS = ""; }; };
+86CFC97D64D84AD38A46FD39 /* /Users/Brian/Dropbox/Magnate/include/Atlas.h */ = {isa = PBXBuildFile; fileRef = 6155B058E251466588C518C0 /* /Users/Brian/Dropbox/Magnate/include/Atlas.h */; settings = { COMPILER_FLAGS = ""; }; };
+25CA06A290E04A0B9E827087 /* /Users/Brian/Dropbox/Magnate/include/Broadcaster.h */ = {isa = PBXBuildFile; fileRef = 63F0D5F31CC547B5BF88E55B /* /Users/Brian/Dropbox/Magnate/include/Broadcaster.h */; settings = { COMPILER_FLAGS = ""; }; };
+B55EDE622647442EAC044779 /* /Users/Brian/Dropbox/Magnate/include/Building.h */ = {isa = PBXBuildFile; fileRef = 41A1A7A1A9134FF8B54949F9 /* /Users/Brian/Dropbox/Magnate/include/Building.h */; settings = { COMPILER_FLAGS = ""; }; };
+FB22476EE78F43A9B38268E9 /* /Users/Brian/Dropbox/Magnate/include/Button.h */ = {isa = PBXBuildFile; fileRef = 58F6327F89EF41219BE3CC7D /* /Users/Brian/Dropbox/Magnate/include/Button.h */; settings = { COMPILER_FLAGS = ""; }; };
+B86AC2FE586543A49EEC8838 /* /Users/Brian/Dropbox/Magnate/include/Camera.h */ = {isa = PBXBuildFile; fileRef = A306A03FC1BE4128B2757903 /* /Users/Brian/Dropbox/Magnate/include/Camera.h */; settings = { COMPILER_FLAGS = ""; }; };
+E2E9165D46984AC5A3187E40 /* /Users/Brian/Dropbox/Magnate/include/Component.h */ = {isa = PBXBuildFile; fileRef = 65272448C1B4491CB9BA5939 /* /Users/Brian/Dropbox/Magnate/include/Component.h */; settings = { COMPILER_FLAGS = ""; }; };
+FC2E7DA85AF84579B9D284DA /* /Users/Brian/Dropbox/Magnate/include/Coord.h */ = {isa = PBXBuildFile; fileRef = C8F8186631084CD8A8906130 /* /Users/Brian/Dropbox/Magnate/include/Coord.h */; settings = { COMPILER_FLAGS = ""; }; };
+42C11E619BFC440B933218B2 /* /Users/Brian/Dropbox/Magnate/include/DebugTools.h */ = {isa = PBXBuildFile; fileRef = 2F6EC821C6A649E693AB0F89 /* /Users/Brian/Dropbox/Magnate/include/DebugTools.h */; settings = { COMPILER_FLAGS = ""; }; };
+7BD77A9693D24EA5A2A19278 /* /Users/Brian/Dropbox/Magnate/include/Draggable.h */ = {isa = PBXBuildFile; fileRef = 4C29E06255AE478CA0DA2A2F /* /Users/Brian/Dropbox/Magnate/include/Draggable.h */; settings = { COMPILER_FLAGS = ""; }; };
+75C455AABDD14C0383CE305D /* /Users/Brian/Dropbox/Magnate/include/Erosion.h */ = {isa = PBXBuildFile; fileRef = AC0CF7CE063D419F91F856C2 /* /Users/Brian/Dropbox/Magnate/include/Erosion.h */; settings = { COMPILER_FLAGS = ""; }; };
+0EFBA5443C9E421799D88BDF /* /Users/Brian/Dropbox/Magnate/include/Field.h */ = {isa = PBXBuildFile; fileRef = 3DCCEAEB8CE84F0197EE85F5 /* /Users/Brian/Dropbox/Magnate/include/Field.h */; settings = { COMPILER_FLAGS = ""; }; };
+31350B08E1E340818DC1B178 /* /Users/Brian/Dropbox/Magnate/include/FileIO.h */ = {isa = PBXBuildFile; fileRef = AD43888C1DE249A5A76345FD /* /Users/Brian/Dropbox/Magnate/include/FileIO.h */; settings = { COMPILER_FLAGS = ""; }; };
+59D8AADAE1384475A81D2A69 /* /Users/Brian/Dropbox/Magnate/include/GUI.h */ = {isa = PBXBuildFile; fileRef = EE74CA8B11C745E0AD40D339 /* /Users/Brian/Dropbox/Magnate/include/GUI.h */; settings = { COMPILER_FLAGS = ""; }; };
+58A80DE00047400FAD5D02F6 /* /Users/Brian/Dropbox/Magnate/include/Game.h */ = {isa = PBXBuildFile; fileRef = 8B08F68E3A3A45AAA7261482 /* /Users/Brian/Dropbox/Magnate/include/Game.h */; settings = { COMPILER_FLAGS = ""; }; };
+D678FE2A89534990881AF505 /* /Users/Brian/Dropbox/Magnate/include/GenTypes.h */ = {isa = PBXBuildFile; fileRef = 356E3D3C5312465DB5C9DF65 /* /Users/Brian/Dropbox/Magnate/include/GenTypes.h */; settings = { COMPILER_FLAGS = ""; }; };
+7ED423B867BC4661A4337128 /* /Users/Brian/Dropbox/Magnate/include/GlmHeaders.h */ = {isa = PBXBuildFile; fileRef = 92CAED18143A4CDA9F7DB8A7 /* /Users/Brian/Dropbox/Magnate/include/GlmHeaders.h */; settings = { COMPILER_FLAGS = ""; }; };
+85090E061DA64FEABF133740 /* /Users/Brian/Dropbox/Magnate/include/GlobalConfig.h */ = {isa = PBXBuildFile; fileRef = CDB7A676412F464FBF4A3EAD /* /Users/Brian/Dropbox/Magnate/include/GlobalConfig.h */; settings = { COMPILER_FLAGS = ""; }; };
+0EACBD1E95574657998B3301 /* /Users/Brian/Dropbox/Magnate/include/Heightmap.h */ = {isa = PBXBuildFile; fileRef = FB82A848BF4A466A8CD84758 /* /Users/Brian/Dropbox/Magnate/include/Heightmap.h */; settings = { COMPILER_FLAGS = ""; }; };
+729BF440F3154AD5A0D5EBB7 /* /Users/Brian/Dropbox/Magnate/include/ImmediateDraw.h */ = {isa = PBXBuildFile; fileRef = 7124A640E16447829A113E2E /* /Users/Brian/Dropbox/Magnate/include/ImmediateDraw.h */; settings = { COMPILER_FLAGS = ""; }; };
+2DD2A6E6B3564CFC9928243F /* /Users/Brian/Dropbox/Magnate/include/Input.h */ = {isa = PBXBuildFile; fileRef = 7054D87D3B764E6590E433C8 /* /Users/Brian/Dropbox/Magnate/include/Input.h */; settings = { COMPILER_FLAGS = ""; }; };
+ABA4BCC92ECA480AB2752531 /* /Users/Brian/Dropbox/Magnate/include/Label.h */ = {isa = PBXBuildFile; fileRef = 3F0E7CAFC0E74DE0BFB6A450 /* /Users/Brian/Dropbox/Magnate/include/Label.h */; settings = { COMPILER_FLAGS = ""; }; };
+908327E8F3EE4950AA554370 /* /Users/Brian/Dropbox/Magnate/include/LinAlg.h */ = {isa = PBXBuildFile; fileRef = 0E724434B4DC47918E91C24D /* /Users/Brian/Dropbox/Magnate/include/LinAlg.h */; settings = { COMPILER_FLAGS = ""; }; };
+11C87AC03FD34304A1F8A5AF /* /Users/Brian/Dropbox/Magnate/include/Menus.h */ = {isa = PBXBuildFile; fileRef = 7BE1BAB5276C4CFD957E8524 /* /Users/Brian/Dropbox/Magnate/include/Menus.h */; settings = { COMPILER_FLAGS = ""; }; };
+C19FD23E47B24B25A9E33DC7 /* /Users/Brian/Dropbox/Magnate/include/Mesh.h */ = {isa = PBXBuildFile; fileRef = B205570BDBFD4302A81E825F /* /Users/Brian/Dropbox/Magnate/include/Mesh.h */; settings = { COMPILER_FLAGS = ""; }; };
+48ED1DA73792418DB6E4FC9E /* /Users/Brian/Dropbox/Magnate/include/Minimap.h */ = {isa = PBXBuildFile; fileRef = D8B5CF8D06F44F028C0CD923 /* /Users/Brian/Dropbox/Magnate/include/Minimap.h */; settings = { COMPILER_FLAGS = ""; }; };
+6FB19DF030C6448697488604 /* /Users/Brian/Dropbox/Magnate/include/Models.h */ = {isa = PBXBuildFile; fileRef = 9BC96CD98A574247AF79D690 /* /Users/Brian/Dropbox/Magnate/include/Models.h */; settings = { COMPILER_FLAGS = ""; }; };
+14AF6EFA781F488988D06722 /* /Users/Brian/Dropbox/Magnate/include/MultiSelect.h */ = {isa = PBXBuildFile; fileRef = 3F0433D747D74D198493BA4F /* /Users/Brian/Dropbox/Magnate/include/MultiSelect.h */; settings = { COMPILER_FLAGS = ""; }; };
+51F6B02566B844D7B08639A4 /* /Users/Brian/Dropbox/Magnate/include/RandomUtils.h */ = {isa = PBXBuildFile; fileRef = 61357F817EAE4CD2B74A4FEC /* /Users/Brian/Dropbox/Magnate/include/RandomUtils.h */; settings = { COMPILER_FLAGS = ""; }; };
+5B416399DC41454A9E74B71B /* /Users/Brian/Dropbox/Magnate/include/Renderer.h */ = {isa = PBXBuildFile; fileRef = 68A76260804A4B69BD97FDE7 /* /Users/Brian/Dropbox/Magnate/include/Renderer.h */; settings = { COMPILER_FLAGS = ""; }; };
+0092A29049204ADE8BA99CD9 /* /Users/Brian/Dropbox/Magnate/include/SaveManager.h */ = {isa = PBXBuildFile; fileRef = 3356BE3A6E7541789F01237D /* /Users/Brian/Dropbox/Magnate/include/SaveManager.h */; settings = { COMPILER_FLAGS = ""; }; };
+1C37EEF1F79045B0A2C4547F /* /Users/Brian/Dropbox/Magnate/include/Scene.h */ = {isa = PBXBuildFile; fileRef = 1517CE435A86407ABDE1554F /* /Users/Brian/Dropbox/Magnate/include/Scene.h */; settings = { COMPILER_FLAGS = ""; }; };
+2BEC176C5F9E46209787B992 /* /Users/Brian/Dropbox/Magnate/include/ScrollBlock.h */ = {isa = PBXBuildFile; fileRef = E4BC0D4922454A7A8441A0CD /* /Users/Brian/Dropbox/Magnate/include/ScrollBlock.h */; settings = { COMPILER_FLAGS = ""; }; };
+BD7CB4884567455396C41F21 /* /Users/Brian/Dropbox/Magnate/include/SdlHeaders.h */ = {isa = PBXBuildFile; fileRef = FB63BB5912394F91AD817711 /* /Users/Brian/Dropbox/Magnate/include/SdlHeaders.h */; settings = { COMPILER_FLAGS = ""; }; };
+2CE62FD899BF4AB28B1F6F3E /* /Users/Brian/Dropbox/Magnate/include/Shaders.h */ = {isa = PBXBuildFile; fileRef = 9403AA91A9CB4BDBB7036CC1 /* /Users/Brian/Dropbox/Magnate/include/Shaders.h */; settings = { COMPILER_FLAGS = ""; }; };
+D4EFAC6FD956432E8A83E3C5 /* /Users/Brian/Dropbox/Magnate/include/Terrain.h */ = {isa = PBXBuildFile; fileRef = 0B8FA4009EB6446691A6540F /* /Users/Brian/Dropbox/Magnate/include/Terrain.h */; settings = { COMPILER_FLAGS = ""; }; };
+3795EFD50071461FA4C10259 /* /Users/Brian/Dropbox/Magnate/include/TerrainGen.h */ = {isa = PBXBuildFile; fileRef = AB0633B0580A4C02BC297A39 /* /Users/Brian/Dropbox/Magnate/include/TerrainGen.h */; settings = { COMPILER_FLAGS = ""; }; };
+32B79208D062410991CB43BA /* /Users/Brian/Dropbox/Magnate/include/TexGen.h */ = {isa = PBXBuildFile; fileRef = 47FA38F9324C42DE81A46D79 /* /Users/Brian/Dropbox/Magnate/include/TexGen.h */; settings = { COMPILER_FLAGS = ""; }; };
+35CCBC5E11634E9F851F7A2F /* /Users/Brian/Dropbox/Magnate/include/TexManager.h */ = {isa = PBXBuildFile; fileRef = 3EADE9118F6049C0943305F7 /* /Users/Brian/Dropbox/Magnate/include/TexManager.h */; settings = { COMPILER_FLAGS = ""; }; };
+67E0C690C384414DBFF1262B /* /Users/Brian/Dropbox/Magnate/include/Topo.h */ = {isa = PBXBuildFile; fileRef = B2EDBCBECD8946CB8A90FD53 /* /Users/Brian/Dropbox/Magnate/include/Topo.h */; settings = { COMPILER_FLAGS = ""; }; };
+7DA2D7BCEC654AE6B940D26A /* /Users/Brian/Dropbox/Magnate/include/UIRenderer.h */ = {isa = PBXBuildFile; fileRef = 038998D231CC4FD9ADE3F9AC /* /Users/Brian/Dropbox/Magnate/include/UIRenderer.h */; settings = { COMPILER_FLAGS = ""; }; };
+4CA43B70904A48DB8F783F3A /* /Users/Brian/Dropbox/Magnate/include/VBO.h */ = {isa = PBXBuildFile; fileRef = BFA6CB06F861422C927D4061 /* /Users/Brian/Dropbox/Magnate/include/VBO.h */; settings = { COMPILER_FLAGS = ""; }; };
+4B8953318DC34327B78F8D64 /* /Users/Brian/Dropbox/Magnate/include/Watershed.h */ = {isa = PBXBuildFile; fileRef = EF92E866B7ED490B9670EC9E /* /Users/Brian/Dropbox/Magnate/include/Watershed.h */; settings = { COMPILER_FLAGS = ""; }; };
+C4A8FF2330D648C6810BBF5D /* /Users/Brian/Dropbox/Magnate/include/Window.h */ = {isa = PBXBuildFile; fileRef = D55C1E654DE44A349ED64C25 /* /Users/Brian/Dropbox/Magnate/include/Window.h */; settings = { COMPILER_FLAGS = ""; }; };
+5E3E35D75ACE4763BAC445B0 /* /Users/Brian/Dropbox/Magnate/include/World.h */ = {isa = PBXBuildFile; fileRef = 178076E922A347B88C142A8D /* /Users/Brian/Dropbox/Magnate/include/World.h */; settings = { COMPILER_FLAGS = ""; }; };
+F838D7A3B37A4E819CD97D1D /* /Users/Brian/Dropbox/Magnate/include/WorldRenderer.h */ = {isa = PBXBuildFile; fileRef = 8E3D7E7C7F734B978662BA29 /* /Users/Brian/Dropbox/Magnate/include/WorldRenderer.h */; settings = { COMPILER_FLAGS = ""; }; };
+848F42EFDE7F43D9BD82DC86 /* /Users/Brian/Dropbox/Magnate/src/Atlas.cpp */ = {isa = PBXBuildFile; fileRef = E4AD5619E949480B8B923E47 /* /Users/Brian/Dropbox/Magnate/src/Atlas.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+D2C490AFF47349FC820CAA90 /* /Users/Brian/Dropbox/Magnate/src/Building.cpp */ = {isa = PBXBuildFile; fileRef = CD2CB159CD26403AA1D07B50 /* /Users/Brian/Dropbox/Magnate/src/Building.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+497B9A61850A452288C49737 /* /Users/Brian/Dropbox/Magnate/src/Button.cpp */ = {isa = PBXBuildFile; fileRef = 8C5C5A010D3549D9A8B0ABC7 /* /Users/Brian/Dropbox/Magnate/src/Button.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+0EB10EA1C22A4CBEAB540984 /* /Users/Brian/Dropbox/Magnate/src/Camera.cpp */ = {isa = PBXBuildFile; fileRef = 76460CF576E549C8BC455326 /* /Users/Brian/Dropbox/Magnate/src/Camera.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+7699FF101EDC4C1E8CF73432 /* /Users/Brian/Dropbox/Magnate/src/Component.cpp */ = {isa = PBXBuildFile; fileRef = BF9748F6D05C401CBA46B66A /* /Users/Brian/Dropbox/Magnate/src/Component.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+361DEED968F846869E8542EB /* /Users/Brian/Dropbox/Magnate/src/Coord.cpp */ = {isa = PBXBuildFile; fileRef = 9E535D5D49414678AD8D7484 /* /Users/Brian/Dropbox/Magnate/src/Coord.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+9D9B01CE6DCE46BBAE0A60F9 /* /Users/Brian/Dropbox/Magnate/src/Draggable.cpp */ = {isa = PBXBuildFile; fileRef = 4B550057D078419980EBE7F4 /* /Users/Brian/Dropbox/Magnate/src/Draggable.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+E15F87664AA846BE9450226B /* /Users/Brian/Dropbox/Magnate/src/Erosion.cpp */ = {isa = PBXBuildFile; fileRef = 436FAE567AEE41D2A8015DCA /* /Users/Brian/Dropbox/Magnate/src/Erosion.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+DDBD3C2897F34FD9AEE19E04 /* /Users/Brian/Dropbox/Magnate/src/Field.cpp */ = {isa = PBXBuildFile; fileRef = 4AAB46ECF95C453582CF9D65 /* /Users/Brian/Dropbox/Magnate/src/Field.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+DDE9D7197848475280908F2A /* /Users/Brian/Dropbox/Magnate/src/FileIO.cpp */ = {isa = PBXBuildFile; fileRef = 39E1CE14E8B14C8E882E3B2D /* /Users/Brian/Dropbox/Magnate/src/FileIO.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+4AD07BEE3E3A4E3CA8395A11 /* /Users/Brian/Dropbox/Magnate/src/GUI.cpp */ = {isa = PBXBuildFile; fileRef = 5890666C57674A37AE3B4FF2 /* /Users/Brian/Dropbox/Magnate/src/GUI.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+D68FAE0A2BCE4EDF820D5C2B /* /Users/Brian/Dropbox/Magnate/src/Game.cpp */ = {isa = PBXBuildFile; fileRef = 948E0234A7E54FF8AE50CB4D /* /Users/Brian/Dropbox/Magnate/src/Game.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+84227E281AB949BA8D6789E4 /* /Users/Brian/Dropbox/Magnate/src/GenTypes.cpp */ = {isa = PBXBuildFile; fileRef = 6AA3799D64BB4A99B5E1F3BA /* /Users/Brian/Dropbox/Magnate/src/GenTypes.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+6FB30F9620314F618436DB71 /* /Users/Brian/Dropbox/Magnate/src/GlmHeaders.cpp */ = {isa = PBXBuildFile; fileRef = 6B9B5150DA5D4F0791E095A3 /* /Users/Brian/Dropbox/Magnate/src/GlmHeaders.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+665A57424CA745C6B55CCED6 /* /Users/Brian/Dropbox/Magnate/src/GlobalConfig.cpp */ = {isa = PBXBuildFile; fileRef = B33513DD1FAC454EA73FBE0C /* /Users/Brian/Dropbox/Magnate/src/GlobalConfig.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+7D3E2230DF96414A991EA5B5 /* /Users/Brian/Dropbox/Magnate/src/Heightmap.cpp */ = {isa = PBXBuildFile; fileRef = 091D91DB1F4644DDA196932D /* /Users/Brian/Dropbox/Magnate/src/Heightmap.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+F13E633C0EAD48EC86F0D40D /* /Users/Brian/Dropbox/Magnate/src/ImmediateDraw.cpp */ = {isa = PBXBuildFile; fileRef = E3C3EFDEE8004B2DBAF1A525 /* /Users/Brian/Dropbox/Magnate/src/ImmediateDraw.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+D9CB724E1CF64EE98FB59F85 /* /Users/Brian/Dropbox/Magnate/src/Input.cpp */ = {isa = PBXBuildFile; fileRef = 05D38AD3A04540F1AFA6C3C4 /* /Users/Brian/Dropbox/Magnate/src/Input.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+3813512437654005BB67E196 /* /Users/Brian/Dropbox/Magnate/src/Label.cpp */ = {isa = PBXBuildFile; fileRef = C1F17E88CB5C46DE98951570 /* /Users/Brian/Dropbox/Magnate/src/Label.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+4DBCF316981745E5B28E06D7 /* /Users/Brian/Dropbox/Magnate/src/LinAlg.cpp */ = {isa = PBXBuildFile; fileRef = 9FDCF98438C345D0B4719919 /* /Users/Brian/Dropbox/Magnate/src/LinAlg.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+8BE61CEF909941F6825BDAAA /* /Users/Brian/Dropbox/Magnate/src/Menus.cpp */ = {isa = PBXBuildFile; fileRef = 535E7D61802149279971EC29 /* /Users/Brian/Dropbox/Magnate/src/Menus.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+6963936568F94A049C420C8A /* /Users/Brian/Dropbox/Magnate/src/Mesh.cpp */ = {isa = PBXBuildFile; fileRef = F06799DE43BF4CFBB09C96F3 /* /Users/Brian/Dropbox/Magnate/src/Mesh.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+E7FF374F22BD4F1BAE421A98 /* /Users/Brian/Dropbox/Magnate/src/Minimap.cpp */ = {isa = PBXBuildFile; fileRef = 5BB4CE97D82F41DDACCEB15B /* /Users/Brian/Dropbox/Magnate/src/Minimap.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+CA69870FACD841B18D85BDD0 /* /Users/Brian/Dropbox/Magnate/src/Models.cpp */ = {isa = PBXBuildFile; fileRef = 52C16BD2E8FD48F0A4E4DBE5 /* /Users/Brian/Dropbox/Magnate/src/Models.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+FC97E0A4EE664FD380B4B3C9 /* /Users/Brian/Dropbox/Magnate/src/MultiSelect.cpp */ = {isa = PBXBuildFile; fileRef = E9E1B35113594BCCB87590B1 /* /Users/Brian/Dropbox/Magnate/src/MultiSelect.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+FEE7D50707D1474E929D55A0 /* /Users/Brian/Dropbox/Magnate/src/RandomUtils.cpp */ = {isa = PBXBuildFile; fileRef = 1D5436DD785941E7B679E1ED /* /Users/Brian/Dropbox/Magnate/src/RandomUtils.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+5660A9185FB843F4B5B2AE6A /* /Users/Brian/Dropbox/Magnate/src/Renderer.cpp */ = {isa = PBXBuildFile; fileRef = 05BA2698877346ECBC972C1D /* /Users/Brian/Dropbox/Magnate/src/Renderer.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+885EB4CCDC184014901A899B /* /Users/Brian/Dropbox/Magnate/src/SaveManager.cpp */ = {isa = PBXBuildFile; fileRef = 2B32E8A8281E4FC6924B4F07 /* /Users/Brian/Dropbox/Magnate/src/SaveManager.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+3D02431784AE4698A2F1CA81 /* /Users/Brian/Dropbox/Magnate/src/Scene.cpp */ = {isa = PBXBuildFile; fileRef = D42B242331FE4214A6129065 /* /Users/Brian/Dropbox/Magnate/src/Scene.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+8DE24EFF61744ADD8D00EF3D /* /Users/Brian/Dropbox/Magnate/src/ScrollBlock.cpp */ = {isa = PBXBuildFile; fileRef = 95D7FC94EB944BB9879F2A3A /* /Users/Brian/Dropbox/Magnate/src/ScrollBlock.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+BF32C34A470F43AC82CB500E /* /Users/Brian/Dropbox/Magnate/src/Shaders.cpp */ = {isa = PBXBuildFile; fileRef = 958C3A2DFA914E3D83FE9078 /* /Users/Brian/Dropbox/Magnate/src/Shaders.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+48102C7D9A924D40B905C298 /* /Users/Brian/Dropbox/Magnate/src/Terrain.cpp */ = {isa = PBXBuildFile; fileRef = 677EFA9CFD09425B869A6F22 /* /Users/Brian/Dropbox/Magnate/src/Terrain.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+885A1E3120ED4785988716BB /* /Users/Brian/Dropbox/Magnate/src/TerrainGen.cpp */ = {isa = PBXBuildFile; fileRef = 1F76FA5092F94A56A651CC1D /* /Users/Brian/Dropbox/Magnate/src/TerrainGen.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+3ED394F83308420984DDF95B /* /Users/Brian/Dropbox/Magnate/src/TexGen.cpp */ = {isa = PBXBuildFile; fileRef = D59093D2E1464D258FD79FE6 /* /Users/Brian/Dropbox/Magnate/src/TexGen.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+D11D69EA938E460FA6F83D27 /* /Users/Brian/Dropbox/Magnate/src/TexManager.cpp */ = {isa = PBXBuildFile; fileRef = 278CF54E99CB4A7D8CD41EC5 /* /Users/Brian/Dropbox/Magnate/src/TexManager.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+D33B25AEEFDB48D8814677FA /* /Users/Brian/Dropbox/Magnate/src/Topo.cpp */ = {isa = PBXBuildFile; fileRef = 1C53D48B162A4CB8BB8A3380 /* /Users/Brian/Dropbox/Magnate/src/Topo.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+B868B633A4EF4BE793E1360E /* /Users/Brian/Dropbox/Magnate/src/UIRenderer.cpp */ = {isa = PBXBuildFile; fileRef = FBFEA462DF73491E9913FEF4 /* /Users/Brian/Dropbox/Magnate/src/UIRenderer.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+82240D59D32C42F0AF4B47D6 /* /Users/Brian/Dropbox/Magnate/src/VBO.cpp */ = {isa = PBXBuildFile; fileRef = DE1EFDE351BF4E0AA2F53885 /* /Users/Brian/Dropbox/Magnate/src/VBO.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+5189CABDC14C48B4AB148281 /* /Users/Brian/Dropbox/Magnate/src/Watershed.cpp */ = {isa = PBXBuildFile; fileRef = C925EF81C6EC4BDF81BE8441 /* /Users/Brian/Dropbox/Magnate/src/Watershed.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+709D1D52FF084EDC8F28ECBD /* /Users/Brian/Dropbox/Magnate/src/Window.cpp */ = {isa = PBXBuildFile; fileRef = B7DC7491F45849A69EE1C7CC /* /Users/Brian/Dropbox/Magnate/src/Window.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+78D99EB476E3472E933DD1A1 /* /Users/Brian/Dropbox/Magnate/src/World.cpp */ = {isa = PBXBuildFile; fileRef = 1D74FB6FA0E0437591FF53CD /* /Users/Brian/Dropbox/Magnate/src/World.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+678374BB28044C928FB3BA9A /* /Users/Brian/Dropbox/Magnate/src/WorldRenderer.cpp */ = {isa = PBXBuildFile; fileRef = 1F4E13D26B984EEEB61E0C9B /* /Users/Brian/Dropbox/Magnate/src/WorldRenderer.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+636C1DE7674E432996CB57CA /* /Users/Brian/Dropbox/Magnate/src/main.cpp */ = {isa = PBXBuildFile; fileRef = 7B897A24025849CA88D89C79 /* /Users/Brian/Dropbox/Magnate/src/main.cpp */; settings = { COMPILER_FLAGS = ""; }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildStyle section */
+              BCD3A45911BA42F3A4370FE3 /*  */ = {
+                     isa = PBXBuildStyle;
+              };
+              2A9193B6288441C0881EB664 /* Debug */ = {
+                     isa = PBXBuildStyle;
+                     buildSettings = {
+                            COPY_PHASE_STRIP = NO;
+                     };
+                     name = Debug;
+              };
+              0A399F4E92784F3C863766DE /* Release */ = {
+                     isa = PBXBuildStyle;
+                     buildSettings = {
+                            COPY_PHASE_STRIP = NO;
+                     };
+                     name = Release;
+              };
+              20A28653EC2047DF8BE07BE0 /* MinSizeRel */ = {
+                     isa = PBXBuildStyle;
+                     buildSettings = {
+                            COPY_PHASE_STRIP = NO;
+                     };
+                     name = MinSizeRel;
+              };
+              147C6BAD6F8544CBA76670B3 /* RelWithDebInfo */ = {
+                     isa = PBXBuildStyle;
+                     buildSettings = {
+                            COPY_PHASE_STRIP = NO;
+                     };
+                     name = RelWithDebInfo;
+              };
+/* End PBXBuildStyle section */
+
+/* Begin PBXContainerItemProxy section */
+              C963C9700974434197E4E1AF /* PBXContainerItemProxy */ = {
+                     isa = PBXContainerItemProxy;
+                     containerPortal = AE1800FB659F4B87A0ECE084 /* Project object */;
+                     proxyType = 1;
+                     remoteGlobalIDString = 30747E43E61C4BAC90340ECB;
+                     remoteInfo = ZERO_CHECK;
+              };
+              D6CC9AE9DC644B12B56A731C /* PBXContainerItemProxy */ = {
+                     isa = PBXContainerItemProxy;
+                     containerPortal = AE1800FB659F4B87A0ECE084 /* Project object */;
+                     proxyType = 1;
+                     remoteGlobalIDString = BA90EB866FFB4869B9F86555;
+                     remoteInfo = Magnate;
+              };
+              BFBC02E9E0D744399240709C /* PBXContainerItemProxy */ = {
+                     isa = PBXContainerItemProxy;
+                     containerPortal = AE1800FB659F4B87A0ECE084 /* Project object */;
+                     proxyType = 1;
+                     remoteGlobalIDString = 30747E43E61C4BAC90340ECB;
+                     remoteInfo = ZERO_CHECK;
+              };
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+0B47A5A24E0C4DF797461E0E /* /Users/Brian/Dropbox/Magnate/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = "sourcecode.text"; fileEncoding = 4; name = "CMakeLists.txt"; path = "CMakeLists.txt"; sourceTree = SOURCE_ROOT; };
+C21E5073067C4F95ACA0EC36 /* /Users/Brian/Dropbox/Magnate/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = "sourcecode.text"; fileEncoding = 4; name = "CMakeLists.txt"; path = "CMakeLists.txt"; sourceTree = SOURCE_ROOT; };
+6155B058E251466588C518C0 /* /Users/Brian/Dropbox/Magnate/include/Atlas.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Atlas.h"; path = "include/Atlas.h"; sourceTree = SOURCE_ROOT; };
+63F0D5F31CC547B5BF88E55B /* /Users/Brian/Dropbox/Magnate/include/Broadcaster.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Broadcaster.h"; path = "include/Broadcaster.h"; sourceTree = SOURCE_ROOT; };
+41A1A7A1A9134FF8B54949F9 /* /Users/Brian/Dropbox/Magnate/include/Building.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Building.h"; path = "include/Building.h"; sourceTree = SOURCE_ROOT; };
+58F6327F89EF41219BE3CC7D /* /Users/Brian/Dropbox/Magnate/include/Button.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Button.h"; path = "include/Button.h"; sourceTree = SOURCE_ROOT; };
+A306A03FC1BE4128B2757903 /* /Users/Brian/Dropbox/Magnate/include/Camera.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Camera.h"; path = "include/Camera.h"; sourceTree = SOURCE_ROOT; };
+65272448C1B4491CB9BA5939 /* /Users/Brian/Dropbox/Magnate/include/Component.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Component.h"; path = "include/Component.h"; sourceTree = SOURCE_ROOT; };
+C8F8186631084CD8A8906130 /* /Users/Brian/Dropbox/Magnate/include/Coord.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Coord.h"; path = "include/Coord.h"; sourceTree = SOURCE_ROOT; };
+2F6EC821C6A649E693AB0F89 /* /Users/Brian/Dropbox/Magnate/include/DebugTools.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "DebugTools.h"; path = "include/DebugTools.h"; sourceTree = SOURCE_ROOT; };
+4C29E06255AE478CA0DA2A2F /* /Users/Brian/Dropbox/Magnate/include/Draggable.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Draggable.h"; path = "include/Draggable.h"; sourceTree = SOURCE_ROOT; };
+AC0CF7CE063D419F91F856C2 /* /Users/Brian/Dropbox/Magnate/include/Erosion.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Erosion.h"; path = "include/Erosion.h"; sourceTree = SOURCE_ROOT; };
+3DCCEAEB8CE84F0197EE85F5 /* /Users/Brian/Dropbox/Magnate/include/Field.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Field.h"; path = "include/Field.h"; sourceTree = SOURCE_ROOT; };
+AD43888C1DE249A5A76345FD /* /Users/Brian/Dropbox/Magnate/include/FileIO.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "FileIO.h"; path = "include/FileIO.h"; sourceTree = SOURCE_ROOT; };
+EE74CA8B11C745E0AD40D339 /* /Users/Brian/Dropbox/Magnate/include/GUI.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "GUI.h"; path = "include/GUI.h"; sourceTree = SOURCE_ROOT; };
+8B08F68E3A3A45AAA7261482 /* /Users/Brian/Dropbox/Magnate/include/Game.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Game.h"; path = "include/Game.h"; sourceTree = SOURCE_ROOT; };
+356E3D3C5312465DB5C9DF65 /* /Users/Brian/Dropbox/Magnate/include/GenTypes.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "GenTypes.h"; path = "include/GenTypes.h"; sourceTree = SOURCE_ROOT; };
+92CAED18143A4CDA9F7DB8A7 /* /Users/Brian/Dropbox/Magnate/include/GlmHeaders.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "GlmHeaders.h"; path = "include/GlmHeaders.h"; sourceTree = SOURCE_ROOT; };
+CDB7A676412F464FBF4A3EAD /* /Users/Brian/Dropbox/Magnate/include/GlobalConfig.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "GlobalConfig.h"; path = "include/GlobalConfig.h"; sourceTree = SOURCE_ROOT; };
+FB82A848BF4A466A8CD84758 /* /Users/Brian/Dropbox/Magnate/include/Heightmap.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Heightmap.h"; path = "include/Heightmap.h"; sourceTree = SOURCE_ROOT; };
+7124A640E16447829A113E2E /* /Users/Brian/Dropbox/Magnate/include/ImmediateDraw.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "ImmediateDraw.h"; path = "include/ImmediateDraw.h"; sourceTree = SOURCE_ROOT; };
+7054D87D3B764E6590E433C8 /* /Users/Brian/Dropbox/Magnate/include/Input.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Input.h"; path = "include/Input.h"; sourceTree = SOURCE_ROOT; };
+3F0E7CAFC0E74DE0BFB6A450 /* /Users/Brian/Dropbox/Magnate/include/Label.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Label.h"; path = "include/Label.h"; sourceTree = SOURCE_ROOT; };
+0E724434B4DC47918E91C24D /* /Users/Brian/Dropbox/Magnate/include/LinAlg.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "LinAlg.h"; path = "include/LinAlg.h"; sourceTree = SOURCE_ROOT; };
+7BE1BAB5276C4CFD957E8524 /* /Users/Brian/Dropbox/Magnate/include/Menus.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Menus.h"; path = "include/Menus.h"; sourceTree = SOURCE_ROOT; };
+B205570BDBFD4302A81E825F /* /Users/Brian/Dropbox/Magnate/include/Mesh.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Mesh.h"; path = "include/Mesh.h"; sourceTree = SOURCE_ROOT; };
+D8B5CF8D06F44F028C0CD923 /* /Users/Brian/Dropbox/Magnate/include/Minimap.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Minimap.h"; path = "include/Minimap.h"; sourceTree = SOURCE_ROOT; };
+9BC96CD98A574247AF79D690 /* /Users/Brian/Dropbox/Magnate/include/Models.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Models.h"; path = "include/Models.h"; sourceTree = SOURCE_ROOT; };
+3F0433D747D74D198493BA4F /* /Users/Brian/Dropbox/Magnate/include/MultiSelect.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "MultiSelect.h"; path = "include/MultiSelect.h"; sourceTree = SOURCE_ROOT; };
+61357F817EAE4CD2B74A4FEC /* /Users/Brian/Dropbox/Magnate/include/RandomUtils.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "RandomUtils.h"; path = "include/RandomUtils.h"; sourceTree = SOURCE_ROOT; };
+68A76260804A4B69BD97FDE7 /* /Users/Brian/Dropbox/Magnate/include/Renderer.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Renderer.h"; path = "include/Renderer.h"; sourceTree = SOURCE_ROOT; };
+3356BE3A6E7541789F01237D /* /Users/Brian/Dropbox/Magnate/include/SaveManager.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "SaveManager.h"; path = "include/SaveManager.h"; sourceTree = SOURCE_ROOT; };
+1517CE435A86407ABDE1554F /* /Users/Brian/Dropbox/Magnate/include/Scene.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Scene.h"; path = "include/Scene.h"; sourceTree = SOURCE_ROOT; };
+E4BC0D4922454A7A8441A0CD /* /Users/Brian/Dropbox/Magnate/include/ScrollBlock.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "ScrollBlock.h"; path = "include/ScrollBlock.h"; sourceTree = SOURCE_ROOT; };
+FB63BB5912394F91AD817711 /* /Users/Brian/Dropbox/Magnate/include/SdlHeaders.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "SdlHeaders.h"; path = "include/SdlHeaders.h"; sourceTree = SOURCE_ROOT; };
+9403AA91A9CB4BDBB7036CC1 /* /Users/Brian/Dropbox/Magnate/include/Shaders.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Shaders.h"; path = "include/Shaders.h"; sourceTree = SOURCE_ROOT; };
+0B8FA4009EB6446691A6540F /* /Users/Brian/Dropbox/Magnate/include/Terrain.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Terrain.h"; path = "include/Terrain.h"; sourceTree = SOURCE_ROOT; };
+AB0633B0580A4C02BC297A39 /* /Users/Brian/Dropbox/Magnate/include/TerrainGen.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "TerrainGen.h"; path = "include/TerrainGen.h"; sourceTree = SOURCE_ROOT; };
+47FA38F9324C42DE81A46D79 /* /Users/Brian/Dropbox/Magnate/include/TexGen.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "TexGen.h"; path = "include/TexGen.h"; sourceTree = SOURCE_ROOT; };
+3EADE9118F6049C0943305F7 /* /Users/Brian/Dropbox/Magnate/include/TexManager.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "TexManager.h"; path = "include/TexManager.h"; sourceTree = SOURCE_ROOT; };
+B2EDBCBECD8946CB8A90FD53 /* /Users/Brian/Dropbox/Magnate/include/Topo.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Topo.h"; path = "include/Topo.h"; sourceTree = SOURCE_ROOT; };
+038998D231CC4FD9ADE3F9AC /* /Users/Brian/Dropbox/Magnate/include/UIRenderer.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "UIRenderer.h"; path = "include/UIRenderer.h"; sourceTree = SOURCE_ROOT; };
+BFA6CB06F861422C927D4061 /* /Users/Brian/Dropbox/Magnate/include/VBO.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "VBO.h"; path = "include/VBO.h"; sourceTree = SOURCE_ROOT; };
+EF92E866B7ED490B9670EC9E /* /Users/Brian/Dropbox/Magnate/include/Watershed.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Watershed.h"; path = "include/Watershed.h"; sourceTree = SOURCE_ROOT; };
+D55C1E654DE44A349ED64C25 /* /Users/Brian/Dropbox/Magnate/include/Window.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "Window.h"; path = "include/Window.h"; sourceTree = SOURCE_ROOT; };
+178076E922A347B88C142A8D /* /Users/Brian/Dropbox/Magnate/include/World.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "World.h"; path = "include/World.h"; sourceTree = SOURCE_ROOT; };
+8E3D7E7C7F734B978662BA29 /* /Users/Brian/Dropbox/Magnate/include/WorldRenderer.h */ = {isa = PBXFileReference; explicitFileType = "sourcecode.c.h"; fileEncoding = 4; name = "WorldRenderer.h"; path = "include/WorldRenderer.h"; sourceTree = SOURCE_ROOT; };
+E4AD5619E949480B8B923E47 /* /Users/Brian/Dropbox/Magnate/src/Atlas.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Atlas.cpp"; path = "src/Atlas.cpp"; sourceTree = SOURCE_ROOT; };
+CD2CB159CD26403AA1D07B50 /* /Users/Brian/Dropbox/Magnate/src/Building.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Building.cpp"; path = "src/Building.cpp"; sourceTree = SOURCE_ROOT; };
+8C5C5A010D3549D9A8B0ABC7 /* /Users/Brian/Dropbox/Magnate/src/Button.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Button.cpp"; path = "src/Button.cpp"; sourceTree = SOURCE_ROOT; };
+76460CF576E549C8BC455326 /* /Users/Brian/Dropbox/Magnate/src/Camera.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Camera.cpp"; path = "src/Camera.cpp"; sourceTree = SOURCE_ROOT; };
+BF9748F6D05C401CBA46B66A /* /Users/Brian/Dropbox/Magnate/src/Component.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Component.cpp"; path = "src/Component.cpp"; sourceTree = SOURCE_ROOT; };
+9E535D5D49414678AD8D7484 /* /Users/Brian/Dropbox/Magnate/src/Coord.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Coord.cpp"; path = "src/Coord.cpp"; sourceTree = SOURCE_ROOT; };
+4B550057D078419980EBE7F4 /* /Users/Brian/Dropbox/Magnate/src/Draggable.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Draggable.cpp"; path = "src/Draggable.cpp"; sourceTree = SOURCE_ROOT; };
+436FAE567AEE41D2A8015DCA /* /Users/Brian/Dropbox/Magnate/src/Erosion.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Erosion.cpp"; path = "src/Erosion.cpp"; sourceTree = SOURCE_ROOT; };
+4AAB46ECF95C453582CF9D65 /* /Users/Brian/Dropbox/Magnate/src/Field.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Field.cpp"; path = "src/Field.cpp"; sourceTree = SOURCE_ROOT; };
+39E1CE14E8B14C8E882E3B2D /* /Users/Brian/Dropbox/Magnate/src/FileIO.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "FileIO.cpp"; path = "src/FileIO.cpp"; sourceTree = SOURCE_ROOT; };
+5890666C57674A37AE3B4FF2 /* /Users/Brian/Dropbox/Magnate/src/GUI.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "GUI.cpp"; path = "src/GUI.cpp"; sourceTree = SOURCE_ROOT; };
+948E0234A7E54FF8AE50CB4D /* /Users/Brian/Dropbox/Magnate/src/Game.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Game.cpp"; path = "src/Game.cpp"; sourceTree = SOURCE_ROOT; };
+6AA3799D64BB4A99B5E1F3BA /* /Users/Brian/Dropbox/Magnate/src/GenTypes.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "GenTypes.cpp"; path = "src/GenTypes.cpp"; sourceTree = SOURCE_ROOT; };
+6B9B5150DA5D4F0791E095A3 /* /Users/Brian/Dropbox/Magnate/src/GlmHeaders.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "GlmHeaders.cpp"; path = "src/GlmHeaders.cpp"; sourceTree = SOURCE_ROOT; };
+B33513DD1FAC454EA73FBE0C /* /Users/Brian/Dropbox/Magnate/src/GlobalConfig.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "GlobalConfig.cpp"; path = "src/GlobalConfig.cpp"; sourceTree = SOURCE_ROOT; };
+091D91DB1F4644DDA196932D /* /Users/Brian/Dropbox/Magnate/src/Heightmap.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Heightmap.cpp"; path = "src/Heightmap.cpp"; sourceTree = SOURCE_ROOT; };
+E3C3EFDEE8004B2DBAF1A525 /* /Users/Brian/Dropbox/Magnate/src/ImmediateDraw.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "ImmediateDraw.cpp"; path = "src/ImmediateDraw.cpp"; sourceTree = SOURCE_ROOT; };
+05D38AD3A04540F1AFA6C3C4 /* /Users/Brian/Dropbox/Magnate/src/Input.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Input.cpp"; path = "src/Input.cpp"; sourceTree = SOURCE_ROOT; };
+C1F17E88CB5C46DE98951570 /* /Users/Brian/Dropbox/Magnate/src/Label.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Label.cpp"; path = "src/Label.cpp"; sourceTree = SOURCE_ROOT; };
+9FDCF98438C345D0B4719919 /* /Users/Brian/Dropbox/Magnate/src/LinAlg.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "LinAlg.cpp"; path = "src/LinAlg.cpp"; sourceTree = SOURCE_ROOT; };
+535E7D61802149279971EC29 /* /Users/Brian/Dropbox/Magnate/src/Menus.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Menus.cpp"; path = "src/Menus.cpp"; sourceTree = SOURCE_ROOT; };
+F06799DE43BF4CFBB09C96F3 /* /Users/Brian/Dropbox/Magnate/src/Mesh.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Mesh.cpp"; path = "src/Mesh.cpp"; sourceTree = SOURCE_ROOT; };
+5BB4CE97D82F41DDACCEB15B /* /Users/Brian/Dropbox/Magnate/src/Minimap.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Minimap.cpp"; path = "src/Minimap.cpp"; sourceTree = SOURCE_ROOT; };
+52C16BD2E8FD48F0A4E4DBE5 /* /Users/Brian/Dropbox/Magnate/src/Models.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Models.cpp"; path = "src/Models.cpp"; sourceTree = SOURCE_ROOT; };
+E9E1B35113594BCCB87590B1 /* /Users/Brian/Dropbox/Magnate/src/MultiSelect.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "MultiSelect.cpp"; path = "src/MultiSelect.cpp"; sourceTree = SOURCE_ROOT; };
+1D5436DD785941E7B679E1ED /* /Users/Brian/Dropbox/Magnate/src/RandomUtils.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "RandomUtils.cpp"; path = "src/RandomUtils.cpp"; sourceTree = SOURCE_ROOT; };
+05BA2698877346ECBC972C1D /* /Users/Brian/Dropbox/Magnate/src/Renderer.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Renderer.cpp"; path = "src/Renderer.cpp"; sourceTree = SOURCE_ROOT; };
+2B32E8A8281E4FC6924B4F07 /* /Users/Brian/Dropbox/Magnate/src/SaveManager.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "SaveManager.cpp"; path = "src/SaveManager.cpp"; sourceTree = SOURCE_ROOT; };
+D42B242331FE4214A6129065 /* /Users/Brian/Dropbox/Magnate/src/Scene.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Scene.cpp"; path = "src/Scene.cpp"; sourceTree = SOURCE_ROOT; };
+95D7FC94EB944BB9879F2A3A /* /Users/Brian/Dropbox/Magnate/src/ScrollBlock.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "ScrollBlock.cpp"; path = "src/ScrollBlock.cpp"; sourceTree = SOURCE_ROOT; };
+958C3A2DFA914E3D83FE9078 /* /Users/Brian/Dropbox/Magnate/src/Shaders.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Shaders.cpp"; path = "src/Shaders.cpp"; sourceTree = SOURCE_ROOT; };
+677EFA9CFD09425B869A6F22 /* /Users/Brian/Dropbox/Magnate/src/Terrain.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Terrain.cpp"; path = "src/Terrain.cpp"; sourceTree = SOURCE_ROOT; };
+1F76FA5092F94A56A651CC1D /* /Users/Brian/Dropbox/Magnate/src/TerrainGen.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "TerrainGen.cpp"; path = "src/TerrainGen.cpp"; sourceTree = SOURCE_ROOT; };
+D59093D2E1464D258FD79FE6 /* /Users/Brian/Dropbox/Magnate/src/TexGen.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "TexGen.cpp"; path = "src/TexGen.cpp"; sourceTree = SOURCE_ROOT; };
+278CF54E99CB4A7D8CD41EC5 /* /Users/Brian/Dropbox/Magnate/src/TexManager.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "TexManager.cpp"; path = "src/TexManager.cpp"; sourceTree = SOURCE_ROOT; };
+1C53D48B162A4CB8BB8A3380 /* /Users/Brian/Dropbox/Magnate/src/Topo.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Topo.cpp"; path = "src/Topo.cpp"; sourceTree = SOURCE_ROOT; };
+FBFEA462DF73491E9913FEF4 /* /Users/Brian/Dropbox/Magnate/src/UIRenderer.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "UIRenderer.cpp"; path = "src/UIRenderer.cpp"; sourceTree = SOURCE_ROOT; };
+DE1EFDE351BF4E0AA2F53885 /* /Users/Brian/Dropbox/Magnate/src/VBO.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "VBO.cpp"; path = "src/VBO.cpp"; sourceTree = SOURCE_ROOT; };
+C925EF81C6EC4BDF81BE8441 /* /Users/Brian/Dropbox/Magnate/src/Watershed.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Watershed.cpp"; path = "src/Watershed.cpp"; sourceTree = SOURCE_ROOT; };
+B7DC7491F45849A69EE1C7CC /* /Users/Brian/Dropbox/Magnate/src/Window.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "Window.cpp"; path = "src/Window.cpp"; sourceTree = SOURCE_ROOT; };
+1D74FB6FA0E0437591FF53CD /* /Users/Brian/Dropbox/Magnate/src/World.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "World.cpp"; path = "src/World.cpp"; sourceTree = SOURCE_ROOT; };
+1F4E13D26B984EEEB61E0C9B /* /Users/Brian/Dropbox/Magnate/src/WorldRenderer.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "WorldRenderer.cpp"; path = "src/WorldRenderer.cpp"; sourceTree = SOURCE_ROOT; };
+7B897A24025849CA88D89C79 /* /Users/Brian/Dropbox/Magnate/src/main.cpp */ = {isa = PBXFileReference; explicitFileType = "sourcecode.cpp.cpp"; fileEncoding = 4; name = "main.cpp"; path = "src/main.cpp"; sourceTree = SOURCE_ROOT; };
+BFE314A5CA2348288E3CA9A0 /* Magnate */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = Magnate; refType = 0; sourceTree = BUILT_PRODUCTS_DIR; };
+470A73EA3B4B4BB682C75416 /* /Users/Brian/Dropbox/Magnate/CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = "sourcecode.text"; fileEncoding = 4; name = "CMakeLists.txt"; path = "CMakeLists.txt"; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+              799A841376A6474AA6A61B9A  = {
+                     isa = PBXGroup;
+                     children = (
+                            6AEB4A8179854E109466D5B8 /* Sources */,
+                            055C6C64003B46FE8176A77E /* Resources */,
+                            ADA891E6B099489BBC4CB830 /* Products */,
+                     );
+                     sourceTree = "<group>";
+              };
+              6AEB4A8179854E109466D5B8 /* Sources */ = {
+                     isa = PBXGroup;
+                     children = (
+                            FAF74707A7A84C7AB02D726B /* ALL_BUILD */,
+                            DDDECAB26B034B9E8BF3AC98 /* Magnate */,
+                            03A5060BADC9409E8F58635D /* ZERO_CHECK */,
+                     );
+                     name = Sources;
+                     sourceTree = "<group>";
+              };
+              055C6C64003B46FE8176A77E /* Resources */ = {
+                     isa = PBXGroup;
+                     children = (
+                     );
+                     name = Resources;
+                     sourceTree = "<group>";
+              };
+              FAF74707A7A84C7AB02D726B /* ALL_BUILD */ = {
+                     isa = PBXGroup;
+                     children = (
+                            07BB6CCB16CC440CAFD35E6B /* CMake Rules */,
+                            0B47A5A24E0C4DF797461E0E /* /Users/Brian/Dropbox/Magnate/CMakeLists.txt */,
+                     );
+                     name = ALL_BUILD;
+                     sourceTree = "<group>";
+              };
+              07BB6CCB16CC440CAFD35E6B /* CMake Rules */ = {
+                     isa = PBXGroup;
+                     children = (
+                     );
+                     name = "CMake Rules";
+                     sourceTree = "<group>";
+              };
+              DDDECAB26B034B9E8BF3AC98 /* Magnate */ = {
+                     isa = PBXGroup;
+                     children = (
+                            F90045762A3540D494FC2412 /* Header Files */,
+                            20AC96ACEE0B4523B174A28B /* Source Files */,
+                            C21E5073067C4F95ACA0EC36 /* /Users/Brian/Dropbox/Magnate/CMakeLists.txt */,
+                     );
+                     name = Magnate;
+                     sourceTree = "<group>";
+              };
+              F90045762A3540D494FC2412 /* Header Files */ = {
+                     isa = PBXGroup;
+                     children = (
+                            6155B058E251466588C518C0 /* /Users/Brian/Dropbox/Magnate/include/Atlas.h */,
+                            63F0D5F31CC547B5BF88E55B /* /Users/Brian/Dropbox/Magnate/include/Broadcaster.h */,
+                            41A1A7A1A9134FF8B54949F9 /* /Users/Brian/Dropbox/Magnate/include/Building.h */,
+                            58F6327F89EF41219BE3CC7D /* /Users/Brian/Dropbox/Magnate/include/Button.h */,
+                            A306A03FC1BE4128B2757903 /* /Users/Brian/Dropbox/Magnate/include/Camera.h */,
+                            65272448C1B4491CB9BA5939 /* /Users/Brian/Dropbox/Magnate/include/Component.h */,
+                            C8F8186631084CD8A8906130 /* /Users/Brian/Dropbox/Magnate/include/Coord.h */,
+                            2F6EC821C6A649E693AB0F89 /* /Users/Brian/Dropbox/Magnate/include/DebugTools.h */,
+                            4C29E06255AE478CA0DA2A2F /* /Users/Brian/Dropbox/Magnate/include/Draggable.h */,
+                            AC0CF7CE063D419F91F856C2 /* /Users/Brian/Dropbox/Magnate/include/Erosion.h */,
+                            3DCCEAEB8CE84F0197EE85F5 /* /Users/Brian/Dropbox/Magnate/include/Field.h */,
+                            AD43888C1DE249A5A76345FD /* /Users/Brian/Dropbox/Magnate/include/FileIO.h */,
+                            EE74CA8B11C745E0AD40D339 /* /Users/Brian/Dropbox/Magnate/include/GUI.h */,
+                            8B08F68E3A3A45AAA7261482 /* /Users/Brian/Dropbox/Magnate/include/Game.h */,
+                            356E3D3C5312465DB5C9DF65 /* /Users/Brian/Dropbox/Magnate/include/GenTypes.h */,
+                            92CAED18143A4CDA9F7DB8A7 /* /Users/Brian/Dropbox/Magnate/include/GlmHeaders.h */,
+                            CDB7A676412F464FBF4A3EAD /* /Users/Brian/Dropbox/Magnate/include/GlobalConfig.h */,
+                            FB82A848BF4A466A8CD84758 /* /Users/Brian/Dropbox/Magnate/include/Heightmap.h */,
+                            7124A640E16447829A113E2E /* /Users/Brian/Dropbox/Magnate/include/ImmediateDraw.h */,
+                            7054D87D3B764E6590E433C8 /* /Users/Brian/Dropbox/Magnate/include/Input.h */,
+                            3F0E7CAFC0E74DE0BFB6A450 /* /Users/Brian/Dropbox/Magnate/include/Label.h */,
+                            0E724434B4DC47918E91C24D /* /Users/Brian/Dropbox/Magnate/include/LinAlg.h */,
+                            7BE1BAB5276C4CFD957E8524 /* /Users/Brian/Dropbox/Magnate/include/Menus.h */,
+                            B205570BDBFD4302A81E825F /* /Users/Brian/Dropbox/Magnate/include/Mesh.h */,
+                            D8B5CF8D06F44F028C0CD923 /* /Users/Brian/Dropbox/Magnate/include/Minimap.h */,
+                            9BC96CD98A574247AF79D690 /* /Users/Brian/Dropbox/Magnate/include/Models.h */,
+                            3F0433D747D74D198493BA4F /* /Users/Brian/Dropbox/Magnate/include/MultiSelect.h */,
+                            61357F817EAE4CD2B74A4FEC /* /Users/Brian/Dropbox/Magnate/include/RandomUtils.h */,
+                            68A76260804A4B69BD97FDE7 /* /Users/Brian/Dropbox/Magnate/include/Renderer.h */,
+                            3356BE3A6E7541789F01237D /* /Users/Brian/Dropbox/Magnate/include/SaveManager.h */,
+                            1517CE435A86407ABDE1554F /* /Users/Brian/Dropbox/Magnate/include/Scene.h */,
+                            E4BC0D4922454A7A8441A0CD /* /Users/Brian/Dropbox/Magnate/include/ScrollBlock.h */,
+                            FB63BB5912394F91AD817711 /* /Users/Brian/Dropbox/Magnate/include/SdlHeaders.h */,
+                            9403AA91A9CB4BDBB7036CC1 /* /Users/Brian/Dropbox/Magnate/include/Shaders.h */,
+                            0B8FA4009EB6446691A6540F /* /Users/Brian/Dropbox/Magnate/include/Terrain.h */,
+                            AB0633B0580A4C02BC297A39 /* /Users/Brian/Dropbox/Magnate/include/TerrainGen.h */,
+                            47FA38F9324C42DE81A46D79 /* /Users/Brian/Dropbox/Magnate/include/TexGen.h */,
+                            3EADE9118F6049C0943305F7 /* /Users/Brian/Dropbox/Magnate/include/TexManager.h */,
+                            B2EDBCBECD8946CB8A90FD53 /* /Users/Brian/Dropbox/Magnate/include/Topo.h */,
+                            038998D231CC4FD9ADE3F9AC /* /Users/Brian/Dropbox/Magnate/include/UIRenderer.h */,
+                            BFA6CB06F861422C927D4061 /* /Users/Brian/Dropbox/Magnate/include/VBO.h */,
+                            EF92E866B7ED490B9670EC9E /* /Users/Brian/Dropbox/Magnate/include/Watershed.h */,
+                            D55C1E654DE44A349ED64C25 /* /Users/Brian/Dropbox/Magnate/include/Window.h */,
+                            178076E922A347B88C142A8D /* /Users/Brian/Dropbox/Magnate/include/World.h */,
+                            8E3D7E7C7F734B978662BA29 /* /Users/Brian/Dropbox/Magnate/include/WorldRenderer.h */,
+                     );
+                     name = "Header Files";
+                     sourceTree = "<group>";
+              };
+              20AC96ACEE0B4523B174A28B /* Source Files */ = {
+                     isa = PBXGroup;
+                     children = (
+                            E4AD5619E949480B8B923E47 /* /Users/Brian/Dropbox/Magnate/src/Atlas.cpp */,
+                            CD2CB159CD26403AA1D07B50 /* /Users/Brian/Dropbox/Magnate/src/Building.cpp */,
+                            8C5C5A010D3549D9A8B0ABC7 /* /Users/Brian/Dropbox/Magnate/src/Button.cpp */,
+                            76460CF576E549C8BC455326 /* /Users/Brian/Dropbox/Magnate/src/Camera.cpp */,
+                            BF9748F6D05C401CBA46B66A /* /Users/Brian/Dropbox/Magnate/src/Component.cpp */,
+                            9E535D5D49414678AD8D7484 /* /Users/Brian/Dropbox/Magnate/src/Coord.cpp */,
+                            4B550057D078419980EBE7F4 /* /Users/Brian/Dropbox/Magnate/src/Draggable.cpp */,
+                            436FAE567AEE41D2A8015DCA /* /Users/Brian/Dropbox/Magnate/src/Erosion.cpp */,
+                            4AAB46ECF95C453582CF9D65 /* /Users/Brian/Dropbox/Magnate/src/Field.cpp */,
+                            39E1CE14E8B14C8E882E3B2D /* /Users/Brian/Dropbox/Magnate/src/FileIO.cpp */,
+                            5890666C57674A37AE3B4FF2 /* /Users/Brian/Dropbox/Magnate/src/GUI.cpp */,
+                            948E0234A7E54FF8AE50CB4D /* /Users/Brian/Dropbox/Magnate/src/Game.cpp */,
+                            6AA3799D64BB4A99B5E1F3BA /* /Users/Brian/Dropbox/Magnate/src/GenTypes.cpp */,
+                            6B9B5150DA5D4F0791E095A3 /* /Users/Brian/Dropbox/Magnate/src/GlmHeaders.cpp */,
+                            B33513DD1FAC454EA73FBE0C /* /Users/Brian/Dropbox/Magnate/src/GlobalConfig.cpp */,
+                            091D91DB1F4644DDA196932D /* /Users/Brian/Dropbox/Magnate/src/Heightmap.cpp */,
+                            E3C3EFDEE8004B2DBAF1A525 /* /Users/Brian/Dropbox/Magnate/src/ImmediateDraw.cpp */,
+                            05D38AD3A04540F1AFA6C3C4 /* /Users/Brian/Dropbox/Magnate/src/Input.cpp */,
+                            C1F17E88CB5C46DE98951570 /* /Users/Brian/Dropbox/Magnate/src/Label.cpp */,
+                            9FDCF98438C345D0B4719919 /* /Users/Brian/Dropbox/Magnate/src/LinAlg.cpp */,
+                            535E7D61802149279971EC29 /* /Users/Brian/Dropbox/Magnate/src/Menus.cpp */,
+                            F06799DE43BF4CFBB09C96F3 /* /Users/Brian/Dropbox/Magnate/src/Mesh.cpp */,
+                            5BB4CE97D82F41DDACCEB15B /* /Users/Brian/Dropbox/Magnate/src/Minimap.cpp */,
+                            52C16BD2E8FD48F0A4E4DBE5 /* /Users/Brian/Dropbox/Magnate/src/Models.cpp */,
+                            E9E1B35113594BCCB87590B1 /* /Users/Brian/Dropbox/Magnate/src/MultiSelect.cpp */,
+                            1D5436DD785941E7B679E1ED /* /Users/Brian/Dropbox/Magnate/src/RandomUtils.cpp */,
+                            05BA2698877346ECBC972C1D /* /Users/Brian/Dropbox/Magnate/src/Renderer.cpp */,
+                            2B32E8A8281E4FC6924B4F07 /* /Users/Brian/Dropbox/Magnate/src/SaveManager.cpp */,
+                            D42B242331FE4214A6129065 /* /Users/Brian/Dropbox/Magnate/src/Scene.cpp */,
+                            95D7FC94EB944BB9879F2A3A /* /Users/Brian/Dropbox/Magnate/src/ScrollBlock.cpp */,
+                            958C3A2DFA914E3D83FE9078 /* /Users/Brian/Dropbox/Magnate/src/Shaders.cpp */,
+                            677EFA9CFD09425B869A6F22 /* /Users/Brian/Dropbox/Magnate/src/Terrain.cpp */,
+                            1F76FA5092F94A56A651CC1D /* /Users/Brian/Dropbox/Magnate/src/TerrainGen.cpp */,
+                            D59093D2E1464D258FD79FE6 /* /Users/Brian/Dropbox/Magnate/src/TexGen.cpp */,
+                            278CF54E99CB4A7D8CD41EC5 /* /Users/Brian/Dropbox/Magnate/src/TexManager.cpp */,
+                            1C53D48B162A4CB8BB8A3380 /* /Users/Brian/Dropbox/Magnate/src/Topo.cpp */,
+                            FBFEA462DF73491E9913FEF4 /* /Users/Brian/Dropbox/Magnate/src/UIRenderer.cpp */,
+                            DE1EFDE351BF4E0AA2F53885 /* /Users/Brian/Dropbox/Magnate/src/VBO.cpp */,
+                            C925EF81C6EC4BDF81BE8441 /* /Users/Brian/Dropbox/Magnate/src/Watershed.cpp */,
+                            B7DC7491F45849A69EE1C7CC /* /Users/Brian/Dropbox/Magnate/src/Window.cpp */,
+                            1D74FB6FA0E0437591FF53CD /* /Users/Brian/Dropbox/Magnate/src/World.cpp */,
+                            1F4E13D26B984EEEB61E0C9B /* /Users/Brian/Dropbox/Magnate/src/WorldRenderer.cpp */,
+                            7B897A24025849CA88D89C79 /* /Users/Brian/Dropbox/Magnate/src/main.cpp */,
+                     );
+                     name = "Source Files";
+                     sourceTree = "<group>";
+              };
+              03A5060BADC9409E8F58635D /* ZERO_CHECK */ = {
+                     isa = PBXGroup;
+                     children = (
+                            16338080F803437B99688F25 /* CMake Rules */,
+                            470A73EA3B4B4BB682C75416 /* /Users/Brian/Dropbox/Magnate/CMakeLists.txt */,
+                     );
+                     name = ZERO_CHECK;
+                     sourceTree = "<group>";
+              };
+              16338080F803437B99688F25 /* CMake Rules */ = {
+                     isa = PBXGroup;
+                     children = (
+                     );
+                     name = "CMake Rules";
+                     sourceTree = "<group>";
+              };
+              ADA891E6B099489BBC4CB830 /* Products */ = {
+                     isa = PBXGroup;
+                     children = (
+                            BFE314A5CA2348288E3CA9A0 /* Magnate */,
+                     );
+                     name = Products;
+                     sourceTree = "<group>";
+              };
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+              BA90EB866FFB4869B9F86555 /* Magnate */ = {
+                     isa = PBXNativeTarget;
+                     buildConfigurationList = 75680154EE324EB9A0FE499B /* Build configuration list for PBXNativeTarget "Magnate" */;
+                     buildPhases = (
+                            08FDB82728AE4BD2A95AB36F /* Sources */,
+                     );
+                     buildRules = (
+                     );
+                     dependencies = (
+                            179EF8EC2D3B407A9350C766 /* PBXTargetDependency */,
+                     );
+                     name = Magnate;
+                     productName = Magnate;
+                     productReference = BFE314A5CA2348288E3CA9A0 /* Magnate */;
+                     productType = "com.apple.product-type.tool";
+              };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+              AE1800FB659F4B87A0ECE084 /* Project object */ = {
+                     isa = PBXProject;
+                     attributes = {
+                            BuildIndependentTargetsInParallel = YES;
+                     };
+                     buildConfigurationList = 60C88B77D3EA4DBF81CC28EA /* Build configuration list for PBXProject  "Magnate" */;
+                     buildSettings = {
+                     };
+                     buildStyles = (
+                            2A9193B6288441C0881EB664 /* Debug */,
+                            0A399F4E92784F3C863766DE /* Release */,
+                            20A28653EC2047DF8BE07BE0 /* MinSizeRel */,
+                            147C6BAD6F8544CBA76670B3 /* RelWithDebInfo */,
+                     );
+                     compatibilityVersion = "Xcode 3.2";
+                     hasScannedForEncodings = 0;
+                     mainGroup = 799A841376A6474AA6A61B9A;
+                     projectDirPath = "..";
+                     projectRoot = "";
+                     targets = (
+                            063B677FAE644FC0BA9FB2CC /* ALL_BUILD */,
+                            BA90EB866FFB4869B9F86555 /* Magnate */,
+                            30747E43E61C4BAC90340ECB /* ZERO_CHECK */,
+                     );
+              };
+/* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+              4A42535B88214599B491EE15 /*  */ = {
+                     isa = PBXShellScriptBuildPhase;
+                     buildActionMask = 2147483647;
+                     files = (
+                     );
+                     inputPaths = (
+                     );
+                     outputPaths = (
+                     );
+                     runOnlyForDeploymentPostprocessing = 0;
+                     shellPath = /bin/sh;
+                     shellScript = "# shell script goes here
+exit 0";
+                     showEnvVarsInLog = 0;
+              };
+              AEBA6EB1BB6F4850BD71E322 /* CMake Rules */ = {
+                     isa = PBXShellScriptBuildPhase;
+                     buildActionMask = 2147483647;
+                     files = (
+                     );
+                     name = "CMake Rules";
+                     runOnlyForDeploymentPostprocessing = 0;
+                     shellPath = /bin/sh;
+                     shellScript = "make -C /Users/Brian/Dropbox/Magnate/xcodeBuild -f /Users/Brian/Dropbox/Magnate/xcodeBuild/CMakeScripts/ALL_BUILD_cmakeRulesBuildPhase.make$CONFIGURATION all";
+                     showEnvVarsInLog = 0;
+              };
+              5306863D33C1435F94CDC30A /*  */ = {
+                     isa = PBXShellScriptBuildPhase;
+                     buildActionMask = 2147483647;
+                     files = (
+                     );
+                     inputPaths = (
+                     );
+                     outputPaths = (
+                     );
+                     runOnlyForDeploymentPostprocessing = 0;
+                     shellPath = /bin/sh;
+                     shellScript = "# shell script goes here
+exit 0";
+                     showEnvVarsInLog = 0;
+              };
+              5CA505FA84C146E6ADC7B369 /* CMake Rules */ = {
+                     isa = PBXShellScriptBuildPhase;
+                     buildActionMask = 2147483647;
+                     files = (
+                     );
+                     name = "CMake Rules";
+                     runOnlyForDeploymentPostprocessing = 0;
+                     shellPath = /bin/sh;
+                     shellScript = "make -C /Users/Brian/Dropbox/Magnate/xcodeBuild -f /Users/Brian/Dropbox/Magnate/xcodeBuild/CMakeScripts/ZERO_CHECK_cmakeRulesBuildPhase.make$CONFIGURATION all";
+                     showEnvVarsInLog = 0;
+              };
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+              08FDB82728AE4BD2A95AB36F /* Sources */ = {
+                     isa = PBXSourcesBuildPhase;
+                     buildActionMask = 2147483647;
+                     files = (
+                            848F42EFDE7F43D9BD82DC86 /* /Users/Brian/Dropbox/Magnate/src/Atlas.cpp */,
+                            D2C490AFF47349FC820CAA90 /* /Users/Brian/Dropbox/Magnate/src/Building.cpp */,
+                            497B9A61850A452288C49737 /* /Users/Brian/Dropbox/Magnate/src/Button.cpp */,
+                            0EB10EA1C22A4CBEAB540984 /* /Users/Brian/Dropbox/Magnate/src/Camera.cpp */,
+                            7699FF101EDC4C1E8CF73432 /* /Users/Brian/Dropbox/Magnate/src/Component.cpp */,
+                            361DEED968F846869E8542EB /* /Users/Brian/Dropbox/Magnate/src/Coord.cpp */,
+                            9D9B01CE6DCE46BBAE0A60F9 /* /Users/Brian/Dropbox/Magnate/src/Draggable.cpp */,
+                            E15F87664AA846BE9450226B /* /Users/Brian/Dropbox/Magnate/src/Erosion.cpp */,
+                            DDBD3C2897F34FD9AEE19E04 /* /Users/Brian/Dropbox/Magnate/src/Field.cpp */,
+                            DDE9D7197848475280908F2A /* /Users/Brian/Dropbox/Magnate/src/FileIO.cpp */,
+                            4AD07BEE3E3A4E3CA8395A11 /* /Users/Brian/Dropbox/Magnate/src/GUI.cpp */,
+                            D68FAE0A2BCE4EDF820D5C2B /* /Users/Brian/Dropbox/Magnate/src/Game.cpp */,
+                            84227E281AB949BA8D6789E4 /* /Users/Brian/Dropbox/Magnate/src/GenTypes.cpp */,
+                            6FB30F9620314F618436DB71 /* /Users/Brian/Dropbox/Magnate/src/GlmHeaders.cpp */,
+                            665A57424CA745C6B55CCED6 /* /Users/Brian/Dropbox/Magnate/src/GlobalConfig.cpp */,
+                            7D3E2230DF96414A991EA5B5 /* /Users/Brian/Dropbox/Magnate/src/Heightmap.cpp */,
+                            F13E633C0EAD48EC86F0D40D /* /Users/Brian/Dropbox/Magnate/src/ImmediateDraw.cpp */,
+                            D9CB724E1CF64EE98FB59F85 /* /Users/Brian/Dropbox/Magnate/src/Input.cpp */,
+                            3813512437654005BB67E196 /* /Users/Brian/Dropbox/Magnate/src/Label.cpp */,
+                            4DBCF316981745E5B28E06D7 /* /Users/Brian/Dropbox/Magnate/src/LinAlg.cpp */,
+                            8BE61CEF909941F6825BDAAA /* /Users/Brian/Dropbox/Magnate/src/Menus.cpp */,
+                            6963936568F94A049C420C8A /* /Users/Brian/Dropbox/Magnate/src/Mesh.cpp */,
+                            E7FF374F22BD4F1BAE421A98 /* /Users/Brian/Dropbox/Magnate/src/Minimap.cpp */,
+                            CA69870FACD841B18D85BDD0 /* /Users/Brian/Dropbox/Magnate/src/Models.cpp */,
+                            FC97E0A4EE664FD380B4B3C9 /* /Users/Brian/Dropbox/Magnate/src/MultiSelect.cpp */,
+                            FEE7D50707D1474E929D55A0 /* /Users/Brian/Dropbox/Magnate/src/RandomUtils.cpp */,
+                            5660A9185FB843F4B5B2AE6A /* /Users/Brian/Dropbox/Magnate/src/Renderer.cpp */,
+                            885EB4CCDC184014901A899B /* /Users/Brian/Dropbox/Magnate/src/SaveManager.cpp */,
+                            3D02431784AE4698A2F1CA81 /* /Users/Brian/Dropbox/Magnate/src/Scene.cpp */,
+                            8DE24EFF61744ADD8D00EF3D /* /Users/Brian/Dropbox/Magnate/src/ScrollBlock.cpp */,
+                            BF32C34A470F43AC82CB500E /* /Users/Brian/Dropbox/Magnate/src/Shaders.cpp */,
+                            48102C7D9A924D40B905C298 /* /Users/Brian/Dropbox/Magnate/src/Terrain.cpp */,
+                            885A1E3120ED4785988716BB /* /Users/Brian/Dropbox/Magnate/src/TerrainGen.cpp */,
+                            3ED394F83308420984DDF95B /* /Users/Brian/Dropbox/Magnate/src/TexGen.cpp */,
+                            D11D69EA938E460FA6F83D27 /* /Users/Brian/Dropbox/Magnate/src/TexManager.cpp */,
+                            D33B25AEEFDB48D8814677FA /* /Users/Brian/Dropbox/Magnate/src/Topo.cpp */,
+                            B868B633A4EF4BE793E1360E /* /Users/Brian/Dropbox/Magnate/src/UIRenderer.cpp */,
+                            82240D59D32C42F0AF4B47D6 /* /Users/Brian/Dropbox/Magnate/src/VBO.cpp */,
+                            5189CABDC14C48B4AB148281 /* /Users/Brian/Dropbox/Magnate/src/Watershed.cpp */,
+                            709D1D52FF084EDC8F28ECBD /* /Users/Brian/Dropbox/Magnate/src/Window.cpp */,
+                            78D99EB476E3472E933DD1A1 /* /Users/Brian/Dropbox/Magnate/src/World.cpp */,
+                            678374BB28044C928FB3BA9A /* /Users/Brian/Dropbox/Magnate/src/WorldRenderer.cpp */,
+                            636C1DE7674E432996CB57CA /* /Users/Brian/Dropbox/Magnate/src/main.cpp */,
+                     );
+                     runOnlyForDeploymentPostprocessing = 0;
+              };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+              22CB81561E6040198B1C0203 /* PBXTargetDependency */ = {
+                     isa = PBXTargetDependency;
+                     target = 30747E43E61C4BAC90340ECB /* ZERO_CHECK */;
+                     targetProxy = C963C9700974434197E4E1AF /* PBXContainerItemProxy */;
+              };
+              79A41F33E65E4472B18A1184 /* PBXTargetDependency */ = {
+                     isa = PBXTargetDependency;
+                     target = BA90EB866FFB4869B9F86555 /* Magnate */;
+                     targetProxy = D6CC9AE9DC644B12B56A731C /* PBXContainerItemProxy */;
+              };
+              179EF8EC2D3B407A9350C766 /* PBXTargetDependency */ = {
+                     isa = PBXTargetDependency;
+                     target = 30747E43E61C4BAC90340ECB /* ZERO_CHECK */;
+                     targetProxy = BFBC02E9E0D744399240709C /* PBXContainerItemProxy */;
+              };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+              BE03BC5C41A848B39EC3868E /* Debug */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+                            ONLY_ACTIVE_ARCH = YES;
+                            SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild/build;
+                     };
+                     name = Debug;
+              };
+              095B70DE846D44ABAFA6E931 /* Release */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+                            ONLY_ACTIVE_ARCH = YES;
+                            SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild/build;
+                     };
+                     name = Release;
+              };
+              47C6E94B46CF42CCB69F2DF6 /* MinSizeRel */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+                            ONLY_ACTIVE_ARCH = YES;
+                            SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild/build;
+                     };
+                     name = MinSizeRel;
+              };
+              B5ED689F0AB94AA9A173A47A /* RelWithDebInfo */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+                            ONLY_ACTIVE_ARCH = YES;
+                            SDKROOT = "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild/build;
+                     };
+                     name = RelWithDebInfo;
+              };
+              4D2DFC70719B4EC38899A742 /* Debug */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            COMBINE_HIDPI_IMAGES = YES;
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 0;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, /Users/Brian/Dropbox/Magnate/include, );
+                            INSTALL_PATH = "";
+                            OTHER_CFLAGS = "  ";
+                            OTHER_LDFLAGS = " ";
+                            OTHER_REZFLAGS = "";
+                            PRODUCT_NAME = ALL_BUILD;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild;
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = Debug;
+              };
+              7C1DDF640F7F4378A6AE430A /* Release */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            COMBINE_HIDPI_IMAGES = YES;
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 0;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, /Users/Brian/Dropbox/Magnate/include, );
+                            INSTALL_PATH = "";
+                            OTHER_CFLAGS = "  ";
+                            OTHER_LDFLAGS = " ";
+                            OTHER_REZFLAGS = "";
+                            PRODUCT_NAME = ALL_BUILD;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild;
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = Release;
+              };
+              3F5BC337AC4F46CF9F67775A /* MinSizeRel */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            COMBINE_HIDPI_IMAGES = YES;
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 0;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, /Users/Brian/Dropbox/Magnate/include, );
+                            INSTALL_PATH = "";
+                            OTHER_CFLAGS = "  ";
+                            OTHER_LDFLAGS = " ";
+                            OTHER_REZFLAGS = "";
+                            PRODUCT_NAME = ALL_BUILD;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild;
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = MinSizeRel;
+              };
+              F1F71A4F84A146819B5ED83B /* RelWithDebInfo */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            COMBINE_HIDPI_IMAGES = YES;
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 0;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, /Users/Brian/Dropbox/Magnate/include, );
+                            INSTALL_PATH = "";
+                            OTHER_CFLAGS = "  ";
+                            OTHER_LDFLAGS = " ";
+                            OTHER_REZFLAGS = "";
+                            PRODUCT_NAME = ALL_BUILD;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild;
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = RelWithDebInfo;
+              };
+              5DF36AA7847141C79A29F4BD /* Debug */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            COMBINE_HIDPI_IMAGES = YES;
+                            EXECUTABLE_PREFIX = "";
+                            EXECUTABLE_SUFFIX = "";
+                            FRAMEWORK_SEARCH_PATHS = (/Library/Frameworks, );
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 2;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, /Users/Brian/Dropbox/Magnate/include, );
+                            INSTALL_PATH = "";
+                            LD_RUNPATH_SEARCH_PATHS = /Library/Frameworks;
+                            LIBRARY_SEARCH_PATHS = "";
+                            OTHER_CFLAGS = "    ";
+                            OTHER_CPLUSPLUSFLAGS = " -std=c++11     -Wall -Dgdb -I/System/Library/Frameworks/OpenGL.framework/Headers -I/Library/Frameworks/SDL2.framework/Headers -I/Library/Frameworks/SDL2_image.framework/Headers -I/Library/Frameworks/SDL2_ttf.framework/Headers -I/usr/local/include/glm     ";
+                            OTHER_LDFLAGS = "  -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -framework OpenGL -framework SDL2 -framework SDL2_image /usr/local/lib/libboost_system.dylib /usr/local/lib/libboost_filesystem.dylib";
+                            OTHER_REZFLAGS = "";
+                            PRODUCT_NAME = Magnate;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild;
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = Debug;
+              };
+              5D0421157A41430E842AFCF0 /* Release */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            COMBINE_HIDPI_IMAGES = YES;
+                            EXECUTABLE_PREFIX = "";
+                            EXECUTABLE_SUFFIX = "";
+                            FRAMEWORK_SEARCH_PATHS = (/Library/Frameworks, );
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 3;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, /Users/Brian/Dropbox/Magnate/include, );
+                            INSTALL_PATH = "";
+                            LD_RUNPATH_SEARCH_PATHS = /Library/Frameworks;
+                            LIBRARY_SEARCH_PATHS = "";
+                            OTHER_CFLAGS = "    -DNDEBUG  ";
+                            OTHER_CPLUSPLUSFLAGS = " -std=c++11     -Wall -Dgdb -I/System/Library/Frameworks/OpenGL.framework/Headers -I/Library/Frameworks/SDL2.framework/Headers -I/Library/Frameworks/SDL2_image.framework/Headers -I/Library/Frameworks/SDL2_ttf.framework/Headers -I/usr/local/include/glm     -DNDEBUG  ";
+                            OTHER_LDFLAGS = "  -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -framework OpenGL -framework SDL2 -framework SDL2_image /usr/local/lib/libboost_system.dylib /usr/local/lib/libboost_filesystem.dylib";
+                            OTHER_REZFLAGS = "";
+                            PRODUCT_NAME = Magnate;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild;
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = Release;
+              };
+              20F90F0CB64942C68730725D /* MinSizeRel */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            COMBINE_HIDPI_IMAGES = YES;
+                            EXECUTABLE_PREFIX = "";
+                            EXECUTABLE_SUFFIX = "";
+                            FRAMEWORK_SEARCH_PATHS = (/Library/Frameworks, );
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = s;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, /Users/Brian/Dropbox/Magnate/include, );
+                            INSTALL_PATH = "";
+                            LD_RUNPATH_SEARCH_PATHS = /Library/Frameworks;
+                            LIBRARY_SEARCH_PATHS = "";
+                            OTHER_CFLAGS = "    -DNDEBUG  ";
+                            OTHER_CPLUSPLUSFLAGS = " -std=c++11     -Wall -Dgdb -I/System/Library/Frameworks/OpenGL.framework/Headers -I/Library/Frameworks/SDL2.framework/Headers -I/Library/Frameworks/SDL2_image.framework/Headers -I/Library/Frameworks/SDL2_ttf.framework/Headers -I/usr/local/include/glm     -DNDEBUG  ";
+                            OTHER_LDFLAGS = "  -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -framework OpenGL -framework SDL2 -framework SDL2_image /usr/local/lib/libboost_system.dylib /usr/local/lib/libboost_filesystem.dylib";
+                            OTHER_REZFLAGS = "";
+                            PRODUCT_NAME = Magnate;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild;
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = MinSizeRel;
+              };
+              BE1E01526BF348CA9EFBFBE2 /* RelWithDebInfo */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            COMBINE_HIDPI_IMAGES = YES;
+                            EXECUTABLE_PREFIX = "";
+                            EXECUTABLE_SUFFIX = "";
+                            FRAMEWORK_SEARCH_PATHS = (/Library/Frameworks, );
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 2;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, /Users/Brian/Dropbox/Magnate/include, );
+                            INSTALL_PATH = "";
+                            LD_RUNPATH_SEARCH_PATHS = /Library/Frameworks;
+                            LIBRARY_SEARCH_PATHS = "";
+                            OTHER_CFLAGS = "       -DNDEBUG  ";
+                            OTHER_CPLUSPLUSFLAGS = " -std=c++11     -Wall -Dgdb -I/System/Library/Frameworks/OpenGL.framework/Headers -I/Library/Frameworks/SDL2.framework/Headers -I/Library/Frameworks/SDL2_image.framework/Headers -I/Library/Frameworks/SDL2_ttf.framework/Headers -I/usr/local/include/glm        -DNDEBUG  ";
+                            OTHER_LDFLAGS = "  -Wl,-search_paths_first -Wl,-headerpad_max_install_names  -framework OpenGL -framework SDL2 -framework SDL2_image /usr/local/lib/libboost_system.dylib /usr/local/lib/libboost_filesystem.dylib";
+                            OTHER_REZFLAGS = "";
+                            PRODUCT_NAME = Magnate;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild;
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = RelWithDebInfo;
+              };
+              07BA6E21A1224A2AA3618451 /* Debug */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            COMBINE_HIDPI_IMAGES = YES;
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 0;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, /Users/Brian/Dropbox/Magnate/include, );
+                            INSTALL_PATH = "";
+                            OTHER_CFLAGS = "  ";
+                            OTHER_LDFLAGS = " ";
+                            OTHER_REZFLAGS = "";
+                            PRODUCT_NAME = ZERO_CHECK;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild;
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = Debug;
+              };
+              CD32D2112DDC482E86CE5C05 /* Release */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            COMBINE_HIDPI_IMAGES = YES;
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 0;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, /Users/Brian/Dropbox/Magnate/include, );
+                            INSTALL_PATH = "";
+                            OTHER_CFLAGS = "  ";
+                            OTHER_LDFLAGS = " ";
+                            OTHER_REZFLAGS = "";
+                            PRODUCT_NAME = ZERO_CHECK;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild;
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = Release;
+              };
+              9CFE65D582BC43688665C9F4 /* MinSizeRel */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            COMBINE_HIDPI_IMAGES = YES;
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 0;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, /Users/Brian/Dropbox/Magnate/include, );
+                            INSTALL_PATH = "";
+                            OTHER_CFLAGS = "  ";
+                            OTHER_LDFLAGS = " ";
+                            OTHER_REZFLAGS = "";
+                            PRODUCT_NAME = ZERO_CHECK;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild;
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = MinSizeRel;
+              };
+              50B61B330E5F47A79B3C4590 /* RelWithDebInfo */ = {
+                     isa = XCBuildConfiguration;
+                     buildSettings = {
+                            COMBINE_HIDPI_IMAGES = YES;
+                            GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+                            GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
+                            GCC_OPTIMIZATION_LEVEL = 0;
+                            GCC_PREPROCESSOR_DEFINITIONS = ("'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'", );
+                            GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+                            HEADER_SEARCH_PATHS = (/usr/local/include, /Users/Brian/Dropbox/Magnate/include, );
+                            INSTALL_PATH = "";
+                            OTHER_CFLAGS = "  ";
+                            OTHER_LDFLAGS = " ";
+                            OTHER_REZFLAGS = "";
+                            PRODUCT_NAME = ZERO_CHECK;
+                            SECTORDER_FLAGS = "";
+                            SYMROOT = /Users/Brian/Dropbox/Magnate/xcodeBuild;
+                            USE_HEADERMAP = NO;
+                            WARNING_CFLAGS = ("-Wmost", "-Wno-four-char-constants", "-Wno-unknown-pragmas", );
+                     };
+                     name = RelWithDebInfo;
+              };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+              60C88B77D3EA4DBF81CC28EA /* Build configuration list for PBXProject  "Magnate" */ = {
+                     isa = XCConfigurationList;
+                     buildConfigurations = (
+                            BE03BC5C41A848B39EC3868E /* Debug */,
+                            095B70DE846D44ABAFA6E931 /* Release */,
+                            47C6E94B46CF42CCB69F2DF6 /* MinSizeRel */,
+                            B5ED689F0AB94AA9A173A47A /* RelWithDebInfo */,
+                     );
+                     defaultConfigurationIsVisible = 0;
+                     defaultConfigurationName = Debug;
+              };
+              5D5E6E283FB842CC9F902486 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */ = {
+                     isa = XCConfigurationList;
+                     buildConfigurations = (
+                            4D2DFC70719B4EC38899A742 /* Debug */,
+                            7C1DDF640F7F4378A6AE430A /* Release */,
+                            3F5BC337AC4F46CF9F67775A /* MinSizeRel */,
+                            F1F71A4F84A146819B5ED83B /* RelWithDebInfo */,
+                     );
+                     defaultConfigurationIsVisible = 0;
+                     defaultConfigurationName = Debug;
+              };
+              75680154EE324EB9A0FE499B /* Build configuration list for PBXNativeTarget "Magnate" */ = {
+                     isa = XCConfigurationList;
+                     buildConfigurations = (
+                            5DF36AA7847141C79A29F4BD /* Debug */,
+                            5D0421157A41430E842AFCF0 /* Release */,
+                            20F90F0CB64942C68730725D /* MinSizeRel */,
+                            BE1E01526BF348CA9EFBFBE2 /* RelWithDebInfo */,
+                     );
+                     defaultConfigurationIsVisible = 0;
+                     defaultConfigurationName = Debug;
+              };
+              D77B8E5D6F914C9C92AF27BA /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */ = {
+                     isa = XCConfigurationList;
+                     buildConfigurations = (
+                            07BA6E21A1224A2AA3618451 /* Debug */,
+                            CD32D2112DDC482E86CE5C05 /* Release */,
+                            9CFE65D582BC43688665C9F4 /* MinSizeRel */,
+                            50B61B330E5F47A79B3C4590 /* RelWithDebInfo */,
+                     );
+                     defaultConfigurationIsVisible = 0;
+                     defaultConfigurationName = Debug;
+              };
+/* End XCConfigurationList section */
+       };
+       rootObject = AE1800FB659F4B87A0ECE084;
+}
