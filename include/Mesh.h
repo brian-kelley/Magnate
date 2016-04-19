@@ -102,6 +102,7 @@ public:
     bool collapseFlip(int edge); 
     //get 4 neighboring faces for collapse
     void getNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, int& f22);
+    void getBoundaryNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, int& f22);
     //get the two faces neighboring the face, but excluding "exclude"
     void getFaceNeighbors(int f, int exclude, int& f1, int& f2);
     int getOtherFace(int f, int e);    //get the face neighboring f across the eth edge of f

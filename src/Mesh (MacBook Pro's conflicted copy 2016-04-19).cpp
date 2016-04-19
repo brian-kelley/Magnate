@@ -572,24 +572,30 @@ void Mesh::getBoundaryNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int
         f22 = -1;
     }
     else
-    {
-        getFaceNeighbors(f2, f1, f21, f22);
-    }
 }
 
 void Mesh::getFaceNeighbors(int f, int exclude, int& f1, int& f2)
 {
     Face& face = faces[f];
+    Face& excludeFace = faces[exclude];
     int excludeEdge = 0;
-    //ok for exclude = -1
-    while(getOtherFace(f, excludeEdge) != exclude)
+    while(!excludeFace.hasEdge(face.e[excludeEdge]))
     {
         excludeEdge++;
     }
     int e1 = (excludeEdge + 1) % 3;
     int e2 = (e1 + 1) % 3;
+    //PRINTVAR(exclude);
+    //PRINT("In getFaceNeighbors...");
     f1 = getOtherFace(f, e1);
     f2 = getOtherFace(f, e2);
+    /*
+    PRINTVAR(e1);
+    PRINTVAR(e2);
+    PRINTVAR(f1);
+    PRINTVAR(f2);
+    PRINT("Returning from getFaceNeighbors");
+    */
 } 
 
 int Mesh::getOtherFace(int f, int e)
