@@ -26,6 +26,7 @@ void Window::init(int w, int h)
     SDL_GL_SetSwapInterval(1);
     sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, SDL_RENDERER_ACCELERATED);
     configGL();
+    GLERR
 }
 
 void Window::dispose()

@@ -11,8 +11,8 @@ GLint Renderer::projLoc = -1;
 void Renderer::init()
 {
     Window::init(640, 480);
-    Atlas::init("main");
     Shaders::init();
+    Atlas::init("main");
     WorldRenderer::init();
     UIRenderer::init();
     ModelRenderer::init(Shaders::modelLoc);
@@ -25,7 +25,6 @@ void Renderer::init()
     vec3 sunlight(0.4, 0.8, 0.2);
     sunlight = normalize(sunlight);
     glUniform3fv(sunLoc, 1, value_ptr(sunlight));
-    Atlas::init("main");
 }
 
 void Renderer::update()

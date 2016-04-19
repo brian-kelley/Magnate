@@ -32,8 +32,11 @@ void Atlas::init(string atlasName)
     SDL_Surface* loadedSurface = IMG_Load(imagePath.string().c_str());
     if(loadedSurface->w != loadedSurface->h)
         throw runtime_error("Atlas not square!");
+    GLERR
     glGenTextures(1, &textureID);
+    GLERR
     glBindTexture(GL_TEXTURE_2D, textureID);
+    GLERR
     #ifdef _WIN32
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, loadedSurface->w, loadedSurface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, loadedSurface->pixels);
     #elif __APPLE__

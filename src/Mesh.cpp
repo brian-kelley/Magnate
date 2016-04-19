@@ -471,7 +471,12 @@ void Mesh::edgeCollapse(int edgeNum)
 
 bool Mesh::collapseConnectivity(int edge)
 {
+    return true;
+}
 
+bool Mesh::collapseFlip(int edge)
+{
+    return true;
 }
 
 int Mesh::hmVertIndex(int x, int y)
@@ -579,7 +584,6 @@ void Mesh::getBoundaryNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int
 
 void Mesh::getFaceNeighbors(int f, int exclude, int& f1, int& f2)
 {
-    Face& face = faces[f];
     int excludeEdge = 0;
     //ok for exclude = -1
     while(getOtherFace(f, excludeEdge) != exclude)

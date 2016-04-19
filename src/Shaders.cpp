@@ -67,7 +67,6 @@ void Shaders::init()
         "       gl_FragColor.w = alpha;"
         "   }"
         "}";
-
     programID = glCreateProgram();
     vshadeID = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vshadeID, 1, &vshader, NULL);
