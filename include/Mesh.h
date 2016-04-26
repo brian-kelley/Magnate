@@ -93,6 +93,8 @@ public:
     Pool<MeshTypes::Edge> edges;
     Pool<MeshTypes::Face> faces;
     //Utility functions
+    void interiorEdgeCollapse(int e);
+    void boundaryEdgeCollapse(int e);
     int hmVertIndex(int x, int y);
     int hmEdgeIndex(int x, int y, EdgeDir which);
     int hmFaceIndex(int x, int y, FaceDir which);

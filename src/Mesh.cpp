@@ -247,9 +247,9 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
     //Testing edge collapse
-    PRINT("collapsing edge 64...");
-    fullCorrectnessCheck();
-    edgeCollapse(64);
+    int testCollapse = 0;
+    PRINT("collapsing edge " << testCollapse << "...");
+    edgeCollapse(testCollapse);
     fullCorrectnessCheck();
     //simplify(faceMatchCutoff);
     PRINT("Done with mesh.");
@@ -371,11 +371,24 @@ void Mesh::simplify(float faceMatchCutoff)
 
 void Mesh::edgeCollapse(int edgeNum)
 {
+    auto& edge = edges[edgeNum];
+    if(edge.f[0] == -1 || edge.f[1] == -1)
+    {
+        boundaryEdgeCollapse(edgeNum);
+    }
+    else
+    {
+        interiorEdgeCollapse(edgeNum);
+    }
+}
+
+/* Mesh utility functions */
+
+void Mesh::interiorEdgeCollapse(int edgeNum)
+{
     //Deletes an edge, merges two pairs of edges, deletes 2 faces, and a vertex
     auto& edge = edges[edgeNum];
     int f1, f2, f11, f12, f21, f22;
-    if(edge.f[0] == -1 || edge.f[1] == -1) {
-    }
     getNeighbors(edgeNum, f1, f2, f11, f12, f21, f22);
     PRINTVAR(edgeNum);
     PRINTVAR(f1);
@@ -403,9 +416,20 @@ void Mesh::edgeCollapse(int edgeNum)
     PRINTVAR(v1);
     PRINTVAR(v2);
     bool moveVertex = true; //by default, move remaining vertex to midpoint of old ones
-#ifdef MAGNATE_DEBUG
-    DBASSERT(!vertices[v1].isInCorner() || !vertices[v2].isInCorner());
-#endif
+    if(vertices[v1].isInCorner() && vertices[v2].isInCorner())
+    {
+        return;
+    }
+    if(vertices[v1].isOnBoundary() && vertices[v2].isOnBoundary())
+    {
+        //make sure v1/v2 on same boundary, otherwise can't do collapse
+        auto& pos1 = vertices[v1].pos;
+        auto& pos2 = vertices[v2].pos;
+        if(pos1.x != pos2.x && pos1.y != pos2.y)
+        {
+            return;
+        }
+    }
     //don't want to move or remove a vertex on the map boundary
     if(vertices[v1].isInCorner() || (vertices[v1].isOnBoundary() && !vertices[v2].isInCorner()))
     {
@@ -419,13 +443,6 @@ void Mesh::edgeCollapse(int edgeNum)
     }
     PRINT("Replacing all links to vertex " << v1 << " with " << v2);
     replaceVertexLinks(v1, v2); //note: does not free v1, but does free edgeNum
-    for(auto it = edges.begin(); it != edges.end(); it++)
-    {
-        if(it->hasVert(v1))
-        {
-            throw runtime_error(string("replaceVertexLinks failed to replace all links to ") + to_string(v1));
-        }
-    }
     //e11.v == e12.v, e21.v == e22.v (only face links different, will change)
     if(moveVertex)
     {
@@ -446,8 +463,11 @@ void Mesh::edgeCollapse(int edgeNum)
     PRINT("");
     //update fxx edge links
     PRINT("Replacing links in face " << f11 << " to edge " << e11 << " with " << e12);
-    faces[f11].replaceEdgeLink(e11, e12);
-    if(f11 != f21)
+    if(f11 != -1)
+    {
+        faces[f11].replaceEdgeLink(e11, e12);
+    }
+    if(f11 != f21 && f21 != -1)
     {
         PRINT("Replacing links in face " << f21 << " to edge " << e21 << " with " << e22);
         faces[f21].replaceEdgeLink(e21, e22);
@@ -463,11 +483,86 @@ void Mesh::edgeCollapse(int edgeNum)
     edges[e22].replaceFaceLink(f2, f21);
     //nothing links to f1, f2 anymore, delete them
     PRINT("Deleting face " << f1);
-    faces.dealloc(f1);
+    if(f1 != -1)
+    {
+        faces.dealloc(f1);
+    }
     PRINT("Deleting face " << f2);
-    faces.dealloc(f2);
+    if(f2 != -1)
+    {
+        faces.dealloc(f2);
+    }
 }
-/* Mesh utility functions */
+
+void Mesh::boundaryEdgeCollapse(int e)
+{
+    auto& edge = edges[e];
+    int f = edge.f[0];
+    if(f == -1)
+    {
+        f = edge.f[1];
+    }
+    Face& face = faces[f];
+    PRINTVAR(face);
+    int v1 = edge.v[0];
+    int v2 = edge.v[1];
+    //Already know on boundary because edge only has one face adjacent
+    //  but must check that at most one of v1, v2 is in a corner
+    //  because can't collapse the boundary of the mesh
+    //Also decide whether to move the merged vertex
+    bool v1corner = vertices[v1].isInCorner();
+    bool v2corner = vertices[v2].isInCorner();
+    if(v1corner && v2corner)
+    {
+        return;
+    }
+    bool moveVertex = !(v1corner || v2corner);
+    int e1, e2, f1, f2;
+    for(int i = 0; i < 3; i++)
+    {
+        if(face.e[i] != e)
+        {
+            e1 = face.e[i];
+        }
+    }
+    for(int i = 0; i < 3; i++)
+    {
+        if(face.e[i] != e && face.e[i] != e1)
+        {
+            e2 = face.e[i];
+        }
+    }
+    //have e1, e2
+    f1 = getOtherFace(f, e1);
+    f2 = getOtherFace(f, e2);
+    PRINTVAR(f);
+    PRINTVAR(e1);
+    PRINTVAR(e2);
+    PRINTVAR(f1);
+    PRINTVAR(f2);
+    //v1 might be moved, v2 will be deleted
+    //don't want to delete a corner vertex
+    if(v2corner)
+    {
+        SWAP(v1, v2);
+    }
+    PRINT("Replacing all links to vertex " << v2 << " with " << v1);
+    replaceVertexLinks(v2, v1);
+    if(moveVertex)
+    {
+        vertices[v1].pos = (vertices[v1].pos + vertices[v2].pos) / 2.0f;
+    }
+    vertices.dealloc(v2);
+    vertices[v1].removeEdge(e);
+    //e2 will be merged onto e1, and e1 will be deleted
+    if(f1 != -1)
+    {
+        faces[f1].replaceEdgeLink(e1, e2);
+    }
+    fullyDeleteEdge(e1);
+    edges[e2].replaceFaceLink(f, f1);
+    faces.dealloc(f);
+}
 
 bool Mesh::collapseConnectivity(int edge)
 {
@@ -553,8 +648,24 @@ void Mesh::getNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, i
         SWAP(f1, f2);
         SWAP(edge.f[0], edge.f[1]);
     }
-    getFaceNeighbors(f1, f2, f11, f12); //f11 to f12 is clockwise around f1
-    getFaceNeighbors(f2, f1, f21, f22); //f21 to f22 is clockwise around f2
+    if(f1 != -1)
+    {
+        getFaceNeighbors(f1, f2, f11, f12); //f11 to f12 is clockwise around f1
+    }
+    else
+    {
+        f11 = -1;
+        f12 = -1;
+    }
+    if(f2 != -1)
+    {
+        getFaceNeighbors(f2, f1, f21, f22); //f21 to f22 is clockwise around f2
+    }
+    else
+    {
+        f21 = -1;
+        f22 = -1;
+    }
 }
 
 void Mesh::getBoundaryNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, int& f22)
@@ -598,17 +709,8 @@ void Mesh::getFaceNeighbors(int f, int exclude, int& f1, int& f2)
 
 int Mesh::getOtherFace(int f, int e)
 {
-    Face& face = faces[f];
-    Edge& edge = edges[face.e[e]];
-    /*
-    PRINT("In getOtherFace");
-    PRINTVAR(f);
-    PRINTVAR(e);
-    PRINTVAR(edge.f[0]);
-    PRINTVAR(edge.f[1]);*/
+    Edge& edge = edges[faces[f].e[e]];
     int rv = edge.f[0] == f ? edge.f[1] : edge.f[0];
-    //PRINTVAR(rv);
-    //PRINT("getOtherFace ret");
     return rv;
 }
 
@@ -634,10 +736,16 @@ void Mesh::replaceVertexLinks(int toReplace, int newLink)
     {
         int edgeNum = *it;
         auto& edge = edges[edgeNum];
-        faces[edge.f[0]].replaceVertexLink(toReplace, newLink);
-        faces[edge.f[0]].checkNormal();
-        faces[edge.f[1]].replaceVertexLink(toReplace, newLink);
-        faces[edge.f[1]].checkNormal();
+        if(edge.f[0] != -1)
+        {
+            faces[edge.f[0]].replaceVertexLink(toReplace, newLink);
+            faces[edge.f[0]].checkNormal();
+        }
+        if(edge.f[1] != -1)
+        {
+            faces[edge.f[1]].replaceVertexLink(toReplace, newLink);
+            faces[edge.f[1]].checkNormal();
+        }
         edge.replaceVertexLink(toReplace, newLink);
         vertices[newLink].addEdge(*it);
         //remove the edge completely if now degenerate
@@ -649,14 +757,6 @@ void Mesh::replaceVertexLinks(int toReplace, int newLink)
         }
     }
 }
-/*
-void Mesh::removeEdgeRefs(int e)
-{
-    auto& edge = edges[e];
-    vertices[edge.v[0]].removeEdge(e);
-    vertices[edge.v[1]].removeEdge(e);
-}
- */
 
 bool minWorldX(vec3& loc)
 {

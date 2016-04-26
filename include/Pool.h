@@ -74,8 +74,7 @@ T& Pool<T>::operator[](int index)
 #ifdef MAGNATE_DEBUG
     if(index < 0 || index >= capacity || !allocMap[index])
     {   
-        PRINT("Illegal pool access!");
-        throw runtime_error("oh man");
+        throw runtime_error("Illegal pool access!");
     }
 #endif
     return data[index];
