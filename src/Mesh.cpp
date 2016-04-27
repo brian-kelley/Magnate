@@ -210,7 +210,7 @@ void Face::replaceEdgeLink(int toReplace, int newLink)
         }
     }
     PRINT("Error: Tried to replace link to edge " << toReplace << " with " << newLink << " but face didn't have reference!");
-    throw runtime_error("oh man");
+    DBASSERT(false);
 }
 
 void Face::replaceVertexLink(int toReplace, int newLink)
@@ -247,7 +247,7 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
     //Testing edge collapse
-    int testCollapse = 0;
+    int testCollapse = 4;
     PRINT("collapsing edge " << testCollapse << "...");
     edgeCollapse(testCollapse);
     fullCorrectnessCheck();
@@ -287,22 +287,19 @@ void Mesh::simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues)
             int urv = hmVertIndex(x + 1, y);
             int llv = hmVertIndex(x, y + 1);
             int lrv = hmVertIndex(x + 1, y + 1);
-            int eleft = hmEdgeIndex(x, y, EdgeDir::LEFT);
             int eright = hmEdgeIndex(x, y, EdgeDir::RIGHT);
-            int etop = hmEdgeIndex(x, y, EdgeDir::TOP);
             int ebot = hmEdgeIndex(x, y, EdgeDir::BOTTOM);
-            int ediag = hmEdgeIndex(x, y, EdgeDir::DIAGONAL);
             int f1 = hmFaceIndex(x, y, FaceDir::UPPER_LEFT);
             int f2 = hmFaceIndex(x, y, FaceDir::LOWER_RIGHT);
             int fleft = hmFaceIndex(x - 1, y, FaceDir::LOWER_RIGHT);
             int ftop = hmFaceIndex(x, y - 1, FaceDir::LOWER_RIGHT);
             //left, top, diagonal, right, bottom
             //left
-            DBASSERT(eleft == edges.alloc(Edge(ulv, llv, f1, fleft)));
+            int eleft = edges.alloc(Edge(ulv, llv, f1, fleft));
             //top
-            DBASSERT(etop == edges.alloc(Edge(ulv, urv, f1, ftop)));
+            int etop = edges.alloc(Edge(ulv, urv, f1, ftop));
             //Diagonal edge
-            DBASSERT(ediag == edges.alloc(Edge(urv, llv, f1, f2)));
+            int ediag = edges.alloc(Edge(urv, llv, f1, f2));
             //right, if on right edge of map
             if(x == WORLD_SIZE - 1)
             {
@@ -322,20 +319,6 @@ void Mesh::simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues)
             //Faces (upper-left and lower-right)
             int faceval = faceValues.get(x, y); //both triangles have same value
             //upper-left
-#ifdef MAGNATE_DEBUG
-            if(eleft == etop)
-                PRINT("err 1");
-            if(ediag == etop)
-                PRINT("err 2");
-            if(eleft == ediag)
-                PRINT("err 3");
-            if(ediag == eright)
-                PRINT("err 4");
-            if(ediag == ebot)
-                PRINT("err 5");
-            if(eright == ebot)
-                PRINT("err 6");
-#endif
             faces.alloc(Face(ulv, urv, llv, eleft, etop, ediag, faceval));
             //lower-right
             faces.alloc(Face(urv, lrv, llv, ediag, eright, ebot, faceval));
@@ -388,34 +371,8 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
 {
     //Deletes an edge, merges two pairs of edges, deletes 2 faces, and a vertex
     auto& edge = edges[edgeNum];
-    int f1, f2, f11, f12, f21, f22;
-    getNeighbors(edgeNum, f1, f2, f11, f12, f21, f22);
-    PRINTVAR(edgeNum);
-    PRINTVAR(f1);
-    PRINTVAR(f2);
-    PRINTVAR(f11);
-    PRINTVAR(f12);
-    PRINTVAR(f21);
-    PRINTVAR(f22);
-    PRINTVAR(faces[f1]);
-    PRINTVAR(faces[f2]);
-    PRINTVAR(faces[f11]);
-    PRINTVAR(faces[f12]);
-    PRINTVAR(faces[f21]);
-    PRINTVAR(faces[f22]);
-    int e11 = getSharedEdge(f1, f11);
-    int e12 = getSharedEdge(f1, f12);
-    int e21 = getSharedEdge(f2, f21);
-    int e22 = getSharedEdge(f2, f22);
     int v1 = edge.v[0];
     int v2 = edge.v[1];
-    PRINTVAR(e11);
-    PRINTVAR(e12);
-    PRINTVAR(e21);
-    PRINTVAR(e22);
-    PRINTVAR(v1);
-    PRINTVAR(v2);
-    bool moveVertex = true; //by default, move remaining vertex to midpoint of old ones
     if(vertices[v1].isInCorner() && vertices[v2].isInCorner())
     {
         return;
@@ -430,6 +387,36 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
             return;
         }
     }
+    int f1, f2, f11, f12, f21, f22;
+    getNeighbors(edgeNum, f1, f2, f11, f12, f21, f22);
+    PRINTVAR(edgeNum);
+    PRINTVAR(f1);
+    PRINTVAR(f2);
+    PRINTVAR(f11);
+    PRINTVAR(f12);
+    PRINTVAR(f21);
+    PRINTVAR(f22);
+    PRINTVAR(faces[f1]);
+    PRINTVAR(faces[f2]);
+    if(f11 != -1)
+        PRINTVAR(faces[f11]);
+    if(f12 != -1)
+        PRINTVAR(faces[f12]);
+    if(f21 != -1)
+        PRINTVAR(faces[f21]);
+    if(f22 != -1)
+        PRINTVAR(faces[f22]);
+    int e11 = getSharedEdge(f1, f11);
+    int e12 = getSharedEdge(f1, f12);
+    int e21 = getSharedEdge(f2, f21);
+    int e22 = getSharedEdge(f2, f22);
+    PRINTVAR(e11);
+    PRINTVAR(e12);
+    PRINTVAR(e21);
+    PRINTVAR(e22);
+    PRINTVAR(v1);
+    PRINTVAR(v2);
+    bool moveVertex = true; //by default, move remaining vertex to midpoint of old ones
     //don't want to move or remove a vertex on the map boundary
     if(vertices[v1].isInCorner() || (vertices[v1].isOnBoundary() && !vertices[v2].isInCorner()))
     {
@@ -522,24 +509,29 @@ void Mesh::boundaryEdgeCollapse(int e)
     {
         if(face.e[i] != e)
         {
-            e1 = face.e[i];
+            e1 = i;
         }
     }
     for(int i = 0; i < 3; i++)
     {
-        if(face.e[i] != e && face.e[i] != e1)
+        if(face.e[i] != e && face.e[i] != face.e[e1])
         {
-            e2 = face.e[i];
+            e2 = i;
         }
     }
-    //have e1, e2
+    //have !! INDICES IN F.E !! of e1, e2 (NOT the actual pointers)
     f1 = getOtherFace(f, e1);
     f2 = getOtherFace(f, e2);
+    //now e1 and e2 are more useful as actual values
+    e1 = faces[f].e[e1];
+    e2 = faces[f].e[e2];
     PRINTVAR(f);
     PRINTVAR(e1);
     PRINTVAR(e2);
     PRINTVAR(f1);
+    PRINTVAR(faces[f1]);
     PRINTVAR(f2);
+    PRINTVAR(faces[f2]);
     //v1 might be moved, v2 will be deleted
     //don't want to delete a corner vertex
     if(v2corner)
@@ -547,7 +539,7 @@ void Mesh::boundaryEdgeCollapse(int e)
         SWAP(v1, v2);
     }
     PRINT("Replacing all links to vertex " << v2 << " with " << v1);
-    replaceVertexLinks(v2, v1);
+    replaceVertexLinks(v2, v1); //fixes all E -> V and F -> V links
     if(moveVertex)
     {
         vertices[v1].pos = (vertices[v1].pos + vertices[v2].pos) / 2.0f;
@@ -557,6 +549,8 @@ void Mesh::boundaryEdgeCollapse(int e)
     //e2 will be merged onto e1, and e1 will be deleted
     if(f1 != -1)
     {
+        PRINT("f1 is " << f1 << ", so attempting to replace its link to edge " << e1 << " with " << e2);
+        PRINTVAR(faces[f1]);
         faces[f1].replaceEdgeLink(e1, e2);
     }
     fullyDeleteEdge(e1);
@@ -716,6 +710,10 @@ int Mesh::getOtherFace(int f, int e)
 
 int Mesh::getSharedEdge(int f1, int f2)
 {
+    if(f1 == -1 || f2 == -1)
+    {
+        return -1;
+    }
     for(int i = 0; i < 3; i++)
     {
         int edge = faces[f1].e[i];
