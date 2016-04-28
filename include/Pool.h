@@ -9,7 +9,6 @@ using std::runtime_error;
  *  allocation of individual objects.
  *  Allows for int as a pointer (index into pool)
  *  and STL-style iteration.
- *  No RAII!
  */
 
 template<typename T>
@@ -143,8 +142,13 @@ void Pool<T>::dealloc(T* ptr)
 template<typename T>
 void Pool<T>::clear()
 {
-    fill(allocMap.begin(), allocMap.end(), false);
+    for(size_t i = 0; i < allocMap.size(); i++)
+    {
+        allocMap[i] = false;
+    }
+    freeList.clear();
     size = 0;
+    top = 0;
 }
     
 template<typename T>

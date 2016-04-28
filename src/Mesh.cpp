@@ -245,12 +245,10 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
 {
     PRINT("Constructing tri mesh.");
     //pools are already sized to store all features of the most detailed mesh
+    deepTest(heights, faceValues);
+    PRINT("All tests passed.");
     simpleLoadHeightmap(heights, faceValues);
     //Testing edge collapse
-    int testCollapse = 4;
-    PRINT("collapsing edge " << testCollapse << "...");
-    edgeCollapse(testCollapse);
-    fullCorrectnessCheck();
     //simplify(faceMatchCutoff);
     PRINT("Done with mesh.");
 }
@@ -354,6 +352,12 @@ void Mesh::simplify(float faceMatchCutoff)
 
 void Mesh::edgeCollapse(int edgeNum)
 {
+    //First do the validity checks
+    if(!checkBoundaryBridge(edgeNum) || !collapseConnectivity(edgeNum))
+    {
+        PRINT("Edge can't be collapsed because one of the pre-collapse checks failed (OK)");
+        return;
+    }
     auto& edge = edges[edgeNum];
     if(edge.f[0] == -1 || edge.f[1] == -1)
     {
@@ -373,22 +377,44 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     auto& edge = edges[edgeNum];
     int v1 = edge.v[0];
     int v2 = edge.v[1];
-    if(vertices[v1].isInCorner() && vertices[v2].isInCorner())
-    {
-        return;
-    }
     if(vertices[v1].isOnBoundary() && vertices[v2].isOnBoundary())
     {
         //make sure v1/v2 on same boundary, otherwise can't do collapse
         auto& pos1 = vertices[v1].pos;
         auto& pos2 = vertices[v2].pos;
         if(pos1.x != pos2.x && pos1.y != pos2.y)
-        {
             return;
-        }
     }
-    int f1, f2, f11, f12, f21, f22;
-    getNeighbors(edgeNum, f1, f2, f11, f12, f21, f22);
+    int f1, f2, f11, f12, f21, f22, e11, e12, e21, e22;
+    f1 = edge.f[0];
+    f2 = edge.f[1];
+    //Since is interior EC, f1 and f2 are guaranteed to be valid faces
+    //First determine the indices (0, 1, or 2) the edges into faces[f1].e and faces[f2].e
+    for(int i = 0; i < 3; i++)
+    {
+        if(faces[f1].e[i] != edgeNum)
+            e11 = i;
+        if(faces[f2].e[i] != edgeNum)
+            e21 = i;
+    }
+    for(int i = 0; i < 3; i++)
+    {
+        if(i != e11 && faces[f1].e[i] != edgeNum)
+            e12 = i;
+        if(i != e21 && faces[f2].e[i] != edgeNum)
+            e22 = i;
+    }
+    //while e{xx} are indices to face -> edge links, use getOtherFace to get f{xx}
+    f11 = getOtherFace(f1, e11);
+    f12 = getOtherFace(f1, e12);
+    f21 = getOtherFace(f2, e21);
+    f22 = getOtherFace(f2, e22);
+    //now want e{xx} to be actual edge pointers
+    e11 = faces[f1].e[e11];
+    e12 = faces[f1].e[e12];
+    e21 = faces[f2].e[e21];
+    e22 = faces[f2].e[e22];
+    /*
     PRINTVAR(edgeNum);
     PRINTVAR(f1);
     PRINTVAR(f2);
@@ -406,16 +432,13 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
         PRINTVAR(faces[f21]);
     if(f22 != -1)
         PRINTVAR(faces[f22]);
-    int e11 = getSharedEdge(f1, f11);
-    int e12 = getSharedEdge(f1, f12);
-    int e21 = getSharedEdge(f2, f21);
-    int e22 = getSharedEdge(f2, f22);
     PRINTVAR(e11);
     PRINTVAR(e12);
     PRINTVAR(e21);
     PRINTVAR(e22);
     PRINTVAR(v1);
     PRINTVAR(v2);
+    */
     bool moveVertex = true; //by default, move remaining vertex to midpoint of old ones
     //don't want to move or remove a vertex on the map boundary
     if(vertices[v1].isInCorner() || (vertices[v1].isOnBoundary() && !vertices[v2].isInCorner()))
@@ -425,16 +448,12 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
         moveVertex = false;
     }
     if(vertices[v1].isOnBoundary())
-    {
         moveVertex = false;
-    }
     PRINT("Replacing all links to vertex " << v1 << " with " << v2);
     replaceVertexLinks(v1, v2); //note: does not free v1, but does free edgeNum
     //e11.v == e12.v, e21.v == e22.v (only face links different, will change)
     if(moveVertex)
-    {
         vertices[v2].pos = (vertices[v1].pos + vertices[v2].pos) * 0.5f;
-    }
     //mesh no longer contains any links to v1, can safely delete it
     PRINT("Deleting vertex " << v1);
     vertices.dealloc(v1);
@@ -451,18 +470,21 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     //update fxx edge links
     PRINT("Replacing links in face " << f11 << " to edge " << e11 << " with " << e12);
     if(f11 != -1)
-    {
         faces[f11].replaceEdgeLink(e11, e12);
-    }
     if(f11 != f21 && f21 != -1)
     {
         PRINT("Replacing links in face " << f21 << " to edge " << e21 << " with " << e22);
         faces[f21].replaceEdgeLink(e21, e22);
     }
+    //PRINTVAR(faces[f11]);
+    //PRINTVAR(faces[f12]);
+    //PRINTVAR(faces[f22]);
     //now e11 and e21 can be deleted
     PRINT("Deleting edges " << e11 << " and " << e21);
-    fullyDeleteEdge(e11);
-    fullyDeleteEdge(e21);
+    if(e11 != -1)
+        fullyDeleteEdge(e11);
+    if(e21 != -1)
+        fullyDeleteEdge(e21);
     //prepare to remove f1/f2 by updating e12/e22 face links
     PRINT("On edge " << e12 << ", replacing link to face " << f1 << " with " << f11);
     edges[e12].replaceFaceLink(f1, f11);
@@ -471,14 +493,10 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     //nothing links to f1, f2 anymore, delete them
     PRINT("Deleting face " << f1);
     if(f1 != -1)
-    {
         faces.dealloc(f1);
-    }
     PRINT("Deleting face " << f2);
     if(f2 != -1)
-    {
         faces.dealloc(f2);
-    }
 }
 
 void Mesh::boundaryEdgeCollapse(int e)
@@ -525,6 +543,7 @@ void Mesh::boundaryEdgeCollapse(int e)
     //now e1 and e2 are more useful as actual values
     e1 = faces[f].e[e1];
     e2 = faces[f].e[e2];
+    /*
     PRINTVAR(f);
     PRINTVAR(e1);
     PRINTVAR(e2);
@@ -532,6 +551,7 @@ void Mesh::boundaryEdgeCollapse(int e)
     PRINTVAR(faces[f1]);
     PRINTVAR(f2);
     PRINTVAR(faces[f2]);
+     */
     //v1 might be moved, v2 will be deleted
     //don't want to delete a corner vertex
     if(v2corner)
@@ -565,6 +585,23 @@ bool Mesh::collapseConnectivity(int edge)
 
 bool Mesh::collapseFlip(int edge)
 {
+    return true;
+}
+
+bool Mesh::checkBoundaryBridge(int edge)
+{
+    auto& v1 = vertices[edges[edge].v[0]];
+    auto& v2 = vertices[edges[edge].v[1]];
+    if(!(v1.isOnBoundary() && v2.isOnBoundary()))
+        return true;    //at least one not on boundary, ok
+    if(v1.isInCorner() && v2.isInCorner())
+        return false;   //bad!
+    if(v1.isInCorner() || v2.isInCorner())
+        return true;    //ok, if one is in corner, can't bridge across boundaries
+    //v1, v2 both on boundary, and neither on a corner
+    //v1 and v2 either need to have the same x or the same z, otherwise bad
+    if(v1.pos[0] != v2.pos[0] && v1.pos[2] != v2.pos[2])
+        return false;
     return true;
 }
 
@@ -710,10 +747,6 @@ int Mesh::getOtherFace(int f, int e)
 
 int Mesh::getSharedEdge(int f1, int f2)
 {
-    if(f1 == -1 || f2 == -1)
-    {
-        return -1;
-    }
     for(int i = 0; i < 3; i++)
     {
         int edge = faces[f1].e[i];
@@ -890,15 +923,6 @@ void Mesh::fullyDeleteEdge(int e)
     edges.dealloc(e);
 }
 
-void Mesh::mergeEdges(int e1, int e2, int f)
-{
-    //remove the shared face f, and update f's neighbors that share e1 and e2
-    //e1 will be merged into e2, and e1 will be deleted
-    int f1 = getOtherFace(f, e1);
-    int f2 = getOtherFace(f, e2);
-    faces[f1].replaceEdgeLink(e1, e2);
-}
-
 bool Mesh::validFace(int f)
 {
     return f >= 0 && f < faces.capacity && faces.isAllocated(f);
@@ -927,3 +951,21 @@ int Mesh::getMaxFaces()
     return 2 * WORLD_SIZE * WORLD_SIZE;
 }
 
+void Mesh::deepTest(Heightmap& heights, Heightmap& faceValues)
+{
+    simpleLoadHeightmap(heights, faceValues);
+    PRINT("heights is size " << heights.getW());
+    int testEdges = edges.size;
+    faces.clear();
+    edges.clear();
+    vertices.clear();
+    for(int test = 0; test < testEdges; test++)
+    {
+        simpleLoadHeightmap(heights, faceValues);
+        PRINT("");
+        PRINT(">>>>>>> About to attempt an edge collapse of edge " << test);
+        edgeCollapse(test);
+        fullCorrectnessCheck();
+        PRINT("Edge collapse test on " << test << " passed.");
+    }
+}

@@ -102,6 +102,9 @@ public:
     bool collapseConnectivity(int edge); 
     //check that no triangles flip in collapse (without modifying mesh)
     bool collapseFlip(int edge); 
+    //check that the two vertices, if both on map boundary and neither on corner,
+    //make sure that they are on the same boundary (i.e. both along the north boundary)
+    bool checkBoundaryBridge(int edge);
     //get 4 neighboring faces for collapse
     void getNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, int& f22);
     void getBoundaryNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, int& f22);
@@ -114,6 +117,7 @@ public:
     void fullyDeleteEdge(int e); //completely deletes edge. Faces must not link to it!
     void mergeEdges(int e1, int e2, int f); //pass the edges to be merged, and shared face
     void fullCorrectnessCheck();
+    void deepTest(Heightmap& heights, Heightmap& faceValues);
     bool validFace(int f);
     bool validEdge(int e);
     bool validVertex(int v);
