@@ -580,7 +580,20 @@ void Mesh::boundaryEdgeCollapse(int e)
 
 bool Mesh::collapseConnectivity(int edge)
 {
-    return true;
+    int v1 = edges[edge].v[0];
+    int v2 = edges[edge].v[1];
+    //Check that at most, 3 pairs of edges link v1 to v2
+    //this is O(degree^2), there might be a better way (but it probably doesn't matter)
+    int connections = 0;
+    for(auto a1 : vertices[v1].edges)
+    {
+        for(auto a2 : vertices[v2].edges)
+        {
+            if(a1 == a2)
+                connections++;
+        }
+    }
+    return connections <= 3;
 }
 
 bool Mesh::collapseFlip(int edge)
