@@ -19,9 +19,7 @@ Pool<Edge>* Edge::edgeArray = nullptr;
 void Vertex::addEdge(int e)
 {
     if(!hasEdge(e))
-    {
         edges.push_back(e);
-    }
 }
 
 void Vertex::removeEdge(int e)
@@ -64,9 +62,7 @@ bool Vertex::hasEdge(int e)
     for(auto it : edges)
     {
         if(it == e)
-        {
             return true;
-        }
     }
     return false;
 }
@@ -119,13 +115,9 @@ void Edge::replaceVertexLink(int toReplace, int newLink)
 void Edge::replaceFaceLink(int toReplace, int newLink)
 {
     if(f[0] == toReplace)
-    {
         f[0] = newLink;
-    }
     else if(f[1] == toReplace)
-    {
         f[1] = newLink;
-    }
 }
 
 Face::Face()
@@ -229,9 +221,7 @@ void Face::replaceVertexLink(int toReplace, int newLink)
 void Face::checkNormal()
 {
     if(getNorm().y < 0)
-    {
         SWAP(v[0], v[1]);
-    }
 }
 
 Mesh::Mesh() : vertices(getMaxVertices()), edges(getMaxEdges()), faces(getMaxFaces())
@@ -246,7 +236,6 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     PRINT("Constructing tri mesh.");
     //pools are already sized to store all features of the most detailed mesh
     deepTest(heights, faceValues);
-    PRINT("All tests passed.");
     simpleLoadHeightmap(heights, faceValues);
     //Testing edge collapse
     //simplify(faceMatchCutoff);
@@ -300,20 +289,10 @@ void Mesh::simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues)
             int ediag = edges.alloc(Edge(urv, llv, f1, f2));
             //right, if on right edge of map
             if(x == WORLD_SIZE - 1)
-            {
-                DBASSERT(eright == edges.alloc(Edge(urv, lrv, f2, -1)));
-            }
+                edges.alloc(Edge(urv, lrv, f2, -1));
             //bottom, if on bottom edge of map
             if(y == WORLD_SIZE - 1)
-            {
-                int loc = edges.alloc(Edge(llv, lrv, f2, -1));
-                if(ebot != loc)
-                {
-                    PRINT("Expected " << ebot);
-                    PRINT("Actual " << loc);
-                    throw runtime_error("A");
-                }
-            } 
+                edges.alloc(Edge(llv, lrv, f2, -1));
             //Faces (upper-left and lower-right)
             int faceval = faceValues.get(x, y); //both triangles have same value
             //upper-left
@@ -352,21 +331,14 @@ void Mesh::simplify(float faceMatchCutoff)
 
 void Mesh::edgeCollapse(int edgeNum)
 {
-    //First do the validity checks
-    if(!checkBoundaryBridge(edgeNum) || !collapseConnectivity(edgeNum))
-    {
-        PRINT("Edge can't be collapsed because one of the pre-collapse checks failed (OK)");
+    //First do the eligibility checks
+    if(!faceValuesCheck(edgeNum) || !checkBoundaryBridge(edgeNum) || !collapseConnectivity(edgeNum))
         return;
-    }
     auto& edge = edges[edgeNum];
     if(edge.f[0] == -1 || edge.f[1] == -1)
-    {
         boundaryEdgeCollapse(edgeNum);
-    }
     else
-    {
         interiorEdgeCollapse(edgeNum);
-    }
 }
 
 /* Mesh utility functions */
@@ -414,31 +386,6 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     e12 = faces[f1].e[e12];
     e21 = faces[f2].e[e21];
     e22 = faces[f2].e[e22];
-    /*
-    PRINTVAR(edgeNum);
-    PRINTVAR(f1);
-    PRINTVAR(f2);
-    PRINTVAR(f11);
-    PRINTVAR(f12);
-    PRINTVAR(f21);
-    PRINTVAR(f22);
-    PRINTVAR(faces[f1]);
-    PRINTVAR(faces[f2]);
-    if(f11 != -1)
-        PRINTVAR(faces[f11]);
-    if(f12 != -1)
-        PRINTVAR(faces[f12]);
-    if(f21 != -1)
-        PRINTVAR(faces[f21]);
-    if(f22 != -1)
-        PRINTVAR(faces[f22]);
-    PRINTVAR(e11);
-    PRINTVAR(e12);
-    PRINTVAR(e21);
-    PRINTVAR(e22);
-    PRINTVAR(v1);
-    PRINTVAR(v2);
-    */
     bool moveVertex = true; //by default, move remaining vertex to midpoint of old ones
     //don't want to move or remove a vertex on the map boundary
     if(vertices[v1].isInCorner() || (vertices[v1].isOnBoundary() && !vertices[v2].isInCorner()))
@@ -449,52 +396,29 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     }
     if(vertices[v1].isOnBoundary())
         moveVertex = false;
-    PRINT("Replacing all links to vertex " << v1 << " with " << v2);
     replaceVertexLinks(v1, v2); //note: does not free v1, but does free edgeNum
     //e11.v == e12.v, e21.v == e22.v (only face links different, will change)
     if(moveVertex)
         vertices[v2].pos = (vertices[v1].pos + vertices[v2].pos) * 0.5f;
     //mesh no longer contains any links to v1, can safely delete it
-    PRINT("Deleting vertex " << v1);
     vertices.dealloc(v1);
-    PRINT("Edges containing v2: ");
-    for(auto i : vertices[v2].edges)
-        cout << i << " ";
-    PRINT("");
-    PRINT("Removing edge " << edgeNum << " from vertex " << v2);
     vertices[v2].removeEdge(edgeNum);
-    PRINT("Edges containing v2: ");
-    for(auto i : vertices[v2].edges)
-        cout << i << " ";
-    PRINT("");
     //update fxx edge links
-    PRINT("Replacing links in face " << f11 << " to edge " << e11 << " with " << e12);
     if(f11 != -1)
         faces[f11].replaceEdgeLink(e11, e12);
     if(f11 != f21 && f21 != -1)
-    {
-        PRINT("Replacing links in face " << f21 << " to edge " << e21 << " with " << e22);
         faces[f21].replaceEdgeLink(e21, e22);
-    }
-    //PRINTVAR(faces[f11]);
-    //PRINTVAR(faces[f12]);
-    //PRINTVAR(faces[f22]);
     //now e11 and e21 can be deleted
-    PRINT("Deleting edges " << e11 << " and " << e21);
     if(e11 != -1)
         fullyDeleteEdge(e11);
     if(e21 != -1)
         fullyDeleteEdge(e21);
     //prepare to remove f1/f2 by updating e12/e22 face links
-    PRINT("On edge " << e12 << ", replacing link to face " << f1 << " with " << f11);
     edges[e12].replaceFaceLink(f1, f11);
-    PRINT("On edge " << e22 << ", replacing link to face " << f2 << " with " << f21);
     edges[e22].replaceFaceLink(f2, f21);
     //nothing links to f1, f2 anymore, delete them
-    PRINT("Deleting face " << f1);
     if(f1 != -1)
         faces.dealloc(f1);
-    PRINT("Deleting face " << f2);
     if(f2 != -1)
         faces.dealloc(f2);
 }
@@ -504,11 +428,8 @@ void Mesh::boundaryEdgeCollapse(int e)
     auto& edge = edges[e];
     int f = edge.f[0];
     if(f == -1)
-    {
         f = edge.f[1];
-    }
     Face& face = faces[f];
-    PRINTVAR(face);
     int v1 = edge.v[0];
     int v2 = edge.v[1];
     //Already know on boundary because edge only has one face adjacent
@@ -518,24 +439,18 @@ void Mesh::boundaryEdgeCollapse(int e)
     bool v1corner = vertices[v1].isInCorner();
     bool v2corner = vertices[v2].isInCorner();
     if(v1corner && v2corner)
-    {
         return;
-    }
     bool moveVertex = !(v1corner || v2corner);
     int e1, e2, f1, f2;
     for(int i = 0; i < 3; i++)
     {
         if(face.e[i] != e)
-        {
             e1 = i;
-        }
     }
     for(int i = 0; i < 3; i++)
     {
         if(face.e[i] != e && face.e[i] != face.e[e1])
-        {
             e2 = i;
-        }
     }
     //have !! INDICES IN F.E !! of e1, e2 (NOT the actual pointers)
     f1 = getOtherFace(f, e1);
@@ -543,39 +458,54 @@ void Mesh::boundaryEdgeCollapse(int e)
     //now e1 and e2 are more useful as actual values
     e1 = faces[f].e[e1];
     e2 = faces[f].e[e2];
-    /*
-    PRINTVAR(f);
-    PRINTVAR(e1);
-    PRINTVAR(e2);
-    PRINTVAR(f1);
-    PRINTVAR(faces[f1]);
-    PRINTVAR(f2);
-    PRINTVAR(faces[f2]);
-     */
     //v1 might be moved, v2 will be deleted
     //don't want to delete a corner vertex
     if(v2corner)
-    {
         SWAP(v1, v2);
-    }
-    PRINT("Replacing all links to vertex " << v2 << " with " << v1);
     replaceVertexLinks(v2, v1); //fixes all E -> V and F -> V links
     if(moveVertex)
-    {
         vertices[v1].pos = (vertices[v1].pos + vertices[v2].pos) / 2.0f;
-    }
     vertices.dealloc(v2);
     vertices[v1].removeEdge(e);
     //e2 will be merged onto e1, and e1 will be deleted
     if(f1 != -1)
-    {
-        PRINT("f1 is " << f1 << ", so attempting to replace its link to edge " << e1 << " with " << e2);
-        PRINTVAR(faces[f1]);
         faces[f1].replaceEdgeLink(e1, e2);
-    }
     fullyDeleteEdge(e1);
     edges[e2].replaceFaceLink(f, f1);
     faces.dealloc(f);
+}
+
+bool Mesh::faceValuesCheck(int edgeNum)
+{
+    auto& edge = edges[edgeNum];
+    int v1 = edge.v[0];
+    int v2 = edge.v[1];
+    //make sure that all triangles containing v1 or v2 have the same face value
+    int goodFace = edge.f[0] == -1 ? edge.f[1] : edge.f[0];
+    auto goodVal = faces[goodFace].value;
+    //if a single face scalar is different than
+    //goodVal in the fans around v1 and v2, return false
+    for(auto adj : vertices[v1].edges)
+    {
+        //determine the indices of the faces to check
+        int check1 = edges[adj].f[0];
+        int check2 = edges[adj].f[1];
+        if(check1 != -1 && faces[check1].value != goodVal)
+            return false;
+        if(check2 != -1 && faces[check2].value != goodVal)
+            return false;
+    }
+    for(auto adj : vertices[v2].edges)
+    {
+        //determine the indices of the faces to check
+        int check1 = edges[adj].f[0];
+        int check2 = edges[adj].f[1];
+        if(check1 != -1 && faces[check1].value != goodVal)
+            return false;
+        if(check2 != -1 && faces[check2].value != goodVal)
+            return false;
+    }
+    return true;
 }
 
 bool Mesh::collapseConnectivity(int edge)
@@ -967,7 +897,6 @@ int Mesh::getMaxFaces()
 void Mesh::deepTest(Heightmap& heights, Heightmap& faceValues)
 {
     simpleLoadHeightmap(heights, faceValues);
-    PRINT("heights is size " << heights.getW());
     int testEdges = edges.size;
     faces.clear();
     edges.clear();
@@ -975,10 +904,8 @@ void Mesh::deepTest(Heightmap& heights, Heightmap& faceValues)
     for(int test = 0; test < testEdges; test++)
     {
         simpleLoadHeightmap(heights, faceValues);
-        PRINT("");
-        PRINT(">>>>>>> About to attempt an edge collapse of edge " << test);
         edgeCollapse(test);
         fullCorrectnessCheck();
-        PRINT("Edge collapse test on " << test << " passed.");
     }
+    PRINT("*** Tests on all edges passed ***");
 }

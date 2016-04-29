@@ -98,6 +98,7 @@ public:
     int hmVertIndex(int x, int y);
     int hmEdgeIndex(int x, int y, EdgeDir which);
     int hmFaceIndex(int x, int y, FaceDir which);
+    bool faceValuesCheck(int edge);
     //check connectivity ok for edge collapse (no holes/overlaps will happen)
     bool collapseConnectivity(int edge); 
     //check that no triangles flip in collapse (without modifying mesh)
