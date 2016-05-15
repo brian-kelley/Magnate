@@ -235,10 +235,9 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
 {
     PRINT("Constructing tri mesh.");
     //pools are already sized to store all features of the most detailed mesh
-    deepTest(heights, faceValues);
     simpleLoadHeightmap(heights, faceValues);
     //Testing edge collapse
-    //simplify(faceMatchCutoff);
+    simplify(faceMatchCutoff);
     PRINT("Done with mesh.");
 }
 
@@ -306,6 +305,8 @@ void Mesh::simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues)
 void Mesh::simplify(float faceMatchCutoff)
 {
     int changes = 1;
+    int iteration = 0;
+    int collapses = 0;
     while(changes)
     {
         changes = 0;
@@ -313,32 +314,39 @@ void Mesh::simplify(float faceMatchCutoff)
         {
             auto& edge = *it;
             //get unit normals for faces sharing this edge
-            auto& f1 = faces[edge.f[0]];
-            auto& f2 = faces[edge.f[1]];
-            if(f1.value != f2.value)
-                continue;
-            auto dotprod = dot(f1.getNorm(), f2.getNorm());
-            if(dotprod < faceMatchCutoff)
-                continue;
-            //check that geometric conditions are met
-            if(!collapseConnectivity(it.loc) || !collapseFlip(it.loc))
-                continue;
-            edgeCollapse(it.loc);
-            changes++;
+            if(edge.f[0] != -1 && edge.f[1] != -1)
+            {
+                auto& f1 = faces[edge.f[0]];
+                auto& f2 = faces[edge.f[1]];
+                auto dotprod = dot(f1.getNorm(), f2.getNorm());
+                if(dotprod < faceMatchCutoff)
+                    continue;
+            }
+            if(edgeCollapse(it.loc))
+            {
+                changes++;
+                if(collapses++ > 100)
+                    fullCorrectnessCheck();
+            }
         }
+        iteration++;
+        PRINT("Completed simplification iteration " << iteration);
     }
+    fullCorrectnessCheck();
 }
 
-void Mesh::edgeCollapse(int edgeNum)
+bool Mesh::edgeCollapse(int edgeNum)
 {
     //First do the eligibility checks
-    if(!faceValuesCheck(edgeNum) || !checkBoundaryBridge(edgeNum) || !collapseConnectivity(edgeNum))
-        return;
+    //if(!faceValuesCheck(edgeNum) || !checkBoundaryBridge(edgeNum) || !collapseConnectivity(edgeNum))
+    if(!checkBoundaryBridge(edgeNum) || !collapseConnectivity(edgeNum))
+        return false;
     auto& edge = edges[edgeNum];
     if(edge.f[0] == -1 || edge.f[1] == -1)
         boundaryEdgeCollapse(edgeNum);
     else
         interiorEdgeCollapse(edgeNum);
+    return true;
 }
 
 /* Mesh utility functions */
@@ -452,7 +460,7 @@ void Mesh::boundaryEdgeCollapse(int e)
         if(face.e[i] != e && face.e[i] != face.e[e1])
             e2 = i;
     }
-    //have !! INDICES IN F.E !! of e1, e2 (NOT the actual pointers)
+    //have indices within Face::e of e1, e2 (NOT the actual pointers)
     f1 = getOtherFace(f, e1);
     f2 = getOtherFace(f, e2);
     //now e1 and e2 are more useful as actual values
@@ -465,8 +473,6 @@ void Mesh::boundaryEdgeCollapse(int e)
     replaceVertexLinks(v2, v1); //fixes all E -> V and F -> V links
     if(moveVertex)
         vertices[v1].pos = (vertices[v1].pos + vertices[v2].pos) / 2.0f;
-    vertices.dealloc(v2);
-    vertices[v1].removeEdge(e);
     //e2 will be merged onto e1, and e1 will be deleted
     if(f1 != -1)
         faces[f1].replaceEdgeLink(e1, e2);
@@ -488,6 +494,7 @@ bool Mesh::faceValuesCheck(int edgeNum)
     for(auto adj : vertices[v1].edges)
     {
         //determine the indices of the faces to check
+        DBASSERT(edges.isAllocated(adj))
         int check1 = edges[adj].f[0];
         int check2 = edges[adj].f[1];
         if(check1 != -1 && faces[check1].value != goodVal)
@@ -498,6 +505,7 @@ bool Mesh::faceValuesCheck(int edgeNum)
     for(auto adj : vertices[v2].edges)
     {
         //determine the indices of the faces to check
+        DBASSERT(edges.isAllocated(adj))
         int check1 = edges[adj].f[0];
         int check2 = edges[adj].f[1];
         if(check1 != -1 && faces[check1].value != goodVal)
@@ -528,7 +536,7 @@ bool Mesh::collapseConnectivity(int edge)
 
 bool Mesh::collapseFlip(int edge)
 {
-    return true;
+    return edge != -1;
 }
 
 bool Mesh::checkBoundaryBridge(int edge)

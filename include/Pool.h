@@ -21,6 +21,7 @@ class Pool
         T& operator[](int index);
         int alloc();
         int alloc(T val);
+        void allocIndex(int index);
         void dealloc(int index);
         void dealloc(T* ptr);
         void clear();
@@ -111,6 +112,14 @@ int Pool<T>::alloc(T val)
     int loc = alloc();
     data[loc] = val;
     return loc;
+}
+
+template<typename T>
+void Pool<T>::allocIndex(int index)
+{
+    allocMap[index] = true;
+    size++;
+    new(&data[index]) T;
 }
 
 template<typename T>

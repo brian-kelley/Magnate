@@ -84,7 +84,7 @@ public:
     void initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMatchCutoff = 0.96);
     void simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues);
     void simplify(float faceMatchCutoff);
-    void edgeCollapse(int edge);
+    bool edgeCollapse(int edge);    //returns false if the operation was aborted because of geometry
     int getMaxVertices();
     int getMaxEdges();
     int getMaxFaces();

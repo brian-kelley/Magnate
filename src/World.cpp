@@ -45,12 +45,13 @@ void World::init(std::string saveName)
     else
     {
         //EDGE COLLAPSE TEST - NOT DOING TERRAIN GEN
+        /*
         for(int i = 0; i < WORLD_SIZE * WORLD_SIZE; i++)
         {
             height.buf[i] = 0;
             biomes.buf[i] = WATER;
-        }
-        //TerrainGen tg(height, biomes);
+        }*/
+        TerrainGen tg(height, biomes);
     }
     RandomUtils::seed(seed);
     mesh.initWorldMesh(height, biomes);
