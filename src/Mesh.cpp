@@ -95,6 +95,13 @@ bool Edge::hasVert(int query)
     return v[0] == query || v[1] == query;
 }
 
+float Edge::getLength()
+{
+    auto& v1 = (*vertArray)[v[0]].pos;
+    auto& v2 = (*vertArray)[v[1]].pos;
+    return glm::distance(v1, v2);
+}
+
 void Edge::replaceVertexLink(int toReplace, int newLink)
 {
     if(v[0] == toReplace)
@@ -325,8 +332,8 @@ void Mesh::simplify(float faceMatchCutoff)
             if(edgeCollapse(it.loc))
             {
                 changes++;
-                if(collapses++ > 100)
-                    fullCorrectnessCheck();
+                if(collapses++ > 5000)
+                    return;
             }
         }
         iteration++;
@@ -339,7 +346,9 @@ bool Mesh::edgeCollapse(int edgeNum)
 {
     //First do the eligibility checks
     //if(!faceValuesCheck(edgeNum) || !checkBoundaryBridge(edgeNum) || !collapseConnectivity(edgeNum))
-    if(!checkBoundaryBridge(edgeNum) || !collapseConnectivity(edgeNum))
+    if(!checkBoundaryBridge(edgeNum) ||
+       !collapseConnectivity(edgeNum) ||
+       !collapseTriangleSides(edgeNum))
         return false;
     auto& edge = edges[edgeNum];
     if(edge.f[0] == -1 || edge.f[1] == -1)
@@ -347,6 +356,11 @@ bool Mesh::edgeCollapse(int edgeNum)
     else
         interiorEdgeCollapse(edgeNum);
     return true;
+}
+
+void retriangulate(int vertexToRemove)
+{
+
 }
 
 /* Mesh utility functions */
@@ -532,6 +546,27 @@ bool Mesh::collapseConnectivity(int edge)
         }
     }
     return connections <= 3;
+}
+
+bool Mesh::collapseTriangleSides(int edge)
+{
+    float edgeLen = edges[edge].getLength();
+    //edgeLen must be shorter than all other edges
+    int faceIndices[2] = {edges[edge].f[0], edges[edge].f[1]};
+    for(int i = 0; i < 2; i++)
+    {
+        if(faceIndices[i] == -1)
+            continue;
+        Face& f = faces[faceIndices[i]];
+        for(int j = 0; j < 3; j++)
+        {
+            if(f.e[j] == edge)
+                continue;
+            if(edgeLen > edges[f.e[j]].getLength())
+                return false;
+        }
+    }
+    return true;
 }
 
 bool Mesh::collapseFlip(int edge)

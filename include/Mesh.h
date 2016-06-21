@@ -36,6 +36,7 @@ namespace MeshTypes
         int f[2]; //triangles containing the edge
         bool hasVert(int query);
         bool hasFace(int query);
+        float getLength();
         void replaceVertexLink(int toReplace, int newLink);
         void replaceFaceLink(int toReplace, int newLink);
         static Pool<Vertex>* vertArray;
@@ -85,6 +86,7 @@ public:
     void simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues);
     void simplify(float faceMatchCutoff);
     bool edgeCollapse(int edge);    //returns false if the operation was aborted because of geometry
+    void retriangulate(int vertexToRemove);    //delete a vertex and then fill in the hole
     int getMaxVertices();
     int getMaxEdges();
     int getMaxFaces();
@@ -106,6 +108,8 @@ public:
     //check that the two vertices, if both on map boundary and neither on corner,
     //make sure that they are on the same boundary (i.e. both along the north boundary)
     bool checkBoundaryBridge(int edge);
+    //check the neighboring triangle side lengths to make sure collapse is an improvement
+    bool collapseTriangleSides(int edge);
     //get 4 neighboring faces for collapse
     void getNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, int& f22);
     void getBoundaryNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, int& f22);
