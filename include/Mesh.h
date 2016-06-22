@@ -87,6 +87,7 @@ public:
     void simplify(float faceMatchCutoff);
     bool edgeCollapse(int edge);    //returns false if the operation was aborted because of geometry
     void retriangulate(int vertexToRemove);    //delete a vertex and then fill in the hole
+    void fixTriFlips(int e1, int e2);
     int getMaxVertices();
     int getMaxEdges();
     int getMaxFaces();
@@ -101,15 +102,16 @@ public:
     int hmEdgeIndex(int x, int y, EdgeDir which);
     int hmFaceIndex(int x, int y, FaceDir which);
     bool faceValuesCheck(int edge);
+    //NOTE: connectivity, boundary bridge, tri sides and flip checks return true if ok
     //check connectivity ok for edge collapse (no holes/overlaps will happen)
     bool collapseConnectivity(int edge); 
-    //check that no triangles flipped in collapse (pass e11/e22)
-    bool collapseFlip(int e1, int e2); 
     //check that the two vertices, if both on map boundary and neither on corner,
     //make sure that they are on the same boundary (i.e. both along the north boundary)
     bool checkBoundaryBridge(int edge);
     //check the neighboring triangle side lengths to make sure collapse is an improvement
     bool collapseTriangleSides(int edge);
+    //check for triangle flips, don't modify mesh
+    bool checkFlips(int e1, int e2);
     //get 4 neighboring faces for collapse
     void getNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, int& f22);
     void getBoundaryNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, int& f22);

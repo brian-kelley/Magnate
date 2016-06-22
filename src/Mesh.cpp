@@ -295,40 +295,42 @@ void Mesh::simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues)
 void Mesh::simplify(float faceMatchCutoff)
 {
     clock_t start = clock();
-    int collapses = 0;
-    for(auto it = edges.begin(); it != edges.end(); it++)
+    int collapses = 1;
+    while(collapses)
     {
-        auto& edge = *it;
-        //get unit normals for faces sharing this edge
-        if(edge.f[0] != -1 && edge.f[1] != -1)
+        collapses = 0;
+        for(auto it = edges.begin(); it != edges.end(); it++)
         {
-            auto& f1 = faces[edge.f[0]];
-            auto& f2 = faces[edge.f[1]];
-            auto dotprod = dot(f1.getNorm(), f2.getNorm());
-            if(dotprod < faceMatchCutoff)
-                continue;
+            auto& edge = *it;
+            //get unit normals for faces sharing this edge
+            if(edge.f[0] != -1 && edge.f[1] != -1)
+            {
+                auto& f1 = faces[edge.f[0]];
+                auto& f2 = faces[edge.f[1]];
+                auto dotprod = dot(f1.getNorm(), f2.getNorm());
+                if(dotprod < faceMatchCutoff)
+                    continue;
+            }
+            if(edgeCollapse(it.loc))
+            {
+                collapses++;
+            }
         }
-        if(edgeCollapse(it.loc))
-        {
-            collapses++;
-            if(collapses == 138000)
-                break;
-        }
+        PRINT("Performed " << collapses << " collapses in " << double(clock() - start) / CLOCKS_PER_SEC << " s.");
+        return;
     }
-    PRINT("Performed " << collapses << " collapses in " << double(clock() - start) / CLOCKS_PER_SEC << " s.");
     //fullCorrectnessCheck();
 }
 
 bool Mesh::edgeCollapse(int edgeNum)
 {
     //First do the eligibility checks
-    //if(!faceValuesCheck(edgeNum) || !checkBoundaryBridge(edgeNum) || !collapseConnectivity(edgeNum))
     if(!checkBoundaryBridge(edgeNum) ||
        !collapseConnectivity(edgeNum) ||
        !collapseTriangleSides(edgeNum))
         return false;
     auto& edge = edges[edgeNum];
-    if(edge.f[0] == -1 || edge.f[1] == -1)
+    if(vertices[edge.v[0]].boundary && vertices[edge.v[1]].boundary)
         boundaryEdgeCollapse(edgeNum);
     else
         interiorEdgeCollapse(edgeNum);
@@ -384,6 +386,10 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     e12 = faces[f1].e[e12];
     e21 = faces[f2].e[e21];
     e22 = faces[f2].e[e22];
+    //Fix triangle vertex ordering so that triangle flips can be
+    //detected after the collapse
+    //note: vertex ordering for faces doesn't affect edges at all
+    //fixTriFlips(e12, e22);
     bool moveVertex = true; //by default, move remaining vertex to midpoint of old ones
     //don't want to move or remove a vertex on the map boundary
     if(vertices[v1].corner || (vertices[v1].boundary && !vertices[v2].corner))
@@ -392,9 +398,11 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
         SWAP(v1, v2);
         moveVertex = false;
     }
-    if(vertices[v1].boundary)
+    if(vertices[v2].boundary)
         moveVertex = false;
     replaceVertexLinks(v1, v2); //note: does not free v1, but does free edgeNum
+    vertices[v2].boundary |= vertices[v1].boundary;
+    vertices[v2].corner |= vertices[v1].corner;
     //e11.v == e12.v, e21.v == e22.v (only face links different, will change)
     if(moveVertex)
         vertices[v2].pos = (vertices[v1].pos + vertices[v2].pos) * 0.5f;
@@ -419,12 +427,13 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
         faces.dealloc(f1);
     if(f2 != -1)
         faces.dealloc(f2);
-    //Check for triangle flip
-    if(!vertices[v2].boundary && collapseFlip(e12, e22))
+    fixTriFlips(e12, e22);
+    /*
+    if(!checkFlips(e12, e22))
     {
-        //delete v2, re-triangulate the hole
         retriangulate(v2);
     }
+    */
 }
 
 void Mesh::boundaryEdgeCollapse(int e)
@@ -456,6 +465,8 @@ void Mesh::boundaryEdgeCollapse(int e)
         if(face.e[i] != e && face.e[i] != face.e[e1])
             e2 = i;
     }
+    //do tri flip fix before doing collapse so it can be detected later
+    //fixTriFlips(e2, -1);
     //have indices within Face::e of e1, e2 (NOT the actual pointers)
     f1 = getOtherFace(f, e1);
     f2 = getOtherFace(f, e2);
@@ -467,6 +478,8 @@ void Mesh::boundaryEdgeCollapse(int e)
     if(v2corner)
         SWAP(v1, v2);
     replaceVertexLinks(v2, v1); //fixes all E -> V and F -> V links
+    vertices[v1].boundary |= vertices[v2].boundary;
+    vertices[v1].corner |= vertices[v2].corner;
     if(moveVertex)
         vertices[v1].pos = (vertices[v1].pos + vertices[v2].pos) / 2.0f;
     //e2 will be merged onto e1, and e1 will be deleted
@@ -475,12 +488,13 @@ void Mesh::boundaryEdgeCollapse(int e)
     fullyDeleteEdge(e1);
     edges[e2].replaceFaceLink(f, f1);
     faces.dealloc(f);
-    //Now that collapse is done, do tri flip check
-    if(!vertices[v1].boundary && collapseFlip(e2, -1))
+    /*
+    if(!checkFlips(e2, -1))
     {
-        //delete v1 (the merged vertex), then re-triangulate the hole
         retriangulate(v1);
     }
+    */
+    fixTriFlips(e2, -1);
 }
 
 bool Mesh::faceValuesCheck(int edgeNum)
@@ -557,7 +571,45 @@ bool Mesh::collapseTriangleSides(int edge)
     return true;
 }
 
-bool Mesh::collapseFlip(int e1, int e2)
+bool Mesh::checkBoundaryBridge(int edge)
+{
+    auto& v1 = vertices[edges[edge].v[0]];
+    auto& v2 = vertices[edges[edge].v[1]];
+    if(!(v1.boundary && v2.boundary))
+        return true;    //at least one not on boundary, ok
+    if(v1.corner && v2.corner)
+        return false;   //bad!
+    if(v1.corner || v2.corner)
+        return true;    //ok, if one is in corner, can't bridge across boundaries
+    //v1, v2 both on boundary, and neither on a corner
+    //v1 and v2 either need to have the same x or the same z, otherwise bad
+    if(v1.pos[0] != v2.pos[0] && v1.pos[2] != v2.pos[2])
+        return false;
+    return true;
+}
+
+void Mesh::fixTriFlips(int e1, int e2)
+{
+    //Check that both faces next to edge still face right way
+    int checkEdges[2] = {e1, e2};
+    int checkFaces[2];
+    for(int i = 0; i < 2; i++)
+    {
+        if(checkEdges[i] == -1)
+            continue;
+        checkFaces[0] = edges[checkEdges[i]].f[0];
+        checkFaces[1] = edges[checkEdges[i]].f[1];
+        for(int j = 0; j < 2; j++)
+        {
+            if(checkFaces[j] == -1)
+                continue;
+            Face& f = faces[checkFaces[j]];
+            f.checkNormal();
+        }
+    }
+}
+
+bool Mesh::checkFlips(int e1, int e2)
 {
     //Check that both faces next to edge still face right way
     int checkEdges[2] = {e1, e2};
@@ -577,23 +629,6 @@ bool Mesh::collapseFlip(int e1, int e2)
                 return false;
         }
     }
-    return true;
-}
-
-bool Mesh::checkBoundaryBridge(int edge)
-{
-    auto& v1 = vertices[edges[edge].v[0]];
-    auto& v2 = vertices[edges[edge].v[1]];
-    if(!(v1.boundary && v2.boundary))
-        return true;    //at least one not on boundary, ok
-    if(v1.corner && v2.corner)
-        return false;   //bad!
-    if(v1.corner || v2.corner)
-        return true;    //ok, if one is in corner, can't bridge across boundaries
-    //v1, v2 both on boundary, and neither on a corner
-    //v1 and v2 either need to have the same x or the same z, otherwise bad
-    if(v1.pos[0] != v2.pos[0] && v1.pos[2] != v2.pos[2])
-        return false;
     return true;
 }
 
