@@ -34,29 +34,6 @@ void Vertex::removeEdge(int e)
     }
 }
 
-bool Vertex::isOnBoundary()
-{
-    return minWorldX(pos) || maxWorldX(pos) || minWorldY(pos) || maxWorldY(pos);
-}
-
-bool Vertex::isInCorner()
-{
-    int score = 0;
-    if(minWorldX(pos))
-        score++;
-    if(maxWorldX(pos))
-        score++;
-    if(minWorldY(pos))
-        score++;
-    if(maxWorldY(pos))
-        score++;
-    //if score is 0, point in interior
-    //if score is 1, point on edge 
-    //if score is 2, point on corner
-    DBASSERT(score <= 2);
-    return score == 2;
-}
-
 bool Vertex::hasEdge(int e)
 {
     for(auto it : edges)
@@ -261,10 +238,16 @@ void Mesh::simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues)
     {
         for(int x = 0; x <= WORLD_SIZE; x++)
         {
-            Vertex loc;
-            loc.pos = Coord::tileToWorld(x, heights.get(x, y), y).xyz();
-            vertices.alloc(loc);
-            //can't add edges yet
+            Vertex v;
+            v.pos = Coord::tileToWorld(x, heights.get(x, y), y).xyz();
+            //set boundary/corner flags
+            v.boundary = false;
+            v.corner = false;
+            if(y == 0 || y == WORLD_SIZE || x == 0 || x == WORLD_SIZE)
+                v.boundary = true;
+            if((y == 0 || y == WORLD_SIZE) && (x == 0 || x == WORLD_SIZE))
+                v.corner = true;
+            vertices.alloc(v);
         }
     }
     //Add edges and faces quad-by-quad
@@ -311,35 +294,29 @@ void Mesh::simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues)
 
 void Mesh::simplify(float faceMatchCutoff)
 {
-    int changes = 1;
-    int iteration = 0;
+    clock_t start = clock();
     int collapses = 0;
-    while(changes)
+    for(auto it = edges.begin(); it != edges.end(); it++)
     {
-        changes = 0;
-        for(auto it = edges.begin(); it != edges.end(); it++)
+        auto& edge = *it;
+        //get unit normals for faces sharing this edge
+        if(edge.f[0] != -1 && edge.f[1] != -1)
         {
-            auto& edge = *it;
-            //get unit normals for faces sharing this edge
-            if(edge.f[0] != -1 && edge.f[1] != -1)
-            {
-                auto& f1 = faces[edge.f[0]];
-                auto& f2 = faces[edge.f[1]];
-                auto dotprod = dot(f1.getNorm(), f2.getNorm());
-                if(dotprod < faceMatchCutoff)
-                    continue;
-            }
-            if(edgeCollapse(it.loc))
-            {
-                changes++;
-                if(collapses++ > 5000)
-                    return;
-            }
+            auto& f1 = faces[edge.f[0]];
+            auto& f2 = faces[edge.f[1]];
+            auto dotprod = dot(f1.getNorm(), f2.getNorm());
+            if(dotprod < faceMatchCutoff)
+                continue;
         }
-        iteration++;
-        PRINT("Completed simplification iteration " << iteration);
+        if(edgeCollapse(it.loc))
+        {
+            collapses++;
+            if(collapses == 138000)
+                break;
+        }
     }
-    fullCorrectnessCheck();
+    PRINT("Performed " << collapses << " collapses in " << double(clock() - start) / CLOCKS_PER_SEC << " s.");
+    //fullCorrectnessCheck();
 }
 
 bool Mesh::edgeCollapse(int edgeNum)
@@ -358,9 +335,8 @@ bool Mesh::edgeCollapse(int edgeNum)
     return true;
 }
 
-void retriangulate(int vertexToRemove)
+void Mesh::retriangulate(int vertexToRemove)
 {
-
 }
 
 /* Mesh utility functions */
@@ -371,7 +347,7 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     auto& edge = edges[edgeNum];
     int v1 = edge.v[0];
     int v2 = edge.v[1];
-    if(vertices[v1].isOnBoundary() && vertices[v2].isOnBoundary())
+    if(vertices[v1].boundary && vertices[v2].boundary)
     {
         //make sure v1/v2 on same boundary, otherwise can't do collapse
         auto& pos1 = vertices[v1].pos;
@@ -410,13 +386,13 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     e22 = faces[f2].e[e22];
     bool moveVertex = true; //by default, move remaining vertex to midpoint of old ones
     //don't want to move or remove a vertex on the map boundary
-    if(vertices[v1].isInCorner() || (vertices[v1].isOnBoundary() && !vertices[v2].isInCorner()))
+    if(vertices[v1].corner || (vertices[v1].boundary && !vertices[v2].corner))
     {
         //keep v1, delete v2 instead (just by swapping names)
         SWAP(v1, v2);
         moveVertex = false;
     }
-    if(vertices[v1].isOnBoundary())
+    if(vertices[v1].boundary)
         moveVertex = false;
     replaceVertexLinks(v1, v2); //note: does not free v1, but does free edgeNum
     //e11.v == e12.v, e21.v == e22.v (only face links different, will change)
@@ -443,6 +419,12 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
         faces.dealloc(f1);
     if(f2 != -1)
         faces.dealloc(f2);
+    //Check for triangle flip
+    if(!vertices[v2].boundary && collapseFlip(e12, e22))
+    {
+        //delete v2, re-triangulate the hole
+        retriangulate(v2);
+    }
 }
 
 void Mesh::boundaryEdgeCollapse(int e)
@@ -458,8 +440,8 @@ void Mesh::boundaryEdgeCollapse(int e)
     //  but must check that at most one of v1, v2 is in a corner
     //  because can't collapse the boundary of the mesh
     //Also decide whether to move the merged vertex
-    bool v1corner = vertices[v1].isInCorner();
-    bool v2corner = vertices[v2].isInCorner();
+    bool v1corner = vertices[v1].corner;
+    bool v2corner = vertices[v2].corner;
     if(v1corner && v2corner)
         return;
     bool moveVertex = !(v1corner || v2corner);
@@ -493,6 +475,12 @@ void Mesh::boundaryEdgeCollapse(int e)
     fullyDeleteEdge(e1);
     edges[e2].replaceFaceLink(f, f1);
     faces.dealloc(f);
+    //Now that collapse is done, do tri flip check
+    if(!vertices[v1].boundary && collapseFlip(e2, -1))
+    {
+        //delete v1 (the merged vertex), then re-triangulate the hole
+        retriangulate(v1);
+    }
 }
 
 bool Mesh::faceValuesCheck(int edgeNum)
@@ -569,20 +557,38 @@ bool Mesh::collapseTriangleSides(int edge)
     return true;
 }
 
-bool Mesh::collapseFlip(int edge)
+bool Mesh::collapseFlip(int e1, int e2)
 {
-    return edge != -1;
+    //Check that both faces next to edge still face right way
+    int checkEdges[2] = {e1, e2};
+    int checkFaces[2];
+    for(int i = 0; i < 2; i++)
+    {
+        if(checkEdges[i] == -1)
+            continue;
+        checkFaces[0] = edges[checkEdges[i]].f[0];
+        checkFaces[1] = edges[checkEdges[i]].f[1];
+        for(int j = 0; j < 2; j++)
+        {
+            if(checkFaces[j] == -1)
+                continue;
+            Face& f = faces[checkFaces[j]];
+            if(f.getNorm().y < 0)
+                return false;
+        }
+    }
+    return true;
 }
 
 bool Mesh::checkBoundaryBridge(int edge)
 {
     auto& v1 = vertices[edges[edge].v[0]];
     auto& v2 = vertices[edges[edge].v[1]];
-    if(!(v1.isOnBoundary() && v2.isOnBoundary()))
+    if(!(v1.boundary && v2.boundary))
         return true;    //at least one not on boundary, ok
-    if(v1.isInCorner() && v2.isInCorner())
+    if(v1.corner && v2.corner)
         return false;   //bad!
-    if(v1.isInCorner() || v2.isInCorner())
+    if(v1.corner || v2.corner)
         return true;    //ok, if one is in corner, can't bridge across boundaries
     //v1, v2 both on boundary, and neither on a corner
     //v1 and v2 either need to have the same x or the same z, otherwise bad

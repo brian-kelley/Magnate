@@ -22,10 +22,10 @@ namespace MeshTypes
     {
         Vec3 pos;
         vector<int> edges;
+        bool boundary;
+        bool corner;
         void addEdge(int e);
         void removeEdge(int e);
-        bool isOnBoundary();    //is the vertex on the world boundary?
-        bool isInCorner();      //is the vertex at a corner of the world?
         bool hasEdge(int e);
     };
     struct Edge
@@ -103,8 +103,8 @@ public:
     bool faceValuesCheck(int edge);
     //check connectivity ok for edge collapse (no holes/overlaps will happen)
     bool collapseConnectivity(int edge); 
-    //check that no triangles flip in collapse (without modifying mesh)
-    bool collapseFlip(int edge); 
+    //check that no triangles flipped in collapse (pass e11/e22)
+    bool collapseFlip(int e1, int e2); 
     //check that the two vertices, if both on map boundary and neither on corner,
     //make sure that they are on the same boundary (i.e. both along the north boundary)
     bool checkBoundaryBridge(int edge);
