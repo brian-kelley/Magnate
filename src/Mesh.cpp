@@ -44,6 +44,17 @@ bool Vertex::hasEdge(int e)
     return false;
 }
 
+int Vertex::connectsTo(int vert)
+{
+    for(auto edge : edges)
+    {
+        if((*Edge::edgeArray)[edge].v[0] == vert ||
+           (*Edge::edgeArray)[edge].v[1] == vert)
+            return edge;
+    }
+    return -1;
+}
+
 Edge::Edge()
 {
     v[0] = -1;
@@ -317,9 +328,8 @@ void Mesh::simplify(float faceMatchCutoff)
             }
         }
         PRINT("Performed " << collapses << " collapses in " << double(clock() - start) / CLOCKS_PER_SEC << " s.");
-        return;
+        //return;
     }
-    //fullCorrectnessCheck();
 }
 
 bool Mesh::edgeCollapse(int edgeNum)
@@ -339,6 +349,142 @@ bool Mesh::edgeCollapse(int edgeNum)
 
 void Mesh::retriangulate(int vertexToRemove)
 {
+    Vertex& vert = vertices[vertexToRemove];
+    //create a list of faces to delete (duplicates ok)
+    vector<int> facesToRemove;
+    for(auto edge : vert.edges)
+    {
+        if(edge != -1)
+        {
+            facesToRemove.push_back(edges[edge].f[0]);
+            facesToRemove.push_back(edges[edge].f[1]);
+        }
+    }
+    auto terrainValue = faces[facesToRemove.front()].value;
+    //Now create a list of the edges in those faces that don't include vertexToRemove
+    //(will not have duplicates)
+    vector<int> edgeBoundary;
+    for(auto face : facesToRemove)
+    {
+        if(face != -1)
+        {
+            for(int i = 0; i < 3; i++)
+            {
+                Edge& edge = edges[faces[face].e[i]];
+                if(edge.v[0] != vertexToRemove && edge.v[1] != vertexToRemove)
+                    edgeBoundary.push_back(faces[face].e[i]);
+            }
+        }
+    }
+    //reorder the list of edges to make a continuous loop
+    //for each in edgeBoundary, swap with the edge connecting to previous
+    for(size_t i = 1; i < edgeBoundary.size(); i++)
+    {
+        Edge& edge = edges[edgeBoundary[i]];
+        Edge& prev = edges[edgeBoundary[i - 1]];
+        if(!prev.hasVert(edge.v[0]) && !prev.hasVert(edge.v[1]))
+        {
+            //need to find an edge that does contain one of prev's vertices
+            for(size_t j = i + 1; j < edgeBoundary.size(); j++)
+            {
+                Edge& check = edges[edgeBoundary[j]];
+                if(prev.hasVert(check.v[0]) || prev.hasVert(check.v[1]))
+                {
+                    SWAP(edgeBoundary[i], edgeBoundary[j]);
+                    break;
+                }
+            }
+        }
+    }
+    //Create a list of vertices that form the loop
+    vector<int> vertLoop;
+    vertLoop.push_back(edges[edgeBoundary.front()].v[0]);
+    for(size_t i = 1; i < edgeBoundary.size(); i++)
+    {
+        Edge& next = edges[edgeBoundary[i]];
+        if(next.v[0] == vertLoop.back())
+            vertLoop.push_back(next.v[1]);
+        else
+            vertLoop.push_back(next.v[0]);
+    }
+    //delete vertexToRemove
+    vertices.dealloc(vertexToRemove);
+    //delete all faces containing vertexToRemove
+    int numFaces = 0;
+    for(auto faceToDelete : facesToRemove)
+    {
+        if(faceToDelete != -1 && faces.isAllocated(faceToDelete))
+        {
+            faces.dealloc(faceToDelete);
+            numFaces++;
+        }
+    }
+    //delete all edges leading to vertexToRemove
+    for(auto boundEdge : edgeBoundary)
+    {
+        //note: these vertices are guaranteed to be valid
+        Vertex* check[2] = {&vertices[edges[boundEdge].v[0]],
+                            &vertices[edges[boundEdge].v[1]]};
+        for(int i = 0; i < 2; i++)
+        {
+            int connection = check[i]->connectsTo(vertexToRemove);
+            if(connection != -1)
+            {
+                check[i]->removeEdge(connection);
+                edges.dealloc(connection);
+            }
+        }
+    }
+    //fix E -> F links along boundary (make links to deleted faces -1)
+    for(auto boundEdge : edgeBoundary)
+    {
+        int facesToCheck[2] = {edges[boundEdge].f[0], edges[boundEdge].f[1]};
+        for(int i = 0; i < 2; i++)
+        {
+            if(!faces.isAllocated(facesToCheck[i]))
+                edges[boundEdge].replaceFaceLink(facesToCheck[i], -1);
+        }
+    }
+    //now have a hole in the mesh with no invalid links
+    //create numFaces-2 new faces
+    //create a new list of the n vertices in the right order to make triangles
+    vector<int> triStripVerts;
+    {
+        int lo = 0;
+        int hi = vertLoop.size() - 1;
+        bool takeFromLo = true;
+        while(triStripVerts.size() != vertLoop.size())
+        {
+            if(takeFromLo)
+                triStripVerts.push_back(vertLoop[lo++]);
+            else
+                triStripVerts.push_back(vertLoop[hi++]);
+            takeFromLo = !takeFromLo;
+        }
+    }
+    //make triangles like this: 0-1-2, 1-2-3, 2-3-4, ...
+    //TODO: Best way to preserve face values?
+    //For now assume all same since EC only happens when all same in the area
+    //terrainValue has the value
+    //Will need to form edges across the gap, and determine existing edges to use
+    for(int i = 0; i < numFaces - 2; i++)
+    {
+        Face f;
+        f.value = terrainValue;
+        for(int j = 0; j < 3; j++)
+            f.v[j] = triStripVerts[i + j];
+        //note: at most 1 edge will need to be created for a given triangle
+        Edge e;
+        int connect1 = vertices[f.v[0]].connectsTo(f.v[1]);
+        int connect2 = vertices[f.v[1]].connectsTo(f.v[2]);
+        int connect3 = vertices[f.v[2]].connectsTo(f.v[0]);
+        if(connect1 == -1)
+        {
+            e.v[0] = f.v[0];
+            e.v[1] = f.v[1];
+
+        }
+    }
 }
 
 /* Mesh utility functions */
@@ -389,7 +535,6 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     //Fix triangle vertex ordering so that triangle flips can be
     //detected after the collapse
     //note: vertex ordering for faces doesn't affect edges at all
-    //fixTriFlips(e12, e22);
     bool moveVertex = true; //by default, move remaining vertex to midpoint of old ones
     //don't want to move or remove a vertex on the map boundary
     if(vertices[v1].corner || (vertices[v1].boundary && !vertices[v2].corner))
@@ -400,6 +545,7 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     }
     if(vertices[v2].boundary)
         moveVertex = false;
+    fixTriFlips(e12, e22);
     replaceVertexLinks(v1, v2); //note: does not free v1, but does free edgeNum
     vertices[v2].boundary |= vertices[v1].boundary;
     vertices[v2].corner |= vertices[v1].corner;
@@ -427,13 +573,10 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
         faces.dealloc(f1);
     if(f2 != -1)
         faces.dealloc(f2);
-    fixTriFlips(e12, e22);
-    /*
     if(!checkFlips(e12, e22))
     {
         retriangulate(v2);
     }
-    */
 }
 
 void Mesh::boundaryEdgeCollapse(int e)
@@ -466,7 +609,6 @@ void Mesh::boundaryEdgeCollapse(int e)
             e2 = i;
     }
     //do tri flip fix before doing collapse so it can be detected later
-    //fixTriFlips(e2, -1);
     //have indices within Face::e of e1, e2 (NOT the actual pointers)
     f1 = getOtherFace(f, e1);
     f2 = getOtherFace(f, e2);
@@ -475,6 +617,7 @@ void Mesh::boundaryEdgeCollapse(int e)
     e2 = faces[f].e[e2];
     //v1 might be moved, v2 will be deleted
     //don't want to delete a corner vertex
+    fixTriFlips(e2, -1);
     if(v2corner)
         SWAP(v1, v2);
     replaceVertexLinks(v2, v1); //fixes all E -> V and F -> V links
@@ -488,12 +631,10 @@ void Mesh::boundaryEdgeCollapse(int e)
     fullyDeleteEdge(e1);
     edges[e2].replaceFaceLink(f, f1);
     faces.dealloc(f);
-    /*
     if(!checkFlips(e2, -1))
     {
         retriangulate(v1);
     }
-    */
     fixTriFlips(e2, -1);
 }
 
@@ -587,7 +728,7 @@ bool Mesh::checkBoundaryBridge(int edge)
         return false;
     return true;
 }
-
+//
 void Mesh::fixTriFlips(int e1, int e2)
 {
     //Check that both faces next to edge still face right way
@@ -814,24 +955,6 @@ void Mesh::replaceVertexLinks(int toReplace, int newLink)
             edges.dealloc(edgeNum);
         }
     }
-}
-
-bool minWorldX(vec3& loc)
-{
-    return loc.x < 1e-7;
-}
-bool maxWorldX(vec3& loc)
-{
-    return loc.x > WORLD_SIZE * Coord::TERRAIN_TILE_SIZE - 1e-7;
-
-}
-bool minWorldY(vec3& loc)
-{
-    return loc.z < 1e-7;
-}
-bool maxWorldY(vec3& loc)
-{
-    return loc.z > WORLD_SIZE * Coord::TERRAIN_TILE_SIZE - 1e-7;
 }
 
 std::ostream& operator<<(std::ostream& os, const MeshTypes::Face& face)
