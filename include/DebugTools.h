@@ -2,8 +2,12 @@
 #define __DEBUG_TOOLS_H__
 
 #include <iostream>
+#include <vector>
+#include <string>
 #include <ctime>
 #include <cmath>
+
+using namespace std;
 
 //Global debug switch
 #define MAGNATE_DEBUG
@@ -35,5 +39,16 @@
 #define PRINTVAR(a)
 
 #endif
+
+//useful output operators
+template<typename T>
+ostream& operator<<(ostream& os, const vector<T>& val)
+{
+    for(size_t i = 0; i < val.size(); i++)
+    {
+        os << val[i] << " ";
+    }
+    return os;
+}
 
 #endif

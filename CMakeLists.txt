@@ -57,6 +57,7 @@ src/Button
 src/Camera
 src/Component
 src/Coord
+src/DebugTools
 src/Draggable
 src/Erosion
 src/Field

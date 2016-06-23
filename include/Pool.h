@@ -2,9 +2,6 @@
 #include <stdexcept>
 #include "DebugTools.h"
 
-using std::vector;
-using std::runtime_error;
-
 /*  Simple fixed-size pool allocator for fast
  *  allocation of individual objects.
  *  Allows for int as a pointer (index into pool)
@@ -14,7 +11,7 @@ using std::runtime_error;
 template<typename T>
 class Pool
 {
-    friend struct iterator;
+    friend struct Iter;
     public:
         Pool(int capacity = 64);
         ~Pool();
@@ -25,19 +22,19 @@ class Pool
         void dealloc(int index);
         void dealloc(T* ptr);
         void clear();
-        struct iterator
+        struct Iter
         {
             int loc;
             Pool& owner;
-            iterator operator++(int);   //postfix increment requires arg for no reason
+            Iter operator++(int);   //postfix increment requires arg for no reason
             T& operator*();
             T* operator->();
-            bool operator==(const iterator& rhs);
-            bool operator!=(const iterator& rhs);
+            bool operator==(const Iter& rhs);
+            bool operator!=(const Iter& rhs);
         };
         bool isAllocated(int index);
-        iterator begin();
-        iterator end();
+        Iter begin();
+        Iter end();
         int size;
         int capacity;
     private:
@@ -165,7 +162,7 @@ void Pool<T>::clear()
 }
     
 template<typename T>
-typename Pool<T>::iterator Pool<T>::iterator::operator++(int)
+typename Pool<T>::Iter Pool<T>::Iter::operator++(int)
 {
     do
     {
@@ -177,7 +174,7 @@ typename Pool<T>::iterator Pool<T>::iterator::operator++(int)
 }
 
 template<typename T>
-T& Pool<T>::iterator::operator*()
+T& Pool<T>::Iter::operator*()
 {
 #ifdef MAGNATE_DEBUG
     if(!owner.allocMap[loc])
@@ -189,7 +186,7 @@ T& Pool<T>::iterator::operator*()
 }
 
 template<typename T>
-T* Pool<T>::iterator::operator->()
+T* Pool<T>::Iter::operator->()
 {
 #ifdef MAGNATE_DEBUG
     if(!owner.allocMap[loc])
@@ -201,9 +198,9 @@ T* Pool<T>::iterator::operator->()
 }
 
 template<typename T>
-typename Pool<T>::iterator Pool<T>::begin()
+typename Pool<T>::Iter Pool<T>::begin()
 {
-    Pool<T>::iterator it = {0, *this};
+    Pool<T>::Iter it = {0, *this};
     while(!allocMap[it.loc] && it.loc < capacity)
     {
         it.loc++;
@@ -212,20 +209,20 @@ typename Pool<T>::iterator Pool<T>::begin()
 }
 
 template<typename T>
-typename Pool<T>::iterator Pool<T>::end()
+typename Pool<T>::Iter Pool<T>::end()
 {
     return {capacity, *this};
 }
 
 template<typename T>
-bool Pool<T>::iterator::operator==(const Pool<T>::iterator& rhs)
+bool Pool<T>::Iter::operator==(const Pool<T>::Iter& rhs)
 {
     //iterators must be for same pool, and must 
     return &owner == &rhs.owner && loc == rhs.loc;
 }
 
 template<typename T>
-bool Pool<T>::iterator::operator!=(const Pool<T>::iterator& rhs)
+bool Pool<T>::Iter::operator!=(const Pool<T>::Iter& rhs)
 {
     return !(*this == rhs);
 }

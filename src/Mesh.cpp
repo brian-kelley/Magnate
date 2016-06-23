@@ -232,7 +232,11 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
     //Testing edge collapse
-    simplify(faceMatchCutoff);
+    //simplify(faceMatchCutoff);
+    fullCorrectnessCheck();
+    int testDelete = hmVertIndex(4, 4);
+    retriangulate(testDelete);
+    fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
 
@@ -348,6 +352,7 @@ bool Mesh::edgeCollapse(int edgeNum)
 
 void Mesh::retriangulate(int vertexToRemove)
 {
+    fullCorrectnessCheck();
     Vertex& vert = vertices[vertexToRemove];
     //create a list of faces to delete (duplicates ok)
     vector<int> facesToRemove;
@@ -424,6 +429,7 @@ void Mesh::retriangulate(int vertexToRemove)
             vertLoop.push_back(next.v[0]);
     }
     vertLoop.pop_back();    //don't want start vertex to also appear at end
+    PRINTVAR(vertLoop);
     //delete vertexToRemove
     vertices.dealloc(vertexToRemove);
     //delete all faces containing vertexToRemove
@@ -475,10 +481,11 @@ void Mesh::retriangulate(int vertexToRemove)
             if(takeFromLo)
                 triStripVerts.push_back(vertLoop[lo++]);
             else
-                triStripVerts.push_back(vertLoop[hi++]);
+                triStripVerts.push_back(vertLoop[hi--]);
             takeFromLo = !takeFromLo;
         }
     }
+    PRINTVAR(triStripVerts);
     //make triangles like this: 0-1-2, 1-2-3, 2-3-4, ...
     //TODO: Best way to preserve face values?
     //For now assume all same since EC only happens when all same in the area
@@ -531,6 +538,7 @@ void Mesh::retriangulate(int vertexToRemove)
         f.e[1] = connect2;
         f.e[2] = connect3;
     }
+    fullCorrectnessCheck();
 }
 
 /* Mesh utility functions */
