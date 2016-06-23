@@ -72,9 +72,13 @@ template<typename T>
 T& Pool<T>::operator[](int index)
 {
 #ifdef MAGNATE_DEBUG
-    if(index < 0 || index >= capacity || !allocMap[index])
-    {   
-        throw runtime_error("Illegal pool access!");
+    if(index < 0 || index >= capacity)
+    {
+        throw runtime_error("Illegal pool access (out of range)!");
+    }
+    if(!allocMap[index])
+    {
+        throw runtime_error("Illegal pool access (not allocated)!");
     }
 #endif
     return data[index];

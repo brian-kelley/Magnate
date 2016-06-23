@@ -116,7 +116,7 @@ public:
     int getOtherFace(int f, int e);    //get the face neighboring f across the eth edge of f
     int getSharedEdge(int f1, int f2);
     //when a pair of verts only shares 1 valid face, return the face
-    int getUniqueFace(int v1, int v2);
+    int getFaceFromVertices(int v1, int v2);
     //replace all links to toReplace with newLink (changes links in faces and edges)
     void replaceVertexLinks(int toReplace, int newLink);
     void fullyDeleteEdge(int e); //completely deletes edge. Faces must not link to it!

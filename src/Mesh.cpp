@@ -324,11 +324,10 @@ void Mesh::simplify(float faceMatchCutoff)
             }
             if(edgeCollapse(it.loc))
             {
-                collapses++;
+                printf("%i collapses\n", collapses++);
             }
         }
         PRINT("Performed " << collapses << " collapses in " << double(clock() - start) / CLOCKS_PER_SEC << " s.");
-        //return;
     }
 }
 
@@ -364,15 +363,32 @@ void Mesh::retriangulate(int vertexToRemove)
     //Now create a list of the edges in those faces that don't include vertexToRemove
     //(will not have duplicates)
     vector<int> edgeBoundary;
-    for(auto face : facesToRemove)
     {
-        if(face != -1)
+        vector<int> usedFaces;
+        for(auto face : facesToRemove)
         {
-            for(int i = 0; i < 3; i++)
+            if(face != -1)
             {
-                Edge& edge = edges[faces[face].e[i]];
-                if(edge.v[0] != vertexToRemove && edge.v[1] != vertexToRemove)
-                    edgeBoundary.push_back(faces[face].e[i]);
+                for(int i = 0; i < 3; i++)
+                {
+                    Edge& edge = edges[faces[face].e[i]];
+                    bool alreadyAdded = false;
+                    if(edge.v[0] != vertexToRemove && edge.v[1] != vertexToRemove)
+                    {
+                        for(size_t j = 0; j < edgeBoundary.size(); j++)
+                        {
+                            if(edgeBoundary[j] == faces[face].e[i])
+                            {
+                                alreadyAdded = true;
+                                break;
+                            }
+                        }
+                        if(!alreadyAdded)
+                        {
+                            edgeBoundary.push_back(faces[face].e[i]);
+                        }
+                    }
+                }
             }
         }
     }
@@ -407,6 +423,7 @@ void Mesh::retriangulate(int vertexToRemove)
         else
             vertLoop.push_back(next.v[0]);
     }
+    vertLoop.pop_back();    //don't want start vertex to also appear at end
     //delete vertexToRemove
     vertices.dealloc(vertexToRemove);
     //delete all faces containing vertexToRemove
@@ -441,7 +458,7 @@ void Mesh::retriangulate(int vertexToRemove)
         int facesToCheck[2] = {edges[boundEdge].f[0], edges[boundEdge].f[1]};
         for(int i = 0; i < 2; i++)
         {
-            if(!faces.isAllocated(facesToCheck[i]))
+            if(facesToCheck[i] != -1 && !faces.isAllocated(facesToCheck[i]))
                 edges[boundEdge].replaceFaceLink(facesToCheck[i], -1);
         }
     }
@@ -469,10 +486,12 @@ void Mesh::retriangulate(int vertexToRemove)
     //Will need to form edges across the gap, and determine existing edges to use
     for(int i = 0; i < numFaces - 2; i++)
     {
-        Face f;
+        int face = faces.alloc();
+        Face& f = faces[face];
         f.value = terrainValue;
         for(int j = 0; j < 3; j++)
             f.v[j] = triStripVerts[i + j];
+        f.checkNormal();
         //note: at most 1 edge will need to be created for a given triangle
         Edge e;
         int connect1 = vertices[f.v[0]].connectsTo(f.v[1]);
@@ -482,8 +501,35 @@ void Mesh::retriangulate(int vertexToRemove)
         {
             e.v[0] = f.v[0];
             e.v[1] = f.v[1];
-
+            e.f[0] = face;
+            e.f[1] = -1;
+            connect1 = edges.alloc(e);
+            vertices[e.v[0]].addEdge(connect1);
+            vertices[e.v[1]].addEdge(connect1);
         }
+        else if(connect2 == -1)
+        {
+            e.v[0] = f.v[1];
+            e.v[1] = f.v[2];
+            e.f[0] = face;
+            e.f[1] = -1;
+            connect2 = edges.alloc(e);
+            vertices[e.v[1]].addEdge(connect2);
+            vertices[e.v[2]].addEdge(connect2);
+        }
+        else if(connect3 == -1)
+        {
+            e.v[0] = f.v[0];
+            e.v[1] = f.v[2];
+            e.f[0] = face;
+            e.f[1] = -1;
+            connect3 = edges.alloc(e);
+            vertices[e.v[0]].addEdge(connect3);
+            vertices[e.v[2]].addEdge(connect3);
+        }
+        f.e[0] = connect1;
+        f.e[1] = connect2;
+        f.e[2] = connect3;
     }
 }
 
@@ -1071,6 +1117,14 @@ void Mesh::fullyDeleteEdge(int e)
         vertices[v2].removeEdge(e);
     }
     edges.dealloc(e);
+}
+
+int Mesh::getFaceFromVertices(int v1, int v2)
+{
+    //assume there is only one face containing v1, v2
+    //also assume that v1 and v2 are connected
+    int e = vertices[v1].connectsTo(v2);
+    return edges[e].f[0] != -1 ? edges[e].f[0] : edges[e].f[1];
 }
 
 bool Mesh::validFace(int f)
