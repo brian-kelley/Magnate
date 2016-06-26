@@ -11,6 +11,9 @@ using namespace glm;
 using namespace GlobalConfig;
 using namespace MeshTypes;
 
+#define INVALID -1  //invalid vert, edge, or face
+#define OUTSIDE -2  //face outside the mesh
+
 int Face::NONE_VALUE = Ground::WATER; //the value of triangles outside map
 Pool<Vertex>* Face::vertArray = nullptr;    //TODO: won't work if multiple Meshes in use
 Pool<Vertex>* Edge::vertArray = nullptr;
@@ -52,15 +55,15 @@ int Vertex::connectsTo(int vert)
            (*Edge::edgeArray)[edge].v[1] == vert)
             return edge;
     }
-    return -1;
+    return INVALID;
 }
 
 Edge::Edge()
 {
-    v[0] = -1;
-    v[1] = -1;
-    f[0] = -1;
-    f[1] = -1;
+    v[0] = INVALID;
+    v[1] = INVALID;
+    f[0] = INVALID;
+    f[1] = INVALID;
 }
 
 Edge::Edge(int v1, int v2, int f1, int f2)
@@ -119,8 +122,8 @@ Face::Face()
 {
     for(int i = 0; i < 3; i++)
     {
-        v[i] = -1;
-        e[i] = -1;
+        v[i] = INVALID;
+        e[i] = INVALID;
     }
 }
 
@@ -161,8 +164,8 @@ bool Face::hasVert(int query)
 
 bool Face::isClockwise(int v1, int v2)
 {
-    int v1loc = -1;
-    int v2loc = -1;
+    int v1loc = INVALID;
+    int v2loc = INVALID;
     for(int i = 0; i < 3; i++)
     {
         if(v[i] == v1)
@@ -171,7 +174,7 @@ bool Face::isClockwise(int v1, int v2)
             break;
         }
     }
-    if(v1loc == -1)
+    if(v1loc == INVALID)
         return false;
     for(int i = 0; i < 3; i++)
     {
@@ -181,7 +184,7 @@ bool Face::isClockwise(int v1, int v2)
             break;
         }
     }
-    if(v2loc == -1)
+    if(v2loc == INVALID)
         return false;
     return (v1loc + 1) % 3 == v2loc;
 }
@@ -233,10 +236,17 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     simpleLoadHeightmap(heights, faceValues);
     //Testing edge collapse
     //simplify(faceMatchCutoff);
+    retriangulate(hmVertIndex(3, 3));
+    retriangulate(hmVertIndex(4, 3));
+    //retriangulate(hmVertIndex(5, 3));
     fullCorrectnessCheck();
-    int testDelete = hmVertIndex(4, 4);
-    retriangulate(testDelete);
-    fullCorrectnessCheck();
+    /*
+    for(int i = 1; i < 20; i++)
+    {
+        for(int j = 1; j < 20; j++)
+            retriangulate(hmVertIndex(i, j));
+    }
+    */
     PRINT("Done with mesh.");
 }
 
@@ -318,7 +328,7 @@ void Mesh::simplify(float faceMatchCutoff)
         {
             auto& edge = *it;
             //get unit normals for faces sharing this edge
-            if(edge.f[0] != -1 && edge.f[1] != -1)
+            if(edge.f[0] >= 0 && edge.f[1] >= 0)
             {
                 auto& f1 = faces[edge.f[0]];
                 auto& f2 = faces[edge.f[1]];
@@ -354,16 +364,24 @@ void Mesh::retriangulate(int vertexToRemove)
 {
     fullCorrectnessCheck();
     Vertex& vert = vertices[vertexToRemove];
+    if(vert.boundary)
+        throw runtime_error("Can't remove a vertex on the boundary.");
     //create a list of faces to delete (duplicates ok)
     vector<int> facesToRemove;
-    for(auto edge : vert.edges)
     {
-        if(edge != -1)
+        for(auto edge : vert.edges)
         {
-            facesToRemove.push_back(edges[edge].f[0]);
-            facesToRemove.push_back(edges[edge].f[1]);
+            if(edge != INVALID)
+            {
+                facesToRemove.push_back(edges[edge].f[0]);
+                facesToRemove.push_back(edges[edge].f[1]);
+            }
         }
+        std::sort(facesToRemove.begin(), facesToRemove.end());
+        auto newEnd = std::unique(facesToRemove.begin(), facesToRemove.end());
+        facesToRemove.erase(newEnd, facesToRemove.end());
     }
+    PRINTVAR(facesToRemove);
     auto terrainValue = faces[facesToRemove.front()].value;
     //Now create a list of the edges in those faces that don't include vertexToRemove
     //(will not have duplicates)
@@ -372,7 +390,7 @@ void Mesh::retriangulate(int vertexToRemove)
         vector<int> usedFaces;
         for(auto face : facesToRemove)
         {
-            if(face != -1)
+            if(face >= 0)
             {
                 for(int i = 0; i < 3; i++)
                 {
@@ -428,17 +446,16 @@ void Mesh::retriangulate(int vertexToRemove)
         else
             vertLoop.push_back(next.v[0]);
     }
-    vertLoop.pop_back();    //don't want start vertex to also appear at end
-    PRINTVAR(vertLoop);
     //delete vertexToRemove
     vertices.dealloc(vertexToRemove);
     //delete all faces containing vertexToRemove
     int numFaces = 0;
     for(auto faceToDelete : facesToRemove)
     {
-        if(faceToDelete != -1 && faces.isAllocated(faceToDelete))
+        if(faceToDelete >= 0)
         {
             faces.dealloc(faceToDelete);
+            PRINT("Deleting face " << faceToDelete);
             numFaces++;
         }
     }
@@ -451,7 +468,7 @@ void Mesh::retriangulate(int vertexToRemove)
         for(int i = 0; i < 2; i++)
         {
             int connection = check[i]->connectsTo(vertexToRemove);
-            if(connection != -1)
+            if(connection != INVALID)
             {
                 check[i]->removeEdge(connection);
                 edges.dealloc(connection);
@@ -464,8 +481,8 @@ void Mesh::retriangulate(int vertexToRemove)
         int facesToCheck[2] = {edges[boundEdge].f[0], edges[boundEdge].f[1]};
         for(int i = 0; i < 2; i++)
         {
-            if(facesToCheck[i] != -1 && !faces.isAllocated(facesToCheck[i]))
-                edges[boundEdge].replaceFaceLink(facesToCheck[i], -1);
+            if(facesToCheck[i] >= 0 && !faces.isAllocated(facesToCheck[i]))
+                edges[boundEdge].replaceFaceLink(facesToCheck[i], INVALID);
         }
     }
     //now have a hole in the mesh with no invalid links
@@ -486,57 +503,78 @@ void Mesh::retriangulate(int vertexToRemove)
         }
     }
     PRINTVAR(triStripVerts);
-    //make triangles like this: 0-1-2, 1-2-3, 2-3-4, ...
-    //TODO: Best way to preserve face values?
     //For now assume all same since EC only happens when all same in the area
-    //terrainValue has the value
+    //terrainValue has that value
     //Will need to form edges across the gap, and determine existing edges to use
+    PRINT("Will create " << numFaces - 2 << " new faces.");
     for(int i = 0; i < numFaces - 2; i++)
     {
         int face = faces.alloc();
         Face& f = faces[face];
         f.value = terrainValue;
         for(int j = 0; j < 3; j++)
+        {
             f.v[j] = triStripVerts[i + j];
+        }
+        PRINT("Making triangle " << face << " with verts: " << f.v[0] << ',' << f.v[1] << ',' << f.v[2]);
         f.checkNormal();
         //note: at most 1 edge will need to be created for a given triangle
         Edge e;
         int connect1 = vertices[f.v[0]].connectsTo(f.v[1]);
         int connect2 = vertices[f.v[1]].connectsTo(f.v[2]);
         int connect3 = vertices[f.v[2]].connectsTo(f.v[0]);
-        if(connect1 == -1)
+        if(connect1 == INVALID)
         {
             e.v[0] = f.v[0];
             e.v[1] = f.v[1];
-            e.f[0] = face;
-            e.f[1] = -1;
+            e.f[0] = INVALID;
+            e.f[1] = INVALID;
             connect1 = edges.alloc(e);
+            PRINT("Created edge " << connect1 << " between " << e.v[0] << ", " << e.v[1]);
             vertices[e.v[0]].addEdge(connect1);
             vertices[e.v[1]].addEdge(connect1);
         }
-        else if(connect2 == -1)
+        else if(connect2 == INVALID)
         {
             e.v[0] = f.v[1];
             e.v[1] = f.v[2];
-            e.f[0] = face;
-            e.f[1] = -1;
+            e.f[0] = INVALID;
+            e.f[1] = INVALID;
             connect2 = edges.alloc(e);
+            PRINT("Created edge " << connect2 << " between " << e.v[0] << ", " << e.v[1]);
+            vertices[e.v[0]].addEdge(connect2);
             vertices[e.v[1]].addEdge(connect2);
-            vertices[e.v[2]].addEdge(connect2);
         }
-        else if(connect3 == -1)
+        else if(connect3 == INVALID)
         {
             e.v[0] = f.v[0];
             e.v[1] = f.v[2];
-            e.f[0] = face;
-            e.f[1] = -1;
+            e.f[0] = INVALID;
+            e.f[1] = INVALID;
             connect3 = edges.alloc(e);
+            PRINT("Created edge " << connect3 << " between " << e.v[0] << ", " << e.v[1]);
             vertices[e.v[0]].addEdge(connect3);
-            vertices[e.v[2]].addEdge(connect3);
+            vertices[e.v[1]].addEdge(connect3);
         }
+        //add f to e links
         f.e[0] = connect1;
         f.e[1] = connect2;
         f.e[2] = connect3;
+        //add e to f links
+        PRINT(" Edge 0 before: " << edges[f.e[0]]);
+        PRINT(" Edge 1 before: " << edges[f.e[1]]);
+        PRINT(" Edge 2 before: " << edges[f.e[2]]);
+        for(int j = 0; j < 3; j++)
+        {
+            PRINT("ONLY 1 SHOULD BE -1: " << edges[f.e[j]].f[0] << " " << edges[f.e[j]].f[1]);
+            if(edges[f.e[j]].f[0] == INVALID)
+                edges[f.e[j]].f[0] = face;
+            else if(edges[f.e[j]].f[1] == INVALID)
+                edges[f.e[j]].f[1] = face;
+        }
+        PRINT(" Edge 0 after: " << edges[f.e[0]]);
+        PRINT(" Edge 1 after: " << edges[f.e[1]]);
+        PRINT(" Edge 2 after: " << edges[f.e[2]]);
     }
     fullCorrectnessCheck();
 }
@@ -610,22 +648,22 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     vertices.dealloc(v1);
     vertices[v2].removeEdge(edgeNum);
     //update fxx edge links
-    if(f11 != -1)
+    if(f11 >= 0)
         faces[f11].replaceEdgeLink(e11, e12);
-    if(f11 != f21 && f21 != -1)
+    if(f11 != f21 && f21 >= 0)
         faces[f21].replaceEdgeLink(e21, e22);
     //now e11 and e21 can be deleted
-    if(e11 != -1)
+    if(e11 != INVALID)
         fullyDeleteEdge(e11);
-    if(e21 != -1)
+    if(e21 != INVALID)
         fullyDeleteEdge(e21);
     //prepare to remove f1/f2 by updating e12/e22 face links
     edges[e12].replaceFaceLink(f1, f11);
     edges[e22].replaceFaceLink(f2, f21);
     //nothing links to f1, f2 anymore, delete them
-    if(f1 != -1)
+    if(f1 != INVALID)
         faces.dealloc(f1);
-    if(f2 != -1)
+    if(f2 != INVALID)
         faces.dealloc(f2);
     if(!checkFlips(e12, e22))
     {
@@ -637,7 +675,7 @@ void Mesh::boundaryEdgeCollapse(int e)
 {
     auto& edge = edges[e];
     int f = edge.f[0];
-    if(f == -1)
+    if(f < 0)               //invalid or outside
         f = edge.f[1];
     Face& face = faces[f];
     int v1 = edge.v[0];
@@ -671,7 +709,7 @@ void Mesh::boundaryEdgeCollapse(int e)
     e2 = faces[f].e[e2];
     //v1 might be moved, v2 will be deleted
     //don't want to delete a corner vertex
-    fixTriFlips(e2, -1);
+    fixTriFlips(e2, INVALID);
     if(v2corner)
         SWAP(v1, v2);
     replaceVertexLinks(v2, v1); //fixes all E -> V and F -> V links
@@ -680,16 +718,16 @@ void Mesh::boundaryEdgeCollapse(int e)
     if(moveVertex)
         vertices[v1].pos = (vertices[v1].pos + vertices[v2].pos) / 2.0f;
     //e2 will be merged onto e1, and e1 will be deleted
-    if(f1 != -1)
+    if(f1 >= 0)
         faces[f1].replaceEdgeLink(e1, e2);
     fullyDeleteEdge(e1);
     edges[e2].replaceFaceLink(f, f1);
     faces.dealloc(f);
-    if(!checkFlips(e2, -1))
+    if(!checkFlips(e2, INVALID))
     {
         retriangulate(v1);
     }
-    fixTriFlips(e2, -1);
+    fixTriFlips(e2, INVALID);
 }
 
 bool Mesh::faceValuesCheck(int edgeNum)
@@ -698,7 +736,7 @@ bool Mesh::faceValuesCheck(int edgeNum)
     int v1 = edge.v[0];
     int v2 = edge.v[1];
     //make sure that all triangles containing v1 or v2 have the same face value
-    int goodFace = edge.f[0] == -1 ? edge.f[1] : edge.f[0];
+    int goodFace = edge.f[0] < 0 ? edge.f[1] : edge.f[0];
     auto goodVal = faces[goodFace].value;
     //if a single face scalar is different than
     //goodVal in the fans around v1 and v2, return false
@@ -708,9 +746,9 @@ bool Mesh::faceValuesCheck(int edgeNum)
         DBASSERT(edges.isAllocated(adj))
         int check1 = edges[adj].f[0];
         int check2 = edges[adj].f[1];
-        if(check1 != -1 && faces[check1].value != goodVal)
+        if(check1 >= 0 && faces[check1].value != goodVal)
             return false;
-        if(check2 != -1 && faces[check2].value != goodVal)
+        if(check2 >= 0 && faces[check2].value != goodVal)
             return false;
     }
     for(auto adj : vertices[v2].edges)
@@ -719,9 +757,9 @@ bool Mesh::faceValuesCheck(int edgeNum)
         DBASSERT(edges.isAllocated(adj))
         int check1 = edges[adj].f[0];
         int check2 = edges[adj].f[1];
-        if(check1 != -1 && faces[check1].value != goodVal)
+        if(check1 >= 0 && faces[check1].value != goodVal)
             return false;
-        if(check2 != -1 && faces[check2].value != goodVal)
+        if(check2 >= 0 && faces[check2].value != goodVal)
             return false;
     }
     return true;
@@ -790,13 +828,13 @@ void Mesh::fixTriFlips(int e1, int e2)
     int checkFaces[2];
     for(int i = 0; i < 2; i++)
     {
-        if(checkEdges[i] == -1)
+        if(checkEdges[i] == INVALID)
             continue;
         checkFaces[0] = edges[checkEdges[i]].f[0];
         checkFaces[1] = edges[checkEdges[i]].f[1];
         for(int j = 0; j < 2; j++)
         {
-            if(checkFaces[j] == -1)
+            if(checkFaces[j] < 0)
                 continue;
             Face& f = faces[checkFaces[j]];
             f.checkNormal();
@@ -811,13 +849,13 @@ bool Mesh::checkFlips(int e1, int e2)
     int checkFaces[2];
     for(int i = 0; i < 2; i++)
     {
-        if(checkEdges[i] == -1)
+        if(checkEdges[i] == INVALID)
             continue;
         checkFaces[0] = edges[checkEdges[i]].f[0];
         checkFaces[1] = edges[checkEdges[i]].f[1];
         for(int j = 0; j < 2; j++)
         {
-            if(checkFaces[j] == -1)
+            if(checkFaces[j] < 0)
                 continue;
             Face& f = faces[checkFaces[j]];
             if(f.getNorm().y < 0)
@@ -875,13 +913,13 @@ int Mesh::hmEdgeIndex(int x, int y, EdgeDir which)
 #ifdef MAGNATE_DEBUG
     throw runtime_error("Should not have gotten here!");
 #endif
-    return -1;
+    return INVALID;
 }
 
 int Mesh::hmFaceIndex(int x, int y, FaceDir which)
 {
     if(x < 0 || x >= WORLD_SIZE || y < 0 || y >= WORLD_SIZE)
-        return -1;
+        return OUTSIDE;
     int base = 2 * (x + y * WORLD_SIZE);
     if(which == FaceDir::UPPER_LEFT)
         return base;
@@ -901,23 +939,23 @@ void Mesh::getNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, i
         SWAP(f1, f2);
         SWAP(edge.f[0], edge.f[1]);
     }
-    if(f1 != -1)
+    if(f1 >= 0)
     {
         getFaceNeighbors(f1, f2, f11, f12); //f11 to f12 is clockwise around f1
     }
     else
     {
-        f11 = -1;
-        f12 = -1;
+        f11 = INVALID;
+        f12 = INVALID;
     }
-    if(f2 != -1)
+    if(f2 >= 0)
     {
         getFaceNeighbors(f2, f1, f21, f22); //f21 to f22 is clockwise around f2
     }
     else
     {
-        f21 = -1;
-        f22 = -1;
+        f21 = INVALID;
+        f22 = INVALID;
     }
 }
 
@@ -926,19 +964,19 @@ void Mesh::getBoundaryNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int
     auto& edge = edges[e];
     f1 = edge.f[0];
     f2 = edge.f[1];
-    if(f1 == -1)
+    if(f1 < 0)
     {
-        f11 = -1;
-        f12 = -1;
+        f11 = INVALID;
+        f12 = INVALID;
     }
     else
     {
         getFaceNeighbors(f1, f2, f11, f12);
     }
-    if(f2 == -1)
+    if(f2 < 0)
     {
-        f21 = -1;
-        f22 = -1;
+        f21 = INVALID;
+        f22 = INVALID;
     }
     else
     {
@@ -975,11 +1013,8 @@ int Mesh::getSharedEdge(int f1, int f2)
         if(faces[f2].hasEdge(edge))
             return edge;
     }
-#ifdef MAGNATE_DEBUG
-    PRINT("Serious warning: expected faces " << f1 << " and " << f2 << " to share an edge but they don't. Returning -1.");
-    throw runtime_error("shart");
-#endif
-    return -1;
+    string err = string("Serious warning: expected faces ") + to_string(f1) + " and " + to_string(f2) + " to share an edge but they don't. Returning INVALID.";
+    throw runtime_error(err);
 }
 
 void Mesh::replaceVertexLinks(int toReplace, int newLink)
@@ -989,12 +1024,12 @@ void Mesh::replaceVertexLinks(int toReplace, int newLink)
     {
         int edgeNum = *it;
         auto& edge = edges[edgeNum];
-        if(edge.f[0] != -1)
+        if(edge.f[0] >= 0)
         {
             faces[edge.f[0]].replaceVertexLink(toReplace, newLink);
             faces[edge.f[0]].checkNormal();
         }
-        if(edge.f[1] != -1)
+        if(edge.f[1] >= 0)
         {
             faces[edge.f[1]].replaceVertexLink(toReplace, newLink);
             faces[edge.f[1]].checkNormal();
@@ -1052,7 +1087,7 @@ void Mesh::fullCorrectnessCheck()
                 PRINT("Edge " << it.loc << " has ref to vertex " << it->v[j] << " but vert not allocated!");
                 throw exception();
             }
-            if(!validFace(it->f[j]) && it->f[j] != -1)  //-1 is allowed
+            if(!validFace(it->f[j]) && it->f[j] >= 0)  //-1 is allowed
             {
                 PRINT("Edge " << it.loc << " has ref to face " << it->f[j] << " but face not allocated!");
                 PRINT("The edge: " << *it);
@@ -1132,7 +1167,7 @@ int Mesh::getFaceFromVertices(int v1, int v2)
     //assume there is only one face containing v1, v2
     //also assume that v1 and v2 are connected
     int e = vertices[v1].connectsTo(v2);
-    return edges[e].f[0] != -1 ? edges[e].f[0] : edges[e].f[1];
+    return edges[e].f[0] != INVALID ? edges[e].f[0] : edges[e].f[1];
 }
 
 bool Mesh::validFace(int f)
