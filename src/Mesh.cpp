@@ -27,12 +27,11 @@ void Vertex::addEdge(int e)
 
 void Vertex::removeEdge(int e)
 {
-    for(auto it = edges.begin(); it != edges.end(); it++)
+    for(int i = edges.size() - 1; i >= 0; i--)
     {
-        if(*it == e)
+        if(edges[i] == e)
         {
-            edges.erase(it);
-            break;
+            edges.erase(edges.begin() + i);
         }
     }
 }
@@ -237,10 +236,12 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     //Testing edge collapse
     //simplify(faceMatchCutoff);
     //fullCorrectnessCheck();
-    //boundaryEdgeCollapse(hmEdgeIndex(0, 0, EdgeDir::LEFT));
     fullCorrectnessCheck();
-    interiorEdgeCollapse(hmEdgeIndex(4, 4, EdgeDir::DIAGONAL));
+    //interiorEdgeCollapse(hmEdgeIndex(4, 4, EdgeDir::DIAGONAL));
+    boundaryEdgeCollapse(hmEdgeIndex(0, 0, EdgeDir::TOP));
     fullCorrectnessCheck();
+    //interiorEdgeCollapse(hmEdgeIndex(4, 4, EdgeDir::DIAGONAL));
+    //fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
 
@@ -574,8 +575,6 @@ void Mesh::retriangulate(int vertexToRemove)
     }
 }
 
-/* Mesh utility functions */
-
 void Mesh::interiorEdgeCollapse(int edgeNum)
 {
     //Deletes an edge, merges two pairs of edges, deletes 2 faces, and a vertex
@@ -665,18 +664,23 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
         PRINT("Removing + retriangulating " << v2);
         retriangulate(v2);
     }
-    fullCorrectnessCheck();
 }
 
 void Mesh::boundaryEdgeCollapse(int e)
 {
+    PRINTVAR(e);
     auto& edge = edges[e];
+    PRINTVAR(edge);
     int f = edge.f[0];
-    if(f < 0)               //invalid or outside
+    if(f < 0)
         f = edge.f[1];
+    //f = the only valid face of edge to collapse
     Face& face = faces[f];
+    PRINTVAR(face);
     int v1 = edge.v[0];
     int v2 = edge.v[1];
+    PRINTVAR(v1);
+    PRINTVAR(v2);
     //Already know on boundary because edge only has one face adjacent
     //  but must check that at most one of v1, v2 is in a corner
     //  because can't collapse the boundary of the mesh
@@ -698,29 +702,37 @@ void Mesh::boundaryEdgeCollapse(int e)
             e2 = i;
     }
     //do tri flip fix before doing collapse so it can be detected later
+    //fixTriFlips(e2, -1);
     //have indices within Face::e of e1, e2 (NOT the actual pointers)
     f1 = getOtherFace(f, e1);
     f2 = getOtherFace(f, e2);
+    PRINTVAR(f1);
+    PRINTVAR(f2);
     //now e1 and e2 are more useful as actual values
     e1 = faces[f].e[e1];
     e2 = faces[f].e[e2];
+    PRINTVAR(e1);
+    PRINTVAR(e2);
     //v1 might be moved, v2 will be deleted
     //don't want to delete a corner vertex
-    fixTriFlips(e2, INVALID);
     if(v2corner)
         SWAP(v1, v2);
-    replaceVertexLinks(v2, v1); //fixes all E -> V and F -> V links
     vertices[v1].boundary |= vertices[v2].boundary;
     vertices[v1].corner |= vertices[v2].corner;
     if(moveVertex)
         vertices[v1].pos = (vertices[v1].pos + vertices[v2].pos) / 2.0f;
     //e2 will be merged onto e1, and e1 will be deleted
-    if(f1 >= 0)
+    PRINT("Merging edge " << e2 << " onto " << e1 << ", then deleting " << e1);
+    if(f1 != -1)
         faces[f1].replaceEdgeLink(e1, e2);
-    fullyDeleteEdge(e1);
     edges[e2].replaceFaceLink(f, f1);
+    //remove V->E links to edge e
+    PRINT("Deleting vert " << v1 << " link to e " << e);
+    replaceVertexLinks(v2, v1); //fixes all E -> V and F -> V links, deleted edge
+    vertices.dealloc(v2);
+    vertices[v1].removeEdge(e);
+    fullyDeleteEdge(e1);
     faces.dealloc(f);
-    fullCorrectnessCheck();
 }
 
 bool Mesh::faceValuesCheck(int edgeNum)
@@ -813,7 +825,7 @@ bool Mesh::checkBoundaryBridge(int edge)
         return false;
     return true;
 }
-//
+
 void Mesh::fixTriFlips(int e1, int e2)
 {
     //Check that both faces next to edge still face right way
@@ -1029,8 +1041,6 @@ void Mesh::replaceVertexLinks(int toReplace, int newLink)
         }
         edge.replaceVertexLink(toReplace, newLink);
         vertices[newLink].addEdge(*it);
-        //remove the edge completely if now degenerate
-        //two faces will have references to that edge -- they will be removed later
         if(edge.v[0] == edge.v[1])
         {
             //removeEdgeRefs(edgeNum);
@@ -1163,10 +1173,12 @@ void Mesh::fullyDeleteEdge(int e)
     int v2 = edges[e].v[1];
     if(vertices.isAllocated(v1))
     {
+        PRINT("Removing vertex " << v1 << " link to edge " << e);
         vertices[v1].removeEdge(e);
     }
     if(vertices.isAllocated(v2))
     {
+        PRINT("Removing vertex " << v2 << " link to edge " << e);
         vertices[v2].removeEdge(e);
     }
     edges.dealloc(e);
