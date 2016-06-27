@@ -238,7 +238,10 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     //simplify(faceMatchCutoff);
     retriangulate(hmVertIndex(3, 3));
     retriangulate(hmVertIndex(4, 3));
-    //retriangulate(hmVertIndex(5, 3));
+    retriangulate(hmVertIndex(5, 3));
+    retriangulate(hmVertIndex(6, 3));
+    //retriangulate(hmVertIndex(7, 3));
+    //retriangulate(hmVertIndex(8, 3));
     fullCorrectnessCheck();
     /*
     for(int i = 1; i < 20; i++)
@@ -362,7 +365,6 @@ bool Mesh::edgeCollapse(int edgeNum)
 
 void Mesh::retriangulate(int vertexToRemove)
 {
-    fullCorrectnessCheck();
     Vertex& vert = vertices[vertexToRemove];
     if(vert.boundary)
         throw runtime_error("Can't remove a vertex on the boundary.");
@@ -387,7 +389,6 @@ void Mesh::retriangulate(int vertexToRemove)
     //(will not have duplicates)
     vector<int> edgeBoundary;
     {
-        vector<int> usedFaces;
         for(auto face : facesToRemove)
         {
             if(face >= 0)
@@ -435,16 +436,44 @@ void Mesh::retriangulate(int vertexToRemove)
             }
         }
     }
+    PRINT("Edge boundary vert list:");
+    for(auto e : edgeBoundary)
+    {
+        PRINT("    " << edges[e].v[0] << " " << edges[e].v[1]);
+    }
+    //verify that edge loop actually forms a loop
+    {
+        size_t num = edgeBoundary.size();
+        for(size_t i = 0; i < num; i++)
+        {
+            Edge& here = edges[edgeBoundary[i]];
+            Edge& next = edges[edgeBoundary[(i + 1) % num]];
+            //must not have same id as next
+            if(&here == &next)
+                throw exception();
+            //must share exactly one vertex with next
+            if(here.hasVert(next.v[0]) && here.hasVert(next.v[1]))
+                throw exception();
+            if(!here.hasVert(next.v[0]) && !here.hasVert(next.v[1]))
+                throw exception();
+        }
+    }
     //Create a list of vertices that form the loop
     vector<int> vertLoop;
-    vertLoop.push_back(edges[edgeBoundary.front()].v[0]);
-    for(size_t i = 1; i < edgeBoundary.size(); i++)
+    for(size_t i = 0; i < edgeBoundary.size(); i++)
     {
-        Edge& next = edges[edgeBoundary[i]];
-        if(next.v[0] == vertLoop.back())
-            vertLoop.push_back(next.v[1]);
-        else
+        Edge& prev = edges[edgeBoundary[i]];
+        Edge& next = edges[edgeBoundary[(i + 1) % edgeBoundary.size()]];
+        //want to add the vert that is shared with prev
+        if(prev.hasVert(next.v[0]))
             vertLoop.push_back(next.v[0]);
+        else
+            vertLoop.push_back(next.v[1]);
+    }
+    PRINT("vert loop:");
+    for(auto v : vertLoop)
+    {
+        PRINT("    " << v);
     }
     //delete vertexToRemove
     vertices.dealloc(vertexToRemove);
@@ -556,6 +585,11 @@ void Mesh::retriangulate(int vertexToRemove)
             vertices[e.v[0]].addEdge(connect3);
             vertices[e.v[1]].addEdge(connect3);
         }
+        if(connect1 == connect2 || connect2 == connect3)
+        {
+            PRINT("Can't have the same edge twice!");
+            throw exception();
+        }
         //add f to e links
         f.e[0] = connect1;
         f.e[1] = connect2;
@@ -566,7 +600,6 @@ void Mesh::retriangulate(int vertexToRemove)
         PRINT(" Edge 2 before: " << edges[f.e[2]]);
         for(int j = 0; j < 3; j++)
         {
-            PRINT("ONLY 1 SHOULD BE -1: " << edges[f.e[j]].f[0] << " " << edges[f.e[j]].f[1]);
             if(edges[f.e[j]].f[0] == INVALID)
                 edges[f.e[j]].f[0] = face;
             else if(edges[f.e[j]].f[1] == INVALID)
@@ -576,7 +609,6 @@ void Mesh::retriangulate(int vertexToRemove)
         PRINT(" Edge 1 after: " << edges[f.e[1]]);
         PRINT(" Edge 2 after: " << edges[f.e[2]]);
     }
-    fullCorrectnessCheck();
 }
 
 /* Mesh utility functions */
@@ -1087,7 +1119,7 @@ void Mesh::fullCorrectnessCheck()
                 PRINT("Edge " << it.loc << " has ref to vertex " << it->v[j] << " but vert not allocated!");
                 throw exception();
             }
-            if(!validFace(it->f[j]) && it->f[j] >= 0)  //-1 is allowed
+            if(!validFace(it->f[j]) && it->f[j] >= 0)
             {
                 PRINT("Edge " << it.loc << " has ref to face " << it->f[j] << " but face not allocated!");
                 PRINT("The edge: " << *it);
@@ -1109,6 +1141,23 @@ void Mesh::fullCorrectnessCheck()
             {
                 PRINT("Vertex " << it.loc << " has ref to edge " << adj << " but that edge doesn't link back to the vertex!");
                 throw exception();
+            }
+        }
+    }
+    //check that adjacency lists for duplicates
+    for(auto it = vertices.begin(); it != vertices.end(); it++)
+    {
+        for(size_t i = 0; i < it->edges.size(); i++)
+        {
+            for(size_t j = 0; j < it->edges.size(); j++)
+            {
+                if(i == j)
+                    continue;
+                if(it->edges[i] == it->edges[j])
+                {
+                    PRINT("Vertex " << it.loc << " has duplicated edge: " << it->edges[i]);
+                    throw exception();
+                }
             }
         }
     }
