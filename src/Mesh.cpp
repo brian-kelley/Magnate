@@ -236,20 +236,11 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     simpleLoadHeightmap(heights, faceValues);
     //Testing edge collapse
     //simplify(faceMatchCutoff);
-    retriangulate(hmVertIndex(3, 3));
-    retriangulate(hmVertIndex(4, 3));
-    retriangulate(hmVertIndex(5, 3));
-    retriangulate(hmVertIndex(6, 3));
-    //retriangulate(hmVertIndex(7, 3));
-    //retriangulate(hmVertIndex(8, 3));
+    //fullCorrectnessCheck();
+    //boundaryEdgeCollapse(hmEdgeIndex(0, 0, EdgeDir::LEFT));
     fullCorrectnessCheck();
-    /*
-    for(int i = 1; i < 20; i++)
-    {
-        for(int j = 1; j < 20; j++)
-            retriangulate(hmVertIndex(i, j));
-    }
-    */
+    interiorEdgeCollapse(hmEdgeIndex(4, 4, EdgeDir::DIAGONAL));
+    fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
 
@@ -345,6 +336,7 @@ void Mesh::simplify(float faceMatchCutoff)
             }
         }
         PRINT("Performed " << collapses << " collapses in " << double(clock() - start) / CLOCKS_PER_SEC << " s.");
+        return;
     }
 }
 
@@ -383,7 +375,6 @@ void Mesh::retriangulate(int vertexToRemove)
         auto newEnd = std::unique(facesToRemove.begin(), facesToRemove.end());
         facesToRemove.erase(newEnd, facesToRemove.end());
     }
-    PRINTVAR(facesToRemove);
     auto terrainValue = faces[facesToRemove.front()].value;
     //Now create a list of the edges in those faces that don't include vertexToRemove
     //(will not have duplicates)
@@ -436,11 +427,6 @@ void Mesh::retriangulate(int vertexToRemove)
             }
         }
     }
-    PRINT("Edge boundary vert list:");
-    for(auto e : edgeBoundary)
-    {
-        PRINT("    " << edges[e].v[0] << " " << edges[e].v[1]);
-    }
     //verify that edge loop actually forms a loop
     {
         size_t num = edgeBoundary.size();
@@ -470,11 +456,6 @@ void Mesh::retriangulate(int vertexToRemove)
         else
             vertLoop.push_back(next.v[1]);
     }
-    PRINT("vert loop:");
-    for(auto v : vertLoop)
-    {
-        PRINT("    " << v);
-    }
     //delete vertexToRemove
     vertices.dealloc(vertexToRemove);
     //delete all faces containing vertexToRemove
@@ -484,7 +465,6 @@ void Mesh::retriangulate(int vertexToRemove)
         if(faceToDelete >= 0)
         {
             faces.dealloc(faceToDelete);
-            PRINT("Deleting face " << faceToDelete);
             numFaces++;
         }
     }
@@ -531,11 +511,9 @@ void Mesh::retriangulate(int vertexToRemove)
             takeFromLo = !takeFromLo;
         }
     }
-    PRINTVAR(triStripVerts);
     //For now assume all same since EC only happens when all same in the area
     //terrainValue has that value
     //Will need to form edges across the gap, and determine existing edges to use
-    PRINT("Will create " << numFaces - 2 << " new faces.");
     for(int i = 0; i < numFaces - 2; i++)
     {
         int face = faces.alloc();
@@ -545,7 +523,6 @@ void Mesh::retriangulate(int vertexToRemove)
         {
             f.v[j] = triStripVerts[i + j];
         }
-        PRINT("Making triangle " << face << " with verts: " << f.v[0] << ',' << f.v[1] << ',' << f.v[2]);
         f.checkNormal();
         //note: at most 1 edge will need to be created for a given triangle
         Edge e;
@@ -559,7 +536,6 @@ void Mesh::retriangulate(int vertexToRemove)
             e.f[0] = INVALID;
             e.f[1] = INVALID;
             connect1 = edges.alloc(e);
-            PRINT("Created edge " << connect1 << " between " << e.v[0] << ", " << e.v[1]);
             vertices[e.v[0]].addEdge(connect1);
             vertices[e.v[1]].addEdge(connect1);
         }
@@ -570,7 +546,6 @@ void Mesh::retriangulate(int vertexToRemove)
             e.f[0] = INVALID;
             e.f[1] = INVALID;
             connect2 = edges.alloc(e);
-            PRINT("Created edge " << connect2 << " between " << e.v[0] << ", " << e.v[1]);
             vertices[e.v[0]].addEdge(connect2);
             vertices[e.v[1]].addEdge(connect2);
         }
@@ -581,23 +556,14 @@ void Mesh::retriangulate(int vertexToRemove)
             e.f[0] = INVALID;
             e.f[1] = INVALID;
             connect3 = edges.alloc(e);
-            PRINT("Created edge " << connect3 << " between " << e.v[0] << ", " << e.v[1]);
             vertices[e.v[0]].addEdge(connect3);
             vertices[e.v[1]].addEdge(connect3);
-        }
-        if(connect1 == connect2 || connect2 == connect3)
-        {
-            PRINT("Can't have the same edge twice!");
-            throw exception();
         }
         //add f to e links
         f.e[0] = connect1;
         f.e[1] = connect2;
         f.e[2] = connect3;
         //add e to f links
-        PRINT(" Edge 0 before: " << edges[f.e[0]]);
-        PRINT(" Edge 1 before: " << edges[f.e[1]]);
-        PRINT(" Edge 2 before: " << edges[f.e[2]]);
         for(int j = 0; j < 3; j++)
         {
             if(edges[f.e[j]].f[0] == INVALID)
@@ -605,9 +571,6 @@ void Mesh::retriangulate(int vertexToRemove)
             else if(edges[f.e[j]].f[1] == INVALID)
                 edges[f.e[j]].f[1] = face;
         }
-        PRINT(" Edge 0 after: " << edges[f.e[0]]);
-        PRINT(" Edge 1 after: " << edges[f.e[1]]);
-        PRINT(" Edge 2 after: " << edges[f.e[2]]);
     }
 }
 
@@ -693,14 +656,16 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     edges[e12].replaceFaceLink(f1, f11);
     edges[e22].replaceFaceLink(f2, f21);
     //nothing links to f1, f2 anymore, delete them
-    if(f1 != INVALID)
+    if(f1 >= 0)
         faces.dealloc(f1);
-    if(f2 != INVALID)
+    if(f2 >= 0)
         faces.dealloc(f2);
     if(!checkFlips(e12, e22))
     {
+        PRINT("Removing + retriangulating " << v2);
         retriangulate(v2);
     }
+    fullCorrectnessCheck();
 }
 
 void Mesh::boundaryEdgeCollapse(int e)
@@ -755,11 +720,7 @@ void Mesh::boundaryEdgeCollapse(int e)
     fullyDeleteEdge(e1);
     edges[e2].replaceFaceLink(f, f1);
     faces.dealloc(f);
-    if(!checkFlips(e2, INVALID))
-    {
-        retriangulate(v1);
-    }
-    fixTriFlips(e2, INVALID);
+    fullCorrectnessCheck();
 }
 
 bool Mesh::faceValuesCheck(int edgeNum)
@@ -822,7 +783,7 @@ bool Mesh::collapseTriangleSides(int edge)
     int faceIndices[2] = {edges[edge].f[0], edges[edge].f[1]};
     for(int i = 0; i < 2; i++)
     {
-        if(faceIndices[i] == -1)
+        if(faceIndices[i] < 0)
             continue;
         Face& f = faces[faceIndices[i]];
         for(int j = 0; j < 3; j++)
