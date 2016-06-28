@@ -14,7 +14,7 @@ float Camera::camPitch;
 const float Camera::ROTATE_SPEED = M_PI;
 const float Camera::MOVE_SPEED = 1.2;
 const float Camera::ZOOM_SPEED = 0.16;
-const float Camera::FOV = M_PI_4;
+const float Camera::FOV = (M_PI_4 + M_PI_4 / 2);
 const float Camera::NEAR = 2;
 const float Camera::FAR = 10000;
 const Heightmap* Camera::heights = nullptr;

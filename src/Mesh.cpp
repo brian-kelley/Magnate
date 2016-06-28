@@ -234,14 +234,8 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
     //Testing edge collapse
-    //simplify(faceMatchCutoff);
-    //fullCorrectnessCheck();
+    simplify(faceMatchCutoff);
     fullCorrectnessCheck();
-    //interiorEdgeCollapse(hmEdgeIndex(4, 4, EdgeDir::DIAGONAL));
-    boundaryEdgeCollapse(hmEdgeIndex(0, 0, EdgeDir::TOP));
-    fullCorrectnessCheck();
-    //interiorEdgeCollapse(hmEdgeIndex(4, 4, EdgeDir::DIAGONAL));
-    //fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
 
@@ -333,10 +327,48 @@ void Mesh::simplify(float faceMatchCutoff)
             }
             if(edgeCollapse(it.loc))
             {
-                printf("%i collapses\n", collapses++);
+                collapses++;
+                //printf("%i collapses\n", collapses);
             }
         }
         PRINT("Performed " << collapses << " collapses in " << double(clock() - start) / CLOCKS_PER_SEC << " s.");
+        PRINT("Fixing flipped triangles; detecting and fixing overlaps...");
+        for(auto it = faces.begin(); it != faces.end(); it++)
+        {
+            it->checkNormal();
+        }
+        for(auto it = vertices.begin(); it != vertices.end(); it++)
+        {
+            if(isTriClique(it.loc))
+            {
+                removeTriClique(it.loc);
+            }
+        }
+        return;
+        for(auto it = edges.begin(); it != edges.end(); it++)
+        {
+            //use the fact that the upward curl of faces should be in opposing directions along an edge
+            if(it->f[0] >= 0 && it->f[1] >= 0)
+            {
+                Face& f1 = faces[it->f[0]];
+                Face& f2 = faces[it->f[1]];
+                if(f1.isClockwise(it->v[0], it->v[1]) == f2.isClockwise(it->v[0], it->v[1]))
+                {
+                    PRINT("Found incorrect fold at edge " << it.loc);
+                    //Overlap, retriangulate the area
+                    if(!vertices[it->v[0]].boundary)
+                        retriangulate(it->v[0]);
+                    else if(!vertices[it->v[1]].boundary)
+                        retriangulate(it->v[1]);
+                    else
+                    {
+                        PRINT("Overlapping faces on map boundary can't be repaired!");
+                        throw exception();
+                    }
+                }
+            }
+        }
+        fullCorrectnessCheck();
         return;
     }
 }
@@ -428,23 +460,6 @@ void Mesh::retriangulate(int vertexToRemove)
             }
         }
     }
-    //verify that edge loop actually forms a loop
-    {
-        size_t num = edgeBoundary.size();
-        for(size_t i = 0; i < num; i++)
-        {
-            Edge& here = edges[edgeBoundary[i]];
-            Edge& next = edges[edgeBoundary[(i + 1) % num]];
-            //must not have same id as next
-            if(&here == &next)
-                throw exception();
-            //must share exactly one vertex with next
-            if(here.hasVert(next.v[0]) && here.hasVert(next.v[1]))
-                throw exception();
-            if(!here.hasVert(next.v[0]) && !here.hasVert(next.v[1]))
-                throw exception();
-        }
-    }
     //Create a list of vertices that form the loop
     vector<int> vertLoop;
     for(size_t i = 0; i < edgeBoundary.size(); i++)
@@ -456,6 +471,23 @@ void Mesh::retriangulate(int vertexToRemove)
             vertLoop.push_back(next.v[0]);
         else
             vertLoop.push_back(next.v[1]);
+    }
+    //verify that edge loop actually forms a loop
+    {
+        size_t num = edgeBoundary.size();
+        for(size_t i = 0; i < num; i++)
+        {
+            Edge& here = edges[edgeBoundary[i]];
+            Edge& next = edges[edgeBoundary[(i + 1) % num]];
+            //must not have same id as next
+            if(&here == &next)
+                throw exception();
+            //must share exactly one vertex with next
+            if(here.hasVert(next.v[0]) == here.hasVert(next.v[1]))
+            {
+                throw exception();
+            }
+        }
     }
     //delete vertexToRemove
     vertices.dealloc(vertexToRemove);
@@ -524,7 +556,6 @@ void Mesh::retriangulate(int vertexToRemove)
         {
             f.v[j] = triStripVerts[i + j];
         }
-        f.checkNormal();
         //note: at most 1 edge will need to be created for a given triangle
         Edge e;
         int connect1 = vertices[f.v[0]].connectsTo(f.v[1]);
@@ -572,6 +603,7 @@ void Mesh::retriangulate(int vertexToRemove)
             else if(edges[f.e[j]].f[1] == INVALID)
                 edges[f.e[j]].f[1] = face;
         }
+        f.checkNormal();
     }
 }
 
@@ -659,28 +691,28 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
         faces.dealloc(f1);
     if(f2 >= 0)
         faces.dealloc(f2);
+    fixTriFlips(e12, e22);
+    if(isTriClique(v2))
+        removeTriClique(v2);
+    /*
     if(!checkFlips(e12, e22))
     {
-        PRINT("Removing + retriangulating " << v2);
+        //PRINT("Removing + retriangulating " << v2);
         retriangulate(v2);
     }
+    */
 }
 
 void Mesh::boundaryEdgeCollapse(int e)
 {
-    PRINTVAR(e);
     auto& edge = edges[e];
-    PRINTVAR(edge);
     int f = edge.f[0];
     if(f < 0)
         f = edge.f[1];
     //f = the only valid face of edge to collapse
     Face& face = faces[f];
-    PRINTVAR(face);
     int v1 = edge.v[0];
     int v2 = edge.v[1];
-    PRINTVAR(v1);
-    PRINTVAR(v2);
     //Already know on boundary because edge only has one face adjacent
     //  but must check that at most one of v1, v2 is in a corner
     //  because can't collapse the boundary of the mesh
@@ -706,13 +738,9 @@ void Mesh::boundaryEdgeCollapse(int e)
     //have indices within Face::e of e1, e2 (NOT the actual pointers)
     f1 = getOtherFace(f, e1);
     f2 = getOtherFace(f, e2);
-    PRINTVAR(f1);
-    PRINTVAR(f2);
     //now e1 and e2 are more useful as actual values
     e1 = faces[f].e[e1];
     e2 = faces[f].e[e2];
-    PRINTVAR(e1);
-    PRINTVAR(e2);
     //v1 might be moved, v2 will be deleted
     //don't want to delete a corner vertex
     if(v2corner)
@@ -722,17 +750,68 @@ void Mesh::boundaryEdgeCollapse(int e)
     if(moveVertex)
         vertices[v1].pos = (vertices[v1].pos + vertices[v2].pos) / 2.0f;
     //e2 will be merged onto e1, and e1 will be deleted
-    PRINT("Merging edge " << e2 << " onto " << e1 << ", then deleting " << e1);
     if(f1 != -1)
         faces[f1].replaceEdgeLink(e1, e2);
     edges[e2].replaceFaceLink(f, f1);
     //remove V->E links to edge e
-    PRINT("Deleting vert " << v1 << " link to e " << e);
     replaceVertexLinks(v2, v1); //fixes all E -> V and F -> V links, deleted edge
     vertices.dealloc(v2);
     vertices[v1].removeEdge(e);
     fullyDeleteEdge(e1);
     faces.dealloc(f);
+    fixTriFlips(e2, INVALID);
+}
+
+bool Mesh::isTriClique(int vertex)
+{
+    return vertex >= 0 && vertices[vertex].edges.size() == 3;
+}
+
+void Mesh::removeTriClique(int vertex)
+{
+    if(vertices[vertex].boundary)
+        return;
+    PRINT("Removing tri clique at vertex " << vertex);
+    Vertex& vert = vertices[vertex];
+    DBASSERT(vert.edges.size() == 3);
+    int v[3];
+    for(int i = 0; i < 3; i++)
+    {
+        Edge& e = edges[vert.edges[i]];
+        if(e.v[0] == vertex)
+            v[i] = e.v[1];
+        else
+            v[i] = e.v[0];
+    }
+    DBASSERT(vertices[v[0]].connectsTo(v[1]) != -1);
+    DBASSERT(vertices[v[1]].connectsTo(v[2]) != -1);
+    DBASSERT(vertices[v[0]].connectsTo(v[2]) != -1);
+    DBASSERT(vert.connectsTo(v[0]) != -1);
+    DBASSERT(vert.connectsTo(v[1]) != -1);
+    DBASSERT(vert.connectsTo(v[2]) != -1);
+    int deleteF1 = getFaceFrom3Vertices(vertex, v[0], v[1]);
+    int deleteF2 = getFaceFrom3Vertices(vertex, v[1], v[2]);
+    int keep = getFaceFrom3Vertices(vertex, v[0], v[2]);
+    faces[keep].replaceVertexLink(vertex, v[1]);
+    int deleteE1 = vert.connectsTo(v[0]);
+    int deleteE2 = vert.connectsTo(v[1]);
+    int deleteE3 = vert.connectsTo(v[2]);
+    int newE1 = vertices[v[0]].connectsTo(v[1]);
+    int newE2 = vertices[v[1]].connectsTo(v[2]);
+    faces[keep].replaceEdgeLink(deleteE1, newE1);
+    faces[keep].replaceEdgeLink(deleteE3, newE2);
+    edges[newE1].replaceFaceLink(deleteF1, keep);
+    edges[newE2].replaceFaceLink(deleteF2, keep);
+    vertices[v[0]].removeEdge(deleteE1);
+    vertices[v[1]].removeEdge(deleteE2);
+    vertices[v[2]].removeEdge(deleteE3);
+    vertices.dealloc(vertex);
+    edges.dealloc(deleteE1);
+    edges.dealloc(deleteE2);
+    edges.dealloc(deleteE3);
+    faces.dealloc(deleteF1);
+    faces.dealloc(deleteF2);
+    faces[keep].checkNormal();
 }
 
 bool Mesh::faceValuesCheck(int edgeNum)
@@ -1173,23 +1252,35 @@ void Mesh::fullyDeleteEdge(int e)
     int v2 = edges[e].v[1];
     if(vertices.isAllocated(v1))
     {
-        PRINT("Removing vertex " << v1 << " link to edge " << e);
         vertices[v1].removeEdge(e);
     }
     if(vertices.isAllocated(v2))
     {
-        PRINT("Removing vertex " << v2 << " link to edge " << e);
         vertices[v2].removeEdge(e);
     }
     edges.dealloc(e);
 }
 
-int Mesh::getFaceFromVertices(int v1, int v2)
+int Mesh::getFaceFrom2Vertices(int v1, int v2)
 {
     //assume there is only one face containing v1, v2
     //also assume that v1 and v2 are connected
     int e = vertices[v1].connectsTo(v2);
     return edges[e].f[0] != INVALID ? edges[e].f[0] : edges[e].f[1];
+}
+
+int Mesh::getFaceFrom3Vertices(int v1, int v2, int v3)
+{
+    int e = vertices[v1].connectsTo(v2);
+    if(e == INVALID)
+        return INVALID;
+    for(int i = 0; i < 2; i++)
+    {
+        int f = edges[e].f[i];
+        if(f >= 0 && faces[f].hasVert(v3))
+            return f;
+    }
+    return INVALID;
 }
 
 bool Mesh::validFace(int f)

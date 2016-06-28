@@ -41,7 +41,7 @@ void WorldRenderer::draw()
     if(World::drawing)
     {
 #ifdef MAGNATE_DEBUG
-        if(Input::keystate[SDL_SCANCODE_M])
+        //if(Input::keystate[SDL_SCANCODE_M])
         {
             //Draw a red wireframe mesh instead of solid heightmap quads
             drawDebugWireframeMesh();
@@ -201,8 +201,9 @@ void WorldRenderer::buildMeshVBO()
     auto& faces = World::mesh.faces;
     auto& verts = World::mesh.vertices;
     Vertex3D v1, v2, v3;
+    Color4 good(0, 0, 255, 127);
+    Color4 bad(225, 0, 0, 127);
     //only positions and norms are modified
-    v1 = v2 = v3 = {Color4(170, 0, 0, 255), TexCoord(-1, -1), Pos3(0, 0, 0), Pos3(0, 1, 0)};
     int numVertices = 3 * faces.size;
     meshVBO.resize(numVertices);
     GLERR;
@@ -214,6 +215,18 @@ void WorldRenderer::buildMeshVBO()
         v1.pos = verts[it->v[0]].pos;
         v2.pos = verts[it->v[1]].pos;
         v3.pos = verts[it->v[2]].pos;
+        if(it->getNorm().y < 0)
+        {
+            v1.color = bad;
+            v2.color = bad;
+            v3.color = bad;
+        }
+        else
+        {
+            v1.color = good;
+            v2.color = good;
+            v3.color = good;
+        }
         meshbuf[vIndex++] = v1;
         meshbuf[vIndex++] = v2;
         meshbuf[vIndex++] = v3;
@@ -224,9 +237,11 @@ void WorldRenderer::buildMeshVBO()
 
 void WorldRenderer::drawDebugWireframeMesh()
 {
+    meshVBO.draw(0, 3 * World::mesh.faces.size, GL_TRIANGLES);
     //go to wireframe mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     meshVBO.draw(0, 3 * World::mesh.faces.size, GL_TRIANGLES);
+    meshVBO.draw(0, 3 * World::mesh.faces.size, GL_TRIANGLES);  //draw twice to make darker
     //restore
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
