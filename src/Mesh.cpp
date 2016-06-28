@@ -344,7 +344,7 @@ void Mesh::simplify(float faceMatchCutoff)
                 removeTriClique(it.loc);
             }
         }
-        return;
+        PRINT("Done handling tri cliques.");
         for(auto it = edges.begin(); it != edges.end(); it++)
         {
             //use the fact that the upward curl of faces should be in opposing directions along an edge
@@ -472,6 +472,9 @@ void Mesh::retriangulate(int vertexToRemove)
         else
             vertLoop.push_back(next.v[1]);
     }
+    //Check for returning early (continuing causes errors and is unnecessary)
+    if(vertLoop.size() < 4)
+        return;
     //verify that edge loop actually forms a loop
     {
         size_t num = edgeBoundary.size();
