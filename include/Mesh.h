@@ -7,9 +7,6 @@
 #include <vector>
 #include <utility>
 
-/* Unstructured triangular mesh for
- * efficiently storing terrain */
-
 namespace MeshTypes
 {
     typedef glm::vec3 Vec3;
@@ -82,10 +79,9 @@ public:
     void simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues);
     void simplify(float faceMatchCutoff);
     bool edgeCollapse(int edge);    //returns false if the operation was aborted because of geometry
-    void retriangulate(int vertexToRemove);    //delete a vertex and then fill in the hole
-    bool isTriClique(int vertex);
-    void removeTriClique(int vertex);
-    void fixTriFlips(int e1, int e2);
+    void removeAndRetriangulate(int vertex);
+    int removeVertex(int vertex);               //delete a vertex, return terrain val or -1 if no changes
+    void retriangulate(int boundaryVertex, int terrainVal);     //fill in a hole left by removeVertex()
     int getMaxVertices();
     int getMaxEdges();
     int getMaxFaces();
@@ -93,7 +89,10 @@ public:
     Pool<MeshTypes::Vec3> normals;
     Pool<MeshTypes::Edge> edges;
     Pool<MeshTypes::Face> faces;
-    //Utility functions
+private:
+    bool isTriClique(int vertex);
+    void removeTriClique(int vertex);
+    void fixTriFlips(int e1, int e2);
     void interiorEdgeCollapse(int e);
     void boundaryEdgeCollapse(int e);
     int hmVertIndex(int x, int y);
@@ -120,6 +119,8 @@ public:
     //when a pair of verts only shares 1 valid face, return the face
     int getFaceFrom2Vertices(int v1, int v2);
     int getFaceFrom3Vertices(int v1, int v2, int v3);
+    //c1, c2 set to vertices connected to both v1, v2 (or -1)
+    void getMutualConnections(int v1, int v2, int& c1, int& c2);    
     //replace all links to toReplace with newLink (changes links in faces and edges)
     void replaceVertexLinks(int toReplace, int newLink);
     void fullyDeleteEdge(int e); //completely deletes edge. Faces must not link to it!

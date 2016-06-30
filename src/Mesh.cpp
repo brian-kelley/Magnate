@@ -357,9 +357,9 @@ void Mesh::simplify(float faceMatchCutoff)
                     PRINT("Found incorrect fold at edge " << it.loc);
                     //Overlap, retriangulate the area
                     if(!vertices[it->v[0]].boundary)
-                        retriangulate(it->v[0]);
+                        removeAndRetriangulate(it->v[0]);
                     else if(!vertices[it->v[1]].boundary)
-                        retriangulate(it->v[1]);
+                        removeAndRetriangulate(it->v[1]);
                     else
                     {
                         PRINT("Overlapping faces on map boundary can't be repaired!");
@@ -388,7 +388,16 @@ bool Mesh::edgeCollapse(int edgeNum)
     return true;
 }
 
-void Mesh::retriangulate(int vertexToRemove)
+void Mesh::removeAndRetriangulate(int vertex)
+{
+    Edge& anyEdge = edges[vertices[vertex].edges.front()];
+    int neighbor = anyEdge.v[0] == vertex ? anyEdge.v[1] : anyEdge.v[0];
+    int terrainVal = removeVertex(vertex);
+    if(terrainVal != -1)
+        retriangulate(neighbor, terrainVal);
+}
+
+int Mesh::removeVertex(int vertexToRemove)
 {
     Vertex& vert = vertices[vertexToRemove];
     if(vert.boundary)
@@ -440,41 +449,10 @@ void Mesh::retriangulate(int vertexToRemove)
             }
         }
     }
-    //reorder the list of edges to make a continuous loop
-    //for each in edgeBoundary, swap with the edge connecting to previous
-    for(size_t i = 1; i < edgeBoundary.size(); i++)
-    {
-        Edge& edge = edges[edgeBoundary[i]];
-        Edge& prev = edges[edgeBoundary[i - 1]];
-        if(!prev.hasVert(edge.v[0]) && !prev.hasVert(edge.v[1]))
-        {
-            //need to find an edge that does contain one of prev's vertices
-            for(size_t j = i + 1; j < edgeBoundary.size(); j++)
-            {
-                Edge& check = edges[edgeBoundary[j]];
-                if(prev.hasVert(check.v[0]) || prev.hasVert(check.v[1]))
-                {
-                    SWAP(edgeBoundary[i], edgeBoundary[j]);
-                    break;
-                }
-            }
-        }
-    }
-    //Create a list of vertices that form the loop
-    vector<int> vertLoop;
-    for(size_t i = 0; i < edgeBoundary.size(); i++)
-    {
-        Edge& prev = edges[edgeBoundary[i]];
-        Edge& next = edges[edgeBoundary[(i + 1) % edgeBoundary.size()]];
-        //want to add the vert that is shared with prev
-        if(prev.hasVert(next.v[0]))
-            vertLoop.push_back(next.v[0]);
-        else
-            vertLoop.push_back(next.v[1]);
-    }
     //Check for returning early (continuing causes errors and is unnecessary)
-    if(vertLoop.size() < 4)
-        return;
+    if(edgeBoundary.size() < 4)
+        return -1;
+    /*
     //verify that edge loop actually forms a loop
     {
         size_t num = edgeBoundary.size();
@@ -492,6 +470,7 @@ void Mesh::retriangulate(int vertexToRemove)
             }
         }
     }
+    */
     //delete vertexToRemove
     vertices.dealloc(vertexToRemove);
     //delete all faces containing vertexToRemove
@@ -530,84 +509,91 @@ void Mesh::retriangulate(int vertexToRemove)
                 edges[boundEdge].replaceFaceLink(facesToCheck[i], INVALID);
         }
     }
-    //now have a hole in the mesh with no invalid links
-    //create numFaces-2 new faces
-    //create a new list of the n vertices in the right order to make triangles
-    vector<int> triStripVerts;
+    return terrainValue;
+}
+
+void Mesh::retriangulate(int vertexToRemove, int terrainVal)
+{
+    vector<int> vertLoop;
+    vertLoop.reserve(32);
     {
-        int lo = 0;
-        int hi = vertLoop.size() - 1;
-        bool takeFromLo = true;
-        while(triStripVerts.size() != vertLoop.size())
+        int startVert = vertexToRemove;
+        int vertIt = vertexToRemove;
+        int lastEdge = INVALID;
+        do
         {
-            if(takeFromLo)
-                triStripVerts.push_back(vertLoop[lo++]);
-            else
-                triStripVerts.push_back(vertLoop[hi--]);
-            takeFromLo = !takeFromLo;
+            vertLoop.push_back(vertIt);
+            for(auto e : vertices[vertIt].edges)
+            {
+                if((edges[e].f[0] == INVALID || edges[e].f[1] == INVALID) && e != lastEdge)
+                {
+                    //have the next edge in loop
+                    lastEdge = e;
+                    if(edges[e].v[0] == vertIt)
+                        vertIt = edges[e].v[0];
+                    else
+                        vertIt = edges[e].v[1];
+                }
+            }
+        }
+        while (vertIt != startVert);
+    }
+    int numFaces = vertLoop.size();
+    vector<pair<int, int>> possibleConnections;
+    possibleConnections.reserve(vertLoop.size() * (vertLoop.size() - 1));
+    for(size_t i = 0; i < vertLoop.size(); i++)
+    {
+        for(size_t j = 0; j < vertLoop.size(); j++)
+        {
+            if(i == j)
+                continue;
+            if(vertices[i].connectsTo(j) == INVALID)
+                possibleConnections.push_back({vertLoop[i], vertLoop[j]});
         }
     }
-    //For now assume all same since EC only happens when all same in the area
-    //terrainValue has that value
-    //Will need to form edges across the gap, and determine existing edges to use
-    for(int i = 0; i < numFaces - 2; i++)
+    //sort the list of possible connections ascending by distance between the vertices
+    auto cmp = [&] (const pair<int, int>& e1, const pair<int, int>& e2) -> bool
     {
-        int face = faces.alloc();
-        Face& f = faces[face];
-        f.value = terrainValue;
-        for(int j = 0; j < 3; j++)
+        float d1 = glm::length(vertices[e1.first].pos - vertices[e1.second].pos);
+        float d2 = glm::length(vertices[e2.first].pos - vertices[e2.second].pos);
+        return d1 > d2;
+    };
+    sort(possibleConnections.begin(), possibleConnections.end(), cmp);
+    int facesAdded = 0;
+    auto nextConnection = possibleConnections.begin();
+    while(facesAdded < numFaces - 2)
+    {
+        //add nextConnection as an edge, then form the face if all 3 edges present
+        int ei = edges.alloc();
+        Edge& e = edges[ei];
+        e.v[0] = nextConnection->first;
+        e.v[1] = nextConnection->second;
+        nextConnection++;
+        //need to create a new face if there exists another vertex that is connected to both of e.v
+        int mutual[2];
+        getMutualConnections(e.v[0], e.v[1], mutual[0], mutual[1]);
+        vertices[e.v[0]].addEdge(ei);
+        vertices[e.v[1]].addEdge(ei);
+        for(int i = 0; i < 2; i++)
         {
-            f.v[j] = triStripVerts[i + j];
+            //make a new triangle with mutual[i], e.v[0], e.v[1] as corners
+            int fi = faces.alloc();
+            Face& f = faces[fi];
+            f.v[0] = mutual[i];
+            f.v[1] = e.v[0];
+            f.v[2] = e.v[1];
+            f.e[0] = ei;
+            f.e[1] = vertices[f.v[0]].connectsTo(f.v[1]);
+            f.e[2] = vertices[f.v[0]].connectsTo(f.v[2]);
+            DBASSERT(f.e[1] != -1);
+            DBASSERT(f.e[2] != -1);
+            edges[f.e[0]].replaceFaceLink(INVALID, fi);
+            edges[f.e[1]].replaceFaceLink(INVALID, fi);
+            edges[f.e[2]].replaceFaceLink(INVALID, fi);
+            f.value = terrainVal;
         }
-        //note: at most 1 edge will need to be created for a given triangle
-        Edge e;
-        int connect1 = vertices[f.v[0]].connectsTo(f.v[1]);
-        int connect2 = vertices[f.v[1]].connectsTo(f.v[2]);
-        int connect3 = vertices[f.v[2]].connectsTo(f.v[0]);
-        if(connect1 == INVALID)
-        {
-            e.v[0] = f.v[0];
-            e.v[1] = f.v[1];
-            e.f[0] = INVALID;
-            e.f[1] = INVALID;
-            connect1 = edges.alloc(e);
-            vertices[e.v[0]].addEdge(connect1);
-            vertices[e.v[1]].addEdge(connect1);
-        }
-        else if(connect2 == INVALID)
-        {
-            e.v[0] = f.v[1];
-            e.v[1] = f.v[2];
-            e.f[0] = INVALID;
-            e.f[1] = INVALID;
-            connect2 = edges.alloc(e);
-            vertices[e.v[0]].addEdge(connect2);
-            vertices[e.v[1]].addEdge(connect2);
-        }
-        else if(connect3 == INVALID)
-        {
-            e.v[0] = f.v[0];
-            e.v[1] = f.v[2];
-            e.f[0] = INVALID;
-            e.f[1] = INVALID;
-            connect3 = edges.alloc(e);
-            vertices[e.v[0]].addEdge(connect3);
-            vertices[e.v[1]].addEdge(connect3);
-        }
-        //add f to e links
-        f.e[0] = connect1;
-        f.e[1] = connect2;
-        f.e[2] = connect3;
-        //add e to f links
-        for(int j = 0; j < 3; j++)
-        {
-            if(edges[f.e[j]].f[0] == INVALID)
-                edges[f.e[j]].f[0] = face;
-            else if(edges[f.e[j]].f[1] == INVALID)
-                edges[f.e[j]].f[1] = face;
-        }
-        f.checkNormal();
     }
+    return;
 }
 
 void Mesh::interiorEdgeCollapse(int edgeNum)
@@ -1284,6 +1270,44 @@ int Mesh::getFaceFrom3Vertices(int v1, int v2, int v3)
             return f;
     }
     return INVALID;
+}
+
+void Mesh::getMutualConnections(int vert1, int vert2, int& c1, int& c2)
+{
+    Vertex& v1 = vertices[vert1];
+    Vertex& v2 = vertices[vert2];
+    bool foundOne = false;
+    for(auto edge1 : v1.edges)
+    {
+        for(auto edge2 : v2.edges)
+        {
+            //now if e1, e2 share any one vertex, set c1 or c2 to it
+            Edge& e1 = edges[edge1];
+            Edge& e2 = edges[edge2];
+            int shared = -1;
+            if(e1.v[0] == e2.v[0])
+                shared = e1.v[0];
+            else if(e1.v[1] == e2.v[0])
+                shared = e1.v[1];
+            else if(e1.v[0] == e2.v[1])
+                shared = e1.v[0];
+            else if(e1.v[1] == e2.v[1])
+                shared = e1.v[1];
+            if(shared != -1)
+            {
+                if(foundOne)
+                {
+                    foundOne = true;
+                    c1 = shared;
+                }
+                else
+                {
+                    c2 = shared;
+                    return;
+                }
+            }
+        }
+    }
 }
 
 bool Mesh::validFace(int f)
