@@ -235,7 +235,7 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     simpleLoadHeightmap(heights, faceValues);
     //Testing edge collapse
     simplify(faceMatchCutoff);
-    fullCorrectnessCheck();
+    //fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
 
@@ -357,9 +357,15 @@ void Mesh::simplify(float faceMatchCutoff)
                     PRINT("Found incorrect fold at edge " << it.loc);
                     //Overlap, retriangulate the area
                     if(!vertices[it->v[0]].boundary)
+                    {
                         removeAndRetriangulate(it->v[0]);
+                        return;
+                    }
                     else if(!vertices[it->v[1]].boundary)
+                    {
                         removeAndRetriangulate(it->v[1]);
+                        return;
+                    }
                     else
                     {
                         PRINT("Overlapping faces on map boundary can't be repaired!");
@@ -368,7 +374,6 @@ void Mesh::simplify(float faceMatchCutoff)
                 }
             }
         }
-        fullCorrectnessCheck();
         return;
     }
 }
@@ -530,69 +535,78 @@ void Mesh::retriangulate(int vertexToRemove, int terrainVal)
                     //have the next edge in loop
                     lastEdge = e;
                     if(edges[e].v[0] == vertIt)
-                        vertIt = edges[e].v[0];
-                    else
                         vertIt = edges[e].v[1];
+                    else
+                        vertIt = edges[e].v[0];
+                    break;
                 }
             }
         }
         while (vertIt != startVert);
     }
-    int numFaces = vertLoop.size();
-    vector<pair<int, int>> possibleConnections;
-    possibleConnections.reserve(vertLoop.size() * (vertLoop.size() - 1));
     for(size_t i = 0; i < vertLoop.size(); i++)
     {
-        for(size_t j = 0; j < vertLoop.size(); j++)
-        {
-            if(i == j)
-                continue;
-            if(vertices[i].connectsTo(j) == INVALID)
-                possibleConnections.push_back({vertLoop[i], vertLoop[j]});
-        }
+        DBASSERT(vertices[vertLoop[i]].connectsTo(vertLoop[(i + 1) % vertLoop.size()]) != -1);
     }
-    //sort the list of possible connections ascending by distance between the vertices
-    auto cmp = [&] (const pair<int, int>& e1, const pair<int, int>& e2) -> bool
+    //for each new face in [0, n-2)
+    //  pick the shortest edge between vertices 2 apart in vertLoop
+    //  form a new edge between that pair, remove middle one from vertloop, create new face
+    while(vertLoop.size() > 3)
     {
-        float d1 = glm::length(vertices[e1.first].pos - vertices[e1.second].pos);
-        float d2 = glm::length(vertices[e2.first].pos - vertices[e2.second].pos);
-        return d1 > d2;
-    };
-    sort(possibleConnections.begin(), possibleConnections.end(), cmp);
-    int facesAdded = 0;
-    auto nextConnection = possibleConnections.begin();
-    while(facesAdded < numFaces - 2)
-    {
-        //add nextConnection as an edge, then form the face if all 3 edges present
+        //get the shortest possible new edge
+        int v1 = -1;
+        int vmid = -1;
+        int vmidIndex;
+        int v2 = -1;
+        float bestDist = 1e10;
+        for(size_t i = 0; i < vertLoop.size(); i++)
+        {
+            float thisDist = (vertices[vertLoop[i]].pos = vertices[vertLoop[(i + 2) % vertLoop.size()]].pos).length();
+            if(v1 == -1 || thisDist < bestDist)
+            {
+                v1 = vertLoop[i];
+                vmidIndex = (i + 1) % vertLoop.size();
+                vmid = vertLoop[vmidIndex];
+                v2 = vertLoop[(i + 2) % vertLoop.size()];
+                bestDist = thisDist;
+            }
+        }
+        vertLoop.erase(vertLoop.begin() + vmidIndex);
+        //create the edge and the face
         int ei = edges.alloc();
         Edge& e = edges[ei];
-        e.v[0] = nextConnection->first;
-        e.v[1] = nextConnection->second;
-        nextConnection++;
-        //need to create a new face if there exists another vertex that is connected to both of e.v
-        int mutual[2];
-        getMutualConnections(e.v[0], e.v[1], mutual[0], mutual[1]);
-        vertices[e.v[0]].addEdge(ei);
-        vertices[e.v[1]].addEdge(ei);
-        for(int i = 0; i < 2; i++)
-        {
-            //make a new triangle with mutual[i], e.v[0], e.v[1] as corners
-            int fi = faces.alloc();
-            Face& f = faces[fi];
-            f.v[0] = mutual[i];
-            f.v[1] = e.v[0];
-            f.v[2] = e.v[1];
-            f.e[0] = ei;
-            f.e[1] = vertices[f.v[0]].connectsTo(f.v[1]);
-            f.e[2] = vertices[f.v[0]].connectsTo(f.v[2]);
-            DBASSERT(f.e[1] != -1);
-            DBASSERT(f.e[2] != -1);
-            edges[f.e[0]].replaceFaceLink(INVALID, fi);
-            edges[f.e[1]].replaceFaceLink(INVALID, fi);
-            edges[f.e[2]].replaceFaceLink(INVALID, fi);
-            f.value = terrainVal;
-        }
+        e.v[0] = v1;
+        e.v[1] = v2;
+        int fi = faces.alloc();
+        Face& f = faces[fi];
+        e.f[0] = fi;
+        e.f[1] = -1;
+        f.v[0] = v1;
+        f.v[1] = vmid;
+        f.v[2] = v2;
+        f.e[0] = vertices[v1].coxnnectsTo(vmid);
+        f.e[1] = vertices[v2].connectsTo(vmid);
+        f.e[2] = ei;
+        edges[f.e[0]].replaceFaceLink(INVALID, fi);
+        edges[f.e[1]].replaceFaceLink(INVALID, fi);
+        PRINTVAR(e);
+        PRINTVAR(f);
+        f.checkNormal();
+        f.value = terrainVal;
     }
+    //create the last face with the 3 remaining verts
+    int fi = faces.alloc();
+    Face& f = faces[fi];
+    for(int i = 0; i < 3; i++)
+        f.v[i] = vertLoop[i];
+    f.e[0] = vertices[f.v[0]].connectsTo(f.v[1]);
+    f.e[1] = vertices[f.v[1]].connectsTo(f.v[2]);
+    f.e[2] = vertices[f.v[2]].connectsTo(f.v[0]);
+    edges[f.e[0]].replaceFaceLink(INVALID, fi);
+    edges[f.e[1]].replaceFaceLink(INVALID, fi);
+    edges[f.e[2]].replaceFaceLink(INVALID, fi);
+    f.checkNormal();
+    f.value = terrainVal;
     return;
 }
 
@@ -1276,6 +1290,8 @@ void Mesh::getMutualConnections(int vert1, int vert2, int& c1, int& c2)
 {
     Vertex& v1 = vertices[vert1];
     Vertex& v2 = vertices[vert2];
+    c1 = -1;
+    c2 = -1;
     bool foundOne = false;
     for(auto edge1 : v1.edges)
     {
