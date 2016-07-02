@@ -134,5 +134,6 @@ private:
 
 std::ostream& operator<<(std::ostream& os, const MeshTypes::Face& face);
 std::ostream& operator<<(std::ostream& os, const MeshTypes::Edge& edge);
+std::ostream& operator<<(std::ostream& os, const MeshTypes::Vertex& vert);
 
 #endif

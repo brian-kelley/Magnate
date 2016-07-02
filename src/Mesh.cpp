@@ -30,9 +30,7 @@ void Vertex::removeEdge(int e)
     for(int i = edges.size() - 1; i >= 0; i--)
     {
         if(edges[i] == e)
-        {
             edges.erase(edges.begin() + i);
-        }
     }
 }
 
@@ -235,7 +233,7 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     simpleLoadHeightmap(heights, faceValues);
     //Testing edge collapse
     simplify(faceMatchCutoff);
-    //fullCorrectnessCheck();
+    fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
 
@@ -357,15 +355,9 @@ void Mesh::simplify(float faceMatchCutoff)
                     PRINT("Found incorrect fold at edge " << it.loc);
                     //Overlap, retriangulate the area
                     if(!vertices[it->v[0]].boundary)
-                    {
                         removeAndRetriangulate(it->v[0]);
-                        return;
-                    }
                     else if(!vertices[it->v[1]].boundary)
-                    {
                         removeAndRetriangulate(it->v[1]);
-                        return;
-                    }
                     else
                     {
                         PRINT("Overlapping faces on map boundary can't be repaired!");
@@ -457,25 +449,6 @@ int Mesh::removeVertex(int vertexToRemove)
     //Check for returning early (continuing causes errors and is unnecessary)
     if(edgeBoundary.size() < 4)
         return -1;
-    /*
-    //verify that edge loop actually forms a loop
-    {
-        size_t num = edgeBoundary.size();
-        for(size_t i = 0; i < num; i++)
-        {
-            Edge& here = edges[edgeBoundary[i]];
-            Edge& next = edges[edgeBoundary[(i + 1) % num]];
-            //must not have same id as next
-            if(&here == &next)
-                throw exception();
-            //must share exactly one vertex with next
-            if(here.hasVert(next.v[0]) == here.hasVert(next.v[1]))
-            {
-                throw exception();
-            }
-        }
-    }
-    */
     //delete vertexToRemove
     vertices.dealloc(vertexToRemove);
     //delete all faces containing vertexToRemove
@@ -517,13 +490,13 @@ int Mesh::removeVertex(int vertexToRemove)
     return terrainValue;
 }
 
-void Mesh::retriangulate(int vertexToRemove, int terrainVal)
+void Mesh::retriangulate(int boundaryVertex, int terrainVal)
 {
     vector<int> vertLoop;
     vertLoop.reserve(32);
     {
-        int startVert = vertexToRemove;
-        int vertIt = vertexToRemove;
+        int startVert = boundaryVertex;
+        int vertIt = boundaryVertex;
         int lastEdge = INVALID;
         do
         {
@@ -547,12 +520,15 @@ void Mesh::retriangulate(int vertexToRemove, int terrainVal)
     for(size_t i = 0; i < vertLoop.size(); i++)
     {
         DBASSERT(vertices[vertLoop[i]].connectsTo(vertLoop[(i + 1) % vertLoop.size()]) != -1);
+        DBASSERT(vertices[vertLoop[(i + 1) % vertLoop.size()]].connectsTo(vertLoop[i]));
     }
     //for each new face in [0, n-2)
     //  pick the shortest edge between vertices 2 apart in vertLoop
     //  form a new edge between that pair, remove middle one from vertloop, create new face
     while(vertLoop.size() > 3)
     {
+        PRINTVAR(vertLoop);
+        PRINTVAR(vertLoop.size());
         //get the shortest possible new edge
         int v1 = -1;
         int vmid = -1;
@@ -561,7 +537,7 @@ void Mesh::retriangulate(int vertexToRemove, int terrainVal)
         float bestDist = 1e10;
         for(size_t i = 0; i < vertLoop.size(); i++)
         {
-            float thisDist = (vertices[vertLoop[i]].pos = vertices[vertLoop[(i + 2) % vertLoop.size()]].pos).length();
+            float thisDist = (vertices[vertLoop[i]].pos - vertices[vertLoop[(i + 2) % vertLoop.size()]].pos).length();
             if(v1 == -1 || thisDist < bestDist)
             {
                 v1 = vertLoop[i];
@@ -577,25 +553,29 @@ void Mesh::retriangulate(int vertexToRemove, int terrainVal)
         Edge& e = edges[ei];
         e.v[0] = v1;
         e.v[1] = v2;
+        vertices[v1].addEdge(ei);
+        vertices[v2].addEdge(ei);
         int fi = faces.alloc();
+        PRINT("Created triangle " << fi);
         Face& f = faces[fi];
         e.f[0] = fi;
         e.f[1] = -1;
         f.v[0] = v1;
         f.v[1] = vmid;
         f.v[2] = v2;
-        f.e[0] = vertices[v1].coxnnectsTo(vmid);
+        f.e[0] = vertices[v1].connectsTo(vmid);
         f.e[1] = vertices[v2].connectsTo(vmid);
         f.e[2] = ei;
+        DBASSERT(f.e[0] != -1);
+        DBASSERT(f.e[1] != -1);
         edges[f.e[0]].replaceFaceLink(INVALID, fi);
         edges[f.e[1]].replaceFaceLink(INVALID, fi);
-        PRINTVAR(e);
-        PRINTVAR(f);
         f.checkNormal();
         f.value = terrainVal;
     }
     //create the last face with the 3 remaining verts
     int fi = faces.alloc();
+    PRINT("Created triangle " << fi);
     Face& f = faces[fi];
     for(int i = 0; i < 3; i++)
         f.v[i] = vertLoop[i];
@@ -1141,6 +1121,16 @@ std::ostream& operator<<(std::ostream& os, const MeshTypes::Edge& edge)
 {
     os << "v: " << edge.v[0] << " " << edge.v[1] << " ";
     return os << "f: " << edge.f[0] << " " << edge.f[1];
+}
+
+std::ostream& operator<<(std::ostream& os, const MeshTypes::Vertex& vert)
+{
+    os << "connections: " << vert.edges << " ";
+    if(vert.boundary)
+        os << "[boundary]";
+    if(vert.corner)
+        os << "[corner]";
+    return os;
 }
 
 void Mesh::fullCorrectnessCheck()
