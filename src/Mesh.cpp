@@ -231,8 +231,10 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     PRINT("Constructing tri mesh.");
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
-    //Testing edge collapse
-    simplify(faceMatchCutoff);
+    //simplify(faceMatchCutoff);
+    removeAndRetriangulate(hmVertIndex(4,4));
+    removeAndRetriangulate(hmVertIndex(5,4));
+    removeAndRetriangulate(hmVertIndex(6,4));
     fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
@@ -338,11 +340,10 @@ void Mesh::simplify(float faceMatchCutoff)
         for(auto it = vertices.begin(); it != vertices.end(); it++)
         {
             if(isTriClique(it.loc))
-            {
                 removeTriClique(it.loc);
-            }
         }
         PRINT("Done handling tri cliques.");
+        int asdf = 9;
         for(auto it = edges.begin(); it != edges.end(); it++)
         {
             //use the fact that the upward curl of faces should be in opposing directions along an edge
@@ -359,10 +360,9 @@ void Mesh::simplify(float faceMatchCutoff)
                     else if(!vertices[it->v[1]].boundary)
                         removeAndRetriangulate(it->v[1]);
                     else
-                    {
-                        PRINT("Overlapping faces on map boundary can't be repaired!");
-                        throw exception();
-                    }
+                        throw runtime_error("Overlapping faces on map boundary can't be repaired!");
+                    if(!asdf--)
+                        return;
                 }
             }
         }
@@ -385,16 +385,7 @@ bool Mesh::edgeCollapse(int edgeNum)
     return true;
 }
 
-void Mesh::removeAndRetriangulate(int vertex)
-{
-    Edge& anyEdge = edges[vertices[vertex].edges.front()];
-    int neighbor = anyEdge.v[0] == vertex ? anyEdge.v[1] : anyEdge.v[0];
-    int terrainVal = removeVertex(vertex);
-    if(terrainVal != -1)
-        retriangulate(neighbor, terrainVal);
-}
-
-int Mesh::removeVertex(int vertexToRemove)
+void Mesh::removeAndRetriangulate(int vertexToRemove)
 {
     Vertex& vert = vertices[vertexToRemove];
     if(vert.boundary)
@@ -404,16 +395,20 @@ int Mesh::removeVertex(int vertexToRemove)
     {
         for(auto edge : vert.edges)
         {
-            if(edge != INVALID)
+            if(edge >= 0)
             {
-                facesToRemove.push_back(edges[edge].f[0]);
-                facesToRemove.push_back(edges[edge].f[1]);
+                for(int i = 0; i < 2; i++)
+                {
+                    if(edges[edge].f[i] >= 0)
+                        facesToRemove.push_back(edges[edge].f[i]);
+                }
             }
         }
         std::sort(facesToRemove.begin(), facesToRemove.end());
         auto newEnd = std::unique(facesToRemove.begin(), facesToRemove.end());
         facesToRemove.erase(newEnd, facesToRemove.end());
     }
+    PRINT("Deleted " << facesToRemove.size() << " faces.");
     auto terrainValue = faces[facesToRemove.front()].value;
     //Now create a list of the edges in those faces that don't include vertexToRemove
     //(will not have duplicates)
@@ -438,17 +433,24 @@ int Mesh::removeVertex(int vertexToRemove)
                             }
                         }
                         if(!alreadyAdded)
-                        {
                             edgeBoundary.push_back(faces[face].e[i]);
-                        }
                     }
                 }
             }
         }
     }
+    //check for abort from an unfilled hole being next to this hole
+    for(auto e : edgeBoundary)
+    {
+        if(edges[e].hasFace(INVALID))
+        {
+            PRINT("Aborting vertex removal.");
+            return;
+        }
+    }
     //Check for returning early (continuing causes errors and is unnecessary)
     if(edgeBoundary.size() < 4)
-        return -1;
+        return;
     //delete vertexToRemove
     vertices.dealloc(vertexToRemove);
     //delete all faces containing vertexToRemove
@@ -487,24 +489,22 @@ int Mesh::removeVertex(int vertexToRemove)
                 edges[boundEdge].replaceFaceLink(facesToCheck[i], INVALID);
         }
     }
-    return terrainValue;
-}
-
-void Mesh::retriangulate(int boundaryVertex, int terrainVal)
-{
     vector<int> vertLoop;
     vertLoop.reserve(32);
     {
-        int startVert = boundaryVertex;
-        int vertIt = boundaryVertex;
+        int startVert = edges[edgeBoundary[0]].v[0];
+        int vertIt = startVert;
         int lastEdge = INVALID;
         do
         {
+            if(vertIt == vertLoop.back())
+                break;
             vertLoop.push_back(vertIt);
             for(auto e : vertices[vertIt].edges)
             {
                 if((edges[e].f[0] == INVALID || edges[e].f[1] == INVALID) && e != lastEdge)
                 {
+                    PRINTVAR(edges[e]);
                     //have the next edge in loop
                     lastEdge = e;
                     if(edges[e].v[0] == vertIt)
@@ -513,6 +513,8 @@ void Mesh::retriangulate(int boundaryVertex, int terrainVal)
                         vertIt = edges[e].v[0];
                     break;
                 }
+                if(vertLoop.size() > 200)
+                    throw exception();
             }
         }
         while (vertIt != startVert);
@@ -521,6 +523,12 @@ void Mesh::retriangulate(int boundaryVertex, int terrainVal)
     {
         DBASSERT(vertices[vertLoop[i]].connectsTo(vertLoop[(i + 1) % vertLoop.size()]) != -1);
         DBASSERT(vertices[vertLoop[(i + 1) % vertLoop.size()]].connectsTo(vertLoop[i]));
+    }
+    //vertLoop must be clockwise geometrically, check for that
+    if(!isLoopOrientedUp(vertLoop))
+    {
+        for(size_t i = 0; i < vertLoop.size() / 2; i++)
+            SWAP(vertLoop[i], vertLoop[vertLoop.size() - 1 - i]);
     }
     //for each new face in [0, n-2)
     //  pick the shortest edge between vertices 2 apart in vertLoop
@@ -537,17 +545,24 @@ void Mesh::retriangulate(int boundaryVertex, int terrainVal)
         float bestDist = 1e10;
         for(size_t i = 0; i < vertLoop.size(); i++)
         {
+            int temp1 = vertLoop[i];
+            int temp2 = vertLoop[(i + 1) % vertLoop.size()];
+            int temp3 = vertLoop[(i + 2) % vertLoop.size()];
+            if(cross(vertices[temp1].pos - vertices[temp2].pos, vertices[temp3].pos - vertices[temp2].pos).y < 0)
+                continue;
             float thisDist = (vertices[vertLoop[i]].pos - vertices[vertLoop[(i + 2) % vertLoop.size()]].pos).length();
             if(v1 == -1 || thisDist < bestDist)
             {
-                v1 = vertLoop[i];
+                v1 = temp1;
                 vmidIndex = (i + 1) % vertLoop.size();
-                vmid = vertLoop[vmidIndex];
-                v2 = vertLoop[(i + 2) % vertLoop.size()];
+                vmid = temp2;
+                v2 = temp3;
                 bestDist = thisDist;
             }
         }
         vertLoop.erase(vertLoop.begin() + vmidIndex);
+        if(v1 == -1)
+            throw runtime_error("Couldn't find suitable place to create triangle, check geometry.");
         //create the edge and the face
         int ei = edges.alloc();
         Edge& e = edges[ei];
@@ -571,7 +586,7 @@ void Mesh::retriangulate(int boundaryVertex, int terrainVal)
         edges[f.e[0]].replaceFaceLink(INVALID, fi);
         edges[f.e[1]].replaceFaceLink(INVALID, fi);
         f.checkNormal();
-        f.value = terrainVal;
+        f.value = terrainValue;
     }
     //create the last face with the 3 remaining verts
     int fi = faces.alloc();
@@ -586,7 +601,7 @@ void Mesh::retriangulate(int boundaryVertex, int terrainVal)
     edges[f.e[1]].replaceFaceLink(INVALID, fi);
     edges[f.e[2]].replaceFaceLink(INVALID, fi);
     f.checkNormal();
-    f.value = terrainVal;
+    f.value = terrainValue;
     return;
 }
 
@@ -1314,6 +1329,32 @@ void Mesh::getMutualConnections(int vert1, int vert2, int& c1, int& c2)
             }
         }
     }
+}
+
+bool Mesh::faceExists(int v1, int v2, int v3)
+{
+    int c1 = vertices[v1].connectsTo(v2);
+    if(c1 == -1)
+        return false;
+    int f1 = edges[c1].f[0];
+    int f2 = edges[c1].f[0];
+    if(f1 >= 0 && faces[f1].hasVert(v3))
+        return true;
+    if(f2 >= 0 && faces[f2].hasVert(v3))
+        return true;
+    return false;
+}
+
+bool Mesh::isLoopOrientedUp(vector<int>& loop)
+{
+    float sum = 0;
+    for(size_t i = 0; i < loop.size(); i++)
+    {
+        auto& v1 = vertices[loop[i]].pos;
+        auto& v2 = vertices[loop[(i + 1) % loop.size()]].pos;
+        sum += (v1.x - v2.x) * (v1.z + v2.z);
+    }
+    return sum >= 0;
 }
 
 bool Mesh::validFace(int f)

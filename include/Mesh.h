@@ -80,8 +80,6 @@ public:
     void simplify(float faceMatchCutoff);
     bool edgeCollapse(int edge);    //returns false if the operation was aborted because of geometry
     void removeAndRetriangulate(int vertex);
-    int removeVertex(int vertex);               //delete a vertex, return terrain val or -1 if no changes
-    void retriangulate(int boundaryVertex, int terrainVal);     //fill in a hole left by removeVertex()
     int getMaxVertices();
     int getMaxEdges();
     int getMaxFaces();
@@ -121,6 +119,8 @@ private:
     int getFaceFrom3Vertices(int v1, int v2, int v3);
     //c1, c2 set to vertices connected to both v1, v2 (or -1)
     void getMutualConnections(int v1, int v2, int& c1, int& c2);    
+    bool faceExists(int v1, int v2, int v3);
+    bool isLoopOrientedUp(vector<int>& loop);
     //replace all links to toReplace with newLink (changes links in faces and edges)
     void replaceVertexLinks(int toReplace, int newLink);
     void fullyDeleteEdge(int e); //completely deletes edge. Faces must not link to it!
