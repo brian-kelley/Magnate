@@ -121,6 +121,9 @@ private:
     void getMutualConnections(int v1, int v2, int& c1, int& c2);    
     bool faceExists(int v1, int v2, int v3);
     bool isLoopOrientedUp(vector<int>& loop);
+    //are the vertices collinear in x/z?
+    bool verticesCollinear(int v1, int v2, int v3);
+    bool verticesCollinear(vector<int>& v);
     //replace all links to toReplace with newLink (changes links in faces and edges)
     void replaceVertexLinks(int toReplace, int newLink);
     void fullyDeleteEdge(int e); //completely deletes edge. Faces must not link to it!
