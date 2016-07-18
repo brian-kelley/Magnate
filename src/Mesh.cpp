@@ -232,12 +232,9 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
     //simplify(faceMatchCutoff);
-    for(int i = 3; i < 20; i++)
-    {
-        for(int j = 3; j < 20; j++)
-            removeAndRetriangulate(hmVertIndex(i, j));
-    }
-    //fullCorrectnessCheck();
+    removeAndRetriangulate(hmVertIndex(3, 3));
+    removeAndRetriangulate(hmVertIndex(4, 3));
+    fullCorrectnessCheck();
     return;
     for(int i = 0; i < 50; i++)
     {
@@ -746,6 +743,19 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
             validEdges.pop_back();
         }
         while(edgeCrossesPrev(newEdge, addedEdges));
+        //test for collinearity (would create degenerate triangle)
+        int c1, c2;
+        getMutualConnections(newEdge.first, newEdge.second, c1, c2);
+        if(c1 != INVALID)
+        {
+            if(verticesCollinear(newEdge.first, newEdge.second, c1))
+                continue;
+        }
+        if(c2 != INVALID)
+        {
+            if(verticesCollinear(newEdge.first, newEdge.second, c2))
+                continue;
+        }
         //create the new edge
         int ei = edges.alloc();
         PRINT("  New edge has length of " << vertDist(newEdge) / Coord::TERRAIN_TILE_SIZE << " tiles.");
@@ -764,8 +774,6 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
         int mutualVerts[2];
         int numNewTris = 0;
         {
-            int c1, c2;
-            getMutualConnections(edge.v[0], edge.v[1], c1, c2);
             PRINT("Mutual connection verts: " << c1 << ", " << c2);
             if(c1 != INVALID)
                 mutualVerts[numNewTris++] = c1;
