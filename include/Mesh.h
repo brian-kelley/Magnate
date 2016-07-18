@@ -4,15 +4,15 @@
 #include "Heightmap.h"
 #include "Pool.h"
 #include "GlmHeaders.h"
+#include "Geom2D.h"
 #include <vector>
 #include <utility>
 
 namespace MeshTypes
 {
-    typedef glm::vec3 Vec3;
     struct Vertex
     {
-        Vec3 pos;
+        vec3 pos;
         vector<int> edges;
         bool boundary;
         bool corner;
@@ -43,7 +43,7 @@ namespace MeshTypes
         int e[3];   //links to neighboring edges, which have links to neighboring faces
         int value;
         static int NONE_VALUE;
-        Vec3 getNorm();
+        vec3 getNorm();
         static Pool<Vertex>* vertArray;
         bool hasVert(int query);
         bool hasEdge(int query);
@@ -80,11 +80,12 @@ public:
     void simplify(float faceMatchCutoff);
     bool edgeCollapse(int edge);    //returns false if the operation was aborted because of geometry
     void removeAndRetriangulate(int vertex);
+    void retriangulate(vector<int>& vertLoop, int terrainVal);
     int getMaxVertices();
     int getMaxEdges();
     int getMaxFaces();
     Pool<MeshTypes::Vertex> vertices;
-    Pool<MeshTypes::Vec3> normals;
+    Pool<vec3> normals;
     Pool<MeshTypes::Edge> edges;
     Pool<MeshTypes::Face> faces;
 private:

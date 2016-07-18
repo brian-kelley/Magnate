@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <utility>
 #include <ctime>
 #include <cmath>
 
@@ -40,15 +41,21 @@ using namespace std;
 
 #endif
 
+template<typename T1, typename T2>
+ostream& operator<<(ostream& os, const pair<T1, T2>& val)
+{
+    os << '<' << val.first << ", " << val.second << '>';
+    return os;
+}
+
 //useful output operators
 template<typename T>
 ostream& operator<<(ostream& os, const vector<T>& val)
 {
     for(size_t i = 0; i < val.size(); i++)
-    {
         os << val[i] << " ";
-    }
     return os;
 }
+
 
 #endif

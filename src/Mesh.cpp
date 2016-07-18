@@ -141,7 +141,7 @@ Face::Face(int v1, int v2, int v3, int e1, int e2, int e3, int value)
     this->value = value;
 }
 
-Vec3 Face::getNorm()
+vec3 Face::getNorm()
 {
     auto& v1 = (*vertArray)[v[0]];
     auto& v2 = (*vertArray)[v[1]];
@@ -231,15 +231,20 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     PRINT("Constructing tri mesh.");
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
-    simplify(faceMatchCutoff);
-    for(int i = 3; i <= 7; i++)
+    //simplify(faceMatchCutoff);
+    for(int i = 3; i < 20; i++)
     {
-        int asdf[4] = {hmVertIndex(3, i), hmVertIndex(7, i), hmVertIndex(i, 3), hmVertIndex(i, 7)};
-        for(int j = 0; j < 4; j++)
-        {
-            if(vertices.isAllocated(asdf[j]))
-                removeAndRetriangulate(asdf[j]);
-        }
+        for(int j = 3; j < 20; j++)
+            removeAndRetriangulate(hmVertIndex(i, j));
+    }
+    //fullCorrectnessCheck();
+    return;
+    for(int i = 0; i < 50; i++)
+    {
+        int x = 3 + rand() % 25;
+        int y = 3 + rand() % 25;
+        if(vertices.isAllocated(hmVertIndex(x, y)))
+            removeAndRetriangulate(hmVertIndex(x, y));
     }
     fullCorrectnessCheck();
     PRINT("Done with mesh.");
@@ -512,7 +517,6 @@ void Mesh::removeAndRetriangulate(int vertexToRemove)
             {
                 if((edges[e].f[0] == INVALID || edges[e].f[1] == INVALID) && e != lastEdge)
                 {
-                    PRINTVAR(edges[e]);
                     //have the next edge in loop
                     lastEdge = e;
                     if(edges[e].v[0] == vertIt)
@@ -536,6 +540,11 @@ void Mesh::removeAndRetriangulate(int vertexToRemove)
         for(size_t i = 0; i < vertLoop.size() / 2; i++)
             SWAP(vertLoop[i], vertLoop[vertLoop.size() - 1 - i]);
     }
+///////////
+    //TESTING NEW RETRI
+////////////
+    retriangulate(vertLoop, terrainValue);
+    return;
     //for each new face in [0, n-2)
     //  pick the shortest edge between vertices 2 apart in vertLoop
     //  form a new edge between that pair, remove middle one from vertloop, create new face
@@ -673,6 +682,116 @@ void Mesh::removeAndRetriangulate(int vertexToRemove)
             edges[f.e[i]].replaceFaceLink(INVALID, fi);
         f.checkNormal();
         f.value = terrainValue;
+    }
+}
+
+void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
+{
+    //precondition: vertLoop is simply connected loop, oriented clockwise
+    auto vertDist = [&] (const pair<int, int>& possibleEdge) -> float
+    {
+        float dist = glm::length(vertices[possibleEdge.first].pos - vertices[possibleEdge.second].pos);
+        return dist;
+    };
+    //operator > for edges
+    auto edgeCmp = [&] (const pair<int, int>& lhs, const pair<int, int>& rhs) -> bool
+    {
+        return vertDist(lhs) > vertDist(rhs);
+    };
+    auto edgesCross = [&] (pair<int, int>& lhs, pair<int, int>& rhs) -> bool
+    {
+        return Geom2D::lineSegmentsCross(vertices[lhs.first].pos.xz(), vertices[lhs.second].pos.xz(),
+                                         vertices[rhs.first].pos.xz(), vertices[rhs.second].pos.xz());
+    };
+    auto edgeCrossesPrev = [&] (pair<int, int>& possible, vector<pair<int, int>>& addedEdges) -> bool
+    {
+        for(auto& edge : addedEdges)
+        {
+            if(edgesCross(possible, edge))
+                return true;
+        }
+        return false;
+    };
+    //make a list of geometrically valid new edges (not already connected, ie not adjacent in vertLoop)
+    vector<pair<int, int>> validEdges;
+    vector<pair<int, int>> addedEdges;
+    validEdges.reserve((vertLoop.size() * (vertLoop.size() - 2)) / 2);
+    for(size_t i = 0; i < vertLoop.size() - 2; i++)
+    {
+        for(size_t j = i + 2; j < vertLoop.size(); j++)
+        {
+            int v1 = vertLoop[i];
+            int v2 = vertLoop[j];
+            if(vertices[v1].connectsTo(v2) == INVALID)
+                validEdges.push_back({vertLoop[i], vertLoop[j]});
+        }
+    }
+    //sort possible edges based on distance between vertices
+    sort(validEdges.begin(), validEdges.end(), edgeCmp);
+    //validEdges now in descending order by length 
+    int trisToMake = vertLoop.size() - 2;
+    int trisAdded = 0;
+    while(trisAdded < trisToMake)
+    {
+        //select shortest possible edge that doesn't cross any previous edges
+        //create the edge
+        //determine whether new faces should be created with the edge
+        pair<int, int> newEdge;
+        do
+        {
+            if(validEdges.size() == 0)
+                return;
+            DBASSERT(validEdges.size() > 0);
+            newEdge = validEdges.back();
+            validEdges.pop_back();
+        }
+        while(edgeCrossesPrev(newEdge, addedEdges));
+        //create the new edge
+        int ei = edges.alloc();
+        PRINT("  New edge has length of " << vertDist(newEdge) / Coord::TERRAIN_TILE_SIZE << " tiles.");
+        PRINT("  Made edge " << ei);
+        Edge& edge = edges[ei];
+        addedEdges.push_back(newEdge);
+        int v1 = newEdge.first;
+        int v2 = newEdge.second;
+        edge.v[0] = v1;
+        edge.v[1] = v2;
+        vertices[edge.v[0]].addEdge(ei);
+        vertices[edge.v[1]].addEdge(ei);
+        edge.f[0] = INVALID;
+        edge.f[1] = INVALID;
+        //edge complete, now check both sides for a newly closed triangle 
+        int mutualVerts[2];
+        int numNewTris = 0;
+        {
+            int c1, c2;
+            getMutualConnections(edge.v[0], edge.v[1], c1, c2);
+            PRINT("Mutual connection verts: " << c1 << ", " << c2);
+            if(c1 != INVALID)
+                mutualVerts[numNewTris++] = c1;
+            if(c2 != INVALID)
+                mutualVerts[numNewTris++] = c2;
+        }
+        for(int i = 0; i < numNewTris; i++)
+        {
+            int v3 = mutualVerts[i];
+            int fi = faces.alloc();
+            Face& face = faces[fi];
+            trisAdded++;
+            face.v[0] = v1;
+            face.v[1] = v2;
+            face.v[2] = v3;
+            face.checkNormal();
+            face.e[0] = ei;
+            face.e[1] = vertices[v1].connectsTo(v3);
+            face.e[2] = vertices[v2].connectsTo(v3);
+            face.value = terrainVal;
+            //set up edge links to new face
+            edges[face.e[0]].replaceFaceLink(INVALID, fi);
+            edges[face.e[1]].replaceFaceLink(INVALID, fi);
+            edges[face.e[2]].replaceFaceLink(INVALID, fi);
+            PRINT("    Added face " << face);
+        }
     }
 }
 
@@ -1371,8 +1490,8 @@ void Mesh::getMutualConnections(int vert1, int vert2, int& c1, int& c2)
 {
     Vertex& v1 = vertices[vert1];
     Vertex& v2 = vertices[vert2];
-    c1 = -1;
-    c2 = -1;
+    c1 = INVALID;
+    c2 = INVALID;
     bool foundOne = false;
     for(auto edge1 : v1.edges)
     {
@@ -1381,7 +1500,7 @@ void Mesh::getMutualConnections(int vert1, int vert2, int& c1, int& c2)
             //now if e1, e2 share any one vertex, set c1 or c2 to it
             Edge& e1 = edges[edge1];
             Edge& e2 = edges[edge2];
-            int shared = -1;
+            int shared = INVALID;
             if(e1.v[0] == e2.v[0])
                 shared = e1.v[0];
             else if(e1.v[1] == e2.v[0])
@@ -1390,9 +1509,9 @@ void Mesh::getMutualConnections(int vert1, int vert2, int& c1, int& c2)
                 shared = e1.v[0];
             else if(e1.v[1] == e2.v[1])
                 shared = e1.v[1];
-            if(shared != -1)
+            if(shared != INVALID && shared != vert1 && shared != vert2)
             {
-                if(foundOne)
+                if(!foundOne)
                 {
                     foundOne = true;
                     c1 = shared;

@@ -53,7 +53,7 @@ void WorldRenderer::draw()
     }
 }
 
-Pos3 WorldRenderer::getTileVertexPos(int chunkX, int chunkZ, int tileX, int tileZ)
+vec3 WorldRenderer::getTileVertexPos(int chunkX, int chunkZ, int tileX, int tileZ)
 {
     Pos2 loc(chunkX * CHUNK_SIZE + tileX, chunkZ * CHUNK_SIZE + tileZ);
     return Coord::tileToWorld(loc.x, World::getHeights().get(loc), loc.y).xyz();

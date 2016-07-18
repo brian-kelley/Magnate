@@ -6,6 +6,8 @@
 #include <iomanip>
 #include "GlmHeaders.h"
 
+using namespace std;
+
 typedef int8_t s8;
 typedef int16_t s16;
 typedef int32_t s32;
@@ -14,7 +16,10 @@ typedef uint8_t u8;
 typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
-typedef glm::vec3 Pos3;
+
+using glm::vec2;
+using glm::vec3;
+using glm::vec4;
 
 typedef void(*CallbackFunc)(void*, void*);
 
@@ -87,8 +92,8 @@ struct Vertex3D
 {
     Color4 color;       //4
     TexCoord texcoord;  //4
-    Pos3 pos;           //12
-    Pos3 norm;          //12
+    vec3 pos;           //12
+    vec3 norm;          //12
 }; //32 bytes total
 
 std::ostream& operator<<(std::ostream& os, const Rectangle& r);

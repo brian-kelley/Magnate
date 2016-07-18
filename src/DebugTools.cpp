@@ -1,5 +1,6 @@
 #include "DebugTools.h"
 
+/*
 template<>
 ostream& operator<<(ostream& os, const vector<int>& val);
 
@@ -8,3 +9,4 @@ ostream& operator<<(ostream& os, const vector<double>& val);
 
 template<>
 ostream& operator<<(ostream& os, const vector<string>& val);
+*/

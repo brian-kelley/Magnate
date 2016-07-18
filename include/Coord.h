@@ -11,8 +11,6 @@ bool operator==(const Pos2& p1, const Pos2& p2);
 bool operator!=(const Pos2& p1, const Pos2& p2);
 std::ostream& operator<<(std::ostream& os, const Pos2& loc);
 
-typedef glm::vec3 Pos3;
-
 struct Plane
 {
     Plane() : a(1), b(0), c(0), d(0) {}

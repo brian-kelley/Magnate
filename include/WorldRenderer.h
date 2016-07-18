@@ -27,7 +27,7 @@ namespace WorldRenderer
     void allocChunk(Pos2 pos);
     bool isChunkAllocated(Pos2 pos);
     void updateVBOChunks(); //call once during frame if camera moves or rotates
-    Pos3 getTileVertexPos(int chunkX, int chunkZ, int tileX, int tileZ);
+    vec3 getTileVertexPos(int chunkX, int chunkZ, int tileX, int tileZ);
     void getTileQuad(int quadIndex, int x, int z);
     void drawDebugWireframeMesh();
     extern Pos2 centerChunk; //chunk at center of view

@@ -18,6 +18,7 @@ include/Field
 include/FileIO
 include/Game
 include/GenTypes
+include/Geom2D
 include/GlmHeaders
 include/GlobalConfig
 include/GUI
@@ -57,13 +58,13 @@ src/Button
 src/Camera
 src/Component
 src/Coord
-src/DebugTools
 src/Draggable
 src/Erosion
 src/Field
 src/FileIO
 src/Game
 src/GenTypes
+src/Geom2D
 src/GlmHeaders
 src/GlobalConfig
 src/GUI
