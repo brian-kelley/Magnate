@@ -110,6 +110,10 @@ private:
     bool checkFlips(int e1, int e2);
     //get 4 neighboring faces for collapse
     void getNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, int& f22);
+    //check if edge (v1, v2) is valid to be created
+    bool retriEdgeOrientation(int v1, int v2, vector<int>& vertLoop);
+    //check if faces adjacent to edge e are overlapping
+    bool facesWrongOrientation(int e);
     void getBoundaryNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, int& f22);
     //get the two faces neighboring the face, but excluding "exclude"
     void getFaceNeighbors(int f, int exclude, int& f1, int& f2);

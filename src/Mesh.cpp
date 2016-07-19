@@ -231,12 +231,8 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     PRINT("Constructing tri mesh.");
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
-    //simplify(faceMatchCutoff);
-    removeAndRetriangulate(hmVertIndex(3, 3));
-    removeAndRetriangulate(hmVertIndex(4, 3));
-    fullCorrectnessCheck();
-    return;
-    for(int i = 0; i < 50; i++)
+    srand(42);
+    for(int i = 0; i < 400; i++)
     {
         int x = 3 + rand() % 25;
         int y = 3 + rand() % 25;
@@ -354,21 +350,16 @@ void Mesh::simplify(float faceMatchCutoff)
         for(auto it = edges.begin(); it != edges.end(); it++)
         {
             //use the fact that the upward curl of faces should be in opposing directions along an edge
-            if(it->f[0] >= 0 && it->f[1] >= 0)
+            if(facesWrongOrientation(it.loc))
             {
-                Face& f1 = faces[it->f[0]];
-                Face& f2 = faces[it->f[1]];
-                if(f1.isClockwise(it->v[0], it->v[1]) == f2.isClockwise(it->v[0], it->v[1]))
-                {
-                    PRINT("Found incorrect fold at edge " << it.loc);
-                    //Overlap, retriangulate the area
-                    if(!vertices[it->v[0]].boundary)
-                        removeAndRetriangulate(it->v[0]);
-                    else if(!vertices[it->v[1]].boundary)
-                        removeAndRetriangulate(it->v[1]);
-                    else
-                        throw runtime_error("Overlapping faces on map boundary can't be repaired!");
-                }
+                PRINT("Found incorrect fold at edge " << it.loc);
+                //Overlap, retriangulate the area
+                if(!vertices[it->v[0]].boundary)
+                    removeAndRetriangulate(it->v[0]);
+                else if(!vertices[it->v[1]].boundary)
+                    removeAndRetriangulate(it->v[1]);
+                else
+                    throw runtime_error("Overlapping faces on map boundary can't be repaired!");
             }
         }
         for(auto it = vertices.begin(); it != vertices.end(); it++)
@@ -418,7 +409,6 @@ void Mesh::removeAndRetriangulate(int vertexToRemove)
         auto newEnd = std::unique(facesToRemove.begin(), facesToRemove.end());
         facesToRemove.erase(newEnd, facesToRemove.end());
     }
-    PRINT("Deleted " << facesToRemove.size() << " faces.");
     auto terrainValue = faces[facesToRemove.front()].value;
     //Now create a list of the edges in those faces that don't include vertexToRemove
     //(will not have duplicates)
@@ -447,15 +437,6 @@ void Mesh::removeAndRetriangulate(int vertexToRemove)
                     }
                 }
             }
-        }
-    }
-    //check for abort from an unfilled hole being next to this hole
-    for(auto e : edgeBoundary)
-    {
-        if(edges[e].hasFace(INVALID))
-        {
-            PRINT("Aborting vertex removal: next to non-retriangulated hole.");
-            return;
         }
     }
     //Check for abort condition before changing any geometry
@@ -537,149 +518,7 @@ void Mesh::removeAndRetriangulate(int vertexToRemove)
         for(size_t i = 0; i < vertLoop.size() / 2; i++)
             SWAP(vertLoop[i], vertLoop[vertLoop.size() - 1 - i]);
     }
-///////////
-    //TESTING NEW RETRI
-////////////
     retriangulate(vertLoop, terrainValue);
-    return;
-    //for each new face in [0, n-2)
-    //  pick the shortest edge between vertices 2 apart in vertLoop
-    //  form a new edge between that pair, remove middle one from vertloop, create new face
-    while(vertLoop.size() > 3)
-    {
-        PRINTVAR(vertLoop);
-        PRINTVAR(vertLoop.size());
-        //get the shortest possible new edge
-        int v1 = -1;
-        int vmid = -1;
-        int vmidIndex;
-        int v2 = -1;
-        float bestDist;
-        for(size_t i = 0; i < vertLoop.size(); i++)
-        {
-            bestDist = 1e10;
-            size_t i2 = (i + 1) % vertLoop.size();
-            size_t i3 = (i + 2) % vertLoop.size();
-            int temp1 = vertLoop[i];
-            int temp2 = vertLoop[i2];
-            int temp3 = vertLoop[i3];
-            if(cross(vertices[temp1].pos - vertices[temp2].pos, vertices[temp3].pos - vertices[temp2].pos).y < 0)
-                continue;
-            //check that there isn't another vertex in vertLoop collinear with temp1, temp3
-            bool skip = false;
-            for(size_t j = 0; j < vertLoop.size(); j++)
-            {
-                if(j == i || j == i3)
-                    continue;
-                if(verticesCollinear(temp1, temp3, vertLoop[j]))
-                {
-                    skip = true;
-                    break;
-                }
-            }
-            if(skip)
-                continue;
-            float thisDist = (vertices[temp1].pos - vertices[temp3].pos).length();
-            if(thisDist < bestDist)
-            {
-                v1 = temp1;
-                vmidIndex = (i + 1) % vertLoop.size();
-                vmid = temp2;
-                v2 = temp3;
-                bestDist = thisDist;
-            }
-        }
-        if(v1 == -1)
-            break;
-        vertLoop.erase(vertLoop.begin() + vmidIndex);
-        //create the edge and the face
-        int ei = edges.alloc();
-        Edge& e = edges[ei];
-        e.v[0] = v1;
-        e.v[1] = v2;
-        vertices[v1].addEdge(ei);
-        vertices[v2].addEdge(ei);
-        int fi = faces.alloc();
-        PRINT("Created triangle " << fi);
-        Face& f = faces[fi];
-        e.f[0] = fi;
-        e.f[1] = -1;
-        f.v[0] = v1;
-        f.v[1] = vmid;
-        f.v[2] = v2;
-        f.e[0] = vertices[v1].connectsTo(vmid);
-        f.e[1] = vertices[v2].connectsTo(vmid);
-        f.e[2] = ei;
-        DBASSERT(f.e[0] != -1);
-        DBASSERT(f.e[1] != -1);
-        edges[f.e[0]].replaceFaceLink(INVALID, fi);
-        edges[f.e[1]].replaceFaceLink(INVALID, fi);
-        f.checkNormal();
-        f.value = terrainValue;
-    }
-    PRINT("Handling remaining collinear verts: " << vertLoop.size());
-    //handle remaining collinear verts
-    if(verticesCollinear(vertLoop))
-    {
-        while(vertLoop.size() >= 2)
-        {
-            int v1, v2, v3;
-            int endIndex;
-            bool found = false;
-            for(size_t i = 0; i < vertLoop.size(); i++)
-            {
-                v1 = vertLoop[i];
-                endIndex = (i + 1) % vertLoop.size();
-                v2 = vertLoop[endIndex];
-                //find v1, v2 so that v2 connects to a non-collinear vert through an edge that has INVALID face
-                auto& vert2 = vertices[v2];
-                for(auto e : vert2.edges)
-                {
-                    if(edges[e].hasFace(INVALID))
-                    {
-                        v3 = edges[e].v[0] == v2 ? edges[e].v[1] : edges[e].v[0];
-                        found = true;
-                        break;
-                    }
-                }
-                if(found)
-                    break;
-            }
-            DBASSERT(found);
-            vertLoop.erase(vertLoop.begin() + endIndex);
-            //form triangle with v1, v2, v3
-            int fi = faces.alloc();
-            PRINT("Created triangle " << fi);
-            Face& f = faces[fi];
-            f.v[0] = v1;
-            f.v[1] = v2;
-            f.v[2] = v3;
-            f.e[0] = vertices[f.v[0]].connectsTo(f.v[1]);
-            f.e[1] = vertices[f.v[1]].connectsTo(f.v[2]);
-            f.e[2] = vertices[f.v[2]].connectsTo(f.v[0]);
-            edges[f.e[0]].replaceFaceLink(INVALID, fi);
-            edges[f.e[1]].replaceFaceLink(INVALID, fi);
-            edges[f.e[2]].replaceFaceLink(INVALID, fi);
-            f.checkNormal();
-            f.value = terrainValue;
-        }
-    }
-    else
-    {
-        //form last triangle with vertLoop[0,1,2]: they aren't collinear
-        int fi = faces.alloc();
-        PRINT("Created triangle " << fi);
-        Face& f = faces[fi];
-        for(int i = 0; i < 3; i++)
-            f.v[i] = vertLoop[i];
-        f.e[0] = vertices[f.v[0]].connectsTo(f.v[1]);
-        f.e[1] = vertices[f.v[1]].connectsTo(f.v[2]);
-        f.e[2] = vertices[f.v[2]].connectsTo(f.v[0]);
-        for(int i = 0; i < 3; i++)
-            edges[f.e[i]].replaceFaceLink(INVALID, fi);
-        f.checkNormal();
-        f.value = terrainValue;
-    }
 }
 
 void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
@@ -743,7 +582,7 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
             validEdges.pop_back();
         }
         while(edgeCrossesPrev(newEdge, addedEdges));
-        //test for collinearity (would create degenerate triangle)
+        //reject edge if collinear
         int c1, c2;
         getMutualConnections(newEdge.first, newEdge.second, c1, c2);
         if(c1 != INVALID)
@@ -756,10 +595,11 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
             if(verticesCollinear(newEdge.first, newEdge.second, c2))
                 continue;
         }
+        //check for bad orientation
+        if(!retriEdgeOrientation(newEdge.first, newEdge.second, vertLoop))
+            continue;
         //create the new edge
         int ei = edges.alloc();
-        PRINT("  New edge has length of " << vertDist(newEdge) / Coord::TERRAIN_TILE_SIZE << " tiles.");
-        PRINT("  Made edge " << ei);
         Edge& edge = edges[ei];
         addedEdges.push_back(newEdge);
         int v1 = newEdge.first;
@@ -772,9 +612,9 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
         edge.f[1] = INVALID;
         //edge complete, now check both sides for a newly closed triangle 
         int mutualVerts[2];
+        int newFaces[2];
         int numNewTris = 0;
         {
-            PRINT("Mutual connection verts: " << c1 << ", " << c2);
             if(c1 != INVALID)
                 mutualVerts[numNewTris++] = c1;
             if(c2 != INVALID)
@@ -784,6 +624,7 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
         {
             int v3 = mutualVerts[i];
             int fi = faces.alloc();
+            newFaces[i] = fi;
             Face& face = faces[fi];
             trisAdded++;
             face.v[0] = v1;
@@ -798,7 +639,6 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
             edges[face.e[0]].replaceFaceLink(INVALID, fi);
             edges[face.e[1]].replaceFaceLink(INVALID, fi);
             edges[face.e[2]].replaceFaceLink(INVALID, fi);
-            PRINT("    Added face " << face);
         }
     }
 }
@@ -1557,7 +1397,8 @@ bool Mesh::isLoopOrientedUp(vector<int>& loop)
         auto& v2 = vertices[loop[(i + 1) % loop.size()]].pos;
         sum += (v1.x - v2.x) * (v1.z + v2.z);
     }
-    return sum >= 0;
+    //for a closed loop, the sum shouldn't ever be 0 (only for a symmetrical figure 8)
+    return sum <= 0;
 }
 
 bool Mesh::verticesCollinear(int v1, int v2, int v3)
@@ -1607,6 +1448,57 @@ bool Mesh::verticesCollinear(vector<int>& v)
         if(fabs(mult1 - mult2) > eps)
             return false;
     }
+    return true;
+}
+
+bool Mesh::facesWrongOrientation(int e)
+{
+    Edge& edge = edges[e];
+    if(edge.f[0] < 0 || edge.f[1] < 0)
+        return false;
+    Face& f1 = faces[edge.f[0]];
+    Face& f2 = faces[edge.f[1]];
+    return f1.isClockwise(edge.v[0], edge.v[1]) == f2.isClockwise(edge.v[0], edge.v[1]);
+}
+
+bool Mesh::retriEdgeOrientation(int v1, int v2, vector<int>& vertLoop)
+{
+    PRINT("Checking if edge <" << v1 << ", " << v2 << "> has valid orientation");
+    PRINT("NOTE: vertLoop: " << vertLoop);
+    int i1 = -1;
+    int i2 = -1;
+    //first find the indices of v1, v2 in vertLoop (i1, i2)
+    for(size_t i = 0; i < vertLoop.size(); i++)
+    {
+        if(vertLoop[i] == v1)
+        {
+            i1 = i;
+            if(i2 >= 0)
+                break;
+        }
+        if(vertLoop[i] == v2)
+        {
+            i2 = i;
+            if(i1 >= 0)
+                break;
+        }
+    }
+    DBASSERT(i1 >= 0 && i2 >= 0);
+    for(size_t i3 = 0; i3 < vertLoop.size(); i3++)
+    {
+        if((int) i3 == i1 || (int) i3 == i2)
+            continue;
+        //reorder the indices so they are clockwise (in order wrt vertLoop)
+        int j1, j2, j3;
+        sort3<int>(i1, i2, i3, j1, j2, j3);
+        if(cross(vertices[vertLoop[j3]].pos - vertices[vertLoop[j2]].pos,
+                 vertices[vertLoop[j1]].pos - vertices[vertLoop[j2]].pos).y < 0)
+        {
+            PRINT("vertices " << vertLoop[j1] << ", " << vertLoop[j2] << ", " << vertLoop[j3] << " counterexample, returning false.\n");
+            return false;
+        }
+    }
+    PRINT("Evertyigng ok, true.\n");
     return true;
 }
 

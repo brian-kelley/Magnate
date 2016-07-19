@@ -102,4 +102,18 @@ std::ostream& operator<<(std::ostream& os, const glm::vec4& v);
 std::ostream& operator<<(std::ostream& os, const glm::mat4& v);
 u32 getColor32(u8 r, u8 g, u8 b, u8 a = 0xFF);
 
+template<typename T>
+void sort3(T in1, T in2, T in3, T& out1, T& out2, T& out3)
+{
+    out1 = in1;
+    out2 = in2;
+    out3 = in3;
+    if(out1 > out2)
+        SWAP(out1, out2);
+    if(out2 > out3)
+        SWAP(out2, out3);
+    if(out1 > out2)
+        SWAP(out1, out2);
+}
+
 #endif
