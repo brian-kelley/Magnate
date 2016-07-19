@@ -201,8 +201,8 @@ void WorldRenderer::buildMeshVBO()
     auto& faces = World::mesh.faces;
     auto& verts = World::mesh.vertices;
     Vertex3D v1, v2, v3;
-    Color4 good(0, 0, 255, 127);
-    Color4 bad(225, 0, 0, 127);
+    Color4 good(225, 0, 0, 127);
+    Color4 bad(0, 0, 255, 127);
     //only positions and norms are modified
     int numVertices = 3 * faces.size;
     meshVBO.resize(numVertices);

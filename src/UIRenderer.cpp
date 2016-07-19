@@ -24,7 +24,6 @@ void UIRenderer::draw()
     beginFrame();
     drawScene(GUI::current);
     drawScene(GUI::debugScene);
-    blit("cursor", Input::mouseX, Input::mouseY);
     ImmediateDraw::draw();
 }
 
@@ -139,9 +138,7 @@ void UIRenderer::drawButton(Button* b)
         background = background * (1 / SHADE);
     }
     else
-    {
         dark = dark * SHADE;
-    }
     //Draw background
     drawRect(background, rect);
     //Draw beveled frame

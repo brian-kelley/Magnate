@@ -233,21 +233,24 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     simpleLoadHeightmap(heights, faceValues);
     //simplify(0.99);
     //fullCorrectnessCheck();
+    /*
     for(int i = 3; i < 20; i++)
     {
         for(int j = 3; j < 40; j++)
             removeAndRetriangulate(hmVertIndex(i, j));
     }
-    /*
-    srand(42);
-    for(int i = 0; i < 600; i++)
-    {
-        int x = 3 + rand() % 25;
-        int y = 3 + rand() % 25;
-        if(vertices.isAllocated(hmVertIndex(x, y)))
-            removeAndRetriangulate(hmVertIndex(x, y));
-    }
     */
+    srand(42);
+    vector<int> verts;
+    verts.reserve(17 * 17);
+    for(int i = 3; i < 30; i++)
+    {
+        for(int j = 3; j < 30; j++)
+            verts.push_back(hmVertIndex(i, j));
+    }
+    std::random_shuffle(verts.begin(), verts.end());
+    for(int i = 0; i < 300; i++)
+        removeAndRetriangulate(verts[i]);
     fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
@@ -630,6 +633,26 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
                 mutualVerts[numNewTris++] = c1;
             if(c2 != INVALID)
                 mutualVerts[numNewTris++] = c2;
+        }
+        //check for 4-vert clique case (don't create two triangles on same side of edge)
+        if(numNewTris == 2)
+        {
+            vec2 ehead = vertices[edge.v[0]].pos.xz();
+            vec2 etail = vertices[edge.v[1]].pos.xz();
+            vec2 p1 = vertices[c1].pos.xz();
+            vec2 p2 = vertices[c2].pos.xz();
+            //know points aren't collinear already
+            if(Geom2D::pointLineSide(p1, etail, ehead) == Geom2D::pointLineSide(p2, etail, ehead))
+            {
+                //p1, p2 on same side of edge, can only create 1 face
+                //decide which point is closer to the edge
+                float p1dist = Geom2D::pointLineDist(p1, etail, ehead);
+                float p2dist = Geom2D::pointLineDist(p2, etail, ehead);
+                //p1 dist, p2 dist both > 0 (not collinear, and distance always nonnegative)
+                if(p1dist > p2dist)
+                    mutualVerts[0] = mutualVerts[1];
+                numNewTris = 1;
+            }
         }
         for(int i = 0; i < numNewTris; i++)
         {
