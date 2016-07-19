@@ -231,14 +231,23 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     PRINT("Constructing tri mesh.");
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
+    //simplify(0.99);
+    //fullCorrectnessCheck();
+    for(int i = 3; i < 20; i++)
+    {
+        for(int j = 3; j < 40; j++)
+            removeAndRetriangulate(hmVertIndex(i, j));
+    }
+    /*
     srand(42);
-    for(int i = 0; i < 400; i++)
+    for(int i = 0; i < 600; i++)
     {
         int x = 3 + rand() % 25;
         int y = 3 + rand() % 25;
         if(vertices.isAllocated(hmVertIndex(x, y)))
             removeAndRetriangulate(hmVertIndex(x, y));
     }
+    */
     fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
@@ -314,8 +323,11 @@ void Mesh::simplify(float faceMatchCutoff)
 {
     clock_t start = clock();
     int collapses = 1;
+    int totalIters = 0;
     while(collapses)
     {
+        if(totalIters++ == 2)
+            return;
         collapses = 0;
         for(auto it = edges.begin(); it != edges.end(); it++)
         {
@@ -367,7 +379,6 @@ void Mesh::simplify(float faceMatchCutoff)
             if(isTriClique(it.loc))
                 removeTriClique(it.loc);
         }
-        return;
     }
 }
 
@@ -1463,8 +1474,6 @@ bool Mesh::facesWrongOrientation(int e)
 
 bool Mesh::retriEdgeOrientation(int v1, int v2, vector<int>& vertLoop)
 {
-    PRINT("Checking if edge <" << v1 << ", " << v2 << "> has valid orientation");
-    PRINT("NOTE: vertLoop: " << vertLoop);
     int i1 = -1;
     int i2 = -1;
     //first find the indices of v1, v2 in vertLoop (i1, i2)
@@ -1492,13 +1501,9 @@ bool Mesh::retriEdgeOrientation(int v1, int v2, vector<int>& vertLoop)
         int j1, j2, j3;
         sort3<int>(i1, i2, i3, j1, j2, j3);
         if(cross(vertices[vertLoop[j3]].pos - vertices[vertLoop[j2]].pos,
-                 vertices[vertLoop[j1]].pos - vertices[vertLoop[j2]].pos).y < 0)
-        {
-            PRINT("vertices " << vertLoop[j1] << ", " << vertLoop[j2] << ", " << vertLoop[j3] << " counterexample, returning false.\n");
+                 vertices[vertLoop[j1]].pos - vertices[vertLoop[j2]].pos).y < 1e-7)
             return false;
-        }
     }
-    PRINT("Evertyigng ok, true.\n");
     return true;
 }
 
