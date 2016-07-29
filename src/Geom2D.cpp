@@ -42,9 +42,7 @@ int pointLineSide(vec2 p, vec2 q1, vec2 q2)
     vec2 qdir = q2 - q1;
     //take 2d cross product (x and y are zero, so compute z)
     float crossProd = pdir.x * qdir.y - pdir.y * qdir.x;
-    if(fabs(crossProd) < 1e-8)
-        return 0;
-    else if(crossProd < 0)
+    if(crossProd < 0)
         return -1;
     return 1;
 }

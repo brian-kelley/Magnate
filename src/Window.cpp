@@ -66,11 +66,6 @@ void Window::endFrame()
     SDL_GL_SwapWindow(sdlWindow);
 }
 
-Pos2 Window::getSize()
-{
-    return Pos2(w, h);
-}
-
 void Window::resize(int w, int h)
 {
     SDL_SetWindowSize(sdlWindow, w, h);

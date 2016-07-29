@@ -172,7 +172,7 @@ void Minimap::setCam()
 {
     auto pos = getLocalMouse();
     vec4 xz = mapToWorld(pos);
-    xz.y = Camera::getPosition().y;
+    xz.y = Camera::camPos.y;
     Camera::moveToPos(xz);
 }
 

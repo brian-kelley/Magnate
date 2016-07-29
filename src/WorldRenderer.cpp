@@ -40,16 +40,10 @@ void WorldRenderer::draw()
 {
     if(World::drawing)
     {
-#ifdef MAGNATE_DEBUG
-        //if(Input::keystate[SDL_SCANCODE_M])
-        {
-            //Draw a red wireframe mesh instead of solid heightmap quads
-            drawDebugWireframeMesh();
-            return;
-        }
-#endif
-        glEnable(GL_DEPTH_TEST);
-        vbo.draw(0, 4 * CHUNK_SIZE * CHUNK_SIZE * VBO_CHUNKS, GL_QUADS);
+        //Draw a red wireframe mesh instead of solid heightmap quads
+        drawDebugWireframeMesh();
+        //glEnable(GL_DEPTH_TEST);
+        //vbo.draw(0, 4 * CHUNK_SIZE * CHUNK_SIZE * VBO_CHUNKS, GL_QUADS);
     }
 }
 
@@ -240,9 +234,38 @@ void WorldRenderer::drawDebugWireframeMesh()
     meshVBO.draw(0, 3 * World::mesh.faces.size, GL_TRIANGLES);
     //go to wireframe mode
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //note: intentionally drawing the wireframe twice to increase saturation
     meshVBO.draw(0, 3 * World::mesh.faces.size, GL_TRIANGLES);
-    meshVBO.draw(0, 3 * World::mesh.faces.size, GL_TRIANGLES);  //draw twice to make darker
+    meshVBO.draw(0, 3 * World::mesh.faces.size, GL_TRIANGLES);
     //restore
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+//Debug labels for mesh vertices
+    //draw labels for vertices with x, z < 30
+    char str[20];
+    string text;
+    Color4 blk(0, 0, 0, 255);
+    Color4 blu(0, 0, 255, 255);
+    for(int i = 3; i <= 30; i++)
+    {
+        for(int j = 3; j <= 30; j++)
+        {
+            int vertIndex = World::mesh.hmVertIndex(i, j);
+            if(!World::mesh.vertices.isAllocated(vertIndex))
+                continue;
+            vec4 pos(World::mesh.vertices[vertIndex].pos, 1);
+            pos = Camera::viewMat * pos;
+            pos = Camera::projMat * pos;
+            pos /= pos.w;
+            vec2 viewport(0.5 * (1 + pos.x) * Window::w, 0.5 * (1 - pos.y) * Window::h);
+            Rectangle rect(viewport.x, viewport.y, 50, 30);
+            //pos.xy gives screen coords
+            sprintf(str, "%i", vertIndex);
+            text = str;
+            ImmediateDraw::drawStringAuto(text, rect, blk);
+            rect = Rectangle(viewport.x - 2, viewport.y - 2, 5, 5);
+            ImmediateDraw::drawRect(blu, rect);
+        }
+    }
 }
 

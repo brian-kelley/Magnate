@@ -47,6 +47,7 @@ void ImmediateDraw::draw()
     vbo.drawWithClip(0, quadIndex, GL_QUADS, clipMarkers);
     //add another vector of clip markers for lines if line clipping becomes necessary for UI
     vbo.draw(quadIndex, lineIndex, GL_LINES);
+    beginFrame();
 }
 
 void ImmediateDraw::color3f(float r, float g, float b)

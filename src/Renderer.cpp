@@ -14,7 +14,7 @@ void Renderer::init()
     Shaders::init();
     Atlas::init("main");
     WorldRenderer::init();
-    UIRenderer::init();
+    ImmediateDraw::init(5000, 100);     //num quads, num lines
     ModelRenderer::init(Shaders::modelLoc);
     auto progID = Shaders::programID;
     modelLoc = glGetUniformLocation(progID, "model");
@@ -45,6 +45,7 @@ void Renderer::update()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     UIRenderer::draw();
+    ImmediateDraw::draw();
     //Finally, flip window
     glFlush();
     Window::endFrame();
@@ -53,11 +54,9 @@ void Renderer::update()
 void Renderer::upload2DMatrices()
 {
     GLERR
-    auto winSize = Window::getSize();
-    mat4 proj2 = ortho<float>(0, winSize.x, winSize.y, 0, -1, 1);
+    mat4 proj2 = ortho<float>(0, Window::w, Window::h, 0, -1, 1);
     mat4 view2 = glm::mat4(); //ID mat: (0,0,0) is camera origin
     mat4 model;
-    //glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(view2));
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model));
     glUniformMatrix4fv(viewLoc, 1, GL_FALSE, value_ptr(view2));
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, value_ptr(proj2));
@@ -65,8 +64,7 @@ void Renderer::upload2DMatrices()
 
 void Renderer::upload3DMatrices()
 {
-    auto winSize = Window::getSize();
-    mat4 proj3 = Camera::getProjMatrix(winSize.x, winSize.y);
+    mat4 proj3 = Camera::getProjMatrix(Window::w, Window::h);
     mat4 view3 = Camera::getViewMatrix();
     mat4 model3 = glm::mat4();
     glUniformMatrix4fv(modelLoc, 1, GL_FALSE, value_ptr(model3));

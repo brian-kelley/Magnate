@@ -3,8 +3,6 @@
 using namespace std;
 using namespace ImmediateDraw;
 
-const int UIRenderer::QUAD_INIT = 1000;
-const int UIRenderer::LINE_INIT = 100;
 //Aesthetic constants
 const Color4 UIRenderer::fg(190, 190, 190, 255);
 const Color4 UIRenderer::bg(120, 120, 120, 255);
@@ -13,18 +11,11 @@ const int UIRenderer::PAD = 5;
 const int UIRenderer::BAR_WIDTH = 6;
 const float UIRenderer::SHADE = 0.85;
 
-void UIRenderer::init()
-{
-    ImmediateDraw::init(QUAD_INIT, LINE_INIT);
-}
-
 void UIRenderer::draw()
 {
     glDisable(GL_DEPTH_TEST);
-    beginFrame();
     drawScene(GUI::current);
     drawScene(GUI::debugScene);
-    ImmediateDraw::draw();
 }
 
 void UIRenderer::drawComponent(Component *c)

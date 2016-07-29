@@ -3,56 +3,56 @@
 using namespace glm;
 using namespace Coord;
 
-Broadcaster<glm::mat4> Camera::cameraMotion;
-vec3 Camera::camDir;
-vec3 Camera::camPos;
-vec3 Camera::camUp;
-mat4 Camera::viewMat;
-mat4 Camera::projMat;
-float Camera::camAngle;
-float Camera::camPitch;
-const float Camera::ROTATE_SPEED = M_PI;
-const float Camera::MOVE_SPEED = 1.2;
-const float Camera::ZOOM_SPEED = 0.16;
-const float Camera::FOV = (M_PI_4 + M_PI_4 / 2);
-const float Camera::NEAR = 2;
-const float Camera::FAR = 10000;
-const Heightmap* Camera::heights = nullptr;
+namespace Camera
+{
 
-void Camera::init()
+Broadcaster<glm::mat4> cameraMotion;
+vec3 camDir;
+vec3 camPos;
+vec3 camUp;
+mat4 viewMat;
+mat4 projMat;
+float camAngle;
+float camPitch;
+const float ROTATE_SPEED = M_PI;
+const float MOVE_SPEED = 1.2;
+const float ZOOM_SPEED = 0.16;
+const float FOV = (M_PI_4 + M_PI_4 / 2);
+const float NEAR = 0.4;
+const float FAR = 500;
+
+
+void init()
 {
     camPos = {0, 20, 0};
     camAngle = 0;
     camPitch = M_PI_2 * 0.8;
     Input::wheelBroadcaster.addListener(NULL, processWheel);
-    heights = &World::getHeights();      //simple handle for world's height data
 }
 
-void Camera::update()
+void update()
 {
     //get the world's height directly under camera
     //use Coord to get tile position
-    Pos2 loc = Coord::worldToTile(vec4(camPos, 1));
-    short worldH = heights->get(loc);
     bool updated = false;
     if(Input::keystate[SDL_SCANCODE_W])
     {
-        camFwd(worldH);
+        camFwd();
         updated = true;
     }
     if(Input::keystate[SDL_SCANCODE_A])
     {
-        camLeft(worldH);
+        camLeft();
         updated = true;
     }
     if(Input::keystate[SDL_SCANCODE_S])
     {
-        camBack(worldH);
+        camBack();
         updated = true;
     }
     if(Input::keystate[SDL_SCANCODE_D])
     {
-        camRight(worldH);
+        camRight();
         updated = true;
     }
     if(Input::keystate[SDL_SCANCODE_Q])
@@ -71,7 +71,7 @@ void Camera::update()
     }
 }
 
-glm::mat4 Camera::getViewMatrix()
+glm::mat4 getViewMatrix()
 {
     vec3 at = {camPos.x + sin(camAngle) * cos(camPitch), camPos.y - 1, camPos.z + cos(camAngle) * cos(camPitch)};
     vec3 camUp = {sin(camPitch) * sin(camAngle), cos(camPitch), sin(camPitch) * cos(camAngle)};
@@ -81,79 +81,81 @@ glm::mat4 Camera::getViewMatrix()
     return viewMat;
 }
 
-glm::mat4 Camera::getProjMatrix(int winW, int winH)
+glm::mat4 getProjMatrix(int winW, int winH)
 {
     projMat = perspectiveFov<float>(FOV, winW, winH, FAR, NEAR);
     //do a test
-    getWorldIntersect(0, 0);
+    //getWorldIntersect(0, 0);
     return projMat;
 }
 
-void Camera::camFwd(short worldH)
+Pos2 worldToScreen(vec3& worldPos)
+{
+    vec4 pos4 = vec4(worldPos, 1);
+    pos4 = viewMat * pos4;
+    pos4 = projMat * pos4;
+    return Pos2(0.5 * (1 + pos4.x), 0.5 * (1 - pos4.y));
+}
+
+void camFwd()
 {
     //get y component out of camDir
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
-    float heightOverGround = camPos.y - worldH * Coord::TERRAIN_Y_SCALE;
-    lookDir *= (Input::dt * MOVE_SPEED * heightOverGround);
+    lookDir *= (Input::dt * MOVE_SPEED * camPos.y);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
 
-void Camera::camLeft(short worldH)
+void camLeft()
 {
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
     //rotate pi/2 to the left
     lookDir = {lookDir.y, -lookDir.x};
-    float heightOverGround = camPos.y - worldH * Coord::TERRAIN_Y_SCALE;
-    lookDir *= (Input::dt * MOVE_SPEED * heightOverGround);
+    lookDir *= (Input::dt * MOVE_SPEED * camPos.y);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
 
-void Camera::camRight(short worldH)
+void camRight()
 {
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
     lookDir = {-lookDir.y, lookDir.x};
-    float heightOverGround = camPos.y - worldH * Coord::TERRAIN_Y_SCALE;
-    lookDir *= (Input::dt * MOVE_SPEED * heightOverGround);
+    lookDir *= (Input::dt * MOVE_SPEED * camPos.y);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
 
-void Camera::camBack(short worldH)
+void camBack()
 {
     vec2 lookDir = normalize(vec2(camDir.x, camDir.z));
-    float heightOverGround = camPos.y - worldH * Coord::TERRAIN_Y_SCALE;
-    lookDir *= -(Input::dt * MOVE_SPEED * heightOverGround);
+    lookDir *= -(Input::dt * MOVE_SPEED * camPos.y);
     camPos.x += lookDir.x;
     camPos.z += lookDir.y;
 }
 
-void Camera::camCCW() //positive radians (CAM_ROTATE_SPEED > 0)
+void camCCW() //positive radians (CAM_ROTATE_SPEED > 0)
 {
     camDir = rotate(camDir, float(Input::dt * ROTATE_SPEED), {0, 1, 0});
     camAngle += Input::dt * ROTATE_SPEED;
 }
 
-void Camera::camCW() //negative radians
+void camCW() //negative radians
 {
     camDir = rotate(camDir, float(Input::dt * -ROTATE_SPEED), {0, 1, 0});
     camAngle -= Input::dt * ROTATE_SPEED;
 }
 
-void Camera::zoomIn()
+void zoomIn()
 {
-    short worldH = heights->get(Coord::worldToTile(vec4(camPos, 1)));
-    camPos.y -= ZOOM_SPEED * (camPos.y - worldH * Coord::TERRAIN_Y_SCALE);
+    camPos.y -= ZOOM_SPEED * camPos.y;
 }
 
-void Camera::zoomOut()
+void zoomOut()
 {
-    short worldH = heights->get(Coord::worldToTile(vec4(camPos, 1)));
-    camPos.y += ZOOM_SPEED * (camPos.y - worldH * Coord::TERRAIN_Y_SCALE);
+    camPos.y += ZOOM_SPEED * camPos.y;
 }
 
-void Camera::processWheel(void*, const SDL_MouseWheelEvent &event)
+void processWheel(void*, const SDL_MouseWheelEvent &event)
 {
     if(event.y > 0)
         zoomIn();
@@ -161,18 +163,13 @@ void Camera::processWheel(void*, const SDL_MouseWheelEvent &event)
         zoomOut();
 }
 
-void Camera::moveToPos(glm::vec4 pos)
+void moveToPos(glm::vec4 pos)
 {
     camPos = pos.xyz();
     cameraMotion.send(getViewMatrix());
 }
-
-vec3 Camera::getPosition()
-{
-    return camPos;
-}
  
-FrustumCorners Camera::getFrustumCorners(const glm::mat4 &view, const glm::mat4 &proj)
+FrustumCorners getFrustumCorners(const glm::mat4 &view, const glm::mat4 &proj)
 {
     FrustumCorners corners;
     //Calculate camera at position from view matrix (is origin in camera space)
@@ -233,7 +230,7 @@ FrustumCorners Camera::getFrustumCorners(const glm::mat4 &view, const glm::mat4 
     return corners;
 }
 
-vec3 Camera::getWorldIntersect(int winX, int winY)
+vec3 getWorldIntersect(int winX, int winY)
 {
     //transform point and direction to worldspace
     vec4 tail = {winX, winY, 2, 1};
@@ -256,11 +253,13 @@ vec3 Camera::getWorldIntersect(int winX, int winY)
     return getWorldIntersect(head, head - tail);
 }
 
-vec3 Camera::getWorldIntersect(vec4 head, vec4 dir)
+vec3 getWorldIntersect(vec4 head, vec4 dir)
 {
     //get sea level intersection point
     vec2 seaLevel = (head - dir * (head.y / dir.y)).xz();
     Pos2 tileStart = worldToTile(head);
     vec2 iter = tileToWorld(tileStart.x, 0, tileStart.y).xz();
-    vec2 traceDir = normalize(vec2(seaLevel.x - iter.x, seaLevel.y - iter.y));
+    return vec3();
+}
+
 }

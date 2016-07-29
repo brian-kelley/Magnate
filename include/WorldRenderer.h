@@ -1,5 +1,5 @@
-#ifndef __WORLD_RENDERER_H__
-#define __WORLD_RENDERER_H__
+#ifndef WORLD_RENDERER_H
+#define WORLD_RENDERER_H
 
 #include <vector>
 #include "Terrain.h"
@@ -11,6 +11,7 @@
 #include "VBO.h"
 #include "World.h"
 #include "Heightmap.h"
+#include "ImmediateDraw.h"
 #include "Input.h"
 #include "Mesh.h"
 #include "SdlHeaders.h"

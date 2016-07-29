@@ -19,7 +19,6 @@ namespace Window
 {
     void init(int w, int h);
     void dispose();
-    Pos2 getSize();
     SDL_Renderer* getRenderer();
     void prepareFrame();
     void endFrame();

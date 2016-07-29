@@ -69,26 +69,25 @@ enum struct FaceDir
     LOWER_RIGHT
 };
 
-class Mesh 
+struct Mesh 
 {
-public:
     //for terrain, pass heights/biomes; world seed important for consistent output!
     //faceMatchCutoff = minimum value of dot(n1hat, n2hat) for merging faces by edge collapse
     Mesh();
     void initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMatchCutoff = 0.96);
-    void simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues);
-    void simplify(float faceMatchCutoff);
     bool edgeCollapse(int edge);    //returns false if the operation was aborted because of geometry
     void removeAndRetriangulate(int vertex);
-    void retriangulate(vector<int>& vertLoop, int terrainVal);
-    int getMaxVertices();
-    int getMaxEdges();
-    int getMaxFaces();
     Pool<MeshTypes::Vertex> vertices;
     Pool<vec3> normals;
     Pool<MeshTypes::Edge> edges;
     Pool<MeshTypes::Face> faces;
-private:
+    void simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues);
+    void simplify(float faceMatchCutoff);
+    vector<int> removeVertex(int vertex, int& terrainVal);
+    void retriangulate(vector<int>& vertLoop, int terrainVal);
+    int getMaxVertices();
+    int getMaxEdges();
+    int getMaxFaces();
     bool isTriClique(int vertex);
     void removeTriClique(int vertex);
     void fixTriFlips(int e1, int e2);

@@ -24,7 +24,6 @@
 
 namespace UIRenderer
 {
-    void init();
     void drawComponent(Component* c);
     void draw();         //do GL draw call for all visible components
     void drawScene(Scene* s);
@@ -35,8 +34,6 @@ namespace UIRenderer
     void drawMultiSelect(MultiSelect* ms);
     void drawDraggable(Draggable* d);
     void drawMinimap(Minimap* mm);
-    extern const int QUAD_INIT;
-    extern const int LINE_INIT;
     //Aesthetic constants
     extern const Color4 fg;
     extern const Color4 bg;

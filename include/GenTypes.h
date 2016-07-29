@@ -97,6 +97,7 @@ struct Vertex3D
 }; //32 bytes total
 
 std::ostream& operator<<(std::ostream& os, const Rectangle& r);
+std::ostream& operator<<(std::ostream& os, const glm::vec2& v);
 std::ostream& operator<<(std::ostream& os, const glm::vec3& v);
 std::ostream& operator<<(std::ostream& os, const glm::vec4& v);
 std::ostream& operator<<(std::ostream& os, const glm::mat4& v);

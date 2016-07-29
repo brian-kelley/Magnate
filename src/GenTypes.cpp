@@ -126,6 +126,12 @@ ostream& operator<<(ostream& os, const Rectangle& r)
     return os;
 }
 
+ostream& operator<<(ostream& os, const vec2& v)
+{
+    os << "(" << v.x << ", " << v.y << ")";
+    return os;
+}
+
 ostream& operator<<(ostream& os, const vec3& v)
 {
     os << "(" << v.x << ", " << v.y << ", " << v.z << ")";

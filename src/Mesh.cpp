@@ -113,6 +113,11 @@ void Edge::replaceFaceLink(int toReplace, int newLink)
         f[0] = newLink;
     else if(f[1] == toReplace)
         f[1] = newLink;
+    else
+    {
+        PRINT("Expected edge to have face link " << toReplace << " but it didn't!");
+        DBASSERT(false);
+    }
 }
 
 Face::Face()
@@ -233,13 +238,6 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     simpleLoadHeightmap(heights, faceValues);
     //simplify(0.99);
     //fullCorrectnessCheck();
-    /*
-    for(int i = 3; i < 20; i++)
-    {
-        for(int j = 3; j < 40; j++)
-            removeAndRetriangulate(hmVertIndex(i, j));
-    }
-    */
     srand(42);
     vector<int> verts;
     verts.reserve(17 * 17);
@@ -249,9 +247,16 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
             verts.push_back(hmVertIndex(i, j));
     }
     std::random_shuffle(verts.begin(), verts.end());
-    for(int i = 0; i < 300; i++)
+    int i = 0;
+    for(i = 0; i < 319; i++)
+    {
+        PRINTVAR(i);
         removeAndRetriangulate(verts[i]);
-    fullCorrectnessCheck();
+    }
+    //BREAK
+    PRINT("\n\n\n\n");
+    removeAndRetriangulate(verts[i]);
+    //fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
 
@@ -368,7 +373,6 @@ void Mesh::simplify(float faceMatchCutoff)
             if(facesWrongOrientation(it.loc))
             {
                 PRINT("Found incorrect fold at edge " << it.loc);
-                //Overlap, retriangulate the area
                 if(!vertices[it->v[0]].boundary)
                     removeAndRetriangulate(it->v[0]);
                 else if(!vertices[it->v[1]].boundary)
@@ -402,7 +406,14 @@ bool Mesh::edgeCollapse(int edgeNum)
 
 void Mesh::removeAndRetriangulate(int vertexToRemove)
 {
-    Vertex& vert = vertices[vertexToRemove];
+    int terrainVal;
+    auto vertLoop = removeVertex(vertexToRemove, terrainVal);
+    retriangulate(vertLoop, terrainVal);
+}
+
+vector<int> Mesh::removeVertex(int vertex, int& terrainVal)
+{
+    Vertex& vert = vertices[vertex];
     if(vert.boundary)
         throw runtime_error("Can't remove a vertex on the boundary.");
     //create a list of faces to delete (duplicates ok)
@@ -423,7 +434,7 @@ void Mesh::removeAndRetriangulate(int vertexToRemove)
         auto newEnd = std::unique(facesToRemove.begin(), facesToRemove.end());
         facesToRemove.erase(newEnd, facesToRemove.end());
     }
-    auto terrainValue = faces[facesToRemove.front()].value;
+    terrainVal = faces[facesToRemove.front()].value;
     //Now create a list of the edges in those faces that don't include vertexToRemove
     //(will not have duplicates)
     vector<int> edgeBoundary;
@@ -436,7 +447,7 @@ void Mesh::removeAndRetriangulate(int vertexToRemove)
                 {
                     Edge& edge = edges[faces[face].e[i]];
                     bool alreadyAdded = false;
-                    if(edge.v[0] != vertexToRemove && edge.v[1] != vertexToRemove)
+                    if(edge.v[0] != vertex && edge.v[1] != vertex)
                     {
                         for(size_t j = 0; j < edgeBoundary.size(); j++)
                         {
@@ -455,9 +466,9 @@ void Mesh::removeAndRetriangulate(int vertexToRemove)
     }
     //Check for abort condition before changing any geometry
     if(edgeBoundary.size() < 4 || edgeBoundary.size() > 40)
-        return;
+        return vector<int>();
     //delete vertexToRemove
-    vertices.dealloc(vertexToRemove);
+    vertices.dealloc(vertex);
     //delete all faces containing vertexToRemove
     int numFaces = 0;
     for(auto faceToDelete : facesToRemove)
@@ -476,7 +487,7 @@ void Mesh::removeAndRetriangulate(int vertexToRemove)
                             &vertices[edges[boundEdge].v[1]]};
         for(int i = 0; i < 2; i++)
         {
-            int connection = check[i]->connectsTo(vertexToRemove);
+            int connection = check[i]->connectsTo(vertex);
             if(connection != INVALID)
             {
                 check[i]->removeEdge(connection);
@@ -532,7 +543,7 @@ void Mesh::removeAndRetriangulate(int vertexToRemove)
         for(size_t i = 0; i < vertLoop.size() / 2; i++)
             SWAP(vertLoop[i], vertLoop[vertLoop.size() - 1 - i]);
     }
-    retriangulate(vertLoop, terrainValue);
+    return vertLoop;
 }
 
 void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
@@ -565,8 +576,7 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
     //make a list of geometrically valid new edges (not already connected, ie not adjacent in vertLoop)
     vector<pair<int, int>> validEdges;
     vector<pair<int, int>> addedEdges;
-    validEdges.reserve((vertLoop.size() * (vertLoop.size() - 2)) / 2);
-    for(size_t i = 0; i < vertLoop.size() - 2; i++)
+    for(size_t i = 0; i < vertLoop.size(); i++)
     {
         for(size_t j = i + 2; j < vertLoop.size(); j++)
         {
@@ -578,55 +588,68 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
     }
     //sort possible edges based on distance between vertices
     sort(validEdges.begin(), validEdges.end(), edgeCmp);
+    auto saved = validEdges;
     //validEdges now in descending order by length 
     int trisToMake = vertLoop.size() - 2;
     int trisAdded = 0;
     while(trisAdded < trisToMake)
     {
-        //select shortest possible edge that doesn't cross any previous edges
-        //create the edge
-        //determine whether new faces should be created with the edge
+        PRINT("Entering main loop, have done " << trisAdded << " tris, need " << trisToMake);
+        PRINT("  Have " << validEdges.size() << " valid edges left to use.");
+        //select shortest possible edge that doesn't cross any previous edges AND wasn't already connected
         pair<int, int> newEdge;
         do
         {
-            if(validEdges.size() == 0)
-                return;
             DBASSERT(validEdges.size() > 0);
             newEdge = validEdges.back();
             validEdges.pop_back();
         }
-        while(edgeCrossesPrev(newEdge, addedEdges));
+        while(edgeCrossesPrev(newEdge, addedEdges)
+            || vertices[newEdge.first].connectsTo(newEdge.second) >= 0);
+        PRINT("  Have edge: " << newEdge);
         //reject edge if collinear
         int c1, c2;
         getMutualConnections(newEdge.first, newEdge.second, c1, c2);
+        PRINT("  Mutual connectino verts: " << c1 << ", " << c2);
         if(c1 != INVALID)
         {
             if(verticesCollinear(newEdge.first, newEdge.second, c1))
+            {
+                PRINT("  Skipping edge because it would be collinear with a mutual connection.");
                 continue;
+            }
         }
         if(c2 != INVALID)
         {
             if(verticesCollinear(newEdge.first, newEdge.second, c2))
+            {
+                PRINT("  Skipping edge because it would be collinear with a mutual connection.");
                 continue;
+            }
         }
         //check for bad orientation
         if(!retriEdgeOrientation(newEdge.first, newEdge.second, vertLoop))
+        {
+            PRINT("  Skipping edge because it is outside vertLoop.");
             continue;
+        }
         //create the new edge
+        DBASSERT(-1 == vertices[newEdge.first].connectsTo(newEdge.second));
+        DBASSERT(-1 == vertices[newEdge.second].connectsTo(newEdge.first));
         int ei = edges.alloc();
+        PRINT("  Making edge " << ei);
         Edge& edge = edges[ei];
         addedEdges.push_back(newEdge);
         int v1 = newEdge.first;
         int v2 = newEdge.second;
         edge.v[0] = v1;
         edge.v[1] = v2;
-        vertices[edge.v[0]].addEdge(ei);
-        vertices[edge.v[1]].addEdge(ei);
+        vertices[v1].addEdge(ei);
+        vertices[v2].addEdge(ei);
         edge.f[0] = INVALID;
         edge.f[1] = INVALID;
-        //edge complete, now check both sides for a newly closed triangle 
+        //edge complete, now check both sides for a newly enclosed triangle to be allocated
         int mutualVerts[2];
-        int newFaces[2];
         int numNewTris = 0;
         {
             if(c1 != INVALID)
@@ -644,6 +667,7 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
             //know points aren't collinear already
             if(Geom2D::pointLineSide(p1, etail, ehead) == Geom2D::pointLineSide(p2, etail, ehead))
             {
+                PRINT("  Skipping one face for 4-clique situation");
                 //p1, p2 on same side of edge, can only create 1 face
                 //decide which point is closer to the edge
                 float p1dist = Geom2D::pointLineDist(p1, etail, ehead);
@@ -654,11 +678,11 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
                 numNewTris = 1;
             }
         }
+        PRINT("  Creating " << numNewTris << " triangles.");
         for(int i = 0; i < numNewTris; i++)
         {
             int v3 = mutualVerts[i];
             int fi = faces.alloc();
-            newFaces[i] = fi;
             Face& face = faces[fi];
             trisAdded++;
             face.v[0] = v1;
@@ -673,7 +697,9 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
             edges[face.e[0]].replaceFaceLink(INVALID, fi);
             edges[face.e[1]].replaceFaceLink(INVALID, fi);
             edges[face.e[2]].replaceFaceLink(INVALID, fi);
+            PRINT("  New face: " << face );
         }
+        PRINT("  (After possible face creation) new edge: " << edge);
     }
 }
 
@@ -764,13 +790,6 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     fixTriFlips(e12, e22);
     if(isTriClique(v2))
         removeTriClique(v2);
-    /*
-    if(!checkFlips(e12, e22))
-    {
-        //PRINT("Removing + retriangulating " << v2);
-        retriangulate(v2);
-    }
-    */
 }
 
 void Mesh::boundaryEdgeCollapse(int e)
@@ -1370,6 +1389,7 @@ int Mesh::getFaceFrom3Vertices(int v1, int v2, int v3)
 
 void Mesh::getMutualConnections(int vert1, int vert2, int& c1, int& c2)
 {
+    DBASSERT(vert1 != vert2);
     Vertex& v1 = vertices[vert1];
     Vertex& v2 = vertices[vert2];
     c1 = INVALID;
@@ -1398,7 +1418,7 @@ void Mesh::getMutualConnections(int vert1, int vert2, int& c1, int& c2)
                     foundOne = true;
                     c1 = shared;
                 }
-                else
+                else if(shared != c2)
                 {
                     c2 = shared;
                     return;
@@ -1437,7 +1457,7 @@ bool Mesh::isLoopOrientedUp(vector<int>& loop)
 
 bool Mesh::verticesCollinear(int v1, int v2, int v3)
 {
-    float eps = 1e-6;
+    float eps = 1e-8;
     auto& p1 = vertices[v1].pos;
     auto& p2 = vertices[v2].pos;
     auto& p3 = vertices[v3].pos;
@@ -1453,7 +1473,7 @@ bool Mesh::verticesCollinear(int v1, int v2, int v3)
 
 bool Mesh::verticesCollinear(vector<int>& v)
 {
-    float eps = 1e-6;
+    float eps = 1e-8;
     if(v.size() < 3)
         return true;
     auto vec = vertices[v[0]].pos - vertices[v[1]].pos;
@@ -1524,7 +1544,7 @@ bool Mesh::retriEdgeOrientation(int v1, int v2, vector<int>& vertLoop)
         int j1, j2, j3;
         sort3<int>(i1, i2, i3, j1, j2, j3);
         if(cross(vertices[vertLoop[j3]].pos - vertices[vertLoop[j2]].pos,
-                 vertices[vertLoop[j1]].pos - vertices[vertLoop[j2]].pos).y < 1e-7)
+                 vertices[vertLoop[j1]].pos - vertices[vertLoop[j2]].pos).y < 0)
             return false;
     }
     return true;
