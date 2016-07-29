@@ -247,16 +247,12 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
             verts.push_back(hmVertIndex(i, j));
     }
     std::random_shuffle(verts.begin(), verts.end());
-    int i = 0;
-    for(i = 0; i < 319; i++)
+    for(size_t i = 0; i < 638; i++)
     {
         PRINTVAR(i);
         removeAndRetriangulate(verts[i]);
     }
-    //BREAK
-    PRINT("\n\n\n\n");
-    removeAndRetriangulate(verts[i]);
-    //fullCorrectnessCheck();
+    fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
 
@@ -573,6 +569,28 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
         }
         return false;
     };
+    auto edgeContainsCollinear = [&] (vector<int>& vertLoop, pair<int, int>& edge) -> bool
+    {
+        //look for collinear vertex that is between first and second vertices
+        auto& p1 = vertices[edge.first].pos;
+        auto& p2 = vertices[edge.second].pos;
+        float minx = MIN(p1.x, p2.x);
+        float maxx = MAX(p1.x, p2.x);
+        float minz = MIN(p1.z, p2.z);
+        float maxz = MAX(p1.z, p2.z);
+        for(int v : vertLoop)
+        {
+            if(v == edge.first || v == edge.second)
+                continue;
+            auto& vpos = vertices[v].pos;
+            if(verticesCollinear(edge.first, edge.second, v))
+            {
+                if(minx <= vpos.x && vpos.x <= maxx && minz <= vpos.z && vpos.z <= maxz)
+                    return true;
+            }
+        }
+        return false;
+    };
     //make a list of geometrically valid new edges (not already connected, ie not adjacent in vertLoop)
     vector<pair<int, int>> validEdges;
     vector<pair<int, int>> addedEdges;
@@ -611,21 +629,11 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
         int c1, c2;
         getMutualConnections(newEdge.first, newEdge.second, c1, c2);
         PRINT("  Mutual connectino verts: " << c1 << ", " << c2);
-        if(c1 != INVALID)
+        //check for collinearity with any other vertices in vertLoop
+        if(edgeContainsCollinear(vertLoop, newEdge))
         {
-            if(verticesCollinear(newEdge.first, newEdge.second, c1))
-            {
-                PRINT("  Skipping edge because it would be collinear with a mutual connection.");
-                continue;
-            }
-        }
-        if(c2 != INVALID)
-        {
-            if(verticesCollinear(newEdge.first, newEdge.second, c2))
-            {
-                PRINT("  Skipping edge because it would be collinear with a mutual connection.");
-                continue;
-            }
+            PRINT("Skipping edge because of collinearity.");
+            continue;
         }
         //check for bad orientation
         if(!retriEdgeOrientation(newEdge.first, newEdge.second, vertLoop))
