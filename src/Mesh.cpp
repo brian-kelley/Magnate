@@ -236,8 +236,11 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     PRINT("Constructing tri mesh.");
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
-    //simplify(0.99);
-    //fullCorrectnessCheck();
+    /*
+    simplify(0.99);
+    fullCorrectnessCheck();
+    return;
+    */
     srand(42);
     vector<int> verts;
     verts.reserve(17 * 17);
@@ -246,12 +249,26 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
         for(int j = 3; j < 30; j++)
             verts.push_back(hmVertIndex(i, j));
     }
-    std::random_shuffle(verts.begin(), verts.end());
-    for(size_t i = 0; i < 638; i++)
+    for(size_t i = 0; i < verts.size(); i++)
     {
         PRINTVAR(i);
         removeAndRetriangulate(verts[i]);
     }
+    fullCorrectnessCheck();
+    return;
+
+    int BROKEN = 390;
+    std::random_shuffle(verts.begin(), verts.end());
+    for(int i = 0; i < BROKEN; i++)
+    {
+        PRINTVAR(i);
+        removeAndRetriangulate(verts[i]);
+    }
+    vertices[verts[BROKEN]].pos.y += 1;
+    PRINT("\n\n\n\n\n\n\n\n\n");
+    removeAndRetriangulate(verts[BROKEN]);
+    return;
+
     fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
@@ -382,6 +399,7 @@ void Mesh::simplify(float faceMatchCutoff)
             if(isTriClique(it.loc))
                 removeTriClique(it.loc);
         }
+        return;
     }
 }
 
@@ -544,6 +562,7 @@ vector<int> Mesh::removeVertex(int vertex, int& terrainVal)
 
 void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
 {
+    PRINTVAR(vertLoop);
     //precondition: vertLoop is simply connected loop, oriented clockwise
     auto vertDist = [&] (const pair<int, int>& possibleEdge) -> float
     {
@@ -628,7 +647,7 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
         //reject edge if collinear
         int c1, c2;
         getMutualConnections(newEdge.first, newEdge.second, c1, c2);
-        PRINT("  Mutual connectino verts: " << c1 << ", " << c2);
+        PRINT("  Mutual connection verts: " << c1 << ", " << c2);
         //check for collinearity with any other vertices in vertLoop
         if(edgeContainsCollinear(vertLoop, newEdge))
         {
@@ -642,8 +661,8 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
             continue;
         }
         //create the new edge
-        DBASSERT(-1 == vertices[newEdge.first].connectsTo(newEdge.second));
-        DBASSERT(-1 == vertices[newEdge.second].connectsTo(newEdge.first));
+        DBASSERT(INVALID == vertices[newEdge.first].connectsTo(newEdge.second));
+        DBASSERT(INVALID == vertices[newEdge.second].connectsTo(newEdge.first));
         int ei = edges.alloc();
         PRINT("  Making edge " << ei);
         Edge& edge = edges[ei];
@@ -1528,7 +1547,8 @@ bool Mesh::retriEdgeOrientation(int v1, int v2, vector<int>& vertLoop)
     int i1 = -1;
     int i2 = -1;
     //first find the indices of v1, v2 in vertLoop (i1, i2)
-    for(size_t i = 0; i < vertLoop.size(); i++)
+    int nverts = vertLoop.size();
+    for(int i = 0; i < nverts; i++)
     {
         if(vertLoop[i] == v1)
         {
@@ -1544,15 +1564,24 @@ bool Mesh::retriEdgeOrientation(int v1, int v2, vector<int>& vertLoop)
         }
     }
     DBASSERT(i1 >= 0 && i2 >= 0);
-    for(size_t i3 = 0; i3 < vertLoop.size(); i3++)
+    if(i2 > i1)
     {
-        if((int) i3 == i1 || (int) i3 == i2)
-            continue;
-        //reorder the indices so they are clockwise (in order wrt vertLoop)
-        int j1, j2, j3;
-        sort3<int>(i1, i2, i3, j1, j2, j3);
-        if(cross(vertices[vertLoop[j3]].pos - vertices[vertLoop[j2]].pos,
-                 vertices[vertLoop[j1]].pos - vertices[vertLoop[j2]].pos).y < 0)
+        if(i2 - i1 > nverts / 2)
+            SWAP(i1, i2);
+    }
+    else
+    {
+        if((i2 + nverts - i1) % nverts > nverts / 2)
+            SWAP(i1, i2);
+    }
+    //test against the vertices connected directly to i1 and/or i2
+    int lower = i1 + 1;
+    int upper = lower + (nverts + i2 - i1) % nverts;
+    for(int i = lower; i < upper; i++)
+    {
+        int imid = i % nverts;
+        if(cross(vertices[vertLoop[i2]].pos - vertices[vertLoop[imid]].pos,
+                 vertices[vertLoop[i1]].pos - vertices[vertLoop[imid]].pos).y < 0)
             return false;
     }
     return true;
