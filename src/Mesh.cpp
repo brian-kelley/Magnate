@@ -241,7 +241,8 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     fullCorrectnessCheck();
     return;
     */
-    srand(42);
+
+    std::srand(42);
     vector<int> verts;
     verts.reserve(17 * 17);
     for(int i = 3; i < 30; i++)
@@ -249,6 +250,7 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
         for(int j = 3; j < 30; j++)
             verts.push_back(hmVertIndex(i, j));
     }
+    std::random_shuffle(verts.begin(), verts.end());
     for(size_t i = 0; i < verts.size(); i++)
     {
         PRINTVAR(i);
@@ -257,14 +259,13 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     fullCorrectnessCheck();
     return;
 
-    int BROKEN = 390;
-    std::random_shuffle(verts.begin(), verts.end());
+    int BROKEN = 582;
     for(int i = 0; i < BROKEN; i++)
     {
         PRINTVAR(i);
         removeAndRetriangulate(verts[i]);
     }
-    vertices[verts[BROKEN]].pos.y += 1;
+    vertices[verts[BROKEN]].pos.y += 0.7;
     PRINT("\n\n\n\n\n\n\n\n\n");
     removeAndRetriangulate(verts[BROKEN]);
     return;
@@ -635,14 +636,18 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
         PRINT("  Have " << validEdges.size() << " valid edges left to use.");
         //select shortest possible edge that doesn't cross any previous edges AND wasn't already connected
         pair<int, int> newEdge;
-        do
+        DBASSERT(validEdges.size() > 0);
+        newEdge = validEdges.back();
+        validEdges.pop_back();
+        if(edgeCrossesPrev(newEdge, addedEdges))
         {
-            DBASSERT(validEdges.size() > 0);
-            newEdge = validEdges.back();
-            validEdges.pop_back();
+            PRINT("  Skipping edge because it crosses prev.");
+            continue;
         }
-        while(edgeCrossesPrev(newEdge, addedEdges)
-            || vertices[newEdge.first].connectsTo(newEdge.second) >= 0);
+        if(vertices[newEdge.first].connectsTo(newEdge.second) >= 0)
+        {
+            DBASSERT(false);
+        }
         PRINT("  Have edge: " << newEdge);
         //reject edge if collinear
         int c1, c2;
@@ -1421,7 +1426,10 @@ void Mesh::getMutualConnections(int vert1, int vert2, int& c1, int& c2)
     Vertex& v2 = vertices[vert2];
     c1 = INVALID;
     c2 = INVALID;
-    bool foundOne = false;
+    float lineDist1 = 1e30;
+    float lineDist2 = 1e30;
+    //pick UP TO 1 mutual connections on one side
+    vector<int> allMutual;
     for(auto edge1 : v1.edges)
     {
         for(auto edge2 : v2.edges)
@@ -1438,21 +1446,49 @@ void Mesh::getMutualConnections(int vert1, int vert2, int& c1, int& c2)
                 shared = e1.v[0];
             else if(e1.v[1] == e2.v[1])
                 shared = e1.v[1];
-            if(shared != INVALID && shared != vert1 && shared != vert2)
+            if(shared != INVALID)
             {
-                if(!foundOne)
-                {
-                    foundOne = true;
-                    c1 = shared;
-                }
-                else if(shared != c2)
-                {
-                    c2 = shared;
-                    return;
-                }
+                allMutual.push_back(shared);
+                break;
             }
         }
     }
+    //sort allMutual verts into left and right
+    //let c1 = closest left vert, c2 = closest right vert
+    auto getVec2 = [&] (int v) -> vec2
+    {
+        return vertices[v].pos.xz();
+    };
+    vec2 base = getVec2(vert1);
+    vec2 head = getVec2(vert2);
+    for(auto m : allMutual)
+    {
+        vec2 testHead = getVec2(m);
+        int side = Geom2D::pointLineSide(testHead, base, head);
+        if(side == 0)   //ignore collinear points, needs to be handled by caller
+            continue;
+        float mLineDist = Geom2D::pointLineDist(testHead, base, head);
+        if(side == 1)
+        {
+            //replace c1 with m if m is closer to line
+            if(mLineDist < lineDist1)
+            {
+                c1 = m;
+                lineDist1 = mLineDist;
+            }
+        }
+        else
+        {
+            //replace c2 with m if m is closer to line
+            if(mLineDist < lineDist2)
+            {
+                c2 = m;
+                lineDist2 = mLineDist;
+            }
+        }
+    }
+    if(c1 == INVALID && c2 != INVALID)
+        SWAP(c1, c2);
 }
 
 bool Mesh::faceExists(int v1, int v2, int v3)
