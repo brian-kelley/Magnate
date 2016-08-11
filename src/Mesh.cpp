@@ -236,7 +236,7 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     PRINT("Constructing tri mesh.");
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
-    simplify(0.99);
+    simplify();
     //fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
@@ -308,22 +308,24 @@ void Mesh::simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues)
     }
 }
 
-void Mesh::simplify(float faceMatchCutoff)
+void Mesh::simplify()
 {
     PRINT("***** STARTING MESH SIMPLIFICATION *****");
-    PRINT(vertices.size << " vertices.");
-    PRINT(edges.size << " edges.");
-    PRINT(faces.size << " faces.");
+    int oldVerts = vertices.size;
+    int oldEdges = edges.size;
+    int oldFaces = faces.size;
+    PRINT(oldVerts << " vertices.");
+    PRINT(oldEdges << " edges.");
+    PRINT(oldFaces << " faces.");
     clock_t start = clock();
-    float maximumCollapseLength = 8 * Coord::TERRAIN_TILE_SIZE;
-    PRINT("maax collapse len: " << maximumCollapseLength << ", should be = " << length(Coord::tileToWorld(8, 0, 0) - Coord::tileToWorld(0, 0, 0)));
+    float maximumCollapseLength = 4 * Coord::TERRAIN_TILE_SIZE;
     int numCollapses = 0;
-    for(int i = 0; i < 3; i++)
+    while(true)
     {
         int numCollapsesBefore = numCollapses;
         for(auto face : faces)
         {
-            //get shortest edge of triangle
+            //get shortest edge of triangle for collapse
             float shortestDist = 1e30;
             int shortestEdge;
             for(int j = 0; j < 3; j++)
@@ -341,22 +343,23 @@ void Mesh::simplify(float faceMatchCutoff)
                     numCollapses++;
             }
         }
-        PRINT("Fixing flipped triangles; detecting and fixing overlaps...");
         for(auto it = faces.begin(); it != faces.end(); it++)
         {
             it->checkNormal();
         }
-        PRINT("Done handling tri cliques.");
-        PRINT("***** Sweep " << i << " had " << numCollapses - numCollapsesBefore << " edge collapses.");
-        fullCorrectnessCheck();
+        PRINT("***** Sweep had " << numCollapses - numCollapsesBefore << " edge collapses.");
+        if(numCollapses == numCollapsesBefore)
+            break;
     }
+    //badTriangleRepair();
+    //fullCorrectnessCheck();
     double elapsed = (double) (clock() - start) / CLOCKS_PER_SEC;
     PRINT("Time to simplify: " << elapsed);
     PRINT("# of successful collapses: " << numCollapses);
     PRINT("***** COMPLETED MESH SIMPLIFICATION *****");
-    PRINT(vertices.size << " vertices.");
-    PRINT(edges.size << " edges.");
-    PRINT(faces.size << " faces.");
+    PRINT(vertices.size << " vertices (" << 100 * (float(oldVerts - vertices.size) / oldVerts) << "% reduction)");
+    PRINT(edges.size << " edges (" << 100 * (float(oldEdges - edges.size) / oldEdges) << "% reduction)");
+    PRINT(faces.size << " faces (" << 100 * (float(oldFaces - faces.size) / oldFaces) << "% reduction)");
 }
 
 bool Mesh::edgeCollapse(int edgeNum)
@@ -364,6 +367,7 @@ bool Mesh::edgeCollapse(int edgeNum)
     //First do the eligibility checks
     if(!checkBoundaryBridge(edgeNum) ||
        !collapseConnectivity(edgeNum) ||
+       !checkFlatness(edgeNum) ||
        !collapseTriangleSides(edgeNum) ||
        !collapseEdgeLength(edgeNum))
         return false;
@@ -405,6 +409,7 @@ vector<int> Mesh::removeVertex(int vertex, int& terrainVal)
         auto newEnd = std::unique(facesToRemove.begin(), facesToRemove.end());
         facesToRemove.erase(newEnd, facesToRemove.end());
     }
+    PRINTVAR(facesToRemove);
     terrainVal = faces[facesToRemove.front()].value;
     //Now create a list of the edges in those faces that don't include vertexToRemove
     //(will not have duplicates)
@@ -482,6 +487,7 @@ vector<int> Mesh::removeVertex(int vertex, int& terrainVal)
         int startVert = edges[edgeBoundary[0]].v[0];
         int vertIt = startVert;
         int lastEdge = INVALID;
+        PRINT("Walking vertLoop");
         do
         {
             if(vertIt == vertLoop.back())
@@ -493,15 +499,13 @@ vector<int> Mesh::removeVertex(int vertex, int& terrainVal)
                 {
                     //have the next edge in loop
                     lastEdge = e;
-                    if(edges[e].v[0] == vertIt)
-                        vertIt = edges[e].v[1];
-                    else
-                        vertIt = edges[e].v[0];
+                    vertIt = edges[e].v[0] == vertIt ? edges[e].v[1] : edges[e].v[0];
+                    PRINTVAR(vertIt);
                     break;
                 }
             }
         }
-        while (vertIt != startVert);
+        while(vertIt != startVert);
     }
     for(size_t i = 0; i < vertLoop.size(); i++)
     {
@@ -828,7 +832,6 @@ void Mesh::removeTriClique(int vertex)
 {
     if(vertices[vertex].boundary)
         return;
-    PRINT("Removing tri clique at vertex " << vertex);
     Vertex& vert = vertices[vertex];
     DBASSERT(vert.edges.size() == 3);
     int v[3];
@@ -1673,6 +1676,38 @@ int Mesh::faceNeedsVertRemoval(int f)
         }
     }
     return INVALID;
+}
+
+bool Mesh::checkFlatness(int edge)
+{
+    const float cutoff = 0.99;
+    Edge& e = edges[edge];
+    if(e.f[0] < 0 || e.f[1] < 0)
+        return true;
+    auto n1 = faces[e.f[0]].getNorm();
+    auto n2 = faces[e.f[1]].getNorm();
+    return dot(n1, n2) > cutoff;
+}
+
+void Mesh::badTriangleRepair()
+{
+    int toRemove;
+    for(auto it = faces.begin(); it != faces.end(); it++)
+    {
+        if((toRemove = faceNeedsVertRemoval(it.loc)) != INVALID)
+        {
+            /*
+            if(toRemove == 16745)
+            {
+                //vertices[toRemove].pos.y += 3;
+                int dontcare;
+                auto loop = removeVertex(16745, dontcare);
+                return;
+            }
+            else */
+                removeAndRetriangulate(toRemove);
+        }
+    }
 }
 
 bool Mesh::validFace(int f)

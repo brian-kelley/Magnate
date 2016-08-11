@@ -82,7 +82,7 @@ struct Mesh
     Pool<MeshTypes::Edge> edges;
     Pool<MeshTypes::Face> faces;
     void simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues);
-    void simplify(float faceMatchCutoff);
+    void simplify();
     vector<int> removeVertex(int vertex, int& terrainVal);
     void retriangulate(vector<int>& vertLoop, int terrainVal);
     int getMaxVertices();
@@ -107,6 +107,8 @@ struct Mesh
     bool collapseTriangleSides(int edge);
     //check that edges getting longer from collapse don't exceed max edge length
     bool collapseEdgeLength(int edge);
+    //check that the area around edge collapse region is flat enough to continue
+    bool checkFlatness(int edge);
     //check for triangle flips, don't modify mesh
     bool checkFlips(int e1, int e2);
     //get 4 neighboring faces for collapse
@@ -138,6 +140,8 @@ struct Mesh
     int faceNeedsVertRemoval(int f);
     //get the position of the vertex merged from v1, v2 in EC
     vec3 getCollapseVertPos(int v1, int v2);  
+    //scan whole mesh again for bad orientation/thin triangles and repair
+    void badTriangleRepair();
     void fullCorrectnessCheck();
     void deepTest(Heightmap& heights, Heightmap& faceValues);
     bool validFace(int f);
