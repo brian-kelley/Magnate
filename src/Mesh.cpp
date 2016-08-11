@@ -236,41 +236,8 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     PRINT("Constructing tri mesh.");
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
-    /*
     simplify(0.99);
-    fullCorrectnessCheck();
-    return;
-    */
-
-    std::srand(42);
-    vector<int> verts;
-    verts.reserve(17 * 17);
-    for(int i = 3; i < 30; i++)
-    {
-        for(int j = 3; j < 30; j++)
-            verts.push_back(hmVertIndex(i, j));
-    }
-    std::random_shuffle(verts.begin(), verts.end());
-    for(size_t i = 0; i < verts.size(); i++)
-    {
-        PRINTVAR(i);
-        removeAndRetriangulate(verts[i]);
-    }
-    fullCorrectnessCheck();
-    return;
-
-    int BROKEN = 582;
-    for(int i = 0; i < BROKEN; i++)
-    {
-        PRINTVAR(i);
-        removeAndRetriangulate(verts[i]);
-    }
-    vertices[verts[BROKEN]].pos.y += 0.7;
-    PRINT("\n\n\n\n\n\n\n\n\n");
-    removeAndRetriangulate(verts[BROKEN]);
-    return;
-
-    fullCorrectnessCheck();
+    //fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
 
@@ -343,65 +310,53 @@ void Mesh::simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues)
 
 void Mesh::simplify(float faceMatchCutoff)
 {
+    PRINT("***** STARTING MESH SIMPLIFICATION *****");
+    PRINT(vertices.size << " vertices.");
+    PRINT(edges.size << " edges.");
+    PRINT(faces.size << " faces.");
     clock_t start = clock();
-    int collapses = 1;
-    int totalIters = 0;
-    while(collapses)
+    float maximumCollapseLength = 8 * Coord::TERRAIN_TILE_SIZE;
+    PRINT("maax collapse len: " << maximumCollapseLength << ", should be = " << length(Coord::tileToWorld(8, 0, 0) - Coord::tileToWorld(0, 0, 0)));
+    int numCollapses = 0;
+    for(int i = 0; i < 3; i++)
     {
-        if(totalIters++ == 2)
-            return;
-        collapses = 0;
-        for(auto it = edges.begin(); it != edges.end(); it++)
+        int numCollapsesBefore = numCollapses;
+        for(auto face : faces)
         {
-            auto& edge = *it;
-            //get unit normals for faces sharing this edge
-            if(edge.f[0] >= 0 && edge.f[1] >= 0)
+            //get shortest edge of triangle
+            float shortestDist = 1e30;
+            int shortestEdge;
+            for(int j = 0; j < 3; j++)
             {
-                auto& f1 = faces[edge.f[0]];
-                auto& f2 = faces[edge.f[1]];
-                auto dotprod = dot(f1.getNorm(), f2.getNorm());
-                if(dotprod < faceMatchCutoff)
-                    continue;
+                float thisDist = edges[face.e[j]].getLength();
+                if(thisDist < shortestDist)
+                {
+                    shortestEdge = j;
+                    shortestDist = thisDist;
+                }
             }
-            if(edgeCollapse(it.loc))
+            if(shortestDist <= maximumCollapseLength)
             {
-                collapses++;
-                //printf("%i collapses\n", collapses);
+                if(edgeCollapse(face.e[shortestEdge]))
+                    numCollapses++;
             }
         }
-        PRINT("Performed " << collapses << " collapses in " << double(clock() - start) / CLOCKS_PER_SEC << " s.");
         PRINT("Fixing flipped triangles; detecting and fixing overlaps...");
         for(auto it = faces.begin(); it != faces.end(); it++)
         {
             it->checkNormal();
         }
-        for(auto it = vertices.begin(); it != vertices.end(); it++)
-        {
-            if(isTriClique(it.loc))
-                removeTriClique(it.loc);
-        }
         PRINT("Done handling tri cliques.");
-        for(auto it = edges.begin(); it != edges.end(); it++)
-        {
-            //use the fact that the upward curl of faces should be in opposing directions along an edge
-            if(facesWrongOrientation(it.loc))
-            {
-                PRINT("Found incorrect fold at edge " << it.loc);
-                if(!vertices[it->v[0]].boundary)
-                    removeAndRetriangulate(it->v[0]);
-                else if(!vertices[it->v[1]].boundary)
-                    removeAndRetriangulate(it->v[1]);
-                else
-                    throw runtime_error("Overlapping faces on map boundary can't be repaired!");
-            }
-        }
-        for(auto it = vertices.begin(); it != vertices.end(); it++)
-        {
-            if(isTriClique(it.loc))
-                removeTriClique(it.loc);
-        }
-        return;
+        PRINT("***** Sweep " << i << " had " << numCollapses - numCollapsesBefore << " edge collapses.");
+        fullCorrectnessCheck();
     }
+    double elapsed = (double) (clock() - start) / CLOCKS_PER_SEC;
+    PRINT("Time to simplify: " << elapsed);
+    PRINT("# of successful collapses: " << numCollapses);
+    PRINT("***** COMPLETED MESH SIMPLIFICATION *****");
+    PRINT(vertices.size << " vertices.");
+    PRINT(edges.size << " edges.");
+    PRINT(faces.size << " faces.");
 }
 
 bool Mesh::edgeCollapse(int edgeNum)
@@ -409,7 +364,8 @@ bool Mesh::edgeCollapse(int edgeNum)
     //First do the eligibility checks
     if(!checkBoundaryBridge(edgeNum) ||
        !collapseConnectivity(edgeNum) ||
-       !collapseTriangleSides(edgeNum))
+       !collapseTriangleSides(edgeNum) ||
+       !collapseEdgeLength(edgeNum))
         return false;
     auto& edge = edges[edgeNum];
     if(vertices[edge.v[0]].boundary && vertices[edge.v[1]].boundary)
@@ -563,7 +519,6 @@ vector<int> Mesh::removeVertex(int vertex, int& terrainVal)
 
 void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
 {
-    PRINTVAR(vertLoop);
     //precondition: vertLoop is simply connected loop, oriented clockwise
     auto vertDist = [&] (const pair<int, int>& possibleEdge) -> float
     {
@@ -632,44 +587,30 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
     int trisAdded = 0;
     while(trisAdded < trisToMake)
     {
-        PRINT("Entering main loop, have done " << trisAdded << " tris, need " << trisToMake);
-        PRINT("  Have " << validEdges.size() << " valid edges left to use.");
         //select shortest possible edge that doesn't cross any previous edges AND wasn't already connected
         pair<int, int> newEdge;
         DBASSERT(validEdges.size() > 0);
         newEdge = validEdges.back();
         validEdges.pop_back();
         if(edgeCrossesPrev(newEdge, addedEdges))
-        {
-            PRINT("  Skipping edge because it crosses prev.");
             continue;
-        }
         if(vertices[newEdge.first].connectsTo(newEdge.second) >= 0)
         {
             DBASSERT(false);
         }
-        PRINT("  Have edge: " << newEdge);
         //reject edge if collinear
         int c1, c2;
         getMutualConnections(newEdge.first, newEdge.second, c1, c2);
-        PRINT("  Mutual connection verts: " << c1 << ", " << c2);
         //check for collinearity with any other vertices in vertLoop
         if(edgeContainsCollinear(vertLoop, newEdge))
-        {
-            PRINT("Skipping edge because of collinearity.");
             continue;
-        }
         //check for bad orientation
         if(!retriEdgeOrientation(newEdge.first, newEdge.second, vertLoop))
-        {
-            PRINT("  Skipping edge because it is outside vertLoop.");
             continue;
-        }
         //create the new edge
         DBASSERT(INVALID == vertices[newEdge.first].connectsTo(newEdge.second));
         DBASSERT(INVALID == vertices[newEdge.second].connectsTo(newEdge.first));
         int ei = edges.alloc();
-        PRINT("  Making edge " << ei);
         Edge& edge = edges[ei];
         addedEdges.push_back(newEdge);
         int v1 = newEdge.first;
@@ -699,7 +640,6 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
             //know points aren't collinear already
             if(Geom2D::pointLineSide(p1, etail, ehead) == Geom2D::pointLineSide(p2, etail, ehead))
             {
-                PRINT("  Skipping one face for 4-clique situation");
                 //p1, p2 on same side of edge, can only create 1 face
                 //decide which point is closer to the edge
                 float p1dist = Geom2D::pointLineDist(p1, etail, ehead);
@@ -710,7 +650,6 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
                 numNewTris = 1;
             }
         }
-        PRINT("  Creating " << numNewTris << " triangles.");
         for(int i = 0; i < numNewTris; i++)
         {
             int v3 = mutualVerts[i];
@@ -729,9 +668,7 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
             edges[face.e[0]].replaceFaceLink(INVALID, fi);
             edges[face.e[1]].replaceFaceLink(INVALID, fi);
             edges[face.e[2]].replaceFaceLink(INVALID, fi);
-            PRINT("  New face: " << face );
         }
-        PRINT("  (After possible face creation) new edge: " << edge);
     }
 }
 
@@ -741,14 +678,7 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     auto& edge = edges[edgeNum];
     int v1 = edge.v[0];
     int v2 = edge.v[1];
-    if(vertices[v1].boundary && vertices[v2].boundary)
-    {
-        //make sure v1/v2 on same boundary, otherwise can't do collapse
-        auto& pos1 = vertices[v1].pos;
-        auto& pos2 = vertices[v2].pos;
-        if(pos1.x != pos2.x && pos1.y != pos2.y)
-            return;
-    }
+    orderCollapseVerts(v1, v2);
     int f1, f2, f11, f12, f21, f22, e11, e12, e21, e22;
     f1 = edge.f[0];
     f2 = edge.f[1];
@@ -781,23 +711,15 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     //Fix triangle vertex ordering so that triangle flips can be
     //detected after the collapse
     //note: vertex ordering for faces doesn't affect edges at all
-    bool moveVertex = true; //by default, move remaining vertex to midpoint of old ones
+    vec3 v2NewPos = getCollapseVertPos(v1, v2);
     //don't want to move or remove a vertex on the map boundary
-    if(vertices[v1].corner || (vertices[v1].boundary && !vertices[v2].corner))
-    {
-        //keep v1, delete v2 instead (just by swapping names)
-        SWAP(v1, v2);
-        moveVertex = false;
-    }
-    if(vertices[v2].boundary)
-        moveVertex = false;
+    //v1 deleted, links moved to v2, v2 possibly moved to mid(v1, v2)
     fixTriFlips(e12, e22);
     replaceVertexLinks(v1, v2); //note: does not free v1, but does free edgeNum
     vertices[v2].boundary |= vertices[v1].boundary;
     vertices[v2].corner |= vertices[v1].corner;
     //e11.v == e12.v, e21.v == e22.v (only face links different, will change)
-    if(moveVertex)
-        vertices[v2].pos = (vertices[v1].pos + vertices[v2].pos) * 0.5f;
+    vertices[v2].pos = v2NewPos;
     //mesh no longer contains any links to v1, can safely delete it
     vertices.dealloc(v1);
     vertices[v2].removeEdge(edgeNum);
@@ -820,8 +742,29 @@ void Mesh::interiorEdgeCollapse(int edgeNum)
     if(f2 >= 0)
         faces.dealloc(f2);
     fixTriFlips(e12, e22);
+    //look for tri cliques on verts conected to v2
+    for(auto v2Connection : vertices[v2].edges)
+    {
+        Edge& checkEdge = edges[v2Connection];
+        int otherVert = checkEdge.v[0] == v2 ? checkEdge.v[1] : checkEdge.v[0];
+        if(isTriClique(otherVert))
+            removeTriClique(otherVert);
+    }
     if(isTriClique(v2))
         removeTriClique(v2);
+    //out of nearby triangles that still exist, test for back-facing or being too thin
+    //both cases are repaired by vertex removal
+    //all 4 of fxy need to be checked
+    int checkFaces[4] = {f11, f12, f21, f22};
+    for(int i = 0; i < 4; i++)
+    {
+        if(checkFaces[i] >= 0 && faces.isAllocated(checkFaces[i]))
+        {
+            int possibleRemoval = faceNeedsVertRemoval(checkFaces[i]);
+            if(possibleRemoval != INVALID)
+                removeAndRetriangulate(possibleRemoval);
+        }
+    }
 }
 
 void Mesh::boundaryEdgeCollapse(int e)
@@ -838,11 +781,6 @@ void Mesh::boundaryEdgeCollapse(int e)
     //  but must check that at most one of v1, v2 is in a corner
     //  because can't collapse the boundary of the mesh
     //Also decide whether to move the merged vertex
-    bool v1corner = vertices[v1].corner;
-    bool v2corner = vertices[v2].corner;
-    if(v1corner && v2corner)
-        return;
-    bool moveVertex = !(v1corner || v2corner);
     int e1, e2, f1, f2;
     for(int i = 0; i < 3; i++)
     {
@@ -862,22 +800,20 @@ void Mesh::boundaryEdgeCollapse(int e)
     //now e1 and e2 are more useful as actual values
     e1 = faces[f].e[e1];
     e2 = faces[f].e[e2];
+    orderCollapseVerts(v1, v2);
     //v1 might be moved, v2 will be deleted
-    //don't want to delete a corner vertex
-    if(v2corner)
-        SWAP(v1, v2);
-    vertices[v1].boundary |= vertices[v2].boundary;
-    vertices[v1].corner |= vertices[v2].corner;
-    if(moveVertex)
-        vertices[v1].pos = (vertices[v1].pos + vertices[v2].pos) / 2.0f;
+    vec3 mergedPos = getCollapseVertPos(v1, v2);
+    vertices[v2].boundary |= vertices[v2].boundary;
+    vertices[v2].corner |= vertices[v2].corner;
+    vertices[v2].pos = mergedPos;
     //e2 will be merged onto e1, and e1 will be deleted
     if(f1 != -1)
         faces[f1].replaceEdgeLink(e1, e2);
     edges[e2].replaceFaceLink(f, f1);
     //remove V->E links to edge e
-    replaceVertexLinks(v2, v1); //fixes all E -> V and F -> V links, deleted edge
-    vertices.dealloc(v2);
-    vertices[v1].removeEdge(e);
+    replaceVertexLinks(v1, v2); //fixes all E -> V and F -> V links, deleted edge
+    vertices.dealloc(v1);
+    vertices[v2].removeEdge(e);
     fullyDeleteEdge(e1);
     faces.dealloc(f);
     fixTriFlips(e2, INVALID);
@@ -1014,15 +950,46 @@ bool Mesh::checkBoundaryBridge(int edge)
     auto& v1 = vertices[edges[edge].v[0]];
     auto& v2 = vertices[edges[edge].v[1]];
     if(!(v1.boundary && v2.boundary))
-        return true;    //at least one not on boundary, ok
+        return true;    //at least one in interior, ok
     if(v1.corner && v2.corner)
-        return false;   //bad!
+        return false;   //bad, would collapse across entire world boundary
     if(v1.corner || v2.corner)
-        return true;    //ok, if one is in corner, can't bridge across boundaries
+        return true;    //ok, exatly one is in corner, won't bridge across boundaries
     //v1, v2 both on boundary, and neither on a corner
     //v1 and v2 either need to have the same x or the same z, otherwise bad
     if(v1.pos[0] != v2.pos[0] && v1.pos[2] != v2.pos[2])
         return false;
+    return true;
+}
+
+bool Mesh::collapseEdgeLength(int edge)
+{
+    const float maxEdgeLen = Coord::TERRAIN_TILE_SIZE * 8;
+    Edge& e = edges[edge];
+    int v[2];
+    v[0] = e.v[0];
+    v[1] = e.v[1];
+    vec3 oldPos[2] = {vertices[v[0]].pos, vertices[v[1]].pos};
+    vec3 newPos = getCollapseVertPos(v[0], v[1]);
+    //movement of v1, v2 during collapse (if any)
+    vec3 shift[2] = {newPos - oldPos[0], newPos - oldPos[1]};
+    orderCollapseVerts(v[0], v[1]);
+    //Check v1 
+    for(int i = 0; i < 2; i++)
+    {
+        for(auto connection : vertices[v[i]].edges)
+        {
+            //edge to be collapsed can't get longer
+            if(connection == edge)
+                continue;
+            Edge& test = edges[connection];
+            //get the vert on the other end of this edge
+            int otherVert = test.v[0] == v[i] ? test.v[1] : test.v[0];
+            vec3 newVec = oldPos[i] - vertices[otherVert].pos + shift[i];
+            if(length(newVec) > maxEdgeLen)
+                return false;
+        }
+    }
     return true;
 }
 
@@ -1491,20 +1458,6 @@ void Mesh::getMutualConnections(int vert1, int vert2, int& c1, int& c2)
         SWAP(c1, c2);
 }
 
-bool Mesh::faceExists(int v1, int v2, int v3)
-{
-    int c1 = vertices[v1].connectsTo(v2);
-    if(c1 == -1)
-        return false;
-    int f1 = edges[c1].f[0];
-    int f2 = edges[c1].f[0];
-    if(f1 >= 0 && faces[f1].hasVert(v3))
-        return true;
-    if(f2 >= 0 && faces[f2].hasVert(v3))
-        return true;
-    return false;
-}
-
 bool Mesh::isLoopOrientedUp(vector<int>& loop)
 {
     float sum = 0;
@@ -1621,6 +1574,105 @@ bool Mesh::retriEdgeOrientation(int v1, int v2, vector<int>& vertLoop)
             return false;
     }
     return true;
+}
+
+
+void Mesh::orderCollapseVerts(int& v1, int& v2)
+{
+    Vertex& vert1 = vertices[v1];
+    Vertex& vert2 = vertices[v2];
+    if(vert1.boundary && !vert2.boundary)
+    {
+        SWAP(v1, v2);
+        return;
+    }
+    else if(vert1.corner && !vert2.corner)
+    {
+        SWAP(v1, v2);
+        return;
+    }
+}
+
+
+vec3 Mesh::getCollapseVertPos(int v1, int v2)
+{
+    DBASSERT(validVertex(v1) && validVertex(v2));
+    Vertex& vert1 = vertices[v1];
+    Vertex& vert2 = vertices[v2];
+    if(!(vert1.boundary && vert2.boundary))
+    {
+        //interior edge collapse
+        if(vertices[v2].boundary)
+            return vert2.pos;
+        else
+            return (vert1.pos + vert2.pos) / 2.0f;
+    }
+    else
+    {
+        //boundary edge collapse
+        if(!vert1.corner && !vert2.corner)
+            return (vert1.pos + vert2.pos) / 2.0f;
+        else
+            return vert2.pos;
+    }
+}
+int Mesh::faceNeedsVertRemoval(int f)
+{
+    Face& face = faces[f];
+    float cutoffFactor = 1.07;
+    //first check for bad orientation of this face
+    //since they should always be fixed immediately, this face is wrong
+    //1st possibility: all 3 neighboring faces are correct and this one is wrong
+    bool rv = false;
+    if(facesWrongOrientation(face.e[0]) &&
+       facesWrongOrientation(face.e[1]) &&
+       facesWrongOrientation(face.e[2]))
+    {
+        rv = true;
+    }
+    int edgeIndices[3];
+    float edgeLen[3];
+    for(int i = 0; i < 3; i++)
+    {
+        edgeIndices[i] = face.e[i];
+        edgeLen[i] = edges[edgeIndices[i]].getLength();
+    }
+    //sort edgeLen ascending
+    if(edgeLen[0] > edgeLen[1])
+    {
+        SWAP(edgeLen[0], edgeLen[1]);
+        SWAP(edgeIndices[0], edgeIndices[1]);
+    }
+    if(edgeLen[1] > edgeLen[2])
+    {
+        SWAP(edgeLen[1], edgeLen[2]);
+        SWAP(edgeIndices[1], edgeIndices[2]);
+    }
+    if(edgeLen[0] > edgeLen[1])
+    {
+        SWAP(edgeLen[0], edgeLen[1]);
+        SWAP(edgeIndices[0], edgeIndices[1]);
+    }
+    //2nd possibility: triangle is too thin
+    DBASSERT(edgeLen[0] <= edgeLen[1] && edgeLen[1] <= edgeLen[2]);
+    if(edgeLen[0] + edgeLen[1] < cutoffFactor * edgeLen[2])
+    {
+        //rv = true;
+    }
+    if(rv)
+    {
+        //return index of vertex opposite (not in) longest face
+        Edge& longEdge  = edges[edgeIndices[2]];
+        for(int i = 0; i < 3; i++)
+        {
+            if(longEdge.v[0] != face.v[i] && longEdge.v[1] != face.v[i])
+            {
+                PRINT("Face " << f << " has vert " << face.v[i] << " which should be removed.");
+                return face.v[i];
+            }
+        }
+    }
+    return INVALID;
 }
 
 bool Mesh::validFace(int f)

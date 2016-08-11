@@ -242,6 +242,7 @@ void WorldRenderer::drawDebugWireframeMesh()
 
 //Debug labels for mesh vertices
     //draw labels for vertices with x, z < 30
+    /*
     char str[20];
     string text;
     Color4 blk(0, 0, 0, 255);
@@ -267,5 +268,6 @@ void WorldRenderer::drawDebugWireframeMesh()
             ImmediateDraw::drawRect(blu, rect);
         }
     }
+    */
 }
 

@@ -26,6 +26,7 @@ class Pool
         {
             int loc;
             Pool& owner;
+            Iter& operator++();
             Iter operator++(int);   //postfix increment requires arg for no reason
             T& operator*();
             T* operator->();
@@ -154,9 +155,9 @@ void Pool<T>::clear()
     size = 0;
     top = 0;
 }
-    
+
 template<typename T>
-typename Pool<T>::Iter Pool<T>::Iter::operator++(int)
+typename Pool<T>::Iter& Pool<T>::Iter::operator++()
 {
     do
     {
@@ -165,6 +166,19 @@ typename Pool<T>::Iter Pool<T>::Iter::operator++(int)
     while(!owner.allocMap[loc] && loc < owner.capacity);
     //returned iterator will be at next allocated position, or end()
     return *this;
+}
+    
+template<typename T>
+typename Pool<T>::Iter Pool<T>::Iter::operator++(int)
+{
+    auto copy = *this;
+    do
+    {
+        loc++;
+    }
+    while(!owner.allocMap[loc] && loc < owner.capacity);
+    //returned iterator will be at next allocated position, or end()
+    return copy;
 }
 
 template<typename T>

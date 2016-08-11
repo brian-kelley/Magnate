@@ -26,7 +26,7 @@ void TerrainGen::generate()
     world.add(first);
     TIMEIT(world.smooth(2));
     TIMEIT(correctOceans());
-    short targetMax = 10000;
+    short targetMax = 12 * GlobalConfig::WORLD_SIZE;
     //Erosion e(world);
     TIMEIT(scaleHeight(targetMax, world.getMax()));
     TIMEIT(assignBiomes());

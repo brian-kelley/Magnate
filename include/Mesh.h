@@ -105,13 +105,15 @@ struct Mesh
     bool checkBoundaryBridge(int edge);
     //check the neighboring triangle side lengths to make sure collapse is an improvement
     bool collapseTriangleSides(int edge);
+    //check that edges getting longer from collapse don't exceed max edge length
+    bool collapseEdgeLength(int edge);
     //check for triangle flips, don't modify mesh
     bool checkFlips(int e1, int e2);
     //get 4 neighboring faces for collapse
     void getNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, int& f22);
     //check if edge (v1, v2) is valid to be created
     bool retriEdgeOrientation(int v1, int v2, vector<int>& vertLoop);
-    //check if faces adjacent to edge e are overlapping
+    //check if one face adjacent to edge e is oriented wrong
     bool facesWrongOrientation(int e);
     void getBoundaryNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, int& f22);
     //get the two faces neighboring the face, but excluding "exclude"
@@ -123,7 +125,6 @@ struct Mesh
     int getFaceFrom3Vertices(int v1, int v2, int v3);
     //c1, c2 set to vertices connected to both v1, v2 (or -1)
     void getMutualConnections(int v1, int v2, int& c1, int& c2);    
-    bool faceExists(int v1, int v2, int v3);
     bool isLoopOrientedUp(vector<int>& loop);
     //are the vertices collinear in x/z?
     bool verticesCollinear(int v1, int v2, int v3);
@@ -131,7 +132,12 @@ struct Mesh
     //replace all links to toReplace with newLink (changes links in faces and edges)
     void replaceVertexLinks(int toReplace, int newLink);
     void fullyDeleteEdge(int e); //completely deletes edge. Faces must not link to it!
-    void mergeEdges(int e1, int e2, int f); //pass the edges to be merged, and shared face
+    //order v1, v2 for EC so that v1 could be deleted and v2 could be kept
+    void orderCollapseVerts(int& v1, int& v2);
+    //return INVALID, or the index of a vert in f that needs removing
+    int faceNeedsVertRemoval(int f);
+    //get the position of the vertex merged from v1, v2 in EC
+    vec3 getCollapseVertPos(int v1, int v2);  
     void fullCorrectnessCheck();
     void deepTest(Heightmap& heights, Heightmap& faceValues);
     bool validFace(int f);
