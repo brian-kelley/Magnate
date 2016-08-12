@@ -48,7 +48,7 @@ namespace MeshTypes
         bool hasVert(int query);
         bool hasEdge(int query);
         void checkNormal();
-        bool isClockwise(int v1, int v2);   //is v2 clockwise of v1
+        bool isCCW(int v1, int v2);   //is v2 clockwise of v1
         void replaceEdgeLink(int toReplace, int newLink);
         void replaceVertexLink(int toReplace, int newLink);
     };
@@ -121,10 +121,12 @@ struct Mesh
     //get the two faces neighboring the face, but excluding "exclude"
     void getFaceNeighbors(int f, int exclude, int& f1, int& f2);
     int getOtherFace(int f, int e);    //get the face neighboring f across the eth edge of f
+    int getOtherVertex(int e, int v);    //get the vertex from e that is not v
     int getSharedEdge(int f1, int f2);
     //when a pair of verts only shares 1 valid face, return the face
     int getFaceFrom2Vertices(int v1, int v2);
     int getFaceFrom3Vertices(int v1, int v2, int v3);
+    int getCCWFace(int edge, int v1, int v2);
     //c1, c2 set to vertices connected to both v1, v2 (or -1)
     void getMutualConnections(int v1, int v2, int& c1, int& c2);    
     bool isLoopOrientedUp(vector<int>& loop);

@@ -164,7 +164,7 @@ bool Face::hasVert(int query)
     return v[0] == query || v[1] == query || v[2] == query;
 }
 
-bool Face::isClockwise(int v1, int v2)
+bool Face::isCCW(int v1, int v2)
 {
     int v1loc = INVALID;
     int v2loc = INVALID;
@@ -236,8 +236,20 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
     PRINT("Constructing tri mesh.");
     //pools are already sized to store all features of the most detailed mesh
     simpleLoadHeightmap(heights, faceValues);
-    simplify();
-    //fullCorrectnessCheck();
+    //simplify();
+    srand(42);
+    vector<int> verts;
+    verts.reserve(600);
+    for(int i = 1; i < 20; i++)
+        for(int j = 1; j < 20; j++)
+            verts.push_back(hmVertIndex(i, j));
+    std::random_shuffle(verts.begin(), verts.end());
+    int keep = 20;
+    for(size_t i = 0; i < verts.size() - keep; i++)
+    {
+        removeAndRetriangulate(verts[i]);
+    }
+    fullCorrectnessCheck();
     PRINT("Done with mesh.");
 }
 
@@ -351,8 +363,8 @@ void Mesh::simplify()
         if(numCollapses == numCollapsesBefore)
             break;
     }
-    //badTriangleRepair();
-    //fullCorrectnessCheck();
+    badTriangleRepair();
+    fullCorrectnessCheck();
     double elapsed = (double) (clock() - start) / CLOCKS_PER_SEC;
     PRINT("Time to simplify: " << elapsed);
     PRINT("# of successful collapses: " << numCollapses);
@@ -381,6 +393,13 @@ bool Mesh::edgeCollapse(int edgeNum)
 
 void Mesh::removeAndRetriangulate(int vertexToRemove)
 {
+    if(vertices[vertexToRemove].boundary)
+        return;
+    if(isTriClique(vertexToRemove))
+    {
+        removeTriClique(vertexToRemove);
+        return;
+    }
     int terrainVal;
     auto vertLoop = removeVertex(vertexToRemove, terrainVal);
     retriangulate(vertLoop, terrainVal);
@@ -389,135 +408,63 @@ void Mesh::removeAndRetriangulate(int vertexToRemove)
 vector<int> Mesh::removeVertex(int vertex, int& terrainVal)
 {
     Vertex& vert = vertices[vertex];
-    if(vert.boundary)
-        throw runtime_error("Can't remove a vertex on the boundary.");
-    //create a list of faces to delete (duplicates ok)
+    DBASSERT(!vert.boundary);
+    size_t num = vert.edges.size();
+    vector<int> edgesToRemove;
+    edgesToRemove.reserve(num);
     vector<int> facesToRemove;
-    {
-        for(auto edge : vert.edges)
-        {
-            if(edge >= 0)
-            {
-                for(int i = 0; i < 2; i++)
-                {
-                    if(edges[edge].f[i] >= 0)
-                        facesToRemove.push_back(edges[edge].f[i]);
-                }
-            }
-        }
-        std::sort(facesToRemove.begin(), facesToRemove.end());
-        auto newEnd = std::unique(facesToRemove.begin(), facesToRemove.end());
-        facesToRemove.erase(newEnd, facesToRemove.end());
-    }
-    PRINTVAR(facesToRemove);
-    terrainVal = faces[facesToRemove.front()].value;
-    //Now create a list of the edges in those faces that don't include vertexToRemove
-    //(will not have duplicates)
-    vector<int> edgeBoundary;
-    {
-        for(auto face : facesToRemove)
-        {
-            if(face >= 0)
-            {
-                for(int i = 0; i < 3; i++)
-                {
-                    Edge& edge = edges[faces[face].e[i]];
-                    bool alreadyAdded = false;
-                    if(edge.v[0] != vertex && edge.v[1] != vertex)
-                    {
-                        for(size_t j = 0; j < edgeBoundary.size(); j++)
-                        {
-                            if(edgeBoundary[j] == faces[face].e[i])
-                            {
-                                alreadyAdded = true;
-                                break;
-                            }
-                        }
-                        if(!alreadyAdded)
-                            edgeBoundary.push_back(faces[face].e[i]);
-                    }
-                }
-            }
-        }
-    }
-    //Check for abort condition before changing any geometry
-    if(edgeBoundary.size() < 4 || edgeBoundary.size() > 40)
-        return vector<int>();
-    //delete vertexToRemove
-    vertices.dealloc(vertex);
-    //delete all faces containing vertexToRemove
-    int numFaces = 0;
-    for(auto faceToDelete : facesToRemove)
-    {
-        if(faceToDelete >= 0)
-        {
-            faces.dealloc(faceToDelete);
-            numFaces++;
-        }
-    }
-    //delete all edges leading to vertexToRemove
-    for(auto boundEdge : edgeBoundary)
-    {
-        //note: these vertices are guaranteed to be valid
-        Vertex* check[2] = {&vertices[edges[boundEdge].v[0]],
-                            &vertices[edges[boundEdge].v[1]]};
-        for(int i = 0; i < 2; i++)
-        {
-            int connection = check[i]->connectsTo(vertex);
-            if(connection != INVALID)
-            {
-                check[i]->removeEdge(connection);
-                edges.dealloc(connection);
-            }
-        }
-    }
-    //fix E -> F links along boundary (make links to deleted faces -1)
-    for(auto boundEdge : edgeBoundary)
-    {
-        int facesToCheck[2] = {edges[boundEdge].f[0], edges[boundEdge].f[1]};
-        for(int i = 0; i < 2; i++)
-        {
-            if(facesToCheck[i] >= 0 && !faces.isAllocated(facesToCheck[i]))
-                edges[boundEdge].replaceFaceLink(facesToCheck[i], INVALID);
-        }
-    }
+    facesToRemove.reserve(num);
     vector<int> vertLoop;
-    vertLoop.reserve(32);
+    vertLoop.reserve(num);
+    vector<int> loopEdges;
+    loopEdges.reserve(num);
+    //pick first edge arbitrarily
+    edgesToRemove.push_back(vert.edges[0]);
+    //get corresponding vert
+    vertLoop.push_back(getOtherVertex(vert.edges[0], vertex));
+    //get the face immediately CCW of the first edge
+    //have edge CW of face and a certain vertex orientation
+    facesToRemove.push_back(getCCWFace(edgesToRemove.back(), vertex, vertLoop.back()));
+    while(vertLoop.size() < num)
     {
-        int startVert = edges[edgeBoundary[0]].v[0];
-        int vertIt = startVert;
-        int lastEdge = INVALID;
-        PRINT("Walking vertLoop");
-        do
+        //use the previous last face/vertLoop entry to get the next edge
+        Face& f = faces[facesToRemove.back()];
+        //get vert in f 1 step CCW from last vertloop entry
+        int nextVertInd = 0;
+        for(; nextVertInd < 3; nextVertInd++)
         {
-            if(vertIt == vertLoop.back())
+            if(f.isCCW(vertLoop.back(), f.v[nextVertInd]))
                 break;
-            vertLoop.push_back(vertIt);
-            for(auto e : vertices[vertIt].edges)
-            {
-                if((edges[e].f[0] == INVALID || edges[e].f[1] == INVALID) && e != lastEdge)
-                {
-                    //have the next edge in loop
-                    lastEdge = e;
-                    vertIt = edges[e].v[0] == vertIt ? edges[e].v[1] : edges[e].v[0];
-                    PRINTVAR(vertIt);
-                    break;
-                }
-            }
         }
-        while(vertIt != startVert);
+        vertLoop.push_back(f.v[nextVertInd]);
+        edgesToRemove.push_back(vertices[vertLoop.back()].connectsTo(vertex));
+        facesToRemove.push_back(getCCWFace(edgesToRemove.back(), vertex, vertLoop.back()));
+        loopEdges.push_back(vertices[vertLoop.back()].connectsTo(vertLoop[vertLoop.size() - 2]));
     }
-    for(size_t i = 0; i < vertLoop.size(); i++)
+    loopEdges.push_back(vertices[vertLoop.back()].connectsTo(vertLoop.front()));
+    PRINTVAR(vertLoop);
+    PRINTVAR(edgesToRemove);
+    PRINTVAR(facesToRemove);
+    PRINTVAR(loopEdges);
+    //Remove the faces
+    for(size_t i = 0; i < num; i++)
     {
-        DBASSERT(vertices[vertLoop[i]].connectsTo(vertLoop[(i + 1) % vertLoop.size()]) != -1);
-        DBASSERT(vertices[vertLoop[(i + 1) % vertLoop.size()]].connectsTo(vertLoop[i]));
+        faces.dealloc(facesToRemove[i]);
+        edges[loopEdges[i]].replaceFaceLink(facesToRemove[i], INVALID);
     }
-    //vertLoop must be clockwise geometrically, check for that
-    if(!isLoopOrientedUp(vertLoop))
+    //Remove the interior edges
+    for(size_t i = 0; i < num; i++)
     {
-        for(size_t i = 0; i < vertLoop.size() / 2; i++)
-            SWAP(vertLoop[i], vertLoop[vertLoop.size() - 1 - i]);
+        Edge& e = edges[edgesToRemove[i]];
+        vertices[e.v[0]].removeEdge(edgesToRemove[i]);
+        vertices[e.v[1]].removeEdge(edgesToRemove[i]);
+        edges.dealloc(edgesToRemove[i]);
     }
+    //Remove the interior vertex
+    vertices.dealloc(vertex);
+    //???
+    for(size_t i = 0; i < vertLoop.size() / 2; i++)
+        SWAP(vertLoop[i], vertLoop[num - 1 - i]);
     return vertLoop;
 }
 
@@ -1109,7 +1056,7 @@ void Mesh::getNeighbors(int e, int& f1, int& f2, int& f11, int& f12, int& f21, i
     f2 = edge.f[1];
     int v1 = edge.v[0];
     int v2 = edge.v[1];
-    if(!faces[f1].isClockwise(v1, v2))
+    if(!faces[f1].isCCW(v1, v2))
     {
         SWAP(f1, f2);
         SWAP(edge.f[0], edge.f[1]);
@@ -1531,7 +1478,7 @@ bool Mesh::facesWrongOrientation(int e)
         return false;
     Face& f1 = faces[edge.f[0]];
     Face& f2 = faces[edge.f[1]];
-    return f1.isClockwise(edge.v[0], edge.v[1]) == f2.isClockwise(edge.v[0], edge.v[1]);
+    return f1.isCCW(edge.v[0], edge.v[1]) == f2.isCCW(edge.v[0], edge.v[1]);
 }
 
 bool Mesh::retriEdgeOrientation(int v1, int v2, vector<int>& vertLoop)
@@ -1660,7 +1607,7 @@ int Mesh::faceNeedsVertRemoval(int f)
     DBASSERT(edgeLen[0] <= edgeLen[1] && edgeLen[1] <= edgeLen[2]);
     if(edgeLen[0] + edgeLen[1] < cutoffFactor * edgeLen[2])
     {
-        //rv = true;
+        rv = true;
     }
     if(rv)
     {
@@ -1696,18 +1643,35 @@ void Mesh::badTriangleRepair()
     {
         if((toRemove = faceNeedsVertRemoval(it.loc)) != INVALID)
         {
-            /*
             if(toRemove == 16745)
             {
                 //vertices[toRemove].pos.y += 3;
                 int dontcare;
                 auto loop = removeVertex(16745, dontcare);
+                PRINTVAR(loop);
                 return;
             }
-            else */
+            else
                 removeAndRetriangulate(toRemove);
         }
     }
+}
+
+int Mesh::getOtherVertex(int e, int v)
+{
+    return edges[e].v[0] == v ? edges[e].v[1] : edges[e].v[0];
+}
+
+int Mesh::getCCWFace(int edge, int v1, int v2)
+{
+    //get the face adjacent to edge where v1 => v2 is CCW order (in f.v order)
+    Edge& e = edges[edge];
+    if(e.f[0] >= 0 && faces[e.f[0]].isCCW(v1, v2))
+        return e.f[0];
+    else if(e.f[1] >= 0 && faces[e.f[1]].isCCW(v1, v2))
+        return e.f[1];
+    DBASSERT(false);
+    return INVALID;
 }
 
 bool Mesh::validFace(int f)
