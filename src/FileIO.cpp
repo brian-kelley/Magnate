@@ -13,7 +13,7 @@ bool FileIO::fileExists(path fpath)
 path FileIO::root()
 {
 #ifdef __APPLE__
-    return "/Users/Brian/Dropbox/Magnate";
+    return "/Users/Brian/Magnate";
 #elif _WIN32
     return initial_path() / "../..";
 #elif __linux
