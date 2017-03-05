@@ -236,8 +236,9 @@ void Mesh::initWorldMesh(Heightmap& heights, Heightmap& faceValues, float faceMa
   PRINT("Constructing tri mesh.");
   //pools are already sized to store all features of the most detailed mesh
   simpleLoadHeightmap(heights, faceValues);
-  TIMEIT(simplify());
-  //fullCorrectnessCheck();
+  removeAndRetriangulate(hmVertIndex(2, 2));
+  //TIMEIT(simplify());
+  fullCorrectnessCheck();
   PRINT("Done with mesh.");
 }
 
@@ -313,7 +314,7 @@ void Mesh::simplify()
   int vertsBefore = vertices.size;
   int edgesBefore = edges.size;
   int facesBefore = faces.size;
-  const float maxRemoveSpan = Coord::TERRAIN_TILE_SIZE * 6;
+  const float maxRemoveSpan = Coord::TERRAIN_TILE_SIZE * 8;
   //minimum value of dot(norm1, norm2) for the faces to be coplanar enough to combine
   const float minNormDot = 0.99;
   int vertsRemoved = 0;
@@ -328,7 +329,7 @@ void Mesh::simplify()
         if(vertices.isAllocated(index))
         {
           auto& v = vertices[index];
-          if(v.boundary)
+          if(v.corner)
           {
             canRemove = false;
           }
@@ -396,8 +397,6 @@ void Mesh::simplify()
 
 void Mesh::removeAndRetriangulate(int vertexToRemove)
 {
-  if(vertices[vertexToRemove].boundary)
-    return;
   if(isTriClique(vertexToRemove))
   {
     removeTriClique(vertexToRemove);
@@ -408,69 +407,103 @@ void Mesh::removeAndRetriangulate(int vertexToRemove)
   retriangulate(vertLoop, terrainVal);
 }
 
-vector<int> Mesh::removeVertex(int vertex, int& terrainVal)
+vector<int> Mesh::removeVertex(int v, int& terrainVal)
 {
-  Vertex& vert = vertices[vertex];
-  //precondition: vertex exists and is not on boundary, so following line is safe
-  terrainVal = faces[edges[vert.edges.front()].f[0]].value;
-  DBASSERT(!vert.boundary);
-  size_t num = vert.edges.size();
-  vector<int> edgesToRemove;
-  edgesToRemove.reserve(num);
-  vector<int> facesToRemove;
-  facesToRemove.reserve(num);
-  vector<int> vertLoop;
-  vertLoop.reserve(num);
-  vector<int> loopEdges;
-  loopEdges.reserve(num);
-  //pick first edge arbitrarily
-  edgesToRemove.push_back(vert.edges[0]);
-  //get corresponding vert
-  vertLoop.push_back(getOtherVertex(vert.edges[0], vertex));
-  //get the face immediately CCW of the first edge
-  //have edge CW of face and a certain vertex orientation
-  facesToRemove.push_back(getCCWFace(edgesToRemove.back(), vertex, vertLoop.back()));
-  while(vertLoop.size() < num)
+  PRINT("Removing vertex " << v);
+  vector<int> loop;
+  //get a vertex connected to vertex (doesn't matter which)
+  Vertex& vert = vertices[v];
+  if(vert.boundary)
+    PRINT(">!>!>!> vert is boundary");
+  int loopSize = vert.edges.size();
+  //delete all the faces containing vert
+  for(auto e : vert.edges)
   {
-    //use the previous last face/vertLoop entry to get the next edge
-    Face& f = faces[facesToRemove.back()];
-    //get vert in f 1 step CCW from last vertloop entry
-    int nextVertInd = 0;
-    for(; nextVertInd < 3; nextVertInd++)
+    for(int i = 0; i < 2; i++)
     {
-      if(f.isCCW(vertLoop.back(), f.v[nextVertInd]))
-        break;
+      int f = edges[e].f[i];
+      if(f >= 0)
+      {
+        Face& face = faces[f];
+        terrainVal = face.value;
+        edges[face.e[0]].replaceFaceLink(f, INVALID);
+        edges[face.e[1]].replaceFaceLink(f, INVALID);
+        edges[face.e[2]].replaceFaceLink(f, INVALID);
+        faces.dealloc(f);
+      }
     }
-    vertLoop.push_back(f.v[nextVertInd]);
-    edgesToRemove.push_back(vertices[vertLoop.back()].connectsTo(vertex));
-    facesToRemove.push_back(getCCWFace(edgesToRemove.back(), vertex, vertLoop.back()));
-    loopEdges.push_back(vertices[vertLoop.back()].connectsTo(vertLoop[vertLoop.size() - 2]));
   }
-  loopEdges.push_back(vertices[vertLoop.back()].connectsTo(vertLoop.front()));
-  //PRINTVAR(vertLoop);
-  //PRINTVAR(edgesToRemove);
-  //PRINTVAR(facesToRemove);
-  //PRINTVAR(loopEdges);
-  //Remove the faces
-  for(size_t i = 0; i < num; i++)
+  //if vert is on boundary, merge the two edges along the boundary into one
+  if(vert.boundary)
   {
-    faces.dealloc(facesToRemove[i]);
-    edges[loopEdges[i]].replaceFaceLink(facesToRemove[i], INVALID);
+    int be1 = INVALID;
+    int be2 = INVALID;
+    for(auto e : vert.edges)
+    {
+      if(vertices[getOtherVertex(e, v)].boundary)
+      {
+        if(be1 == INVALID)
+        {
+          be1 = e;
+        }
+        else
+        {
+          be2 = e;
+          break;
+        }
+      }
+    }
+    //delete be2, then extend be1
+    int newVert = getOtherVertex(be2, v);
+    edges[be1].replaceVertexLink(v, newVert);
+    vert.removeEdge(be1);
+    edges.dealloc(be2);
+    //know the first 2 vertices in loop to begin CCW traversal
+    loop.push_back(getOtherVertex(be1, newVert));
+    loop.push_back(newVert);
   }
-  //Remove the interior edges
-  for(size_t i = 0; i < num; i++)
+  else
   {
-    Edge& e = edges[edgesToRemove[i]];
-    vertices[e.v[0]].removeEdge(edgesToRemove[i]);
-    vertices[e.v[1]].removeEdge(edgesToRemove[i]);
-    edges.dealloc(edgesToRemove[i]);
+    //get the first vertex to use in loop (pick arbitrarily)
+    loop.push_back(getOtherVertex(vert.edges[0], v));
   }
-  //Remove the interior vertex
-  vertices.dealloc(vertex);
-  //???
-  for(size_t i = 0; i < vertLoop.size() / 2; i++)
-    SWAP(vertLoop[i], vertLoop[num - 1 - i]);
-  return vertLoop;
+  //walk around the loop (direction doesn't really matter), adding vertices
+  while(loop.size() < loopSize)
+  {
+    int p = loop.back();
+    Vertex& prev = vertices[p];
+    for(auto e : prev.edges)
+    {
+      int otherV = getOtherVertex(e, p);
+      if(loop.size() == 1 || otherV != loop[loop.size() - 2])
+      {
+        Vertex& otherVertex = vertices[otherV];
+        if(otherVertex.connectsTo(v))
+        {
+          loop.push_back(otherV);
+          break;
+        }
+      }
+    }
+  }
+  //now delete all edges connecting to v
+  for(auto e : vert.edges)
+  {
+    int otherVert = getOtherVertex(e, v);
+    vertices[otherVert].removeEdge(e);
+    edges.dealloc(e);
+  }
+  //finally, delete vert
+  vertices.dealloc(v);
+  if(!isLoopOrientedUp(loop))
+  {
+    //reverse loop
+    for(int i = 0; i < loop.size() / 2; i++)
+    {
+      SWAP(loop[i], loop[loop.size() - 1 - i]);
+    }
+  }
+  return loop;
 }
 
 void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
@@ -480,6 +513,14 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
     return Geom2D::lineSegmentsCross(vertices[lhs.first].pos.xz(), vertices[lhs.second].pos.xz(),
         vertices[rhs.first].pos.xz(), vertices[rhs.second].pos.xz());
   };
+  if(!isLoopOrientedUp(vertLoop))
+  {
+    //reverse vertLoop
+    for(int i = 0; i < vertLoop.size() / 2; i++)
+    {
+      SWAP(vertLoop[i], vertLoop[vertLoop.size() - 1 - i]);
+    }
+  }
   //while there are more than 3 vertices in vertLoop, choose the best pair (separated by 1) to form edge
   //form the edge and create a new triangle
   //then remove the vertex in between the connected verts from vertloop
@@ -558,30 +599,10 @@ void Mesh::retriangulate(vector<int>& vertLoop, int terrainVal)
       //make sure edge candidate is inside the empty space, and doesn't cross any other edges
       //the edges it may cross are in the faces containing edges (v1, vmid) and (vmid, v2)
       {
-        //get an edge as a pair of vertices
-        auto getVertPair = [&] (int e) -> pair<int, int>
+        Vertex& midVertex = vertices[vmid];
+        if(cross(midVertex.pos - vert1.pos, vert2.pos - midVertex.pos).y <= 0)
         {
-          Edge& edge = edges[e];
-          return pair<int, int>(edge.v[0], edge.v[1]);
-        };
-        //note: at this point, edges e1 and e2 have at most one valid face adjacent to them
-        //(could be on mesh boundary, then they would be in 0 valid faces)
-        Edge& e1 = edges[vertices[v1].connectsTo(vmid)];
-        Edge& e2 = edges[vertices[v2].connectsTo(vmid)];
-        int facesToCheck[2] = {e1.f[0] < 0 ? e1.f[1] : e1.f[0], e2.f[0] < 0 ? e2.f[1] : e2.f[0]};
-        bool crosses = false;
-        for(int j = 0; j < 2; j++)
-        {
-          if(facesToCheck[j] < 0)
-            continue;
-          Face& checkFace = faces[facesToCheck[j]];
-          crosses = crosses || edgesCross(edgeCand, getVertPair(checkFace.e[0]));
-          crosses = crosses || edgesCross(edgeCand, getVertPair(checkFace.e[1]));
-          crosses = crosses || edgesCross(edgeCand, getVertPair(checkFace.e[2]));
-        }
-        if(crosses)
-        {
-          //PRINT(">>Can't use because crosses an already existing edge");
+          //PRINT(">>Can't use because would make non-manifold flipped face.");
           continue;
         }
       }

@@ -84,6 +84,7 @@ struct Mesh
   void simpleLoadHeightmap(Heightmap& heights, Heightmap& faceValues);
   void simplify();
   vector<int> removeVertex(int vertex, int& terrainVal);
+  vector<int> removeVertexBoundary(int vertex, int& terrainVal);
   void retriangulate(vector<int>& vertLoop, int terrainVal);
   int getMaxVertices();
   int getMaxEdges();

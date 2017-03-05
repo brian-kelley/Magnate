@@ -19,59 +19,59 @@ Broadcaster<SDL_EventType> Input::miscBroadcaster;
 
 void Input::init()
 {
-    keystateCurrent = SDL_GetKeyboardState(&numKeys);
-    keystate = new u8[numKeys];
-    copyKeystate();
-    SDL_SetRelativeMouseMode(SDL_TRUE);
-    winX = GlobalConfig::WINDOW_W;
-    winY = GlobalConfig::WINDOW_H;
+  keystateCurrent = SDL_GetKeyboardState(&numKeys);
+  keystate = new u8[numKeys];
+  copyKeystate();
+  //SDL_SetRelativeMouseMode(SDL_TRUE);
+  winX = GlobalConfig::WINDOW_W;
+  winY = GlobalConfig::WINDOW_H;
 }
 
 void Input::update()
 {
-    SDL_PumpEvents();
-    SDL_Event event;
-    isMouseDown = SDL_GetMouseState(&mouseX, &mouseY) & SDL_BUTTON(SDL_BUTTON_LEFT);
-    while(SDL_PollEvent(&event))
+  SDL_PumpEvents();
+  SDL_Event event;
+  isMouseDown = SDL_GetMouseState(&mouseX, &mouseY) & SDL_BUTTON(SDL_BUTTON_LEFT);
+  while(SDL_PollEvent(&event))
+  {
+    switch(event.type)
     {
-        switch(event.type)
+      case SDL_KEYDOWN:
+      case SDL_KEYUP:
+        keyBroadcaster.send(event.key);
+        break;
+      case SDL_TEXTINPUT:
+        typingBroadcaster.send(event.text);
+        break;
+      case SDL_WINDOWEVENT:
         {
-            case SDL_KEYDOWN:
-            case SDL_KEYUP:
-                keyBroadcaster.send(event.key);
-                break;
-            case SDL_TEXTINPUT:
-                typingBroadcaster.send(event.text);
-                break;
-            case SDL_WINDOWEVENT:
-            {
-                SDL_WindowEvent& wevent = event.window;
-                if(wevent.event == SDL_WINDOWEVENT_RESIZED)
-                {
-                    winX = wevent.data1;
-                    winY = wevent.data2;
-                }
-                windowBroadcaster.send(wevent);
-                break;
-            }
-            case SDL_MOUSEBUTTONDOWN:
-            case SDL_MOUSEBUTTONUP:
-                buttonBroadcaster.send(event.button);
-                break;
-            case SDL_MOUSEMOTION:
-                motionBroadcaster.send(event.motion);
-                break;
-            case SDL_MOUSEWHEEL:
-                wheelBroadcaster.send(event.wheel);
-                break;
-            default:
-                miscBroadcaster.send(SDL_EventType(event.type));
+          SDL_WindowEvent& wevent = event.window;
+          if(wevent.event == SDL_WINDOWEVENT_RESIZED)
+          {
+            winX = wevent.data1;
+            winY = wevent.data2;
+          }
+          windowBroadcaster.send(wevent);
+          break;
         }
+      case SDL_MOUSEBUTTONDOWN:
+      case SDL_MOUSEBUTTONUP:
+        buttonBroadcaster.send(event.button);
+        break;
+      case SDL_MOUSEMOTION:
+        motionBroadcaster.send(event.motion);
+        break;
+      case SDL_MOUSEWHEEL:
+        wheelBroadcaster.send(event.wheel);
+        break;
+      default:
+        miscBroadcaster.send(SDL_EventType(event.type));
     }
-    copyKeystate();
+  }
+  copyKeystate();
 }
 
 void Input::copyKeystate()
 {
-    memcpy((void*) keystate, (void*) keystateCurrent, numKeys);
+  memcpy((void*) keystate, (void*) keystateCurrent, numKeys);
 }
